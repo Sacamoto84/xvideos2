@@ -17,9 +17,12 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.ClippingMediaSource
 import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.videoplayer.host.DrmConfig
 import com.client.xvideos.common.videoplayer.host.MediaPlayerError
+import com.client.xvideos.common.videoplayer.model.MediaClip
+import com.client.xvideos.common.videoplayer.model.playerRepeatMode
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSource
 import com.client.xvideos.common.videoplayer.util.createHlsMediaSourceWithDrm
 import com.client.xvideos.common.videoplayer.util.createProgressiveMediaSource
@@ -45,6 +48,7 @@ fun rememberExoPlayerWithLifecycle(
     seekBackIncrementMs: Long = 1000L,
     seekForwardIncrementMs: Long = 1000L,
     playFromTime: Float? = null,
+    clips: List<MediaClip> = emptyList(),
 ): ExoPlayer {
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -83,17 +87,14 @@ fun rememberExoPlayerWithLifecycle(
         }
     }
 
-    LaunchedEffect(isLooping) {
-        exoPlayer.repeatMode = if (isLooping) {
-            Player.REPEAT_MODE_ONE
-        } else {
-            Player.REPEAT_MODE_OFF
-        }
+    // С отрезками повторяется весь список, без них — сам ролик.
+    LaunchedEffect(isLooping, clips) {
+        exoPlayer.repeatMode = playerRepeatMode(isLooping, hasClips = clips.isNotEmpty())
     }
 
     // Все входы загрузки — в ключах: раньше источник пересобирался только по
     // смене адреса, хотя читает и заголовки, и DRM, и признак прямого эфира.
-    LaunchedEffect(exoPlayer, url, headers, drmConfig, isLiveStream) {
+    LaunchedEffect(exoPlayer, url, headers, drmConfig, isLiveStream, clips) {
         if (url.isBlank()) {
             exoPlayer.stop()
             exoPlayer.clearMediaItems()
@@ -102,22 +103,39 @@ fun rememberExoPlayerWithLifecycle(
         try {
             val mediaItem = MediaItem.fromUri(url.toUri())
 
-            val mediaSource = when {
-                drmConfig != null -> createHlsMediaSourceWithDrm(mediaItem, headers, drmConfig)
-                isLiveStream || isHlsUrl(url) -> createHlsMediaSource(
-                    mediaItem,
-                    headers
-                )
-                else -> createProgressiveMediaSource(mediaItem, context, headers)
+            // Источник создаётся заново на каждый вызов: у каждого отрезка свой,
+            // один экземпляр в плейлисте дважды не используется.
+            val newMediaSource = {
+                when {
+                    drmConfig != null -> createHlsMediaSourceWithDrm(mediaItem, headers, drmConfig)
+                    isLiveStream || isHlsUrl(url) -> createHlsMediaSource(
+                        mediaItem,
+                        headers
+                    )
+                    else -> createProgressiveMediaSource(mediaItem, context, headers)
+                }
             }
 
             val initialSeekMs = (playFromTime?.times(1000f)?.toLong() ?: 0L).coerceAtLeast(0L)
             exoPlayer.apply {
                 stop()
                 clearMediaItems()
-                setMediaSource(mediaSource)
-                prepare()
-                seekTo(0, initialSeekMs)
+                if (clips.isEmpty()) {
+                    setMediaSource(newMediaSource())
+                    prepare()
+                    seekTo(0, initialSeekMs)
+                } else {
+                    // Отрезки одного файла друг за другом; начало — первый отрезок.
+                    setMediaSources(
+                        clips.map { clip ->
+                            ClippingMediaSource.Builder(newMediaSource())
+                                .setStartPositionMs(clip.startMs)
+                                .setEndPositionMs(clip.endMs)
+                                .build()
+                        }
+                    )
+                    prepare()
+                }
             }
 
         } catch (e: CancellationException) {

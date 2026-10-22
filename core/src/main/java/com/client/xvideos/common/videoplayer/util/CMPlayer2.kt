@@ -54,6 +54,7 @@ fun CMPPlayer2(
         bufferForPlaybackMs = 50,
         bufferForPlaybackAfterRebufferM = 100,
         playFromTime = config.playFromTime,
+        clips = config.clips,
     )
 
     val currentCallbacks by rememberUpdatedState(callbacks)

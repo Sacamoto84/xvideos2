@@ -27,6 +27,8 @@ data class PlayerPlaybackConfig(
     val playFromTime: Float? = null,
     /** Перемотка, которую плеер должен выполнить и подтвердить через [PlayerPlaybackCallbacks.seekApplied]. */
     val seekRequest: SeekRequest? = null,
+    /** Отрезки файла вместо файла целиком; пусто — весь файл. */
+    val clips: List<MediaClip> = emptyList(),
 ) {
     val isValid: Boolean get() = url.isNotBlank()
     val isEmpty: Boolean get() = url.isEmpty()
@@ -107,6 +109,7 @@ fun MediaPlayerHost.toPlaybackConfig(autoRotate: Boolean = false): PlayerPlaybac
         isSliding = isSliding,
         seekToTime = seekToTime,
         seekRequest = seekRequest,
+        clips = clips,
         playFromTime = playFromTime,
         speed = speed,
         size = videoFitMode,

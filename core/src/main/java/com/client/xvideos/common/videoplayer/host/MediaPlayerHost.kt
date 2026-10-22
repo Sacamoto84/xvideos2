@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.client.xvideos.common.videoplayer.model.MediaClip
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.model.SeekRequest
@@ -28,6 +29,8 @@ class MediaPlayerHost(
     isFullScreen: Boolean = false,
     headers: Map<String, String>? = null,
     drmConfig: DrmConfig? = null,
+    /** Отрезки файла вместо файла целиком (превью сохранённого ролика X); пусто — весь файл. */
+    val clips: List<MediaClip> = emptyList(),
 ) : RememberObserver {
     var poster by mutableStateOf(true)
 

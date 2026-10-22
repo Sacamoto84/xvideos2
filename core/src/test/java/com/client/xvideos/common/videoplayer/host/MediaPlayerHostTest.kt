@@ -1,5 +1,7 @@
 package com.client.xvideos.common.videoplayer.host
 
+import com.client.xvideos.common.videoplayer.model.MediaClip
+import com.client.xvideos.common.videoplayer.model.toPlaybackConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -233,6 +235,15 @@ class MediaPlayerHostTest {
 
         assertEquals(10f, host.currentTime, 0.001f)
         assertNull(host.seekRequest)
+        host.dispose()
+    }
+
+    @Test
+    fun `отрезки хоста доходят до плеера`() {
+        val clips = listOf(MediaClip(1_000, 2_000), MediaClip(5_000, 6_000))
+        val host = MediaPlayerHost(mediaUrl = "file:///v.mp4", clips = clips)
+
+        assertEquals(clips, host.toPlaybackConfig().clips)
         host.dispose()
     }
 
