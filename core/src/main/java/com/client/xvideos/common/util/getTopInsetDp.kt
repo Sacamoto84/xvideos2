@@ -34,11 +34,3 @@ fun getTopInsetDp(): Dp {
         ).toDp()
     }
 }
-
-@Composable
-fun getStatusBarInsetDp(): Dp {
-    val density = LocalDensity.current
-    return with(density) {
-        WindowInsets.statusBars.getTop(this).toDp()
-    }
-}

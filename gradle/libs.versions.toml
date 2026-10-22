@@ -5,9 +5,7 @@ agp = "9.4.1"
 
 coil = "3.6.3"
 componentsResources = "1.12.1"
-composeExtendedGestures = "3.1"
 composeThemeAdapter = "1.2.1"
-composeZoom = "0.5.0"
 core = "1.49.9"
 coreSplashscreen = "1.2.0"
 desugar_jdk_libs = "2.1.5"
@@ -83,8 +81,6 @@ coil-network-cache-control = { module = "io.coil-kt.coil3:coil-network-cache-con
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 
 components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "componentsResources" }
-compose-extended-gestures = { module = "com.github.SmartToolFactory:Compose-Extended-Gestures", version.ref = "composeExtendedGestures" }
-compose-zoom = { module = "com.github.SmartToolFactory:Compose-Zoom", version.ref = "composeZoom" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 image-loader = { module = "io.github.qdsfdhvh:image-loader", version.ref = "imageLoader" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }

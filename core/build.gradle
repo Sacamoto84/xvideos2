@@ -138,8 +138,6 @@ dependencies {
     api libs.lottie
     api libs.lottie.compose
     api libs.lazycolumnscrollbar
-    api(libs.compose.zoom)
-    api libs.compose.extended.gestures
     api libs.zoomable
     api(libs.accompanist.systemuicontroller)
 
