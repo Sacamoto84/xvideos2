@@ -51,10 +51,8 @@ dependencies {
     debugApi libs.androidx.ui.tooling
 
     api libs.material
-    api libs.androidx.material
     api libs.androidx.material3
     api(libs.material3)
-    api libs.compose.theme.adapter
     api libs.androidx.material.icons.core
     api libs.androidx.material.icons.extended
     api libs.androidx.adaptive
@@ -70,7 +68,6 @@ dependencies {
     api(libs.androidx.lifecycle.process)
     api libs.androidx.hilt.navigation.compose
     api(libs.androidx.core.splashscreen)
-    api libs.androidx.storage
     // Только внутри :core — зашифрованные настройки (учётные данные L).
     implementation(libs.androidx.security.crypto)
     api(libs.androidx.paging.runtime)
@@ -81,11 +78,8 @@ dependencies {
 
     api(libs.voyager.navigator)
     api(libs.voyager.screenmodel)
-    api(libs.voyager.bottom.sheet.navigator)
-    api(libs.voyager.tab.navigator)
     api(libs.voyager.transitions)
     api(libs.voyager.hilt)
-    api(libs.voyager.livedata)
 
     api libs.androidx.media3.ui
     api libs.androidx.media3.exoplayer
@@ -108,15 +102,13 @@ dependencies {
     api(libs.coil.compose)
     api(libs.coil.network.okhttp)
     api(libs.coil.gif)
-    api(libs.coil.network.cache.control)
-    api(libs.image.loader)
 
     api(libs.ktor.client.core)
-    api(libs.ktor.client.cio)
     api(libs.ktor.client.okhttp)
     api(libs.ktor.client.logging)
+    // Транзитивная зависимость media3-datasource-ktor (просит 3.0.3): явная запись
+    // держит её на версии Ktor проекта, иначе рядом окажутся модули Ktor разных версий.
     api(libs.ktor.client.android)
-    api(libs.ktor.network)
     api(libs.ktor.client.content.negotiation)
     api(libs.ktor.serialization.kotlinx.json)
     api libs.kotlinx.serialization.json
@@ -124,22 +116,19 @@ dependencies {
 
     api libs.jsoup
     api libs.timber
-    // Бэкенд логирования и кеши: компиляции потребителей не касаются.
+    // Бэкенд логирования (SLF4J для журнала Ktor): компиляции потребителей не касается.
     implementation libs.slf4j.android
-    implementation libs.disk.lru.cache
-    implementation libs.volley
     api libs.kotlinx.collections.immutable
     // Примитивные коллекции без боксинга (IntSet/IntObjectMap) — для горячих
     // путей вроде окна предзагрузки ленты. Наружу не выходят, потому implementation.
     implementation libs.androidx.collection
+    // Транзитивная зависимость com.composables:core (просит 1.10.3): явная запись
+    // держит её на версии, совместимой с Compose из BOM.
     api libs.components.resources
     api(libs.core)
 
-    api libs.lottie
-    api libs.lottie.compose
     api libs.lazycolumnscrollbar
     api libs.zoomable
-    api(libs.accompanist.systemuicontroller)
 
     // P2P Nearby Connections. Весь обмен живёт в common/p2p, наружу уходят
     // только собственные типы :core — разделы про Nearby не знают.
