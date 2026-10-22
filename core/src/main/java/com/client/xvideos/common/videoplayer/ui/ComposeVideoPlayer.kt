@@ -72,7 +72,7 @@ fun ComposeVideoPlayer(
     var swipeLabel by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(swipeCount) {
         if (swipeLabel != null) {
-            delay(SWIPE_BADGE_MS)
+            delay(600) // столько виден значок
             swipeLabel = null
         }
     }
@@ -176,9 +176,6 @@ fun ComposeVideoPlayer(
     }
 }
 
-/** Сколько видно значок шага свайпа. */
-private const val SWIPE_BADGE_MS = 600L
-
 /**
  * Свайп по видео одним пальцем: по отпусканию — направление из
  * [swipeSeekDirection] (порог 48dp), если картинка не увеличена. Касания не
@@ -207,12 +204,10 @@ private fun Modifier.swipeSeekGesture(
             val direction = swipeSeekDirection(
                 dx = last.x - down.position.x,
                 dy = last.y - down.position.y,
-                minDistancePx = SWIPE_MIN_DISTANCE.toPx(),
+                // Короче — тап, а не свайп.
+                minDistancePx = 48.dp.toPx(),
             )
             if (direction != 0) onSwipe(direction)
         }
     }
 }
-
-/** Короче — тап, а не свайп. */
-private val SWIPE_MIN_DISTANCE = 48.dp

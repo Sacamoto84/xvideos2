@@ -20,8 +20,8 @@ private const val STORYBOARD_JPEG_QUALITY = 80
  * к началу своего процента: точный кадр пришлось бы декодировать от ключевого,
  * а для превью над ползунком разницы не видно.
  *
- * Кадр, который не достался, оставляет клетку чёрной; ни одного кадра — сетки
- * нет. Отмену проверяет между кадрами.
+ * Кадр, который не достался, оставляет клетку чёрной; ни одного кадра или
+ * сетка не записалась целиком — сетки нет. Отмену проверяет между кадрами.
  */
 object RetrieverStoryboardRenderer : StoryboardRenderer {
 
@@ -51,8 +51,9 @@ object RetrieverStoryboardRenderer : StoryboardRenderer {
                     frames++
                 }
                 if (frames == 0) return false
-                out.outputStream().use { sheet.compress(Bitmap.CompressFormat.JPEG, STORYBOARD_JPEG_QUALITY, it) }
-                return true
+                // Сбой записи (нет места) compress не бросает, а отвечает false:
+                // без проверки недописанная сетка становилась готовой (проход 211, C2).
+                return out.outputStream().use { sheet.compress(Bitmap.CompressFormat.JPEG, STORYBOARD_JPEG_QUALITY, it) }
             } finally {
                 sheet.recycle()
             }

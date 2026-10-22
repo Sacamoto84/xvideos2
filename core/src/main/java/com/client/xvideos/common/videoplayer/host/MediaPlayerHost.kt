@@ -38,17 +38,11 @@ class MediaPlayerHost(
     var url by mutableStateOf(mediaUrl)
     var speed by mutableStateOf(initialSpeed)
     var videoFitMode by mutableStateOf(initialVideoFitMode)
-    /**
-     * Перемотка на ходу, пока палец ведёт ползунок (плеер скачанного ролика X).
-     * [seekTo] её не пишет: у него свой канал [seekRequest], иначе плеер
-     * перематывал бы дважды.
-     */
-    var seekToTime: Float? by mutableStateOf(null)
 
     /**
-     * Перемотка из [seekTo], которую плеер ещё не выполнил. Отдельно от
-     * [seekToTime]: тот сбрасывает опрос позиции, и если опрос успевал до
-     * перекомпоновки, перемотка при отпускании ползунка терялась.
+     * Перемотка из [seekTo], которую плеер ещё не выполнил. Единственный канал
+     * перемотки: прежний `seekToTime` сбрасывал опрос позиции, и если опрос
+     * успевал до перекомпоновки, перемотка при отпускании ползунка терялась.
      */
     var seekRequest: SeekRequest? by mutableStateOf(null)
         private set
@@ -149,7 +143,6 @@ class MediaPlayerHost(
     fun onPlayerPosition(seconds: Float) {
         if (isSliding || seekRequest != null) return
         updateCurrentTime(seconds)
-        seekToTime = null
     }
 
     /** Плеер выполнил перемотку [requestId]; более ранний номер новый запрос не снимает. */

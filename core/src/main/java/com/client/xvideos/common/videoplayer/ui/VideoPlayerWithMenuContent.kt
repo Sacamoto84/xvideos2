@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.gestures.detectTapGestures
 
 @Composable
 fun VideoPlayerWithMenuContent(
@@ -40,7 +39,8 @@ fun VideoPlayerWithMenuContent(
     onClick: () -> Unit = {},
     /**
      * Долгое нажатие по видео; `null` — не обрабатывается. Превью в карточке
-     * открывает им плеер, не останавливая превью.
+     * открывает им плеер, не останавливая превью. В зоне перемотки (нижняя
+     * треть) удержание уходит предку — у карточки X оно то же.
      */
     onLongClick: (() -> Unit)? = null,
     autoRotate: Boolean,
@@ -139,13 +139,11 @@ fun VideoPlayerWithMenuContent(
                     .fillMaxHeight(1 / 3f)
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
+                    // Касание без сдвига зона не поглощает: тап, двойной тап и
+                    // удержание здесь получает предок — карточка X. Свой детектор
+                    // нажатий поглотил бы касание, и тап с двойным тапом до
+                    // карточки бы не дошли (проход 211, C1).
                     .then(seekDragModifier)
-                    // Зона перемотки лежит поверх видео: без этого долгое нажатие
-                    // в нижней трети до плеера не доходило.
-                    .pointerInput(onLongClick) {
-                        val longClick = onLongClick ?: return@pointerInput
-                        detectTapGestures(onLongPress = { longClick() })
-                    }
                     .alpha(0.5f)
                     .background(Color.Transparent)
             )

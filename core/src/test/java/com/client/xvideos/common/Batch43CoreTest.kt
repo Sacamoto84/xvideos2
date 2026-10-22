@@ -84,7 +84,6 @@ class Batch43CoreTest {
         assertFalse(empty.isMuted)
         assertFalse(empty.hasHeaders)
         assertFalse(empty.hasDrm)
-        assertFalse(empty.isSeeking)
 
         val mutedConfig = PlayerPlaybackConfig(
             url = "https://example/v.mp4",
@@ -97,7 +96,6 @@ class Batch43CoreTest {
         assertTrue(mutedConfig.isMuted)
         assertTrue(mutedConfig.hasHeaders)
         assertTrue(mutedConfig.hasDrm)
-        assertTrue(mutedConfig.isSeeking)
     }
 
     @Test

@@ -147,10 +147,6 @@ class Batch65CoreSettingsAndPlayerTest {
         val fast = config.withSpeed(PlayerSpeed.X1_5)
         assertEquals(PlayerSpeed.X1_5, fast.speed)
 
-        val seeked = config.withSeek(15.5f)
-        assertEquals(15.5f, seeked.seekToTime ?: 0f, 0.001f)
-        assertTrue(seeked.isSeeking)
-
         val playedFrom = config.withPlayFromTime(3.0f)
         assertEquals(3.0f, playedFrom.playFromTime ?: 0f, 0.001f)
 
@@ -171,12 +167,10 @@ class Batch65CoreSettingsAndPlayerTest {
         val outOfBounds = PlayerPlaybackConfig(
             url = "https://example.com/video.mp4",
             volume = 2.5f,
-            seekToTime = -10f,
             playFromTime = -5f
         ).sanitized()
 
         assertEquals(1.0f, outOfBounds.volume, 0.001f)
-        assertEquals(0f, outOfBounds.seekToTime ?: -1f, 0.001f)
         assertEquals(0f, outOfBounds.playFromTime ?: -1f, 0.001f)
     }
 

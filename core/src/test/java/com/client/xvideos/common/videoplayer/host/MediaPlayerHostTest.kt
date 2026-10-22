@@ -21,14 +21,14 @@ class MediaPlayerHostTest {
     )
 
     // Раньше seekTo писал ещё и seekToTime, и плеер перематывал дважды: по
-    // запросу и по seekToTime (проход 210, A1).
+    // запросу и по seekToTime (проход 210, A1). Сам seekToTime убран в
+    // проходе 211 (A1): писателей у него не осталось.
     @Test
-    fun `seekTo ставит запрос перемотки и время, а seekToTime не трогает`() {
+    fun `seekTo ставит запрос перемотки и время`() {
         val host = createHost(mediaUrl = "http://test.mp4")
         host.seekTo(15.5f)
 
         assertEquals(15.5f, host.seekRequest?.seconds)
-        assertNull(host.seekToTime)
         assertEquals(15.5f, host.currentTime, 0.001f)
         assertFalse(host.isSliding)
         host.dispose()
@@ -41,15 +41,15 @@ class MediaPlayerHostTest {
         assertEquals(10f, host.currentTime, 0.001f)
 
         host.seekTo(-5f)
-        assertNull(host.seekToTime)
+        assertEquals(10f, host.seekRequest?.seconds)
         assertEquals(10f, host.currentTime, 0.001f)
 
         host.seekTo(Float.NaN)
-        assertNull(host.seekToTime)
+        assertEquals(10f, host.seekRequest?.seconds)
         assertEquals(10f, host.currentTime, 0.001f)
 
         host.seekTo(Float.POSITIVE_INFINITY)
-        assertNull(host.seekToTime)
+        assertEquals(10f, host.seekRequest?.seconds)
         assertEquals(10f, host.currentTime, 0.001f)
         host.dispose()
     }
@@ -139,16 +139,14 @@ class MediaPlayerHostTest {
     }
 
     @Test
-    fun `после выполнения перемотки позиция от плеера снова обновляет время и снимает перемотку на ходу`() {
+    fun `после выполнения перемотки позиция от плеера снова обновляет время`() {
         val host = createHost()
-        // Перетаскивание с перемоткой на ходу, затем отпускание.
+        // Перетаскивание ползунка, затем отпускание.
         host.isSliding = true
-        host.seekToTime = 30f
         host.seekTo(30f)
         host.onSeekApplied(host.seekRequest!!.id)
         host.onPlayerPosition(31f)
         assertEquals(31f, host.currentTime)
-        assertNull(host.seekToTime)
         assertNull(host.seekRequest)
         host.dispose()
     }
