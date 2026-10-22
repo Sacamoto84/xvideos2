@@ -26,6 +26,8 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.C
@@ -362,15 +364,36 @@ fun RedPooledVideoPlayer(
         )
     }
 
-    // Зона перемотки лежит поверх видео, и тап по ней до `zoomable(onTap)` не
-    // доходил: пауза по нижней трети не ставилась (проход 212, C2). Предков с
-    // тапом у страницы нет, так что зона ловит тап сама. Перетаскивание от этого
-    // не страдает: после порога его забирает детектор перемотки, и тап
-    // отменяется.
-    val currentOnClick by rememberUpdatedState(onClick)
-    val seekZoneTapModifier = Modifier.pointerInput(Unit) {
-        detectTapGestures(onTap = { currentOnClick() })
+    // Двойной тап — увеличение 2,5× в точке касания, по увеличенному кадру — сброс.
+    // Общий для кадра (`zoomable`) и зоны перемотки.
+    val onDoubleTapZoom: (Offset) -> Unit = remember(coroutineScope, zoomState) {
+        { tapOffset ->
+            coroutineScope.launch {
+                if (zoomState.scale > 1.05f) {
+                    zoomState.changeScale(1.0f, Offset.Zero)
+                } else {
+                    zoomState.changeScale(2.5f, tapOffset)
+                }
+            }
+        }
     }
+
+    // Зона перемотки лежит поверх видео, и тапы по ней до `zoomable` не доходили
+    // (проход 212, C2). Предков с тапом у страницы нет, так что зона ловит тапы
+    // сама и так же, как кадр: одиночный ждёт окна двойного, двойной увеличивает
+    // картинку (проход 213, C1). Точку касания переводим из координат зоны в
+    // координаты кадра — сдвигом на верх зоны. Перетаскивание от этого не
+    // страдает: после порога его забирает детектор перемотки, и тап отменяется.
+    val currentOnClick by rememberUpdatedState(onClick)
+    var seekZoneTop by remember { mutableFloatStateOf(0f) }
+    val seekZoneTapModifier = Modifier
+        .onPlaced { seekZoneTop = it.positionInParent().y }
+        .pointerInput(onDoubleTapZoom) {
+            detectTapGestures(
+                onDoubleTap = { offset -> onDoubleTapZoom(offset + Offset(0f, seekZoneTop)) },
+                onTap = { currentOnClick() },
+            )
+        }
 
     // clipToBounds — как в прежнем `Box(modifier.clipToBounds())`: увеличенный зумом кадр
     // не должен выезжать поверх оверлея и нижней панели.
@@ -383,15 +406,7 @@ fun RedPooledVideoPlayer(
                     zoomState = zoomState,
                     enableOneFingerZoom = false,
                     onTap = { onClick() },
-                    onDoubleTap = { tapOffset ->
-                        coroutineScope.launch {
-                            if (zoomState.scale > 1.05f) {
-                                zoomState.changeScale(1.0f, Offset.Zero)
-                            } else {
-                                zoomState.changeScale(2.5f, tapOffset)
-                            }
-                        }
-                    },
+                    onDoubleTap = onDoubleTapZoom,
                 ),
             contentScale = ContentScale.Fit,
             keepContentOnReset = true,

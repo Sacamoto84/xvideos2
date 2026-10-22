@@ -50,9 +50,14 @@ fun Red_Video_Lite_Row2(
     val playerHost = remember(url) { MediaPlayerHost(mediaUrl = url, isPaused = !play, isMuted = true) }
 
     LaunchedEffect(play) { if (play) playerHost.play() else playerHost.pause() }
-    LaunchedEffect(Unit) { playerHost.videoFitMode = ScreenResize.FIT; playerHost.mute() }
-
-    LaunchedEffect(Unit) {
+    // Хост пересоздаётся по адресу, а адрес у карточки зависит от сети: настройка
+    // и подписка — на каждый новый хост, время прежнего сбрасывается. С ключом
+    // Unit новый хост оставался с FILL и без событий времени (проход 213, C2).
+    LaunchedEffect(playerHost) {
+        time = 0f
+        duration = 0
+        playerHost.videoFitMode = ScreenResize.FIT
+        playerHost.mute()
         playerHost.onEvent = { event ->
             when (event) {
                 is MediaPlayerEvent.CurrentTimeChange -> { time = event.currentTime }
