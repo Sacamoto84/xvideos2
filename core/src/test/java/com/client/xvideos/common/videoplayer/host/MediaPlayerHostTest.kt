@@ -236,6 +236,34 @@ class MediaPlayerHostTest {
         host.dispose()
     }
 
+    // Конец ролика переключал паузу: свайп к самому концу на паузе её снимал
+    // (финальное ревью плана свайпа, M2).
+    @Test
+    fun `конец ролика ставит паузу и не снимает уже стоящую`() {
+        val playing = createHost()
+        playing.isLooping = false
+        playing.onMediaEnded()
+        assertTrue(playing.isPaused)
+
+        val paused = createHost(isPaused = true)
+        paused.isLooping = false
+        paused.onMediaEnded()
+        assertTrue(paused.isPaused)
+        playing.dispose()
+        paused.dispose()
+    }
+
+    @Test
+    fun `зацикленный ролик в конце на паузу не встаёт`() {
+        val host = createHost()
+        host.isLooping = true
+
+        host.onMediaEnded()
+
+        assertFalse(host.isPaused)
+        host.dispose()
+    }
+
     @Test
     fun `seekBy не трогает паузу`() {
         val host = createHost(isPaused = true)

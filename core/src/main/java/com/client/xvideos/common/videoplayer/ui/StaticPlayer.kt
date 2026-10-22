@@ -22,12 +22,7 @@ fun StaticPlayer(
             currentTime = { playerHost.onPlayerPosition(it) },
             seekApplied = { playerHost.onSeekApplied(it) },
             bufferCallback = { playerHost.setBufferingStatus(it) },
-            didEndVideo = {
-                playerHost.triggerMediaEnd()
-                if (!playerHost.isLooping) {
-                    playerHost.togglePlayPause()
-                }
-            },
+            didEndVideo = { playerHost.onMediaEnded() },
             error = { playerHost.triggerError(it) },
             poster = { playerHost.poster = it }
         )

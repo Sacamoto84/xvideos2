@@ -209,6 +209,16 @@ class MediaPlayerHost(
         onEvent?.invoke(MediaPlayerEvent.MediaEnd)
     }
 
+    /**
+     * Ролик доиграл: событие экрану и пауза, если ролик не зациклен. Именно
+     * пауза, а не переключение: перемотка на паузе к самому концу (свайп)
+     * снимала бы паузу.
+     */
+    fun onMediaEnded() {
+        triggerMediaEnd()
+        if (!isLooping) pause()
+    }
+
     fun triggerError(error: MediaPlayerError) {
         onError?.invoke(error)
     }
