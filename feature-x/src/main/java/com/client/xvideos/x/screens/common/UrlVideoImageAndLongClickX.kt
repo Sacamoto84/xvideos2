@@ -110,14 +110,16 @@ fun UrlVideoImageAndLongClickX(
                 video = localVideo,
                 posterUrl = posterUrl,
                 onClick = handleVideoClick,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                onLongClick = handleLongClick,
             )
             isVideo -> UrlVideoLite(
                 url = previewVideoUrl.orEmpty(),
                 posterUrl = item.previewImage,
                 modifier = Modifier.fillMaxSize(),
                 fallbackUrls = fallbackUrls,
-                onClick = handleVideoClick
+                onClick = handleVideoClick,
+                onLongClick = handleLongClick,
             )
             else -> {
                 UrlImage(posterUrl, modifier = Modifier.fillMaxWidth())

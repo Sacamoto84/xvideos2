@@ -40,7 +40,9 @@ fun UrlVideoLite(
     modifier: Modifier = Modifier,
     posterUrl: String = "",
     fallbackUrls: List<String> = emptyList(),
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    /** Долгое нажатие по играющему превью (карточка открывает им плеер). */
+    onLongClick: (() -> Unit)? = null,
 ) {
     val urlCandidates = remember(url, fallbackUrls) { xPreviewVideoCandidates(url, fallbackUrls) }
     var currentUrlIndex by remember(urlCandidates) { mutableIntStateOf(0) }
@@ -112,6 +114,7 @@ fun UrlVideoLite(
                 modifier = Modifier.fillMaxSize(),
                 playerHost = playerHost,
                 onClick = onClick,
+                onLongClick = onLongClick,
                 autoRotate = false
             )
         }

@@ -31,12 +31,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.detectTapGestures
 
 @Composable
 fun VideoPlayerWithMenuContent(
     modifier: Modifier,
     playerHost: MediaPlayerHost,
     onClick: () -> Unit = {},
+    /**
+     * Долгое нажатие по видео; `null` — не обрабатывается. Превью в карточке
+     * открывает им плеер, не останавливая превью.
+     */
+    onLongClick: (() -> Unit)? = null,
     autoRotate: Boolean,
     /**
      * Перемотка горизонтальным свайпом по нижней трети плеера.
@@ -110,7 +116,8 @@ fun VideoPlayerWithMenuContent(
                 zoomEnabled = true,
                 enableOneFingerZoom = false,
                 onTap = { onClick() },
-                onDoubleTap = onDoubleTapZoom
+                onDoubleTap = onDoubleTapZoom,
+                onLongPress = onLongClick?.let { longClick -> { _: Offset -> longClick() } },
             )
         ) {
             StaticPlayer(playerHost, autoRotate)
@@ -133,6 +140,12 @@ fun VideoPlayerWithMenuContent(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
                     .then(seekDragModifier)
+                    // Зона перемотки лежит поверх видео: без этого долгое нажатие
+                    // в нижней трети до плеера не доходило.
+                    .pointerInput(onLongClick) {
+                        val longClick = onLongClick ?: return@pointerInput
+                        detectTapGestures(onLongPress = { longClick() })
+                    }
                     .alpha(0.5f)
                     .background(Color.Transparent)
             )

@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -37,7 +36,9 @@ import timber.log.Timber
  * путь (`MediaPlayerHost` → `CMPPlayer2`), поэтому он сам встаёт на паузу в
  * фоне и под экраном замка и освобождается, когда карточка уходит из
  * композиции. Постер [posterUrl] — поверх, пока не пошёл первый кадр, и при
- * ошибке. Тап — [onClick] (вернуть постер).
+ * ошибке. Тап — [onClick] (вернуть постер), удержание — [onLongClick]. Пока
+ * плеера нет (длительность ещё читается или ошибка), касания доходят до
+ * самой карточки.
  */
 @Composable
 fun LocalVideoPreview(
@@ -45,6 +46,8 @@ fun LocalVideoPreview(
     posterUrl: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Долгое нажатие по играющему превью — карточка открывает им плеер. */
+    onLongClick: (() -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
         Box(modifier = modifier.fillMaxSize().background(Color(0xFF202020)))
@@ -78,6 +81,7 @@ fun LocalVideoPreview(
                 modifier = Modifier.fillMaxSize(),
                 playerHost = host,
                 onClick = onClick,
+                onLongClick = onLongClick,
                 autoRotate = false,
                 // Отрезки по секунде: перематывать внутри превью нечего.
                 seekDragEnabled = false,
@@ -94,12 +98,6 @@ fun LocalVideoPreview(
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
             )
-        }
-
-        // Плеера нет (длительность ещё читается или ошибка) — тап всё равно
-        // возвращает постер.
-        if (host == null || playbackError) {
-            Box(modifier = Modifier.fillMaxSize().clickable(onClick = onClick))
         }
     }
 }
