@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.client.xvideos.x.screens.common.rememberLocalVideoOf
 
 /**
  * Контент экрана «Сохранённое» (загруженные превью-mp4).
@@ -100,9 +101,8 @@ fun X_SavedContent(saved: SavedX, gridState: LazyGridState, modifier: Modifier =
         onPlayItem = onPlayItem,
         onDeleteItem = onDeleteItem,
         onShareP2pItem = onShareP2pItem,
-        posterUrlProvider = { item ->
-            saved.downloads.localPosterPath(item.id) ?: item.previewImage
-        },
+        // Превью и обложка — из скачанного файла.
+        localVideoOf = rememberLocalVideoOf(saved.downloads),
         modifier = modifier
     )
 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.XHistoryItem
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 /**
  * Сетка карточек роликов в истории.
@@ -24,7 +25,7 @@ fun HistoryGrid(
     selectedIds: List<Long>,
     isSelectionMode: Boolean,
     isFavorite: (ItemsX) -> Boolean,
-    localUrlOf: (ItemsX) -> String?,
+    localVideoOf: (ItemsX) -> SavedLocalVideo?,
     posterUrlOf: (ItemsX) -> String,
     actions: HistoryRowActions,
     onToggleSelect: (Long) -> Unit,
@@ -41,14 +42,14 @@ fun HistoryGrid(
             contentType = { "history_row" }
         ) { historyItem ->
             val isSelected = historyItem.item.id in selectedIds
-            val localUrl = remember(historyItem.item, localUrlOf) { localUrlOf(historyItem.item) }
+            val localVideo = remember(historyItem.item, localVideoOf) { localVideoOf(historyItem.item) }
             val posterUrl = remember(historyItem.item, posterUrlOf) { posterUrlOf(historyItem.item) }
             val favorite = isFavorite(historyItem.item)
 
             HistoryRow(
                 historyItem = historyItem,
                 isFavorite = favorite,
-                localUrl = localUrl,
+                localVideo = localVideo,
                 posterUrl = posterUrl,
                 isSelectionMode = isSelectionMode,
                 isSelected = isSelected,
@@ -70,13 +71,12 @@ private fun HistoryGridPreview() {
         selectedIds = emptyList(),
         isSelectionMode = false,
         isFavorite = { false },
-        localUrlOf = { null },
+        localVideoOf = { null },
         posterUrlOf = { "" },
         actions = HistoryRowActions(
             onToggleFavorite = {},
             onDelete = {},
             onDownload = {},
-            onPlayLocal = { _, _ -> },
             onOpenVideo = {},
             onSaveToGallery = {},
         ),

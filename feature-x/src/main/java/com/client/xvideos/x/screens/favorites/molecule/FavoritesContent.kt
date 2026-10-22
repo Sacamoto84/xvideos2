@@ -28,24 +28,23 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.favorites.atom.FavoritesHeader
 
 /**
  * Stateless-тело экрана «Избранное» — пригодно для [Preview] (без Hilt/Navigator).
  *
- * @param localUrlOf для скачанного видео возвращает `file://`-URL локального файла, иначе null.
- * @param onPlayLocal открыть локальное воспроизведение по `file://`-URL.
- * @param onOpenVideo открыть сетевой плеер для нескачанного видео.
+ * @param localVideoOf для скачанного видео — файл и обложка (превью из файла), иначе null.
+ * @param onOpenVideo открыть плеер: скачанный — файлом, остальные — из сети.
  */
 @Composable
 fun FavoritesContent(
     favorites: List<ItemsX>,
-    localUrlOf: (ItemsX) -> String?,
+    localVideoOf: (ItemsX) -> SavedLocalVideo?,
     posterUrlOf: (ItemsX) -> String,
     onDelete: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
-    onPlayLocal: (String, ItemsX) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     gridState: LazyGridState,
     modifier: Modifier = Modifier,
@@ -114,12 +113,10 @@ fun FavoritesContent(
                 items(items = favorites, key = { item -> item.id }, contentType = { "favorite_row" }) { item ->
                     FavoriteRow(
                         item = item,
-                        localUrl = localUrlOf(item),
-                        posterUrl = posterUrlOf(item),
+                        localVideo = localVideoOf(item),
                         onDelete = onDeleteItem,
                         onDownload = onDownload,
                         onSaveToGallery = onSaveToGallery,
-                        onPlayLocal = onPlayLocal,
                         onOpenVideo = onOpenVideo,
                     )
                 }
@@ -144,11 +141,10 @@ private fun FavoritesContentPreview() {
                 linkProfile = "/old4k",
             )
         ),
-        localUrlOf = { null },
+        localVideoOf = { null },
         posterUrlOf = { it.previewImage },
         onDelete = {},
         onDownload = {},
-        onPlayLocal = { _, _ -> },
         onOpenVideo = {},
         gridState = rememberLazyGridState(),
     )

@@ -11,10 +11,9 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.favorites.molecule.FavoritesContent
-import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
-import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import com.client.xvideos.x.screens.common.rememberLocalVideoOf
+import com.client.xvideos.x.screens.common.xVideoScreen
 
 class ScreenFavorites : Screen {
 
@@ -41,16 +40,13 @@ fun ScreenFavoritesContent(
     navigator: Navigator,
     modifier: Modifier = Modifier,
 ) {
-    // Множество id скачанных видео (реактивно) — для значка и локального воспроизведения.
+    // Множество id скачанных видео (реактивно) — для обложки в диалоге удаления.
     val downloadedIds by vm.saved.downloads.downloadedVideoIds.collectAsStateWithLifecycle()
 
     FavoritesContent(
         favorites = vm.favorites,
-        localUrlOf = remember(downloadedIds, vm.saved) {
-            { item ->
-                if (item.id in downloadedIds) vm.saved.downloads.localUrl(item.id) else null
-            }
-        },
+        // Скачанные: превью и плеер — из файла.
+        localVideoOf = rememberLocalVideoOf(vm.saved.downloads),
         posterUrlOf = remember(downloadedIds, vm.saved) {
             { item ->
                 if (item.id in downloadedIds) (vm.saved.downloads.localPosterPath(item.id) ?: item.previewImage)
@@ -60,8 +56,9 @@ fun ScreenFavoritesContent(
         onDelete = remember(vm) { { item -> vm.removeFavorite(item) } },
         onDownload = remember(vm) { { item -> vm.download(item) } },
         onSaveToGallery = remember(vm) { { item -> vm.saveToGallery(item) } },
-        onPlayLocal = remember(navigator) { { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) } },
-        onOpenVideo = remember(navigator) { { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) } },
+        onOpenVideo = remember(navigator, vm) {
+            { item -> navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id))) }
+        },
         gridState = vm.gridPosition.rememberState(),
         modifier = modifier,
     )

@@ -22,15 +22,15 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.XHistoryItem
-import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.history.atom.HistoryEmptyState
 import com.client.xvideos.x.screens.history.model.HistoryDialogData
 import com.client.xvideos.x.screens.history.molecule.HistoryDialogHost
 import com.client.xvideos.x.screens.history.molecule.HistoryGrid
 import com.client.xvideos.x.screens.history.model.HistoryRowActions
 import com.client.xvideos.x.screens.history.molecule.HistoryTopBarHost
-import com.client.xvideos.x.screens.videoplayer.ScreenX_LocalVideoPlayer
-import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
+import com.client.xvideos.x.screens.common.rememberLocalVideoOf
+import com.client.xvideos.x.screens.common.xVideoScreen
 
 /**
  * Контент экрана «История просмотров» раздела X.
@@ -60,11 +60,8 @@ fun ScreenXHistory(
                 }
             }
         },
-        localUrlOf = remember(downloadedIds, saved.downloads) {
-            { item ->
-                if (item.id in downloadedIds) saved.downloads.localUrl(item.id) else null
-            }
-        },
+        // Скачанные: превью и плеер — из файла.
+        localVideoOf = rememberLocalVideoOf(saved.downloads),
         posterUrlOf = remember(downloadedIds, saved.downloads) {
             { item ->
                 if (item.id in downloadedIds) {
@@ -78,8 +75,9 @@ fun ScreenXHistory(
         onClearAll = remember(saved.history) { { saved.history.clearAll() } },
         onDownload = remember(saved.downloads) { { saved.downloads.download(it) } },
         onSaveToGallery = remember(saved.downloads) { { saved.downloads.saveToGallery(it) } },
-        onPlayLocal = remember(navigator) { { url, item -> navigator.push(ScreenX_LocalVideoPlayer(url, item)) } },
-        onOpenVideo = remember(navigator) { { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) } },
+        onOpenVideo = remember(navigator, saved.downloads) {
+            { item -> navigator.push(xVideoScreen(item, saved.downloads.localVideo(item.id))) }
+        },
         gridState = gridState,
         modifier = modifier,
         onDeleteBatch = remember(saved.history) { { items -> saved.history.deleteBatch(items) } },
@@ -95,13 +93,12 @@ fun ScreenXHistoryContent(
     history: List<XHistoryItem>,
     isFavorite: (ItemsX) -> Boolean,
     onToggleFavorite: (ItemsX) -> Unit,
-    localUrlOf: (ItemsX) -> String?,
+    localVideoOf: (ItemsX) -> SavedLocalVideo?,
     posterUrlOf: (ItemsX) -> String,
     onDelete: (ItemsX) -> Unit,
     onClearAll: () -> Unit,
     onDownload: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit,
-    onPlayLocal: (String, ItemsX) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     gridState: LazyGridState,
     modifier: Modifier = Modifier,
@@ -167,12 +164,11 @@ fun ScreenXHistoryContent(
     }
     val onDeleteRequest: (ItemsX) -> Unit = remember { { item -> pendingDelete = item } }
 
-    val actions = remember(onToggleFavorite, onDeleteRequest, onDownload, onPlayLocal, onOpenVideo, onSaveToGallery) {
+    val actions = remember(onToggleFavorite, onDeleteRequest, onDownload, onOpenVideo, onSaveToGallery) {
         HistoryRowActions(
             onToggleFavorite = onToggleFavorite,
             onDelete = onDeleteRequest,
             onDownload = onDownload,
-            onPlayLocal = onPlayLocal,
             onOpenVideo = onOpenVideo,
             onSaveToGallery = onSaveToGallery,
         )
@@ -206,7 +202,7 @@ fun ScreenXHistoryContent(
                 selectedIds = selectedIds,
                 isSelectionMode = isSelectionMode,
                 isFavorite = isFavorite,
-                localUrlOf = localUrlOf,
+                localVideoOf = localVideoOf,
                 posterUrlOf = posterUrlOf,
                 actions = actions,
                 onToggleSelect = onToggleSelect,
@@ -223,13 +219,12 @@ private fun ScreenXHistoryContentPreview() {
         history = emptyList(),
         isFavorite = { false },
         onToggleFavorite = {},
-        localUrlOf = { null },
+        localVideoOf = { null },
         posterUrlOf = { "" },
         onDelete = {},
         onClearAll = {},
         onDownload = {},
         onSaveToGallery = {},
-        onPlayLocal = { _, _ -> },
         onOpenVideo = {},
         gridState = rememberLazyGridState(),
         onDeleteBatch = {}

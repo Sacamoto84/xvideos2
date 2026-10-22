@@ -25,6 +25,7 @@ import com.client.xvideos.x.model.XHistoryItem
 import com.client.xvideos.x.screens.history.atom.DurationOverlay
 import com.client.xvideos.x.screens.history.atom.HistoryWatchedBadge
 import com.client.xvideos.x.screens.history.atom.SelectionCheckBadge
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 private const val CARD_ASPECT_RATIO = 352f / 198f
 
@@ -35,7 +36,7 @@ private const val CARD_ASPECT_RATIO = 352f / 198f
 fun HistoryRow(
     historyItem: XHistoryItem,
     isFavorite: Boolean,
-    localUrl: String?,
+    localVideo: SavedLocalVideo?,
     posterUrl: String,
     isSelectionMode: Boolean,
     isSelected: Boolean,
@@ -55,7 +56,6 @@ fun HistoryRow(
     val handleToggleFavorite = remember(item, actions.onToggleFavorite) { { actions.onToggleFavorite(item) } }
     val handleDelete = remember(item, actions.onDelete) { { actions.onDelete(item) } }
     val handleDownload = remember(item, actions.onDownload) { { actions.onDownload(item) } }
-    val handlePlayLocal = remember(item, actions.onPlayLocal) { { url: String -> actions.onPlayLocal(url, item) } }
     val handleOpenVideo = remember(item, actions.onOpenVideo) { { actions.onOpenVideo(item) } }
     val handleSaveToGallery = remember(item, actions.onSaveToGallery) { { actions.onSaveToGallery(item) } }
 
@@ -77,11 +77,10 @@ fun HistoryRow(
     ) {
         HistoryCardMedia(
             item = item,
-            localUrl = localUrl,
+            localVideo = localVideo,
             posterUrl = posterUrl,
             isSelectionMode = selectionState.isSelectionMode,
             onToggleSelect = selectionState.onToggleSelect,
-            onPlayLocal = handlePlayLocal,
             onOpenVideo = handleOpenVideo,
         )
 
@@ -144,7 +143,7 @@ private fun HistoryRowPreview() {
     HistoryRow(
         historyItem = XHistoryItem(item = ItemsX(id = 1L, title = "Sample video", duration = "12:34")),
         isFavorite = false,
-        localUrl = null,
+        localVideo = null,
         posterUrl = "",
         isSelectionMode = false,
         isSelected = false,
@@ -153,7 +152,6 @@ private fun HistoryRowPreview() {
             onToggleFavorite = {},
             onDelete = {},
             onDownload = {},
-            onPlayLocal = { _, _ -> },
             onOpenVideo = {},
             onSaveToGallery = {},
         )

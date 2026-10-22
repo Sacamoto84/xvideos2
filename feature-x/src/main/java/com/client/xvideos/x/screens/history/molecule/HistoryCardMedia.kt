@@ -12,37 +12,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.icons.IconSave18
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 
 /**
- * Медиа-контент карточки истории (превью видео, локальное изображение или сетевое).
+ * Медиа-контент карточки истории: тап — превью (у скачанного — из файла),
+ * удержание и двойной тап — плеер (у скачанного — скачанный файл, решает
+ * [onOpenVideo] экрана). В режиме выбора у скачанного — постер, и тап с
+ * удержанием отмечают ролик.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HistoryCardMedia(
     item: ItemsX,
-    localUrl: String?,
+    localVideo: SavedLocalVideo?,
     posterUrl: String,
     isSelectionMode: Boolean,
     onToggleSelect: () -> Unit,
-    onPlayLocal: (String) -> Unit,
     onOpenVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Долгое нажатие открывает ролик, как в остальных сетках X, а в режиме выбора
     // отмечает его. Сам режим включает кнопка «Выбрать» в шапке: раньше его включало
     // долгое нажатие, и открыть ролик на весь экран было нельзя.
-    val onCombinedClick = remember(isSelectionMode, onToggleSelect, onPlayLocal, localUrl) {
-        {
-            if (isSelectionMode) {
-                onToggleSelect()
-            } else if (localUrl != null) {
-                onPlayLocal(localUrl)
-            }
-        }
-    }
-    val onRemoteOpen = remember(isSelectionMode, onToggleSelect, onOpenVideo) {
+    val onOpenOrSelect = remember(isSelectionMode, onToggleSelect, onOpenVideo) {
         {
             if (isSelectionMode) {
                 onToggleSelect()
@@ -52,27 +46,29 @@ fun HistoryCardMedia(
         }
     }
 
-    when {
-        localUrl != null -> {
-            UrlImage(
-                posterUrl,
-                modifier = modifier
-                    .fillMaxSize()
-                    .combinedClickable(
-                        onClick = onCombinedClick,
-                        onLongClick = onCombinedClick
-                    )
-            )
-            Row(modifier = Modifier.padding(4.dp)) {
-                IconSave18()
-            }
-        }
-        else -> UrlVideoImageAndLongClickX(
+    if (isSelectionMode && localVideo != null) {
+        UrlImage(
+            posterUrl,
+            modifier = modifier
+                .fillMaxSize()
+                .combinedClickable(
+                    onClick = onToggleSelect,
+                    onLongClick = onToggleSelect
+                )
+        )
+    } else {
+        UrlVideoImageAndLongClickX(
             item,
             modifier = modifier,
-            onLongClick = onRemoteOpen,
-            onDoubleClick = onRemoteOpen,
+            onLongClick = onOpenOrSelect,
+            onDoubleClick = onOpenOrSelect,
+            localVideo = localVideo,
         )
+    }
+    if (localVideo != null) {
+        Row(modifier = Modifier.padding(4.dp)) {
+            IconSave18()
+        }
     }
 }
 
@@ -81,11 +77,10 @@ fun HistoryCardMedia(
 private fun HistoryCardMediaPreview() {
     HistoryCardMedia(
         item = ItemsX(id = 1L, title = "Test"),
-        localUrl = null,
+        localVideo = null,
         posterUrl = "",
         isSelectionMode = false,
         onToggleSelect = {},
-        onPlayLocal = {},
         onOpenVideo = {}
     )
 }

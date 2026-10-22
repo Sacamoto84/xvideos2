@@ -23,6 +23,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.saved.atom.SavedHeader
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 /**
  * Сетка скачанных роликов с шапкой: две колонки на телефоне, больше на широком
@@ -36,7 +37,7 @@ fun X_SavedList(
     onPlayItem: (ItemsX) -> Unit = {},
     onDeleteItem: (ItemsX) -> Unit = {},
     onShareP2pItem: (ItemsX) -> Unit = {},
-    posterUrlProvider: (ItemsX) -> String = { it.previewImage },
+    localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -68,8 +69,8 @@ fun X_SavedList(
                 ) { item ->
                     SavedRow(
                         item = item,
-                        posterUrl = posterUrlProvider(item),
-                        onPlay = onPlayItem,
+                        localVideo = localVideoOf(item),
+                        onOpen = onPlayItem,
                         onDelete = onDeleteItem,
                         onShareP2p = onShareP2pItem,
                         modifier = Modifier.padding(horizontal = 1.dp),

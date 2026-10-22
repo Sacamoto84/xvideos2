@@ -1,12 +1,10 @@
 package com.client.xvideos.x.screens.saved.molecule
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,20 +23,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
+import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 
 @Composable
 fun SavedRow(
     item: ItemsX,
-    posterUrl: String,
-    onPlay: (ItemsX) -> Unit,
+    localVideo: SavedLocalVideo?,
+    onOpen: (ItemsX) -> Unit,
     onDelete: (ItemsX) -> Unit,
     onShareP2p: (ItemsX) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val handlePlay = remember(item, onPlay) { { onPlay(item) } }
+    val handleOpen = remember(item, onOpen) { { onOpen(item) } }
     val handleShareP2p = remember(item, onShareP2p) { { onShareP2p(item) } }
     val handleDelete = remember(item, onDelete) { { onDelete(item) } }
 
@@ -52,9 +51,14 @@ fun SavedRow(
                 .fillMaxWidth()
                 .aspectRatio(352f / 198f)
                 .background(Color.DarkGray)
-                .clickable(onClick = handlePlay)
         ) {
-            UrlImage(url = posterUrl, modifier = Modifier.fillMaxSize())
+            // Тап — превью из скачанного файла, удержание и двойной тап — плеер.
+            UrlVideoImageAndLongClickX(
+                item,
+                onLongClick = handleOpen,
+                onDoubleClick = handleOpen,
+                localVideo = localVideo,
+            )
 
             // Продолжительность видео в правом верхнем углу.
             Text(
@@ -114,8 +118,8 @@ private fun SavedRowPreview() {
             title = "Preview Title",
             duration = "10:00"
         ),
-        posterUrl = "",
-        onPlay = {},
+        localVideo = SavedLocalVideo(fileUrl = "file:///v.mp4", posterPath = null),
+        onOpen = {},
         onDelete = {},
         onShareP2p = {}
     )
