@@ -13,7 +13,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.screens.favorites.molecule.FavoritesContent
 import com.client.xvideos.x.screens.common.rememberLocalVideoOf
-import com.client.xvideos.x.screens.common.xVideoScreen
+import com.client.xvideos.x.screens.common.playerScreenFor
 
 class ScreenFavorites : Screen {
 
@@ -57,7 +57,7 @@ fun ScreenFavoritesContent(
         onDownload = remember(vm) { { item -> vm.download(item) } },
         onSaveToGallery = remember(vm) { { item -> vm.saveToGallery(item) } },
         onOpenVideo = remember(navigator, vm) {
-            { item -> navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id))) }
+            { item -> navigator.push(playerScreenFor(item, vm.saved.downloads.localVideo(item.id))) }
         },
         gridState = vm.gridPosition.rememberState(),
         modifier = modifier,

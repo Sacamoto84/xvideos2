@@ -50,7 +50,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.screens.common.rememberLocalVideoOf
-import com.client.xvideos.x.screens.common.xVideoScreen
+import com.client.xvideos.x.screens.common.playerScreenFor
 
 /**
  * Экран канала автора/студии X (`ScreenX_Channel`).
@@ -82,7 +82,7 @@ class ScreenX_Channel(
 
         val onOpenVideo = remember(navigator, vm) {
             { item: ItemsX ->
-                navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id)))
+                navigator.push(playerScreenFor(item, vm.saved.downloads.localVideo(item.id)))
             }
         }
 

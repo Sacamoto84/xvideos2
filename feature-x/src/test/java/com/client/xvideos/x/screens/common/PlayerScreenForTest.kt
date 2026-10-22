@@ -14,13 +14,13 @@ import org.junit.Test
  * скачанным файлом, несохранённый — из сети (спека
  * 2026-10-22-x-saved-card-local-preview-design.md).
  */
-class XVideoScreenTest {
+class PlayerScreenForTest {
 
     private val item = ItemsX(id = 5L, href = "/video5/x")
 
     @Test
     fun `сохранённый ролик открывается скачанным файлом`() {
-        val screen = xVideoScreen(item, SavedLocalVideo(fileUrl = "file:///d/5.mp4", posterPath = null))
+        val screen = playerScreenFor(item, SavedLocalVideo(fileUrl = "file:///d/5.mp4", posterPath = null))
 
         screen as ScreenX_LocalVideoPlayer
         assertEquals("file:///d/5.mp4", screen.fileUrl)
@@ -29,7 +29,7 @@ class XVideoScreenTest {
 
     @Test
     fun `несохранённый ролик открывается из сети`() {
-        val screen = xVideoScreen(item, null)
+        val screen = playerScreenFor(item, null)
 
         screen as ScreenX_VideoPlayer
         assertEquals(normalizeXUrl(item.href), screen.url)

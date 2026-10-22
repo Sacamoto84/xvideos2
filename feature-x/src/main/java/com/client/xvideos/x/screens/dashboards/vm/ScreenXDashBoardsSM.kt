@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import timber.log.Timber
 import javax.inject.Inject
-import com.client.xvideos.x.screens.common.xVideoScreen
+import com.client.xvideos.x.screens.common.playerScreenFor
 
 /**
  * ScreenModel главного экрана дашбордов (лент и категорий) раздела X.
@@ -65,7 +65,7 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
      * @param navigator Навигатор Voyager.
      */
     fun openVideoPlayer(item: ItemsX, navigator: Navigator) {
-        navigator.push(xVideoScreen(item, saved.downloads.localVideo(item.id)))
+        navigator.push(playerScreenFor(item, saved.downloads.localVideo(item.id)))
     }
 
     /** Скачать (сохранить) видео в раздел «Сохранённое». */

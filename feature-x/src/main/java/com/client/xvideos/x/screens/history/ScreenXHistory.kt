@@ -30,7 +30,7 @@ import com.client.xvideos.x.screens.history.model.HistoryRowActions
 import com.client.xvideos.x.screens.history.molecule.HistoryTopBarHost
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.screens.common.rememberLocalVideoOf
-import com.client.xvideos.x.screens.common.xVideoScreen
+import com.client.xvideos.x.screens.common.playerScreenFor
 
 /**
  * Контент экрана «История просмотров» раздела X.
@@ -76,7 +76,7 @@ fun ScreenXHistory(
         onDownload = remember(saved.downloads) { { saved.downloads.download(it) } },
         onSaveToGallery = remember(saved.downloads) { { saved.downloads.saveToGallery(it) } },
         onOpenVideo = remember(navigator, saved.downloads) {
-            { item -> navigator.push(xVideoScreen(item, saved.downloads.localVideo(item.id))) }
+            { item -> navigator.push(playerScreenFor(item, saved.downloads.localVideo(item.id))) }
         },
         gridState = gridState,
         modifier = modifier,

@@ -30,7 +30,7 @@ import com.client.xvideos.x.search.model.Channel
 import com.client.xvideos.x.search.model.Pornstar
 import com.client.xvideos.x.xProfileSlug
 import com.client.xvideos.x.screens.common.rememberLocalVideoOf
-import com.client.xvideos.x.screens.common.xVideoScreen
+import com.client.xvideos.x.screens.common.playerScreenFor
 
 /**
  * Автономный Voyager-экран вкладки поиска.
@@ -44,7 +44,7 @@ class ScreenXSearchTab : Screen {
         val navigator = LocalNavigator.currentOrThrow
         ScreenXSearchTabContent(
             vm = vm,
-            onOpenVideoPlayer = { item -> navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id))) },
+            onOpenVideoPlayer = { item -> navigator.push(playerScreenFor(item, vm.saved.downloads.localVideo(item.id))) },
             onOpenChannel = { slug, isModel -> navigator.push(ScreenX_Channel(slug = slug, isModel = isModel)) }
         )
     }

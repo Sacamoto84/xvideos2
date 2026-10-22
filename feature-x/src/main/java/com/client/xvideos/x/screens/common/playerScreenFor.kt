@@ -11,7 +11,7 @@ import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
  * Экран плеера для ролика [item] по удержанию и двойному тапу карточки:
  * сохранённый ([local] не `null`) — скачанный файл, остальные — из сети.
  */
-fun xVideoScreen(item: ItemsX, local: SavedLocalVideo?): Screen =
+fun playerScreenFor(item: ItemsX, local: SavedLocalVideo?): Screen =
     if (local != null) {
         ScreenX_LocalVideoPlayer(local.fileUrl, item)
     } else {

@@ -33,7 +33,7 @@ import com.client.xvideos.x.screens.tags.model.TagCellActions
 import com.client.xvideos.x.screens.tags.molecule.TagsPaginatedListScreen
 import kotlinx.coroutines.launch
 import com.client.xvideos.x.screens.common.rememberLocalVideoOf
-import com.client.xvideos.x.screens.common.xVideoScreen
+import com.client.xvideos.x.screens.common.playerScreenFor
 
 class ScreenTags(val tag: String) : Screen {
 
@@ -68,7 +68,7 @@ class ScreenTags(val tag: String) : Screen {
         val localVideoOf = rememberLocalVideoOf(vm.saved.downloads)
         val cellActions = remember(navigator, vm, localVideoOf) {
             TagCellActions(
-                onOpenVideo = { item -> navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id))) },
+                onOpenVideo = { item -> navigator.push(playerScreenFor(item, vm.saved.downloads.localVideo(item.id))) },
                 isFavorite = vm::isFavorite,
                 onFavoriteAdd = vm::addFavorite,
                 onFavoriteRemove = vm::removeFavorite,

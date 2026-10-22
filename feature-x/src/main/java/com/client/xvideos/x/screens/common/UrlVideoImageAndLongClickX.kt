@@ -32,7 +32,7 @@ private val EMPTY_FALLBACK_URLS = persistentListOf<String>()
  * Карточка ролика X: тап — превью в карточке, удержание и двойной тап — колбэки
  * вызывающего (обычно плеер). Для сохранённого ролика ([localVideo] не `null`)
  * превью и обложка — из скачанного файла, без сети; вызывающий ведёт удержание
- * в скачанный файл (`xVideoScreen`).
+ * в скачанный файл (`playerScreenFor`).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
