@@ -35,6 +35,7 @@ import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.model.ChannelSortOrder
 import com.client.xvideos.x.model.ItemsX
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 @Suppress("LongParameterList")
 @Composable
@@ -51,7 +52,7 @@ fun ChannelVideosPager(
     onRetryPage: (Int) -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     isFavorite: (Long) -> Boolean,
-    isDownloaded: (Long) -> Boolean,
+    localVideoOf: (ItemsX) -> SavedLocalVideo?,
     onFavoriteAdd: (ItemsX) -> Unit,
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
@@ -148,7 +149,7 @@ fun ChannelVideosPager(
                         ChannelVideoItem(
                             item = video,
                             isFavorite = isFavorite(video.id),
-                            isDownloaded = isDownloaded(video.id),
+                            localVideo = localVideoOf(video),
                             onOpenVideo = onOpenVideo,
                             onFavoriteAdd = onFavoriteAdd,
                             onFavoriteRemove = onFavoriteRemove,
@@ -197,7 +198,7 @@ private fun ChannelVideosPagerPreview() {
             onRetryPage = {},
             onOpenVideo = {},
             isFavorite = { false },
-            isDownloaded = { false },
+            localVideoOf = { null },
             onFavoriteAdd = {},
             onFavoriteRemove = {},
             onDownload = {},

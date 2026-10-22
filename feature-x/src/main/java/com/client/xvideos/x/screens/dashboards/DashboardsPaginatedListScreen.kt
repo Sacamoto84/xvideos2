@@ -43,6 +43,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 internal fun buildDashboardUrl(numberScreen: Int): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
@@ -66,6 +67,7 @@ fun DashboardsPaginatedListScreen(
     modifier: Modifier = Modifier,
     onSaveToGallery: (ItemsX) -> Unit = {},
     cachedPage: (Int) -> ImmutableList<ItemsX>? = { null },
+    localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
 ) {
     // Загруженная страница хранится в ScreenModel: возврат к ней (соседняя страница
     // пейджера, выход из плеера) показывает её сразу, без новой загрузки.
@@ -122,6 +124,7 @@ fun DashboardsPaginatedListScreen(
                 onSaveToGallery = onSaveToGallery,
                 openVideoPlayer = openVideoPlayer,
                 gridState = gridState,
+                localVideoOf = localVideoOf,
             )
             val topCutout = getTopInsetDp()
             if (hasError) {

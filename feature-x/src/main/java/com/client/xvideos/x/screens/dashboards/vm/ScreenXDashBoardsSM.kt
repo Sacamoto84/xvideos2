@@ -13,13 +13,11 @@ import com.client.xvideos.x.feature.country.CountryState
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.parcer.parseSiteCountryFlag
 import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.screens.common.PageCache
 import com.client.xvideos.x.screens.dashboards.buildDashboardUrl
 import com.client.xvideos.x.screens.dashboards.model.SavedTabListPositions
-import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -33,6 +31,7 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import timber.log.Timber
 import javax.inject.Inject
+import com.client.xvideos.x.screens.common.xVideoScreen
 
 /**
  * ScreenModel главного экрана дашбордов (лент и категорий) раздела X.
@@ -59,13 +58,14 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
     val savedListPositions = SavedTabListPositions()
 
     /**
-     * Открывает экран видеоплеера по карточке ролика.
+     * Открывает экран видеоплеера по карточке ролика: сохранённый — скачанным
+     * файлом, остальные — из сети.
      *
      * @param item Карточка ролика [ItemsX].
      * @param navigator Навигатор Voyager.
      */
     fun openVideoPlayer(item: ItemsX, navigator: Navigator) {
-        navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item))
+        navigator.push(xVideoScreen(item, saved.downloads.localVideo(item.id)))
     }
 
     /** Скачать (сохранить) видео в раздел «Сохранённое». */

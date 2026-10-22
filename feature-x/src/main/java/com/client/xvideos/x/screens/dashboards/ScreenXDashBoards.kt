@@ -51,6 +51,7 @@ import com.client.xvideos.x.screens.search.SearchUiMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import com.client.xvideos.x.screens.common.rememberLocalVideoOf
 
 private val mainTabs: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Dashboard,
@@ -160,6 +161,8 @@ fun ScreenXDashBoardsContent(
     val onOpenChannel: (String, Boolean) -> Unit = remember(navigator) {
         { slug, isModel -> navigator.push(ScreenX_Channel(slug = slug, isModel = isModel)) }
     }
+    // Сохранённые ролики в ленте: превью и плеер — из скачанного файла.
+    val localVideoOf = rememberLocalVideoOf(saved.downloads)
 
     val snapAnimationSpec = remember {
         spring(
@@ -231,6 +234,7 @@ fun ScreenXDashBoardsContent(
                 ) { pageIndex ->
                     DashboardsPaginatedListScreen(
                         pageIndex = pageIndex,
+                        localVideoOf = localVideoOf,
                         openVideoPlayer = onOpenVideoPlayer,
                         isFavorite = onIsFavorite,
                         onFavoriteAdd = onFavoriteAdd,

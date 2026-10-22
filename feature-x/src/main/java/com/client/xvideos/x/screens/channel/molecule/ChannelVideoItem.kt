@@ -24,6 +24,7 @@ import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 /**
  * Карточка видеоролика канала в сетке.
@@ -32,7 +33,7 @@ import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
 fun ChannelVideoItem(
     item: ItemsX,
     isFavorite: Boolean,
-    isDownloaded: Boolean,
+    localVideo: SavedLocalVideo?,
     onOpenVideo: (ItemsX) -> Unit,
     onFavoriteAdd: (ItemsX) -> Unit,
     onFavoriteRemove: (ItemsX) -> Unit,
@@ -58,6 +59,7 @@ fun ChannelVideoItem(
             item = item,
             onLongClick = handleOpen,
             onDoubleClick = handleOpen,
+            localVideo = localVideo,
         ) {
             // Длительность, иконка избранного и индикатор скачивания в правом нижнем углу
             Row(
@@ -67,7 +69,7 @@ fun ChannelVideoItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if (isDownloaded) {
+                if (localVideo != null) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
@@ -157,7 +159,7 @@ private fun ChannelVideoItemPreview() {
                 linkProfile = "/channels/sample",
             ),
             isFavorite = true,
-            isDownloaded = true,
+            localVideo = SavedLocalVideo(fileUrl = "file:///v.mp4", posterPath = null),
             onOpenVideo = {},
             onFavoriteAdd = {},
             onFavoriteRemove = {},

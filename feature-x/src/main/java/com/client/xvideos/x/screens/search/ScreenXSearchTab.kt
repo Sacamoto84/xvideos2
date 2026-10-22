@@ -21,16 +21,16 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
 import com.client.xvideos.x.screens.search.molecule.SearchHistoryView
 import com.client.xvideos.x.screens.search.molecule.SearchResultsView
 import com.client.xvideos.x.screens.search.molecule.SearchSuggestionsView
 import com.client.xvideos.x.screens.search.molecule.SearchTopBar
-import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import com.client.xvideos.x.search.model.Channel
 import com.client.xvideos.x.search.model.Pornstar
 import com.client.xvideos.x.xProfileSlug
+import com.client.xvideos.x.screens.common.rememberLocalVideoOf
+import com.client.xvideos.x.screens.common.xVideoScreen
 
 /**
  * Автономный Voyager-экран вкладки поиска.
@@ -44,7 +44,7 @@ class ScreenXSearchTab : Screen {
         val navigator = LocalNavigator.currentOrThrow
         ScreenXSearchTabContent(
             vm = vm,
-            onOpenVideoPlayer = { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) },
+            onOpenVideoPlayer = { item -> navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id))) },
             onOpenChannel = { slug, isModel -> navigator.push(ScreenX_Channel(slug = slug, isModel = isModel)) }
         )
     }
@@ -158,6 +158,8 @@ fun ScreenXSearchTabContent(
                     )
                 }
                 SearchUiMode.RESULTS -> {
+                    // Сохранённые ролики в выдаче: превью и плеер — из скачанного файла.
+                    val localVideoOf = rememberLocalVideoOf(vm.saved.downloads)
                     val onRetry = remember(vm) { { vm.retrySearch() } }
                     val isFavoriteFn: (Long) -> Boolean = remember(vm) { { id -> vm.isFavorite(id) } }
                     val onFavAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
@@ -174,7 +176,8 @@ fun ScreenXSearchTabContent(
                         onFavoriteRemove = onFavRemove,
                         onDownload = onDl,
                         onSaveToGallery = onGallery,
-                        openVideoPlayer = onOpenVideoPlayer
+                        openVideoPlayer = onOpenVideoPlayer,
+                        localVideoOf = localVideoOf,
                     )
                 }
             }

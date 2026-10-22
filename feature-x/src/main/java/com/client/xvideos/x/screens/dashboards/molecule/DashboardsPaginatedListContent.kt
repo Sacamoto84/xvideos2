@@ -18,6 +18,7 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 @OptIn(ExperimentalFoundationApi::class)
 @Suppress("DEPRECATION")
@@ -33,6 +34,7 @@ fun DashboardsPaginatedListContent(
     gridState: LazyGridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
     contentPadding: PaddingValues? = null,
     modifier: Modifier = Modifier,
+    localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
 ) {
     val topCutout = getTopInsetDp()
     val actualContentPadding = contentPadding ?: remember(topCutout) { PaddingValues(top = topCutout) }
@@ -55,6 +57,7 @@ fun DashboardsPaginatedListContent(
                 onFavoriteRemove = onFavoriteRemove,
                 onDownload = onDownload,
                 onSaveToGallery = onSaveToGallery,
+                localVideo = localVideoOf(cell),
             )
         }
     }

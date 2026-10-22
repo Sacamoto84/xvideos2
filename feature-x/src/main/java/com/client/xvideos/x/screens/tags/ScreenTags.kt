@@ -27,13 +27,13 @@ import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
 import com.client.xvideos.x.screens.tags.atom.TagsHeader
 import com.client.xvideos.x.screens.tags.model.TagCellActions
 import com.client.xvideos.x.screens.tags.molecule.TagsPaginatedListScreen
-import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.launch
+import com.client.xvideos.x.screens.common.rememberLocalVideoOf
+import com.client.xvideos.x.screens.common.xVideoScreen
 
 class ScreenTags(val tag: String) : Screen {
 
@@ -64,14 +64,17 @@ class ScreenTags(val tag: String) : Screen {
         val loadPage: suspend (Int) -> List<ItemsX> = remember(vm) {
             { page -> vm.loadPage(page).items }
         }
-        val cellActions = remember(navigator, vm) {
+        // Сохранённые ролики по тегу: превью и плеер — из скачанного файла.
+        val localVideoOf = rememberLocalVideoOf(vm.saved.downloads)
+        val cellActions = remember(navigator, vm, localVideoOf) {
             TagCellActions(
-                onOpenVideo = { item -> navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item)) },
+                onOpenVideo = { item -> navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id))) },
                 isFavorite = vm::isFavorite,
                 onFavoriteAdd = vm::addFavorite,
                 onFavoriteRemove = vm::removeFavorite,
                 onDownload = vm::download,
                 onSaveToGallery = vm::saveToGallery,
+                localVideoOf = localVideoOf,
             )
         }
 

@@ -21,6 +21,7 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.dashboards.atom.ShadowedDurationText
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 @Composable
 fun DashboardGridCell(
@@ -32,6 +33,7 @@ fun DashboardGridCell(
     onDownload: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit,
     modifier: Modifier = Modifier,
+    localVideo: SavedLocalVideo? = null,
 ) {
     val handleOpen = remember(cell, openVideoPlayer) { { openVideoPlayer(cell) } }
     val handleFavoriteAdd = remember(cell, onFavoriteAdd) { { onFavoriteAdd(cell) } }
@@ -51,6 +53,7 @@ fun DashboardGridCell(
             cell,
             onLongClick = handleOpen,
             onDoubleClick = handleOpen,
+            localVideo = localVideo,
         ) {
             if (durationText.isNotEmpty()) {
                 ShadowedDurationText(durationText = durationText)

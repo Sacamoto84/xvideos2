@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.dashboards.molecule.DashboardsPaginatedListContent
 import kotlinx.collections.immutable.toImmutableList
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 /**
  * Отображение результатов поиска видеороликов.
@@ -40,6 +41,7 @@ fun SearchResultsView(
     onSaveToGallery: (ItemsX) -> Unit,
     openVideoPlayer: (ItemsX) -> Unit,
     modifier: Modifier = Modifier,
+    localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         when {
@@ -87,7 +89,8 @@ fun SearchResultsView(
                     onDownload = onDownload,
                     openVideoPlayer = openVideoPlayer,
                     onSaveToGallery = onSaveToGallery,
-                    contentPadding = PaddingValues(top = 2.dp, bottom = 4.dp)
+                    contentPadding = PaddingValues(top = 2.dp, bottom = 4.dp),
+                    localVideoOf = localVideoOf,
                 )
             }
         }

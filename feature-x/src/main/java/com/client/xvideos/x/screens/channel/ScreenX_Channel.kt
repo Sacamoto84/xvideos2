@@ -9,7 +9,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -39,7 +38,6 @@ import com.client.xvideos.x.model.ChannelUiState
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ProfileType
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
-import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.screens.channel.atom.ChannelStatusCover
 import com.client.xvideos.x.screens.channel.model.rememberChannelHeaderCollapseState
 import com.client.xvideos.x.screens.channel.molecule.ChannelCollapsingLayout
@@ -48,9 +46,11 @@ import com.client.xvideos.x.screens.channel.molecule.ChannelHeader
 import com.client.xvideos.x.screens.channel.molecule.ChannelPagerBottomBar
 import com.client.xvideos.x.screens.channel.molecule.ChannelStickyBar
 import com.client.xvideos.x.screens.channel.molecule.ChannelVideosPager
-import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayer
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
+import com.client.xvideos.x.screens.common.rememberLocalVideoOf
+import com.client.xvideos.x.screens.common.xVideoScreen
 
 /**
  * Экран канала автора/студии X (`ScreenX_Channel`).
@@ -80,15 +80,15 @@ class ScreenX_Channel(
 
         val onBack = remember(navigator) { { navigator.pop().let {} } }
 
-        val onOpenVideo = remember(navigator) {
+        val onOpenVideo = remember(navigator, vm) {
             { item: ItemsX ->
-                navigator.push(ScreenX_VideoPlayer(normalizeXUrl(item.href), item))
+                navigator.push(xVideoScreen(item, vm.saved.downloads.localVideo(item.id)))
             }
         }
 
-        val downloadedVideoIds by vm.saved.downloads.downloadedVideoIds.collectAsState()
         val isFavorite: (Long) -> Boolean = remember(vm) { { id -> vm.isFavorite(id) } }
-        val isDownloaded: (Long) -> Boolean = remember(downloadedVideoIds) { { id -> downloadedVideoIds.contains(id) } }
+        // Сохранённые ролики канала: превью и плеер — из скачанного файла.
+        val localVideoOf = rememberLocalVideoOf(vm.saved.downloads)
         val onFavoriteAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
         val onFavoriteRemove: (ItemsX) -> Unit = remember(vm) { { item -> vm.removeFavorite(item) } }
         val onDownload: (ItemsX) -> Unit = remember(vm) { { item -> vm.download(item) } }
@@ -139,7 +139,7 @@ class ScreenX_Channel(
             onRetryInitial = vm::loadInitial,
             onOpenVideo = onOpenVideo,
             isFavorite = isFavorite,
-            isDownloaded = isDownloaded,
+            localVideoOf = localVideoOf,
             onFavoriteAdd = onFavoriteAdd,
             onFavoriteRemove = onFavoriteRemove,
             onDownload = onDownload,
@@ -172,7 +172,7 @@ fun ScreenX_ChannelContent(
     onRetryInitial: () -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
     isFavorite: (Long) -> Boolean = { false },
-    isDownloaded: (Long) -> Boolean = { false },
+    localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
     onFavoriteAdd: (ItemsX) -> Unit = {},
     onFavoriteRemove: (ItemsX) -> Unit = {},
     onDownload: (ItemsX) -> Unit = {},
@@ -280,7 +280,7 @@ fun ScreenX_ChannelContent(
                     onRetryPage = onRetryPage,
                     onOpenVideo = onOpenVideo,
                     isFavorite = isFavorite,
-                    isDownloaded = isDownloaded,
+                    localVideoOf = localVideoOf,
                     onFavoriteAdd = onFavoriteAdd,
                     onFavoriteRemove = onFavoriteRemove,
                     onDownload = onDownload,

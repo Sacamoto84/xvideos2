@@ -19,6 +19,7 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.urlVideoImage.UrlVideoLite
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
 import com.client.xvideos.ui.theme.XvideosTheme
+import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parserVideoPreviewFromImageUrl
 import kotlinx.collections.immutable.persistentListOf
@@ -27,6 +28,12 @@ import timber.log.Timber
 private const val NULL_STRING = "null"
 private val EMPTY_FALLBACK_URLS = persistentListOf<String>()
 
+/**
+ * Карточка ролика X: тап — превью в карточке, удержание и двойной тап — колбэки
+ * вызывающего (обычно плеер). Для сохранённого ролика ([localVideo] не `null`)
+ * превью и обложка — из скачанного файла, без сети; вызывающий ведёт удержание
+ * в скачанный файл (`xVideoScreen`).
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UrlVideoImageAndLongClickX(
@@ -34,6 +41,7 @@ fun UrlVideoImageAndLongClickX(
     modifier: Modifier = Modifier,
     onLongClick: () -> Unit,
     onDoubleClick: () -> Unit,
+    localVideo: SavedLocalVideo? = null,
     overlay: @Composable () -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
@@ -95,17 +103,26 @@ fun UrlVideoImageAndLongClickX(
                 onClick = handleClick
             )
     ) {
-        if (isVideo) {
-            UrlVideoLite(
+        // Обложка сохранённого ролика — скачанная, если есть.
+        val posterUrl = localVideo?.posterPath ?: item.previewImage
+        when {
+            isVideo && localVideo != null -> LocalVideoPreview(
+                video = localVideo,
+                posterUrl = posterUrl,
+                onClick = handleVideoClick,
+                modifier = Modifier.fillMaxSize()
+            )
+            isVideo -> UrlVideoLite(
                 url = previewVideoUrl.orEmpty(),
                 posterUrl = item.previewImage,
                 modifier = Modifier.fillMaxSize(),
                 fallbackUrls = fallbackUrls,
                 onClick = handleVideoClick
             )
-        } else {
-            UrlImage(item.previewImage, modifier = Modifier.fillMaxWidth())
-            overlay()
+            else -> {
+                UrlImage(posterUrl, modifier = Modifier.fillMaxWidth())
+                overlay()
+            }
         }
     }
 }

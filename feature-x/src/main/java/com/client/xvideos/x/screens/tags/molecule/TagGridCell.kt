@@ -41,6 +41,7 @@ fun TagGridCell(
             cell,
             onLongClick = handleOpen,
             onDoubleClick = handleOpen,
+            localVideo = actions.localVideoOf(cell),
         ) {
             Box(modifier = Modifier.align(Alignment.TopEnd)) {
                 X_DashboardExpandMenu(
