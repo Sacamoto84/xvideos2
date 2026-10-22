@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
+import com.client.xvideos.x.screens.videoplayer.model.panelTouchTarget
 
 /**
  * Верхняя панель управления видеоплеером в полноэкранном режиме.
@@ -56,6 +57,8 @@ fun PlayerFullScreenTopBar(
                     colors = listOf(Color(0xCC000000), Color.Transparent)
                 )
             )
+            // Касания по панели не уходят к видео (свайп ±5 с, тап).
+            .panelTouchTarget()
             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,

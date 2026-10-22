@@ -41,6 +41,7 @@ import com.client.xvideos.x.screens.videoplayer.atom.FitModeToggle
 import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
 import com.client.xvideos.x.screens.videoplayer.model.finishSeekDrag
 import com.client.xvideos.x.screens.videoplayer.model.finishSeekDragIfActive
+import com.client.xvideos.x.screens.videoplayer.model.panelTouchTarget
 import java.util.Locale
 
 /**
@@ -112,6 +113,8 @@ fun X_PlayerBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .background(Color(0x73000000))
+            // Касания по панели не уходят к видео (свайп ±5 с, тап).
+            .panelTouchTarget()
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
