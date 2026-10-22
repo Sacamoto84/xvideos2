@@ -54,21 +54,22 @@ class RSubscriptionsFeedTest {
         Dispatchers.resetMain()
     }
 
-    private fun kotlinx.coroutines.test.TestScope.subscriptions(vararg creators: String): R_Saved_Subscriptions {
-        val store = R_Saved_Subscriptions(
+    // Список выбранных авторов тесты не трогают: ленту они грузят по явному
+    // списку имён. Раньше хелпер заполнял его с потока теста, а `init` в это
+    // время синхронизировал тот же список на потоке IO, и тест изредка падал с
+    // ConcurrentModificationException (проход 213, T1).
+    private fun kotlinx.coroutines.test.TestScope.subscriptions(): R_Saved_Subscriptions =
+        R_Saved_Subscriptions(
             scope = backgroundScope,
             redApi = RedApi(AppFileDatabase()),
             loadCreatorGifs = { name -> loadCreator(name) },
             notifyPartialFailure = { notices += it },
         )
-        creators.forEach { store.selectedListCreator.add(SelectedCreator(it, true, null)) }
-        return store
-    }
 
     @Test
     fun `без сети лента подписок — ошибка, а не пустой список`() = runTest {
         loadCreator = { throw IOException("нет сети") }
-        val store = subscriptions("a", "b")
+        val store = subscriptions()
 
         val error = runCatching { store.loadSubscriptionFeed(listOf("a", "b")) }.exceptionOrNull()
 
@@ -78,7 +79,7 @@ class RSubscriptionsFeedTest {
     @Test
     fun `сбой части авторов отдаёт остальных и сообщает о пропуске`() = runTest {
         loadCreator = { name -> if (name == "b") throw IOException("обрыв") else listOf(GifsInfo(id = "gif_$name", userName = name)) }
-        val store = subscriptions("a", "b", "c")
+        val store = subscriptions()
 
         val feed = store.loadSubscriptionFeed(listOf("a", "b", "c"))
 
@@ -89,7 +90,7 @@ class RSubscriptionsFeedTest {
     @Test
     fun `ролики одного id от разных авторов в ленте не повторяются`() = runTest {
         loadCreator = { listOf(GifsInfo(id = "same", userName = it)) }
-        val store = subscriptions("a", "b")
+        val store = subscriptions()
 
         val feed = store.loadSubscriptionFeed(listOf("a", "b"))
 
@@ -112,7 +113,7 @@ class RSubscriptionsFeedTest {
             listOf(GifsInfo(id = "gif_$name", userName = name))
         }
         val names = (1..10).map { "c$it" }
-        val store = subscriptions(*names.toTypedArray())
+        val store = subscriptions()
 
         val feed = async { store.loadSubscriptionFeed(names) }
         testScheduler.advanceUntilIdle()
