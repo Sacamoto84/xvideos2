@@ -23,6 +23,7 @@ import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.ActressesIndexItem
 import com.client.xvideos.x.model.ActressesIndexUiState
+import com.client.xvideos.x.model.CatalogProfileHit
 import com.client.xvideos.x.screens.actresses.molecule.ActressesIndexGrid
 import com.client.xvideos.x.screens.actresses.molecule.ActressesIndexTopBar
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
@@ -67,6 +68,12 @@ class ScreenX_ActressesIndex(
             }
         }
 
+        val onProfileClick = remember(navigator) {
+            { hit: CatalogProfileHit ->
+                navigator.push(ScreenX_Channel(slug = hit.slug, isModel = hit.isModel))
+            }
+        }
+
         ScreenX_ActressesIndexContent(
             uiState = vm.uiState,
             gridState = vm.gridPosition.rememberState(),
@@ -78,11 +85,13 @@ class ScreenX_ActressesIndex(
             onToggleDropdown = vm::toggleDropdown,
             onSelectOption = vm::selectFilterOption,
             onSearchQueryChange = vm::onDropdownSearchQueryChange,
+            onProfileClick = onProfileClick,
             onCloseDropdown = vm::closeDropdown,
         )
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 fun ScreenX_ActressesIndexContent(
     uiState: ActressesIndexUiState,
@@ -95,6 +104,7 @@ fun ScreenX_ActressesIndexContent(
     onToggleDropdown: (ActressesIndexDropdownType) -> Unit,
     onSelectOption: (ActressesIndexFilterOption) -> Unit,
     onSearchQueryChange: (String) -> Unit,
+    onProfileClick: (CatalogProfileHit) -> Unit,
     onCloseDropdown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -124,11 +134,12 @@ fun ScreenX_ActressesIndexContent(
                 topCutout = topCutout,
                 catalog = uiState.catalog,
                 activeDropdown = uiState.activeDropdown,
-                searchQuery = uiState.dropdownSearchQuery,
+                search = uiState.dropdownSearch,
                 onBack = onBack,
                 onToggleDropdown = onToggleDropdown,
                 onSelectOption = onSelectOption,
                 onSearchQueryChange = onSearchQueryChange,
+                onProfileClick = onProfileClick,
                 onCloseDropdown = onCloseDropdown,
             )
         }
@@ -158,6 +169,7 @@ private fun ScreenX_ActressesIndexContentPreview() {
         onToggleDropdown = {},
         onSelectOption = {},
         onSearchQueryChange = {},
+        onProfileClick = {},
         onCloseDropdown = {}
     )
 }

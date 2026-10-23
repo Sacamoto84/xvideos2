@@ -83,8 +83,47 @@ data class ActressesIndexFilterGroup(
     val displayTitle: String get() = selectedOption?.title?.ifBlank { activeTitle } ?: activeTitle
 }
 
+/** Кого ищет поиск по имени в каталоге: рейтинг моделей — модели, рейтинг каналов — каналы. */
+enum class CatalogProfileKind : Serializable {
+    MODELS,
+    CHANNELS,
+}
+
+/**
+ * Страна для поиска «конкретной страны» каталога.
+ *
+ * @property code Код страны (`"EE"`) — по нему Android даёт название на языке устройства.
+ * @property token Часть адреса рейтинга страны (`"estonia"`), подставляется в шаблон каталога.
+ */
+@Immutable
+data class CatalogCountry(
+    val code: String,
+    val token: String,
+) : Serializable
+
+/**
+ * Найденный по имени профиль (модель или канал) из общего поиска сайта.
+ *
+ * @property slug Идентификатор профиля для экрана канала.
+ * @property subscribers Число подписчиков текстом сайта, может быть пустым.
+ */
+@Immutable
+data class CatalogProfileHit(
+    val name: String,
+    val slug: String,
+    val avatarUrl: String,
+    val subscribers: String,
+    val isModel: Boolean,
+) : Serializable
+
 /**
  * Распарсенные данные одной страницы каталога актрис/моделей.
+ *
+ * @property profileTypeFilter Второй список: типы моделей, а у рейтинга каналов — основная
+ *   категория («Гетеросексуальный» / «Геи» / «Трансы»), списка типов там нет.
+ * @property profileKind Кого ищет поиск по имени во втором списке.
+ * @property countries Все страны, по которым есть рейтинг (из настроек страницы).
+ * @property countryUrlTemplate Адрес рейтинга страны с `%country_token%` вместо страны.
  */
 @Immutable
 data class ActressesIndexCatalog(
@@ -98,11 +137,32 @@ data class ActressesIndexCatalog(
     val totalPages: Int = 1,
     val hasNextPage: Boolean = false,
     val nextPageUrl: String = "",
+    val profileKind: CatalogProfileKind = CatalogProfileKind.MODELS,
+    val countries: List<CatalogCountry> = emptyList(),
+    val countryUrlTemplate: String = "",
 ) : Serializable {
     companion object {
         val EMPTY = ActressesIndexCatalog()
     }
 }
+
+/**
+ * Поиск в открытом выпадающем списке каталога.
+ *
+ * @property query Введённый текст.
+ * @property countryHits Найденные страны (список стран).
+ * @property profileHits Найденные по имени модели или каналы (второй список).
+ * @property isLoading Запрос поиска по имени ещё идёт.
+ * @property error Поиск по имени не удался (сеть).
+ */
+@Immutable
+data class CatalogDropdownSearch(
+    val query: String = "",
+    val countryHits: List<ActressesIndexFilterOption> = emptyList(),
+    val profileHits: List<CatalogProfileHit> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+) : Serializable
 
 /**
  * Состояние пользовательского интерфейса экрана каталога рейтингов актрис.
@@ -114,7 +174,7 @@ data class ActressesIndexUiState(
     val catalog: ActressesIndexCatalog = ActressesIndexCatalog.EMPTY,
     val items: List<ActressesIndexItem> = emptyList(),
     val activeDropdown: ActressesIndexDropdownType? = null,
-    val dropdownSearchQuery: String = "",
+    val dropdownSearch: CatalogDropdownSearch = CatalogDropdownSearch(),
     val isLoadingInitial: Boolean = true,
     val isLoadingMore: Boolean = false,
     val isEndReached: Boolean = false,

@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ActressesIndexCatalog
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
+import com.client.xvideos.x.model.CatalogDropdownSearch
+import com.client.xvideos.x.model.CatalogProfileHit
 import com.client.xvideos.x.screens.actresses.atom.FilterButton
 
 /**
@@ -32,10 +34,11 @@ import com.client.xvideos.x.screens.actresses.atom.FilterButton
 fun ActressesFilterBar(
     catalog: ActressesIndexCatalog,
     activeDropdown: ActressesIndexDropdownType?,
-    searchQuery: String,
+    search: CatalogDropdownSearch,
     onToggleDropdown: (ActressesIndexDropdownType) -> Unit,
     onSelectOption: (ActressesIndexFilterOption) -> Unit,
     onSearchQueryChange: (String) -> Unit,
+    onProfileClick: (CatalogProfileHit) -> Unit,
     onCloseDropdown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -91,9 +94,12 @@ fun ActressesFilterBar(
             if (group != null) {
                 DropdownOptionsPanel(
                     group = group,
-                    searchQuery = searchQuery,
+                    profileKind = catalog.profileKind,
+                    countryCount = catalog.countries.size,
+                    search = search,
                     onSearchQueryChange = onSearchQueryChange,
                     onSelectOption = onSelectOption,
+                    onProfileClick = onProfileClick,
                     onClose = onCloseDropdown,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
@@ -108,10 +114,11 @@ private fun ActressesFilterBarPreview() {
     ActressesFilterBar(
         catalog = ActressesIndexCatalog(),
         activeDropdown = null,
-        searchQuery = "",
+        search = CatalogDropdownSearch(),
         onToggleDropdown = {},
         onSelectOption = {},
         onSearchQueryChange = {},
+        onProfileClick = {},
         onCloseDropdown = {}
     )
 }

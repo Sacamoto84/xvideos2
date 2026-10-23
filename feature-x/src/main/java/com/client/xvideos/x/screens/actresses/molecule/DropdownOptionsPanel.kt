@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -32,23 +33,40 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterGroup
 import com.client.xvideos.x.model.ActressesIndexFilterOption
+import com.client.xvideos.x.model.CatalogDropdownSearch
+import com.client.xvideos.x.model.CatalogProfileHit
+import com.client.xvideos.x.model.CatalogProfileKind
+import com.client.xvideos.x.screens.actresses.atom.CatalogProfileHitRow
 import com.client.xvideos.x.screens.actresses.atom.DropdownOptionRow
 import com.client.xvideos.x.screens.actresses.atom.DropdownOptionsSearchField
+import com.client.xvideos.x.screens.actresses.atom.DropdownSearchMessage
 
+/**
+ * Открытый выпадающий список каталога.
+ *
+ * Список стран ищет по всем странам каталога ([countryCount] — сколько их),
+ * второй список — модели или каналы по имени ([profileKind]). Пока запрос пуст,
+ * виден сам список; с запросом — найденное.
+ */
 @Composable
 fun DropdownOptionsPanel(
     group: ActressesIndexFilterGroup,
-    searchQuery: String,
+    profileKind: CatalogProfileKind,
+    countryCount: Int,
+    search: CatalogDropdownSearch,
     onSearchQueryChange: (String) -> Unit,
     onSelectOption: (ActressesIndexFilterOption) -> Unit,
+    onProfileClick: (CatalogProfileHit) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showSearch = group.type == ActressesIndexDropdownType.GEO || group.type == ActressesIndexDropdownType.PROFILE_TYPE
-    val filteredOptions = if (searchQuery.isBlank()) {
-        group.options
-    } else {
-        group.options.filter { it.matches(searchQuery) }
+    val isGeo = group.type == ActressesIndexDropdownType.GEO
+    val showSearch = group.type == ActressesIndexDropdownType.PROFILE_TYPE || (isGeo && countryCount > 0)
+    val isSearching = showSearch && search.query.isNotBlank()
+    val placeholder = when {
+        isGeo -> "Поиск страны..."
+        profileKind == CatalogProfileKind.CHANNELS -> "Поиск канала..."
+        else -> "Поиск профиля..."
     }
 
     Column(
@@ -89,38 +107,48 @@ fun DropdownOptionsPanel(
         if (showSearch) {
             Spacer(modifier = Modifier.height(4.dp))
             DropdownOptionsSearchField(
-                groupType = group.type,
-                searchQuery = searchQuery,
+                placeholder = placeholder,
+                searchQuery = search.query,
                 onSearchQueryChange = onSearchQueryChange
             )
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Список опций
+        // Список опций или найденное
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 260.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            if (filteredOptions.isEmpty()) {
-                Box(
+            when {
+                !isSearching -> if (group.options.isEmpty()) {
+                    DropdownSearchMessage(text = "Ничего не найдено")
+                } else {
+                    group.options.forEach { option ->
+                        DropdownOptionRow(option = option, onSelectOption = onSelectOption)
+                    }
+                }
+                isGeo -> if (search.countryHits.isEmpty()) {
+                    DropdownSearchMessage(text = "Ничего не найдено")
+                } else {
+                    search.countryHits.forEach { option ->
+                        DropdownOptionRow(option = option, onSelectOption = onSelectOption)
+                    }
+                }
+                search.profileHits.isNotEmpty() -> search.profileHits.forEach { hit ->
+                    CatalogProfileHitRow(hit = hit, onClick = onProfileClick)
+                }
+                search.isLoading -> Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Ничего не найдено",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
+                    CircularProgressIndicator(color = Color(0xFFDE2600), strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
                 }
-            } else {
-                filteredOptions.forEach { option ->
-                    DropdownOptionRow(option = option, onSelectOption = onSelectOption)
-                }
+                else -> DropdownSearchMessage(text = search.error ?: "Ничего не найдено")
             }
         }
     }
@@ -137,9 +165,12 @@ private fun DropdownOptionsPanelPreview() {
                 ActressesIndexFilterOption(title = "Бразилия", urlPath = "/from/brazil", isActive = false)
             )
         ),
-        searchQuery = "",
+        profileKind = CatalogProfileKind.MODELS,
+        countryCount = 0,
+        search = CatalogDropdownSearch(),
         onSearchQueryChange = {},
         onSelectOption = {},
+        onProfileClick = {},
         onClose = {}
     )
 }

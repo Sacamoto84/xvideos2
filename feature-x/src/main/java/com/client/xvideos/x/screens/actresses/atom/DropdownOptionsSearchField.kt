@@ -35,7 +35,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.common.ui.excludedFromAutofill
 
 private val AccentColor = Color(0xFFDE2600)
@@ -49,7 +48,7 @@ private val AccentColor = Color(0xFFDE2600)
  */
 @Composable
 fun DropdownOptionsSearchField(
-    groupType: ActressesIndexDropdownType,
+    placeholder: String,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -84,7 +83,7 @@ fun DropdownOptionsSearchField(
         ) {
             if (searchQuery.isEmpty()) {
                 Text(
-                    text = if (groupType == ActressesIndexDropdownType.GEO) "Поиск страны..." else "Поиск типа профиля...",
+                    text = placeholder,
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -121,7 +120,7 @@ fun DropdownOptionsSearchField(
 @Composable
 private fun DropdownOptionsSearchFieldPreview() {
     DropdownOptionsSearchField(
-        groupType = ActressesIndexDropdownType.GEO,
+        placeholder = "Поиск страны...",
         searchQuery = "",
         onSearchQueryChange = {}
     )

@@ -27,7 +27,10 @@ import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.x.model.ActressesIndexCatalog
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
+import com.client.xvideos.x.model.CatalogDropdownSearch
+import com.client.xvideos.x.model.CatalogProfileHit
 
+@Suppress("LongParameterList")
 @Composable
 fun ActressesIndexTopBar(
     title: String,
@@ -35,11 +38,12 @@ fun ActressesIndexTopBar(
     topCutout: Dp,
     catalog: ActressesIndexCatalog,
     activeDropdown: ActressesIndexDropdownType?,
-    searchQuery: String,
+    search: CatalogDropdownSearch,
     onBack: () -> Unit,
     onToggleDropdown: (ActressesIndexDropdownType) -> Unit,
     onSelectOption: (ActressesIndexFilterOption) -> Unit,
     onSearchQueryChange: (String) -> Unit,
+    onProfileClick: (CatalogProfileHit) -> Unit,
     onCloseDropdown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -99,10 +103,11 @@ fun ActressesIndexTopBar(
         ActressesFilterBar(
             catalog = catalog,
             activeDropdown = activeDropdown,
-            searchQuery = searchQuery,
+            search = search,
             onToggleDropdown = onToggleDropdown,
             onSelectOption = onSelectOption,
             onSearchQueryChange = onSearchQueryChange,
+            onProfileClick = onProfileClick,
             onCloseDropdown = onCloseDropdown,
         )
     }
@@ -117,11 +122,12 @@ private fun ActressesIndexTopBarPreview() {
         topCutout = 0.dp,
         catalog = ActressesIndexCatalog(),
         activeDropdown = null,
-        searchQuery = "",
+        search = CatalogDropdownSearch(),
         onBack = {},
         onToggleDropdown = {},
         onSelectOption = {},
         onSearchQueryChange = {},
+        onProfileClick = {},
         onCloseDropdown = {}
     )
 }

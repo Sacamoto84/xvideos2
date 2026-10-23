@@ -5,6 +5,8 @@ import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterGroup
 import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.ActressesIndexItem
+import com.client.xvideos.x.model.CatalogCountry
+import com.client.xvideos.x.model.CatalogProfileKind
 import com.client.xvideos.x.xProfileSlug
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -40,13 +42,33 @@ fun parseActressesIndexPage(document: Document): ActressesIndexCatalog {
         defaultTitle = "Мировые модели"
     )
 
-    val profileTypeFilter = parseFilterGroup(
-        document = document,
-        buttonClass = "btn-profile-links",
-        listClass = "profile-links",
-        type = ActressesIndexDropdownType.PROFILE_TYPE,
-        defaultTitle = "Порноактрисы"
-    )
+    // У рейтинга каналов списка типов профиля нет: на его месте основная категория.
+    val isChannelsIndex = document.selectFirst(".btn-profile-links") == null &&
+        document.selectFirst(".btn-main-cats-links") != null
+    val profileTypeFilter = if (isChannelsIndex) {
+        parseFilterGroup(
+            document = document,
+            buttonClass = "btn-main-cats-links",
+            listClass = "main-cats-links",
+            type = ActressesIndexDropdownType.PROFILE_TYPE,
+            defaultTitle = "Гетеросексуальный"
+        )
+    } else {
+        parseFilterGroup(
+            document = document,
+            buttonClass = "btn-profile-links",
+            listClass = "profile-links",
+            type = ActressesIndexDropdownType.PROFILE_TYPE,
+            defaultTitle = "Порноактрисы"
+        )
+    }
+
+    // Все страны и шаблон адреса — из настроек страницы, как у поиска страны на сайте.
+    val scripts = document.select("script").joinToString("\n") { it.data() }
+    val countries = AV_COUNTRIES_REGEX.find(scripts)?.groupValues?.get(1)?.let { body ->
+        COUNTRY_PAIR_REGEX.findAll(body).map { CatalogCountry(it.groupValues[1], it.groupValues[2]) }.toList()
+    }.orEmpty()
+    val countryUrlTemplate = COUNTRY_URL_REGEX.find(scripts)?.groupValues?.get(1)?.replace("\\/", "/").orEmpty()
 
     val timeSortFilter = parseFilterGroup(
         document = document,
@@ -78,8 +100,15 @@ fun parseActressesIndexPage(document: Document): ActressesIndexCatalog {
         totalPages = totalPages,
         hasNextPage = hasNextPage,
         nextPageUrl = nextPageUrl,
+        profileKind = if (isChannelsIndex) CatalogProfileKind.CHANNELS else CatalogProfileKind.MODELS,
+        countries = countries,
+        countryUrlTemplate = countryUrlTemplate,
     )
 }
+
+private val AV_COUNTRIES_REGEX = Regex("\"av_menu_countries\"\\s*:\\s*\\{([^}]*)\\}")
+private val COUNTRY_PAIR_REGEX = Regex("\"([A-Za-z]{2})\"\\s*:\\s*\"([^\"]+)\"")
+private val COUNTRY_URL_REGEX = Regex("\"index_country_url\"\\s*:\\s*\"([^\"]+)\"")
 
 private fun parseFilterGroup(
     document: Document,

@@ -11,14 +11,19 @@ import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.util.pathForLog
 import com.client.xvideos.x.feature.net.fetchHtml
+import com.client.xvideos.x.feature.net.getSearchResults
 import com.client.xvideos.x.feature.net.logLabel
 import com.client.xvideos.x.feature.net.notFoundAsEmpty
 import com.client.xvideos.x.feature.net.readHtmlFromURLDirect
 import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.ActressesIndexUiState
+import com.client.xvideos.x.model.CatalogDropdownSearch
 import com.client.xvideos.x.normalizeXUrl
 import com.client.xvideos.x.parcer.parseActressesIndexPage
+import com.client.xvideos.x.screens.actresses.model.catalogProfileHits
+import com.client.xvideos.x.screens.actresses.model.searchCatalogCountries
+import com.client.xvideos.x.search.parseJson
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -30,6 +35,7 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -77,6 +83,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
 
     private var initialJob: Job? = null
     private var pagingJob: Job? = null
+    private var profileSearchJob: Job? = null
     private var currentPageIndex: Int = 0
 
     init {
@@ -99,8 +106,9 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
             loadMoreError = null,
             items = emptyList(),
             activeDropdown = null,
-            dropdownSearchQuery = "",
+            dropdownSearch = CatalogDropdownSearch(),
         )
+        profileSearchJob?.cancel()
 
         initialJob = screenModelScope.launch {
             try {
@@ -234,25 +242,81 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
      * Открывает или закрывает выпадающее меню фильтра.
      */
     fun toggleDropdown(type: ActressesIndexDropdownType) {
-        uiState = if (uiState.activeDropdown == type) {
-            uiState.copy(activeDropdown = null, dropdownSearchQuery = "")
-        } else {
-            uiState.copy(activeDropdown = type, dropdownSearchQuery = "")
-        }
+        profileSearchJob?.cancel()
+        uiState = uiState.copy(
+            activeDropdown = if (uiState.activeDropdown == type) null else type,
+            dropdownSearch = CatalogDropdownSearch(),
+        )
     }
 
     /**
      * Закрывает текущее открытое выпадающее меню.
      */
     fun closeDropdown() {
-        uiState = uiState.copy(activeDropdown = null, dropdownSearchQuery = "")
+        profileSearchJob?.cancel()
+        uiState = uiState.copy(activeDropdown = null, dropdownSearch = CatalogDropdownSearch())
     }
 
     /**
-     * Обновляет поисковый запрос внутри выпадающего списка фильтра (например, поиск страны).
+     * Поиск в открытом списке: в списке стран — по всем странам каталога сразу, во
+     * втором списке — модели или каналы по имени через общий поиск сайта.
      */
     fun onDropdownSearchQueryChange(query: String) {
-        uiState = uiState.copy(dropdownSearchQuery = query)
+        when (uiState.activeDropdown) {
+            ActressesIndexDropdownType.GEO -> {
+                val catalog = uiState.catalog
+                uiState = uiState.copy(
+                    dropdownSearch = CatalogDropdownSearch(
+                        query = query,
+                        countryHits = searchCatalogCountries(catalog.countries, catalog.countryUrlTemplate, query),
+                    )
+                )
+            }
+            ActressesIndexDropdownType.PROFILE_TYPE -> searchProfiles(query)
+            else -> uiState = uiState.copy(dropdownSearch = CatalogDropdownSearch(query = query))
+        }
+    }
+
+    /**
+     * Поиск модели или канала по имени. Запрос уходит после паузы в наборе, как на
+     * сайте; новый символ отменяет прежний запрос.
+     */
+    private fun searchProfiles(query: String) {
+        profileSearchJob?.cancel()
+        val text = query.trim()
+        if (text.isEmpty()) {
+            uiState = uiState.copy(dropdownSearch = CatalogDropdownSearch(query = query))
+            return
+        }
+        uiState = uiState.copy(
+            dropdownSearch = uiState.dropdownSearch.copy(query = query, isLoading = true, error = null)
+        )
+        val kind = uiState.catalog.profileKind
+        profileSearchJob = screenModelScope.launch {
+            delay(PROFILE_SEARCH_DELAY_MS)
+            val json = getSearchResults(text)
+            if (json == null) {
+                uiState = uiState.copy(
+                    dropdownSearch = uiState.dropdownSearch.copy(
+                        profileHits = emptyList(),
+                        isLoading = false,
+                        error = "Не удалось выполнить поиск",
+                    )
+                )
+                return@launch
+            }
+            val hits = withContext(Dispatchers.Default) {
+                parseJson(json)?.let { catalogProfileHits(it, kind, text) }.orEmpty()
+            }
+            uiState = uiState.copy(
+                dropdownSearch = uiState.dropdownSearch.copy(profileHits = hits, isLoading = false, error = null)
+            )
+        }
+    }
+
+    private companion object {
+        /** Пауза в наборе перед запросом — как у поиска профиля на сайте. */
+        const val PROFILE_SEARCH_DELAY_MS = 250L
     }
 }
 

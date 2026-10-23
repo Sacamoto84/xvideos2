@@ -1,6 +1,8 @@
 package com.client.xvideos.x.parcer
 
 import com.client.xvideos.x.model.ActressesIndexDropdownType
+import com.client.xvideos.x.model.CatalogCountry
+import com.client.xvideos.x.model.CatalogProfileKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -8,6 +10,46 @@ import org.junit.Test
 import java.io.File
 
 class ParserActressesIndexTest {
+
+    /**
+     * Рейтинг каналов: списка типов профиля нет, вторая кнопка — основная категория.
+     * Страны для поиска и шаблон адреса берутся из настроек страницы.
+     */
+    @Test
+    fun `рейтинг каналов — основная категория вместо типа профиля и все страны`() {
+        val html = """
+            <div class="ordered-label-list"><ul>
+                <strong class="btn btn-default main label btn-text">34 869 каналов</strong>
+                <li><span class="btn btn-default main label btn-profiles-date-links btn-main-cats-links">Гетеросексуальный ▼</span>
+                    <ul class="profiles-date-links main-cats-links hidden">
+                        <li class="active"><a href="/channels-index">Гетеросексуальный</a></li>
+                        <li><a href="/channels-index/gay">Геи</a></li>
+                        <li><a href="/channels-index/shemale">Трансы</a></li>
+                    </ul></li>
+                <li><span class="btn btn-default main label btn-profiles-date-links btn-geo-links">Каналы по всему миру ▼</span>
+                    <ul class="profiles-date-links geo-links hidden">
+                        <li class="active"><a href="/channels-index">Каналы по всему миру</a></li>
+                    </ul></li>
+            </ul></div>
+            <script>var xv={conf:{"dyn":{"index_country_url":"\/channels-index\/%country_token%","av_menu_countries":{"EE":"estonia","US":"united_states"}}}};</script>
+        """.trimIndent()
+
+        val catalog = parseActressesIndexPage(html)
+
+        assertEquals(CatalogProfileKind.CHANNELS, catalog.profileKind)
+        assertEquals("Гетеросексуальный", catalog.profileTypeFilter.displayTitle)
+        assertEquals(listOf("Гетеросексуальный", "Геи", "Трансы"), catalog.profileTypeFilter.options.map { it.title })
+        assertEquals("/channels-index/%country_token%", catalog.countryUrlTemplate)
+        assertEquals(listOf(CatalogCountry("EE", "estonia"), CatalogCountry("US", "united_states")), catalog.countries)
+    }
+
+    @Test
+    fun `рейтинг моделей — поиск ищет модели, стран без настроек нет`() {
+        val catalog = parseActressesIndexPage(SAMPLE_CATALOG_HTML)
+
+        assertEquals(CatalogProfileKind.MODELS, catalog.profileKind)
+        assertTrue(catalog.countries.isEmpty())
+    }
 
     /** Каталог открывается и из рейтингов канала: тип и slug берутся из ссылки карточки. */
     @Test
