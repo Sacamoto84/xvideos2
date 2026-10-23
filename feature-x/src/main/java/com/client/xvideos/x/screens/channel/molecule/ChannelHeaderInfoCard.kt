@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -26,6 +30,9 @@ import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ProfileType
 import com.client.xvideos.x.screens.channel.atom.InfoFieldItem
+
+/** Строк описания в свёрнутом виде. */
+private const val ABOUT_COLLAPSED_LINES = 2
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -103,17 +110,27 @@ fun ChannelHeaderInfoCard(
         }
 
         if (header.hasAboutMe) {
+            // Кнопка — только когда текст правда не влезает в свёрнутый вид. По числу
+            // символов угадывалось плохо: фраза в две строки получала «Показать полностью».
+            var aboutOverflows by remember(header.aboutMe) { mutableStateOf(false) }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = header.aboutMe,
                 fontSize = 13.sp,
                 color = Color(0xFFE0E0E0),
-                maxLines = if (isAboutExpanded) Int.MAX_VALUE else 2,
+                maxLines = if (isAboutExpanded) Int.MAX_VALUE else ABOUT_COLLAPSED_LINES,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = 18.sp
+                lineHeight = 18.sp,
+                onTextLayout = { result ->
+                    aboutOverflows = if (isAboutExpanded) {
+                        result.lineCount > ABOUT_COLLAPSED_LINES
+                    } else {
+                        result.hasVisualOverflow
+                    }
+                }
             )
 
-            if (header.aboutMe.length > 80 || header.aboutMe.contains("\n")) {
+            if (aboutOverflows) {
                 Text(
                     text = if (isAboutExpanded) "Свернуть" else "Показать полностью...",
                     fontSize = 12.sp,
