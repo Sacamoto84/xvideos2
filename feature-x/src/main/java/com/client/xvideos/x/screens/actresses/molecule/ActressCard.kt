@@ -95,40 +95,15 @@ fun ActressCard(
                     )
             )
 
-            // Номер в рейтинге (например, «#1») в левом верхнем углу
-            if (item.rankText.isNotBlank()) {
-                Box(
+            // Флаг страны крупно в левом верхнем углу фото, как на сайте
+            if (item.flagEmoji.isNotBlank()) {
+                Text(
+                    text = item.flagEmoji,
+                    fontSize = 24.sp,
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(6.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFFDE2600))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = item.rankText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-
-            // Флаг страны в правом верхнем углу
-            if (item.flagEmoji.isNotBlank() || item.country.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xCC000000))
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = item.flagEmoji.ifBlank { item.countryCode.uppercase() },
-                        fontSize = 12.sp,
-                    )
-                }
+                        .padding(start = 6.dp, top = 2.dp)
+                )
             }
         }
 
@@ -138,8 +113,9 @@ fun ActressCard(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 6.dp)
         ) {
+            // Номер в рейтинге перед именем, как на сайте: «#3  Имя»
             Text(
-                text = item.displayName,
+                text = if (item.rankText.isNotBlank()) "${item.rankText}  ${item.displayName}" else item.displayName,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
