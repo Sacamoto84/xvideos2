@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.model
 
 import androidx.compose.runtime.Immutable
+import com.client.xvideos.common.util.capitalizeEachWord
 import com.client.xvideos.l.model.Tag
 
 /**
@@ -15,7 +16,10 @@ import com.client.xvideos.l.model.Tag
 data class AlbumTagGroup(
     val category: String?,
     val tags: List<Tag>,
-)
+) {
+    /** Заголовок ряда: категория, а у тегов без категории — «Tags». */
+    val title: String get() = category?.capitalizeEachWord() ?: "Tags"
+}
 
 /** Группы в порядке первого появления категории; теги без категории — последней группой. */
 fun groupAlbumTags(tags: List<Tag>): List<AlbumTagGroup> {

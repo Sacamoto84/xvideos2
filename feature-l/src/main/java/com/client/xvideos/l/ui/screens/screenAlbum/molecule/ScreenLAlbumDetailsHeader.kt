@@ -32,6 +32,7 @@ import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonServerFavorite
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonShareAlbum
+import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoDescription
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoTags
@@ -114,6 +115,7 @@ fun ScreenLAlbumDetailsHeader(
             parsed.tags.reversed().filter { it.count > 0 }
         }
         AlbumInfoTags({ activeTags }, onTagClick)
+        AlbumInfoDescription(parsed.description)
         AlbumInfoButtonSaveAlbum(saved, onClick = {
             if (!saved) {
                 actions.onSaveAlbum()

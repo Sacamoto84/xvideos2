@@ -22,7 +22,7 @@ import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Теги альбома рядами по категориям: «Character: [Frieren (260)]», ниже —
- * теги без категории. Заголовок ряда оформлен как «Audiences:».
+ * теги без категории под заголовком «Tags:». Заголовок ряда оформлен как «Audiences:».
  */
 @Composable
 fun AlbumInfoTags(
@@ -44,16 +44,12 @@ fun AlbumInfoTags(
         groups.forEach { group ->
             key(group.category) {
                 FlowRow(verticalArrangement = Arrangement.Center) {
-                    group.category?.let { category ->
-                        Text(
-                            text = "${category.capitalizeEachWord()}: ",
-                            color = Theme.L.textColor,
-                            style = headerStyle,
-                            // end = 2.dp: у AlbumTagChip нет внешнего отступа по бокам,
-                            // как у AudienceChip, — зазор до чипа тот же, что у «Audiences:».
-                            modifier = Modifier.padding(top = 4.dp, end = 2.dp, bottom = 4.dp)
-                        )
-                    }
+                    Text(
+                        text = "${group.title}: ",
+                        color = Theme.L.textColor,
+                        style = headerStyle,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
                     group.tags.forEach { tag ->
                         key(tag.id) {
                             val label = remember(tag.text, tag.category, tag.count) {

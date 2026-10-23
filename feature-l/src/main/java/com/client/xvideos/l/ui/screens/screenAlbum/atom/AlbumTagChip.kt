@@ -26,8 +26,10 @@ fun AlbumTagChip(
     val borderColor = Theme.L.secondaryColor
     val chipBorderModifier = remember(borderColor) {
         val shape = RoundedCornerShape(4.dp)
+        // Поля как у GenreChip и AudienceChip: без боковых чипы тегов почти
+        // соприкасались, а у жанров и аудиторий между чипами 4dp.
         Modifier
-            .padding(vertical = 2.dp)
+            .padding(horizontal = 2.dp, vertical = 2.dp)
             .clip(shape)
             .border(1.dp, borderColor, shape)
     }

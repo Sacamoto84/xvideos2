@@ -41,6 +41,12 @@ class AlbumTagGroupTest {
     }
 
     @Test
+    fun `title is the capitalized category or Tags for plain tags`() {
+        assertEquals("Character", AlbumTagGroup("character", emptyList()).title)
+        assertEquals("Tags", AlbumTagGroup(null, emptyList()).title)
+    }
+
+    @Test
     fun `textWithoutCategory strips the category prefix ignoring case`() {
         assertEquals("frieren", tag("1", "Character", "Character: frieren").textWithoutCategory())
         assertEquals("frieren", tag("1", "Character", "character:frieren").textWithoutCategory())

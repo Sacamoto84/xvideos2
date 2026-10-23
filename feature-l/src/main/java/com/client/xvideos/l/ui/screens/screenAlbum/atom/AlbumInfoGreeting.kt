@@ -29,15 +29,16 @@ fun AlbumInfoGreeting(
         Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
     }
 
+    // Отступы как у ряда «Audiences:»: у FlowRow нет ни padding, ни spacedBy —
+    // зазоры дают поля GenreChip (2dp по краям) и пробел после двоеточия. С ними
+    // ряд жанров был на 8dp выше соседних, а чипы стояли вдвое дальше друг от друга.
     FlowRow(
-        modifier = modifier.padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier,
         verticalArrangement = Arrangement.Center
     ) {
-        // Заголовок как у «Audiences:»; пробел после двоеточия даёт spacedBy.
         if (parsed.genres.isNotEmpty()) {
             Text(
-                text = "Genre:",
+                text = "Genre: ",
                 color = Theme.L.textColor,
                 style = headerStyle,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -54,18 +55,8 @@ fun AlbumInfoGreeting(
                 )
             }
         }
-
-        parsed.description.takeIf { it.isNotBlank() }?.let { description ->
-            Text(
-                text = description,
-                style = Theme.L.Type.caption.copy(
-                    color = Theme.L.textColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                ),
-                modifier = Modifier.padding(start = 2.dp)
-            )
-        }
+        // Описание вынесено в AlbumInfoDescription под теги: в этом ряду оно
+        // вставало между жанрами и аудиториями.
     }
 }
 
