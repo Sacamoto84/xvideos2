@@ -71,6 +71,29 @@ class ChannelCollapsingGeometryTest {
     }
 
     @Test
+    fun `зона магнита — четверть окна`() {
+        assertEquals(650f, channelHeaderMagnetZone(viewportRangePx = 2600f), 0f)
+    }
+
+    /** Высокую шапку, чуть вытянутую из схлопнутого состояния, возвращает обратно. */
+    @Test
+    fun `чуть вытянутая шапка возвращается в схлопнутое`() {
+        assertTrue(channelHeaderMagnetsToCollapsed(pulledPx = 200f, projectedPulledPx = 200f, zonePx = 650f))
+        // бросок вверх — тем более вниз, к схлопнутой
+        assertTrue(channelHeaderMagnetsToCollapsed(pulledPx = 200f, projectedPulledPx = -400f, zonePx = 650f))
+        // бросок вниз, но с остановкой ещё в зоне
+        assertTrue(channelHeaderMagnetsToCollapsed(pulledPx = 200f, projectedPulledPx = 600f, zonePx = 650f))
+    }
+
+    @Test
+    fun `вытянутую дальше зоны или брошенную за неё шапку магнит не держит`() {
+        assertFalse(channelHeaderMagnetsToCollapsed(pulledPx = 700f, projectedPulledPx = 700f, zonePx = 650f))
+        assertFalse(channelHeaderMagnetsToCollapsed(pulledPx = 200f, projectedPulledPx = 1500f, zonePx = 650f))
+        // схлопнутая и не тронутая — магниту делать нечего, инерция уходит в сетку
+        assertFalse(channelHeaderMagnetsToCollapsed(pulledPx = 0f, projectedPulledPx = -300f, zonePx = 650f))
+    }
+
+    @Test
     fun `без выреза плашки нет, панель прилипает к верху экрана`() {
         val g = geometry(offset = -600f, inset = 0)
         assertEquals(0, g.stickyY)

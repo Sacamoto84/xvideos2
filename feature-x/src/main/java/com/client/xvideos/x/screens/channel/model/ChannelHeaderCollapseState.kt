@@ -1,7 +1,9 @@
 package com.client.xvideos.x.screens.channel.model
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.Orientation
@@ -35,6 +37,7 @@ import kotlinx.coroutines.launch
  *   схлопнута (см. [onCollapseRangeChanged]).
  * @param scope Область для анимации доводки шапки.
  * @param decayFling Обычная инерция прокрутки — для шапки выше окна (см. [channelHeaderSnaps]).
+ * @param decay Затухание той же инерции: по нему видно, где шапка остановится после броска.
  * @param currentGrid Сетка текущей страницы пейджера, если она на экране.
  */
 @Stable
@@ -42,6 +45,7 @@ class ChannelHeaderCollapseState(
     offsetState: MutableFloatState,
     private val scope: CoroutineScope,
     private val decayFling: FlingBehavior,
+    private val decay: DecayAnimationSpec<Float>,
     private val currentGrid: () -> LazyGridState?,
 ) {
     private var headerOffsetPxState by offsetState
@@ -121,6 +125,13 @@ class ChannelHeaderCollapseState(
         override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
             if (collapseRangePx <= 0f) return 0f
             if (!channelHeaderSnaps(collapseRangePx, viewportRangePx)) {
+                // Положительная скорость — палец вниз, шапка раскрывается.
+                val pulled = headerOffsetPxState + collapseRangePx
+                val projected = pulled + decay.calculateTargetValue(0f, initialVelocity)
+                if (channelHeaderMagnetsToCollapsed(pulled, projected, channelHeaderMagnetZone(viewportRangePx))) {
+                    animateHeaderTo(target = -collapseRangePx, initialVelocity = initialVelocity)
+                    return initialVelocity
+                }
                 return with(decayFling) { performFling(initialVelocity) }
             }
             val target = if (initialVelocity > 300f || (initialVelocity >= -300f && headerOffsetPxState > -collapseRangePx * 0.5f)) {

@@ -24,6 +24,25 @@ internal fun channelHeaderConstraints(parent: Constraints): Constraints =
 internal fun channelHeaderSnaps(collapseRangePx: Float, viewportRangePx: Float): Boolean =
     collapseRangePx <= viewportRangePx
 
+/** Доля окна, в пределах которой высокую шапку тянет обратно в схлопнутое состояние. */
+private const val HEADER_MAGNET_ZONE_FRACTION = 0.25f
+
+/** Зона магнита схлопнутого состояния: четверть окна под вырезом. */
+internal fun channelHeaderMagnetZone(viewportRangePx: Float): Float =
+    viewportRangePx * HEADER_MAGNET_ZONE_FRACTION
+
+/**
+ * Вернуть ли высокую шапку в схлопнутое состояние после отпускания.
+ *
+ * Внизу, над сеткой, — отдельный «экран» ленты. Если шапку из него лишь чуть
+ * вытянули ([pulledPx] — насколько она открылась от схлопнутой) и бросили так,
+ * что по инерции она остановилась бы ещё в зоне ([projectedPulledPx] < [zonePx]),
+ * её возвращает к ленте. Вытянутую дальше зоны или брошенную за неё магнит
+ * отпускает — дальше обычная прокрутка.
+ */
+internal fun channelHeaderMagnetsToCollapsed(pulledPx: Float, projectedPulledPx: Float, zonePx: Float): Boolean =
+    pulledPx > 0f && pulledPx < zonePx && projectedPulledPx < zonePx
+
 /**
  * Вертикальная раскладка экрана канала при текущем смещении шапки.
  *
