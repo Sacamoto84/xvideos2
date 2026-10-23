@@ -28,7 +28,6 @@ import com.client.xvideos.common.snackbar.UiMessage
 import com.client.xvideos.common.navigation.LocalMainNavigator
 import com.client.xvideos.common.snackbar.show
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.ui.screens.explorer.molecule.LCollectionDialogs
 import kotlinx.coroutines.flow.mapNotNull
@@ -38,7 +37,8 @@ import net.engawapg.lib.zoomable.ExperimentalZoomableApi
  * Корневой экран приложения.
  *
  * Собирает общий каркас UI: Voyager navigation stack, snackbar host,
- * диалоги коллекций L-раздела, overlay-слой и мини-монитор скорости сети.
+ * диалоги коллекций L-раздела и overlay-слой. Мини-монитор скорости сети —
+ * в `MainActivity`, поверх подложки статус-бара.
  */
 object ScreenRoot : Screen {
 
@@ -142,5 +142,4 @@ fun ScreenRootContent(
             }
         }
     }
-    AppNetworkSpeedMonitorLite()
 }

@@ -60,6 +60,7 @@ import com.client.xvideos.common.p2p.toggleP2pService
 import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
+import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.common.ui.statusbar.LocalStatusBarRequests
 import com.client.xvideos.common.ui.statusbar.StatusBarRequests
 import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
@@ -336,6 +337,8 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                     hideRequests = statusBarRequests.hideRequests,
                                     onVisibleChange = ::applyStatusBarVisibility,
                                 )
+                                // После подложки бара: нарисованный раньше, он уходил под её градиент.
+                                AppNetworkSpeedMonitorLite()
                             }
 
                             if (isAppMinimized && blurRecentTasks) {
