@@ -1,46 +1,74 @@
 package com.client.xvideos.l.ui.screens.screenAlbum.atom
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.capitalizeEachWord
 import com.client.xvideos.l.model.Tag
+import com.client.xvideos.l.ui.screens.screenAlbum.model.groupAlbumTags
+import com.client.xvideos.l.ui.screens.screenAlbum.model.textWithoutCategory
 import com.client.xvideos.ui.theme.XvideosTheme
 
+/**
+ * Теги альбома рядами по категориям: «Character: [Frieren (260)]», ниже —
+ * теги без категории. Заголовок ряда оформлен как «Audiences:».
+ */
 @Composable
 fun AlbumInfoTags(
     tags: () -> (List<Tag>),
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val headerStyle = remember(Theme.L.Type.rowTitle) {
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+    }
     val tagTextStyle = remember(Theme.L.Type.caption, Theme.L.textColor) {
         Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
     }
 
     val tagList = tags()
+    val groups = remember(tagList) { groupAlbumTags(tagList) }
 
-    FlowRow(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center
-    ) {
-        tagList.forEach { tag ->
-            key(tag.id) {
-                val label = remember(tag.text, tag.count) {
-                    "${tag.text.capitalizeEachWord()} (${tag.count})"
+    Column(modifier = modifier) {
+        groups.forEach { group ->
+            key(group.category) {
+                FlowRow(verticalArrangement = Arrangement.Center) {
+                    group.category?.let { category ->
+                        Text(
+                            text = "${category.capitalizeEachWord()}: ",
+                            color = Theme.L.textColor,
+                            style = headerStyle,
+                            // end = 2.dp: у AlbumTagChip нет внешнего отступа по бокам,
+                            // как у AudienceChip, — зазор до чипа тот же, что у «Audiences:».
+                            modifier = Modifier.padding(top = 4.dp, end = 2.dp, bottom = 4.dp)
+                        )
+                    }
+                    group.tags.forEach { tag ->
+                        key(tag.id) {
+                            val label = remember(tag.text, tag.category, tag.count) {
+                                "${tag.textWithoutCategory().capitalizeEachWord()} (${tag.count})"
+                            }
+                            val handleClick = remember(tag.text, onClick) { { onClick(tag.text) } }
+
+                            AlbumTagChip(
+                                label = label,
+                                onClick = handleClick,
+                                textStyle = tagTextStyle
+                            )
+                        }
+                    }
                 }
-                val handleClick = remember(tag.text, onClick) { { onClick(tag.text) } }
-
-                AlbumTagChip(
-                    label = label,
-                    onClick = handleClick,
-                    textStyle = tagTextStyle
-                )
             }
         }
     }
@@ -53,8 +81,9 @@ private fun AlbumInfoTagsPreview() {
         AlbumInfoTags(
             tags = {
                 listOf(
-                    Tag(id = "tag1", category = "general", text = "nature photography", url = "url1", count = 150),
-                    Tag(id = "tag2", category = "location", text = "mountain view", url = "url2", count = 75)
+                    Tag(id = "tag1", category = "Character", text = "Character: frieren", url = "url1", count = 260),
+                    Tag(id = "tag2", category = "Ethnicity", text = "Ethnicity: elf", url = "url2", count = 163),
+                    Tag(id = "tag3", text = "nature photography", url = "url3", count = 150)
                 )
             },
             onClick = {}

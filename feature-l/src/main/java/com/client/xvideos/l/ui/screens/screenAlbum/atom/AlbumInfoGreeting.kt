@@ -22,6 +22,9 @@ fun AlbumInfoGreeting(
     onGenreClick: (Genre) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val headerStyle = remember(Theme.L.Type.rowTitle) {
+        Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+    }
     val titleStyle = remember(Theme.L.Type.caption, Theme.L.textColor) {
         Theme.L.Type.caption.copy(color = Theme.L.textColor, fontSize = 14.sp)
     }
@@ -31,6 +34,15 @@ fun AlbumInfoGreeting(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.Center
     ) {
+        // Заголовок как у «Audiences:»; пробел после двоеточия даёт spacedBy.
+        if (parsed.genres.isNotEmpty()) {
+            Text(
+                text = "Genre:",
+                color = Theme.L.textColor,
+                style = headerStyle,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+        }
         parsed.genres.forEach { genre ->
             key(genre.id) {
                 val handleClick = remember(genre, onGenreClick) { { onGenreClick(genre) } }
