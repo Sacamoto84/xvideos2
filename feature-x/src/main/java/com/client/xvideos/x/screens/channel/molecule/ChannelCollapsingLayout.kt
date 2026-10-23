@@ -12,6 +12,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.screens.channel.model.channelCollapsingGeometry
+import com.client.xvideos.x.screens.channel.model.channelHeaderConstraints
 
 /**
  * Кастомный макет для схлопывающейся шапки профиля канала, липкой панели сортировок/фильтров
@@ -44,7 +45,7 @@ fun ChannelCollapsingLayout(
         val pagerMeasurable = measurables.getOrNull(2)
         val statusCoverMeasurable = measurables.getOrNull(3)
 
-        val headerPlaceable = headerMeasurable?.measure(constraints.copy(minHeight = 0))
+        val headerPlaceable = headerMeasurable?.measure(channelHeaderConstraints(constraints))
         val headerHeight = headerPlaceable?.height ?: 0
 
         val stickyBarPlaceable = stickyBarMeasurable?.measure(constraints.copy(minHeight = 0))

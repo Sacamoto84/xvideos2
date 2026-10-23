@@ -1,6 +1,9 @@
 package com.client.xvideos.x.screens.channel.model
 
+import androidx.compose.ui.unit.Constraints
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ChannelCollapsingGeometryTest {
@@ -41,6 +44,30 @@ class ChannelCollapsingGeometryTest {
         assertEquals(0.5f, geometry(offset = -450f).coverAlpha, 0.0001f)
         assertEquals(1f, geometry(offset = -600f).coverAlpha, 0f) // дальше панель не поднимается
         assertEquals(topInset, geometry(offset = -600f).stickyY)
+    }
+
+    /**
+     * Шапка с длинным списком сотрудничества выше экрана: с потолком в высоту
+     * экрана она обрезалась, и дальше сотрудничества было не долистать.
+     */
+    @Test
+    fun `шапка меряется без потолка высоты, ширина — как у экрана`() {
+        val screen = Constraints(minWidth = 1280, maxWidth = 1280, minHeight = 2600, maxHeight = 2600)
+
+        val header = channelHeaderConstraints(screen)
+
+        assertFalse(header.hasBoundedHeight)
+        assertEquals(0, header.minHeight)
+        assertEquals(1280, header.minWidth)
+        assertEquals(1280, header.maxWidth)
+    }
+
+    /** Доводка до края только у шапки, которая видна целиком: иначе середину не прочитать. */
+    @Test
+    fun `доводка шапки только когда она помещается на экран`() {
+        assertTrue(channelHeaderSnaps(collapseRangePx = 1200f, viewportRangePx = 2500f))
+        assertTrue(channelHeaderSnaps(collapseRangePx = 2500f, viewportRangePx = 2500f))
+        assertFalse(channelHeaderSnaps(collapseRangePx = 5200f, viewportRangePx = 2500f))
     }
 
     @Test

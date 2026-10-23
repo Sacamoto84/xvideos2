@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.channel.model
 
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
@@ -23,8 +24,9 @@ fun rememberChannelHeaderCollapseState(
     currentGrid: () -> LazyGridState?,
 ): ChannelHeaderCollapseState {
     val scope = rememberCoroutineScope()
+    val decayFling = ScrollableDefaults.flingBehavior()
     val latestGrid by rememberUpdatedState(currentGrid)
-    return remember(offsetState, scope) {
-        ChannelHeaderCollapseState(offsetState, scope) { latestGrid() }
+    return remember(offsetState, scope, decayFling) {
+        ChannelHeaderCollapseState(offsetState, scope, decayFling) { latestGrid() }
     }
 }

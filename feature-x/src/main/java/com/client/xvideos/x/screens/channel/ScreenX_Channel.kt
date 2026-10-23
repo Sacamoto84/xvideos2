@@ -304,6 +304,9 @@ fun ScreenX_ChannelContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .onSizeChanged { size ->
+                    collapse.onViewportChanged((size.height - topCutoutPx).coerceAtLeast(0).toFloat())
+                }
                 .clipToBounds()
                 .nestedScroll(collapse.nestedScrollConnection)
         )

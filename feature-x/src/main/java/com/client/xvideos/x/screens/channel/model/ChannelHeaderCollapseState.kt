@@ -34,16 +34,19 @@ import kotlinx.coroutines.launch
  * @param offsetState Смещение шапки в пикселях: 0 — раскрыта, минус путь схлопывания —
  *   схлопнута (см. [onCollapseRangeChanged]).
  * @param scope Область для анимации доводки шапки.
+ * @param decayFling Обычная инерция прокрутки — для шапки выше окна (см. [channelHeaderSnaps]).
  * @param currentGrid Сетка текущей страницы пейджера, если она на экране.
  */
 @Stable
 class ChannelHeaderCollapseState(
     offsetState: MutableFloatState,
     private val scope: CoroutineScope,
+    private val decayFling: FlingBehavior,
     private val currentGrid: () -> LazyGridState?,
 ) {
     private var headerOffsetPxState by offsetState
     private var collapseRangePx by mutableFloatStateOf(0f)
+    private var viewportRangePx by mutableFloatStateOf(Float.MAX_VALUE)
     private var flingAnimationJob: Job? = null
 
     /** Смещение шапки в пикселях: 0 — раскрыта, минус путь схлопывания — схлопнута. */
@@ -117,6 +120,9 @@ class ChannelHeaderCollapseState(
     private val headerFlingBehavior = object : FlingBehavior {
         override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
             if (collapseRangePx <= 0f) return 0f
+            if (!channelHeaderSnaps(collapseRangePx, viewportRangePx)) {
+                return with(decayFling) { performFling(initialVelocity) }
+            }
             val target = if (initialVelocity > 300f || (initialVelocity >= -300f && headerOffsetPxState > -collapseRangePx * 0.5f)) {
                 0f
             } else {
@@ -149,6 +155,11 @@ class ChannelHeaderCollapseState(
                 headerOffsetPxState = -range
             }
         }
+    }
+
+    /** Высота окна под вырезом: шапку длиннее неё не доводят до края. */
+    fun onViewportChanged(rangePx: Float) {
+        viewportRangePx = rangePx
     }
 
     private fun animateHeaderTo(target: Float, initialVelocity: Float) {
