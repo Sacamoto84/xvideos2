@@ -194,19 +194,24 @@ fun ScreenLAlbumBody(
                                 onRetry = { album.retry() },
                                 onBack = { navigator.pop() }
                             )
-                        } else if (isLoading) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = Theme.L.red)
-                            }
                         }
                     }
                 }
             )
+
+            // Сведения об альбоме ещё грузятся: индикатор по центру экрана, а не
+            // первым элементом сетки — там он висел под самым верхом. Отступ сверху
+            // тот же, что у индикатора ScreenLAlbumContent, чтобы при смене
+            // состояний он не прыгал.
+            val isHeaderLoading = parsed?.id.isNullOrBlank() && loadError == null && isLoading
+            if (isHeaderLoading) {
+                CircularProgressIndicator(
+                    color = Theme.L.red,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(top = topInset)
+                )
+            }
         }
     }
 }
