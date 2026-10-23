@@ -175,7 +175,12 @@ fun LFullScreenPage(
                         albumName = albumName,
                         autoPlay = autoPlay,
                         isAnimated = pageItem.is_animated,
-                        isVisible = isCurrentPage,
+                        // isVisible не передаём: UrlImage не начинает загрузку, пока
+                        // isVisible == false, а currentPage переключается только на
+                        // середине свайпа — соседняя картинка начинала качаться уже
+                        // на экране. Сколько страниц держать загруженными, решает
+                        // пейджер: beyondViewportPageCount = 1 — текущая и по одной
+                        // с каждой стороны.
                         isFullScreen = true
                     )
                 } else {
