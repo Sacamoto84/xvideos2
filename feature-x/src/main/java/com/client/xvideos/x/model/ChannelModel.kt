@@ -203,6 +203,8 @@ enum class ChannelSortOrder(val apiKey: String, val title: String) : Serializabl
  * @property totalVideosCount Число видео по ответу ленты; 0 — неизвестно.
  * @property error Текст ошибки первой загрузки (null, если ошибки нет). Загрузку и сбой
  *   страниц показывает пейджер по `loadingPages` и `errorPages` ScreenModel канала.
+ * @property isLoaded Первая загрузка удалась: шапка и лента уже здесь. Не сбрасывается —
+ *   смена сортировки или фильтра перезагружает ленту под уже показанной шапкой.
  */
 @Immutable
 data class ChannelUiState(
@@ -214,6 +216,7 @@ data class ChannelUiState(
     val currentPage: Int = 0,
     val totalVideosCount: Int = 0,
     val error: String? = null,
+    val isLoaded: Boolean = false,
 ) : Serializable {
     val availableModels: List<ChannelModelFilterItem> get() = header.availableModels
     val hasModelFilters: Boolean get() = availableModels.isNotEmpty()

@@ -333,6 +333,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     videos = result.videos,
                     totalVideosCount = result.totalVideos ?: 0,
                     error = null,
+                    isLoaded = true,
                 )
                 // Вместе с шапкой: при сбое ленты она в uiState не попала и нужна снова.
                 isHeaderLoaded = headerFetched

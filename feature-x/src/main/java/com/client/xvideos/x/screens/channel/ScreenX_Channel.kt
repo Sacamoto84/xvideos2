@@ -38,7 +38,10 @@ import com.client.xvideos.x.model.ChannelUiState
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ProfileType
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
+import com.client.xvideos.x.screens.channel.atom.ChannelLoadingView
 import com.client.xvideos.x.screens.channel.atom.ChannelStatusCover
+import com.client.xvideos.x.screens.channel.model.ChannelScreenPhase
+import com.client.xvideos.x.screens.channel.model.channelScreenPhase
 import com.client.xvideos.x.screens.channel.model.rememberChannelHeaderCollapseState
 import com.client.xvideos.x.screens.channel.molecule.ChannelCollapsingLayout
 import com.client.xvideos.x.screens.channel.molecule.ChannelErrorView
@@ -183,11 +186,18 @@ fun ScreenX_ChannelContent(
     onModelExpandedChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    // Пустое имя — только у некорректного адреса: ошибка на весь экран. Загрузку и сбой
-    // при корректном адресе показывает страница 0 пейджера, шапка остаётся с именем.
-    if (uiState.error != null && uiState.header.name.isBlank()) {
-        ChannelErrorView(message = uiState.error, onRetry = onRetryInitial, modifier = modifier)
-        return
+    // До первой удачной загрузки — только индикатор или ошибка на весь экран. После неё
+    // загрузку и сбой ленты (смена сортировки, фильтра) показывает страница 0 пейджера.
+    when (channelScreenPhase(uiState)) {
+        ChannelScreenPhase.LOADING -> {
+            ChannelLoadingView(modifier = modifier)
+            return
+        }
+        ChannelScreenPhase.ERROR -> {
+            ChannelErrorView(message = uiState.error.orEmpty(), onRetry = onRetryInitial, modifier = modifier)
+            return
+        }
+        ChannelScreenPhase.CONTENT -> Unit
     }
 
     val coroutineScope = rememberCoroutineScope()
@@ -326,6 +336,7 @@ private fun ScreenX_ChannelContentPreview() {
             profileType = ProfileType.CHANNEL,
         ),
         totalVideosCount = 36,
+        isLoaded = true,
     )
     val gridPosition = remember { LazyGridPosition() }
 
