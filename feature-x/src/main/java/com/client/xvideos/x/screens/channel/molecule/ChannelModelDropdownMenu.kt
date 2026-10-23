@@ -2,7 +2,7 @@ package com.client.xvideos.x.screens.channel.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,13 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.screens.channel.atom.ChannelModelDropdownItem
+import com.client.xvideos.x.screens.channel.model.channelModelMenuListHeight
 
 /**
  * Выпадающий список моделей канала (или каналов модели) для фильтра видео.
  *
  * Поиска нет: модель выбирают из списка, поэтому в нём все модели, а не первые
- * десятки. У крупной студии их сотни — список ленивый. Ширина у него фиксированная:
- * меню меряет содержимое по intrinsic-ширине, а ленивый список её не отдаёт.
+ * десятки. У крупной студии их сотни — список ленивый. Ширина и высота у него
+ * фиксированные: меню меряет содержимое по intrinsic-ширине, и `Column` при этом
+ * спрашивает у списка ещё и intrinsic-высоту — ленивый список не отдаёт ни ту,
+ * ни другую ([channelModelMenuListHeight]).
  */
 @Composable
 fun ChannelModelDropdownMenu(
@@ -84,7 +87,7 @@ fun ChannelModelDropdownMenu(
             state = listState,
             modifier = Modifier
                 .width(280.dp)
-                .heightIn(max = 300.dp)
+                .height(channelModelMenuListHeight(models.size))
         ) {
             items(models) { model ->
                 ChannelModelDropdownItem(
