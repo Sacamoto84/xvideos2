@@ -34,6 +34,10 @@ fun ChannelHeaderStatsRow(
             .fillMaxWidth()
             .padding(bottom = 10.dp)
     ) {
+        // Порядок: видео, подписчики, просмотры.
+        if (header.videoCount > 0) {
+            StatPill(icon = painterResource(R.drawable.posts), contentDescription = "Видео", text = "${header.videoCount}")
+        }
         if (header.hasSubscribers) {
             val subscribers = remember(header.subscribers) { channelStatCount(header.subscribers) }
             StatPill(icon = painterResource(R.drawable.members), contentDescription = "Подписчики", text = subscribers)
@@ -45,9 +49,6 @@ fun ChannelHeaderStatsRow(
                 contentDescription = "Просмотры",
                 text = views
             )
-        }
-        if (header.videoCount > 0) {
-            StatPill(icon = painterResource(R.drawable.posts), contentDescription = "Видео", text = "${header.videoCount}")
         }
     }
 }
