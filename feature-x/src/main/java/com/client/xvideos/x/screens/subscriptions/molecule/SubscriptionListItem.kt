@@ -100,7 +100,7 @@ fun SubscriptionListItem(
             Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(4.dp))
                     .background(Color(0xFF222228)),
                 contentAlignment = Alignment.Center
             ) {
