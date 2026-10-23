@@ -33,6 +33,8 @@ fun ChannelHeaderInfoCard(
     header: ChannelHeaderModel,
     isAboutExpanded: Boolean,
     onToggleAboutExpanded: () -> Unit,
+    isRankingsExpanded: Boolean,
+    onToggleRankingsExpanded: () -> Unit,
     onCollaboratorClick: (ChannelCollaborator) -> Unit,
     onRankingClick: (targetUrl: String, title: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -94,6 +96,8 @@ fun ChannelHeaderInfoCard(
             Spacer(modifier = Modifier.height(8.dp))
             ChannelRankingsSection(
                 rankings = header.rankings,
+                isExpanded = isRankingsExpanded,
+                onToggleExpanded = onToggleRankingsExpanded,
                 onRankingClick = onRankingClick,
             )
         }
@@ -142,6 +146,8 @@ private fun ChannelHeaderInfoCardPreview() {
         ),
         isAboutExpanded = false,
         onToggleAboutExpanded = {},
+        isRankingsExpanded = false,
+        onToggleRankingsExpanded = {},
         onCollaboratorClick = {},
         onRankingClick = { _, _ -> }
     )

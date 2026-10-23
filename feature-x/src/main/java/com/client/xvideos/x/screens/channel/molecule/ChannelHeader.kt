@@ -43,6 +43,8 @@ fun ChannelHeader(
     topInset: Dp = 0.dp,
 ) {
     var isAboutExpanded by remember { mutableStateOf(false) }
+    // Рейтинг по умолчанию свёрнут: развёрнутый занимает полэкрана шапки.
+    var isRankingsExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -73,6 +75,8 @@ fun ChannelHeader(
                     header = header,
                     isAboutExpanded = isAboutExpanded,
                     onToggleAboutExpanded = { isAboutExpanded = !isAboutExpanded },
+                    isRankingsExpanded = isRankingsExpanded,
+                    onToggleRankingsExpanded = { isRankingsExpanded = !isRankingsExpanded },
                     onCollaboratorClick = onCollaboratorClick,
                     onRankingClick = onRankingClick,
                 )
