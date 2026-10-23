@@ -3,7 +3,7 @@ activityKtx = "1.13.0"
 agp = "9.4.1"
 
 coil = "3.6.3"
-componentsResources = "1.12.1"
+componentsResources = "1.12.2"
 core = "1.49.9"
 coreSplashscreen = "1.2.0"
 desugar_jdk_libs = "2.1.5"
@@ -13,13 +13,13 @@ hiltAndroidCompiler = "2.60.1"
 hiltLifecycleViewmodelCompose = "1.4.0"
 haze = "2.0.1"
 jsoup = "1.23.2"
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 detekt = "1.23.8"
 ksp = "2.3.10"
 coreKtx = "1.19.1"
 annotationExperimental = "1.5.1"
 junit = "4.13.2"
-androidxCollection = "1.6.0"
+androidxCollection = "1.7.0"
 kotlinxCollectionsImmutable = "0.5.2"
 kotlinxSerializationJson = "1.11.0"
 ktor= "3.6.0"
@@ -34,17 +34,16 @@ material = "1.14.0"
 # (ExposedDropdownMenu в новом виде) есть только здесь. Обновляем вместе с
 # composeBom и проверяем compileDebugKotlin всех feature-модулей — alpha правит
 # API между сборками.
-material3 = "1.5.0-alpha29"
+material3 = "1.5.0-beta01"
 media3 = "1.11.1"
-pagingRuntime = "3.5.1"
-pagingCompose = "3.5.1"
+pagingRuntime = "3.5.3"
 securityCrypto = "1.1.0"
 slf4jAndroid = "1.7.36"
 timber = "5.0.1"
 googleGmsGoogleServices = "4.5.0"
 uiAndroid = "1.12.1"
 voyager = "2.2.21-1.10.3"
-zoomable = "2.15.0"
+zoomable = "2.16.0"
 runtimeSavedInstanceState = "1.0.0-alpha11"
 playServicesNearby = "19.5.1"
 kotlinxCoroutinesTest = "1.11.0"
@@ -60,7 +59,7 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "hiltLifecycleViewmodelCompose" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
-androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingRuntime" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRuntime" }
 
 androidx-runtime = { module = "androidx.compose.runtime:runtime" }
