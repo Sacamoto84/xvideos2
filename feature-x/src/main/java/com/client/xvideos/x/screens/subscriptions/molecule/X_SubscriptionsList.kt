@@ -28,6 +28,7 @@ fun X_SubscriptionsList(
     listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
     onOpenCreator: (XSubscriptionItem) -> Unit = {},
     onDeleteRequest: (XSubscriptionItem) -> Unit = {},
+    onImageError: (XSubscriptionItem) -> Unit = {},
     order: XSubscriptionsOrder = XSubscriptionsOrder.NEWEST,
     onOrderChange: (XSubscriptionsOrder) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -71,6 +72,7 @@ fun X_SubscriptionsList(
                     onClick = { onOpenCreator(item) },
                     onLongClick = { onDeleteRequest(item) },
                     onDeleteClick = { onDeleteRequest(item) },
+                    onImageError = { onImageError(item) },
                     modifier = Modifier.adaptiveContentWidth(),
                 )
             }

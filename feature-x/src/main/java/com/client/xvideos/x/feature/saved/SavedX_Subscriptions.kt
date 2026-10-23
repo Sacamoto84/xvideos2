@@ -6,7 +6,10 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.common.fileDB.putFirst
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.x.feature.net.fetchProfileHtml
 import com.client.xvideos.x.model.XSubscriptionItem
+import com.client.xvideos.x.model.withImagesFrom
+import com.client.xvideos.x.parcer.parserChannelHeader
 import com.client.xvideos.x.xProfileSlug
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -145,6 +148,44 @@ class SavedX_Subscriptions(val scope: CoroutineScope) {
                 .onFailure { e ->
                     SnackBar.error("Ошибка отписки: ${e.message}")
                 }
+        }
+    }
+
+    /** Подписки, чьи картинки уже обновлены в этом запуске; только из главного потока. */
+    private val imagesRefreshed = mutableSetOf<String>()
+
+    /**
+     * Перечитывает аватар и баннер [item] со страницы профиля — после ошибки
+     * загрузки картинки в списке.
+     *
+     * Сохранённый при подписке адрес может быть подписанным (`?secure=…`) и
+     * через несколько часов перестаёт открываться. Удачное обновление — одно
+     * на подписку за запуск: если и свежий адрес не грузится, страница не
+     * перечитывается по кругу. Неудачное (сети нет) — повторится при следующей
+     * ошибке. Запись пишется через [FileDB.update]: отписка, случившаяся во
+     * время запроса, её не воскресит.
+     */
+    fun refreshImages(item: XSubscriptionItem) {
+        val slug = item.cleanSlug
+        if (slug.isBlank()) return
+        val key = (if (item.isModel) "models/" else "channels/") + slug
+        if (!imagesRefreshed.add(key)) return
+        scope.launch(Dispatchers.IO) {
+            val html = fetchProfileHtml(slug, item.isModel)
+            if (html.isBlank()) {
+                withContext(Dispatchers.Main) { imagesRefreshed.remove(key) }
+                return@launch
+            }
+            val header = parserChannelHeader(html = html, fallbackSlug = slug, isModel = item.isModel)
+            val updated = item.withImagesFrom(header) ?: return@launch
+            val db = if (item.isModel) modelsDb else channelsDb
+            db.update(slug, updated).onSuccess {
+                withContext(Dispatchers.Main) {
+                    val list = if (item.isModel) modelsList else channelsList
+                    val idx = list.indexOfFirst { it.cleanSlug == slug }
+                    if (idx >= 0) list[idx] = updated
+                }
+            }
         }
     }
 

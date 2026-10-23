@@ -10,6 +10,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.x.feature.net.fetchHtml
+import com.client.xvideos.x.feature.net.fetchProfileHtml
 import com.client.xvideos.x.feature.net.logLabel
 import com.client.xvideos.x.feature.net.notFoundAsEmpty
 import com.client.xvideos.x.feature.net.postFormData
@@ -254,23 +255,6 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     }
 
     /**
-     * Загружает HTML-разметку страницы канала или модели с fallback-проверками альтернативных путей.
-     */
-    private suspend fun fetchChannelHtml(cleanSlug: String, pathPrefix: String, isModel: Boolean): String = withContext(Dispatchers.IO) {
-        val raw = readHtmlFromURLDirect("$urlStart/$pathPrefix/$cleanSlug")
-        if (raw.isNotBlank() && !raw.contains("Не найдено")) return@withContext raw
-
-        val altPrefix = if (isModel) "channels" else "models"
-        val rawAlt = readHtmlFromURLDirect("$urlStart/$altPrefix/$cleanSlug")
-        if (rawAlt.isNotBlank() && !rawAlt.contains("Не найдено")) return@withContext rawAlt
-
-        val rawProfile = readHtmlFromURLDirect("$urlStart/profiles/$cleanSlug")
-        if (rawProfile.isNotBlank() && !rawProfile.contains("Не найдено")) return@withContext rawProfile
-
-        readHtmlFromURLDirect("$urlStart/$cleanSlug")
-    }
-
-    /**
      * Выполняет первичную загрузку шапки из HTML и нулевой страницы видео через JSON API.
      */
     fun loadInitial() {
@@ -305,7 +289,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 val parsedHeader = if (isHeaderLoaded) {
                     uiState.header
                 } else {
-                    val headerHtml = fetchChannelHtml(cleanSlug, pathPrefix, isModel)
+                    val headerHtml = fetchProfileHtml(cleanSlug, isModel)
                     // Пустой ответ — запрос не удался: шапку запросит следующая загрузка.
                     headerFetched = headerHtml.isNotBlank()
                     withContext(Dispatchers.Default) {

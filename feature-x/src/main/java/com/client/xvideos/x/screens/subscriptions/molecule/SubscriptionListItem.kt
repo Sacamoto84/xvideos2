@@ -42,6 +42,7 @@ import com.client.xvideos.x.model.XSubscriptionItem
 
 /**
  * Вертикальный элемент списка подписки (стиль L: картинка слева, имя и счётчики справа, кнопка удаления).
+ * [onImageError] — картинка не загрузилась: сохранённый адрес мог устареть.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -51,6 +52,7 @@ fun SubscriptionListItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onImageError: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val accentColor = if (isModel) Color(0xFFDE2600) else Color(0xFF1E88E5)
@@ -106,6 +108,7 @@ fun SubscriptionListItem(
                     UrlImage(
                         url = imageUrl,
                         contentScale = ContentScale.Crop,
+                        onFailure = onImageError,
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
@@ -178,6 +181,7 @@ private fun SubscriptionListItemPreview() {
         isModel = false,
         onClick = {},
         onLongClick = {},
-        onDeleteClick = {}
+        onDeleteClick = {},
+        onImageError = {}
     )
 }

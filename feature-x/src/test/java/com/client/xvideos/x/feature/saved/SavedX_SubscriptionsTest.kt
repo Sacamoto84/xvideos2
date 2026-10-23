@@ -5,8 +5,10 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ProfileType
 import com.client.xvideos.x.model.XSubscriptionItem
 import com.client.xvideos.x.model.toSubscriptionItem
+import com.client.xvideos.x.model.withImagesFrom
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -56,6 +58,68 @@ class SavedX_SubscriptionsTest {
         assertEquals("12 М", sub.totalViews)
         assertEquals(180, sub.videoCount)
         assertTrue(sub.isModel)
+    }
+
+    @Test
+    fun `withImagesFrom берёт картинки свежей шапки и не трогает остальные поля`() {
+        val saved = XSubscriptionItem(
+            slug = "joy-sky",
+            name = "Joy Sky",
+            avatarUrl = "https://img.com/avatar.jpg?secure=old,1",
+            bannerUrl = "https://img.com/banner.jpg?secure=old,1",
+            isModel = true,
+            subscribers = "45,2 к",
+            totalViews = "12 М",
+            videoCount = 180,
+            dateAdded = 123456789L,
+        )
+        val header = ChannelHeaderModel(
+            slug = "joy-sky",
+            name = "Другое имя",
+            avatarUrl = "https://img.com/avatar.jpg?secure=new,2",
+            bannerUrl = "https://img.com/banner.jpg?secure=new,2",
+            subscribers = "50 к",
+            videoCount = 200,
+            profileType = ProfileType.MODEL,
+        )
+
+        val updated = saved.withImagesFrom(header)
+
+        assertEquals(
+            saved.copy(
+                avatarUrl = "https://img.com/avatar.jpg?secure=new,2",
+                bannerUrl = "https://img.com/banner.jpg?secure=new,2",
+            ),
+            updated,
+        )
+    }
+
+    @Test
+    fun `withImagesFrom без картинок в шапке оставляет запись как есть`() {
+        val saved = XSubscriptionItem(slug = "joy-sky", avatarUrl = "https://img.com/a.jpg?secure=old,1")
+        // Так выглядит шапка, когда страница не загрузилась: только запасные поля.
+        val header = ChannelHeaderModel(slug = "joy-sky", name = "joy-sky")
+
+        assertNull(saved.withImagesFrom(header))
+    }
+
+    @Test
+    fun `withImagesFrom с теми же адресами возвращает null`() {
+        val saved = XSubscriptionItem(slug = "joy-sky", avatarUrl = "https://img.com/a.jpg", bannerUrl = "")
+        val header = ChannelHeaderModel(slug = "joy-sky", avatarUrl = "https://img.com/a.jpg")
+
+        assertNull(saved.withImagesFrom(header))
+    }
+
+    @Test
+    fun `withImagesFrom без аватара на странице переходит на баннер`() {
+        val saved = XSubscriptionItem(slug = "joy-sky", avatarUrl = "https://img.com/a.jpg?secure=old,1")
+        val header = ChannelHeaderModel(slug = "joy-sky", bannerUrl = "https://img.com/b.jpg")
+
+        val updated = saved.withImagesFrom(header)
+
+        assertEquals("", updated?.avatarUrl)
+        assertEquals("https://img.com/b.jpg", updated?.bannerUrl)
     }
 
     @Test

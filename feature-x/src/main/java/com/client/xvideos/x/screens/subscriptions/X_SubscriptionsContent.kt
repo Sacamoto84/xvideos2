@@ -95,6 +95,11 @@ fun X_SubscriptionsContent(
         }
     }
 
+    // Сохранённый адрес аватара устаревает — свежий берётся со страницы профиля.
+    val onImageError = remember(saved) {
+        { item: XSubscriptionItem -> saved.subscriptions.refreshImages(item) }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -107,6 +112,7 @@ fun X_SubscriptionsContent(
             listState = listState,
             onOpenCreator = onOpenCreator,
             onDeleteRequest = { itemToDelete = it },
+            onImageError = onImageError,
             order = order,
             onOrderChange = onOrderChange
         )

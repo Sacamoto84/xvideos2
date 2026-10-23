@@ -51,3 +51,18 @@ fun ChannelHeaderModel.toSubscriptionItem(): XSubscriptionItem = XSubscriptionIt
     totalViews = totalViews,
     videoCount = videoCount,
 )
+
+/**
+ * Запись с аватаром и баннером из свежей шапки профиля [header] или `null`,
+ * если менять нечего.
+ *
+ * Адреса картинок на части CDN подписаны (`?secure=…`) и живут часы: запись,
+ * сохранённая при подписке, через день отдаёт ошибку загрузки, хотя на
+ * странице профиля аватар есть. Шапка без единой картинки — страница не
+ * загрузилась, и старые адреса не затираются пустыми.
+ */
+fun XSubscriptionItem.withImagesFrom(header: ChannelHeaderModel): XSubscriptionItem? {
+    if (!header.hasAvatar && !header.hasBanner) return null
+    if (header.avatarUrl == avatarUrl && header.bannerUrl == bannerUrl) return null
+    return copy(avatarUrl = header.avatarUrl, bannerUrl = header.bannerUrl)
+}
