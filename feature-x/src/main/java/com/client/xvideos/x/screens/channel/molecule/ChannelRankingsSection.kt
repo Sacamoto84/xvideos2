@@ -62,9 +62,14 @@ fun ChannelRankingsSection(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            // Без ripple: подсветка заливала строку заголовка серой плашкой.
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onToggleExpanded)
+                .clickable(
+                    interactionSource = null,
+                    indication = null,
+                    onClick = onToggleExpanded
+                )
         ) {
             Text(
                 text = channelRankingsTitle(rankings),
