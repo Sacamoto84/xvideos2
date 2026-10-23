@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.feature.r.R
+import com.client.xvideos.core.R
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.Niche

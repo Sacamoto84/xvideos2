@@ -1,35 +1,56 @@
 package com.client.xvideos.x.screens.channel.atom
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.core.R
 
+private val PillContentColor = Color(0xFFCCCCCC)
+
+/** Плашка счётчика шапки: иконка вместо подписи и число. */
 @Composable
 fun StatPill(
+    icon: Painter,
+    contentDescription: String,
     text: String,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(Color(0xFF222226))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
+        Icon(
+            painter = icon,
+            contentDescription = contentDescription,
+            tint = PillContentColor,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = text,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFFCCCCCC)
+            color = PillContentColor
         )
     }
 }
@@ -37,5 +58,5 @@ fun StatPill(
 @Preview
 @Composable
 private fun StatPillPreview() {
-    StatPill(text = "150.5K подписчиков")
+    StatPill(icon = painterResource(R.drawable.members), contentDescription = "Подписчики", text = "150.5K")
 }
