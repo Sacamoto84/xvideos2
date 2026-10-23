@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,11 +62,15 @@ fun CollaboratorsFlow(
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 contentAlignment = Alignment.Center
             ) {
+                // Стиль целиком, как у CollaboratorChip: параметры Text наследуют
+                // высоту строки 24sp из темы, и кнопка выходила выше чипов.
                 Text(
                     text = toggleText,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF2196F3)
+                    style = TextStyle(
+                        color = Color(0xFF2196F3),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
             }
         }
