@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -25,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.r.model.Order
-import com.client.xvideos.r.ui.ui.atom.ButtonUp
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import kotlinx.collections.immutable.persistentListOf
 
@@ -73,15 +71,7 @@ fun GifsTabBottomBar(
                     .weight(1f)
             )
 
-            Spacer(modifier = Modifier.width(4.dp))
-
-            AnimatedVisibility(
-                visible = !isFocused,
-                enter = expandHorizontally(animationSpec = tween(250), expandFrom = Alignment.Start) + fadeIn(tween(250)),
-                exit = shrinkHorizontally(animationSpec = tween(250), shrinkTowards = Alignment.Start) + fadeOut(tween(250)),
-            ) {
-                ButtonUp(onClick = onUpClick)
-            }
+            //Spacer(modifier = Modifier.width(4.dp))
         }
         Spacer(modifier = Modifier.height(1.dp))
         HorizontalDivider(color = Theme.R.colorCommonBackground)
