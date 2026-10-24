@@ -14,6 +14,7 @@ import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Меню категорий сайта X по ориентациям, с кешем в памяти на процесс.
@@ -25,10 +26,12 @@ import javax.inject.Singleton
  */
 @Singleton
 class XRubricCatalog internal constructor(
+    /** Где разбирается меню; тесты подставляют свой диспетчер. */
+    private val parseContext: CoroutineContext = Dispatchers.Default,
     private val fetch: suspend (String) -> String,
 ) {
     @Inject
-    constructor() : this(::fetchHtmlInOwnSession)
+    constructor() : this(fetch = ::fetchHtmlInOwnSession)
 
     private val lists = ConcurrentHashMap<XCategory, ImmutableList<XRubric>>()
 
@@ -43,7 +46,7 @@ class XRubricCatalog internal constructor(
     suspend fun load(orientation: XCategory): ImmutableList<XRubric> {
         lists[orientation]?.let { return it }
         val html = fetch(buildRubricMenuUrl(orientation))
-        val rubrics = withContext(Dispatchers.Default) {
+        val rubrics = withContext(parseContext) {
             val collator = Collator.getInstance(Locale.forLanguageTag("ru"))
             parserRubricMenu(html).sortedWith { a, b -> collator.compare(a.title, b.title) }
         }

@@ -19,8 +19,9 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 const val MAIN_TAB_DASHBOARDS = 0
-const val MAIN_TAB_SAVABLE = 1
-const val MAIN_TAB_SEARCH = 2
+const val MAIN_TAB_RUBRICS = 1
+const val MAIN_TAB_SAVABLE = 2
+const val MAIN_TAB_SEARCH = 3
 
 private val savedTabs: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.FavoriteBorder,
@@ -45,6 +46,8 @@ fun DashboardSecondaryControls(
     modifier: Modifier = Modifier,
 ) {
     when (mainTab) {
+        // У категорий второго ряда нет: вкладка — один список.
+        MAIN_TAB_RUBRICS -> Unit
         MAIN_TAB_SAVABLE -> TabRow(
             titlesIcon = savedTabs,
             value = savedTab,

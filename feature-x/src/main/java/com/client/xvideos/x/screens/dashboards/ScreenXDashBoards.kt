@@ -15,6 +15,7 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.HorizontalDivider
@@ -45,12 +46,17 @@ import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
 import com.client.xvideos.x.screens.dashboards.model.SavedTabListPositions
 import com.client.xvideos.x.screens.dashboards.molecule.DashboardSecondaryControls
+import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_DASHBOARDS
+import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_RUBRICS
 import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_SAVABLE
 import com.client.xvideos.x.screens.dashboards.molecule.MAIN_TAB_SEARCH
 import com.client.xvideos.x.screens.dashboards.molecule.SAVED_TAB_COUNT
 import com.client.xvideos.x.screens.dashboards.molecule.SavedTabContent
 import com.client.xvideos.x.screens.dashboards.vm.ScreenXDashBoardsScreenModel
 import com.client.xvideos.x.screens.favorites.ScreenFavorites
+import com.client.xvideos.x.screens.rubric.ScreenXRubric
+import com.client.xvideos.x.screens.rubrics.ScreenXRubricsTabContent
+import com.client.xvideos.x.screens.rubrics.XRubricsSM
 import com.client.xvideos.x.screens.search.ScreenXSearchSM
 import com.client.xvideos.x.screens.search.ScreenXSearchTabContent
 import com.client.xvideos.x.screens.search.SearchUiMode
@@ -61,6 +67,7 @@ import com.client.xvideos.x.screens.common.rememberLocalVideoOf
 
 private val mainTabs: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Dashboard,
+    Icons.Outlined.Category,
     Icons.Outlined.BookmarkBorder,
     Icons.Outlined.Search,
 )
@@ -77,6 +84,7 @@ class ScreenXDashBoards : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenXDashBoardsScreenModel = getScreenModel()
         val searchVm: ScreenXSearchSM = getScreenModel()
+        val rubricsVm: XRubricsSM = getScreenModel()
 
         val searchUiMode by searchVm.uiMode.collectAsStateWithLifecycle()
         val searchPage by searchVm.currentPage.collectAsStateWithLifecycle()
@@ -87,14 +95,14 @@ class ScreenXDashBoards : Screen {
             {
                 if (vm.mainTab == MAIN_TAB_SEARCH) {
                     if (!searchVm.onBackPress()) {
-                        vm.mainTab = 0
+                        vm.mainTab = MAIN_TAB_DASHBOARDS
                     }
                 } else {
-                    vm.mainTab = 0
+                    vm.mainTab = MAIN_TAB_DASHBOARDS
                 }
             }
         }
-        BackHandler(enabled = vm.mainTab != 0, onBack = onBack)
+        BackHandler(enabled = vm.mainTab != MAIN_TAB_DASHBOARDS, onBack = onBack)
 
         val favoritesScreen = remember { ScreenFavorites() }
         val scope = rememberCoroutineScope()
@@ -111,6 +119,14 @@ class ScreenXDashBoards : Screen {
                     searchVm.onCategoryChanged()
                 }
             }
+        }
+
+        val rubricsTab: @Composable () -> Unit = {
+            ScreenXRubricsTabContent(
+                vm = rubricsVm,
+                category = XCategoryState.current,
+                onOpenRubric = { rubric -> navigator.push(ScreenXRubric(rubric.id, rubric.slug, rubric.title)) },
+            )
         }
 
         ScreenXDashBoardsContent(
@@ -138,6 +154,7 @@ class ScreenXDashBoards : Screen {
             cachedDashboardPage = vm::cachedDashboardPage,
             category = XCategoryState.current,
             onCategorySelect = onCategorySelect,
+            rubricsTab = rubricsTab,
         )
     }
 }
@@ -172,6 +189,7 @@ fun ScreenXDashBoardsContent(
     cachedDashboardPage: (Int) -> ImmutableList<ItemsX>?,
     category: XCategory,
     onCategorySelect: (XCategory) -> Unit,
+    rubricsTab: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val onDashboardPageChange: suspend (Int) -> Unit = remember(pagerState) {
@@ -244,6 +262,7 @@ fun ScreenXDashBoardsContent(
                 .fillMaxSize()
         ) {
             when (mainTab) {
+                MAIN_TAB_RUBRICS -> rubricsTab()
                 MAIN_TAB_SAVABLE -> SavedTabContent(
                     pagerState = savedPagerState,
                     favoritesScreen = favoritesScreen,
