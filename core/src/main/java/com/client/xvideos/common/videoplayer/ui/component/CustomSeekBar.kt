@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +32,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CustomSeekBarPreview() {
     CustomSeekBar(
-        progress = 0.5f,
+        progress = { 0.5f },
         maxProgress = 1f,
         onValueChange = {},
         onValueChangeFinished = {},
@@ -46,10 +45,15 @@ fun CustomSeekBarPreview() {
 
 
 
+/**
+ * @param progress текущая позиция. Поставщиком, а не числом: позиция плеера
+ * меняется 20 раз в секунду, и читает её только отрисовка — полоса
+ * перерисовывается, не перекомпонуя ни себя, ни вызывающего (проход 217, T2).
+ */
 @Composable
 fun CustomSeekBar(
     modifier: Modifier = Modifier,
-    progress: Float,
+    progress: () -> Float,
     maxProgress: Float,
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
@@ -63,7 +67,8 @@ fun CustomSeekBar(
 ) {
     val density = LocalDensity.current
     var isDragging by remember { mutableStateOf(false) }
-    var localProgress by remember { mutableFloatStateOf(progress) }
+    // Позиция под пальцем; пока бегунок не тянут, полоса показывает [progress].
+    var localProgress by remember { mutableFloatStateOf(0f) }
     var trackWidth by remember { mutableFloatStateOf(1f) }
     var dragStartOffsetX by remember { mutableFloatStateOf(0f) }
     var initialProgress by remember { mutableFloatStateOf(0f) }
@@ -84,12 +89,6 @@ fun CustomSeekBar(
         animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
         label = "Thumb Scale"
     )
-
-    LaunchedEffect(progress, maxProgress) {
-        if (!isDragging) {
-            localProgress = progress
-        }
-    }
 
     Box(
         modifier = modifier
@@ -136,7 +135,8 @@ fun CustomSeekBar(
         ) {
             val trackWidthPx = size.width
             val thumbPx = with(density) { thumbRadius.toPx() } * thumbScale
-            val progressX = calculateCustomSeekBarProgressX(localProgress, maxProgress, trackWidthPx)
+            val shownProgress = if (isDragging) localProgress else progress()
+            val progressX = calculateCustomSeekBarProgressX(shownProgress, maxProgress, trackWidthPx)
 
             // Inactive track
             drawLine(

@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -108,6 +109,16 @@ fun X_PlayerBottomBar(
         onFullScreen?.let { action -> { action() } }
     }
     val formattedTotalTime = remember(host.totalTime) { formatTime(host.totalTime) }
+    // Позиция плеера приходит 20 раз в секунду. Раньше панель читала её здесь и
+    // перекомпоновывалась на каждое обновление (проход 217, T2). Теперь текст
+    // зависит от целых секунд, а полоса читает позицию только в отрисовке.
+    val currentTimeSec by remember(host) {
+        derivedStateOf { host.currentTime.takeIf { it.isFinite() && it >= 0f }?.toInt() ?: 0 }
+    }
+    val safeTotalTime = host.totalTime.coerceAtLeast(0).toFloat()
+    val currentProgress: () -> Float = remember(host, safeTotalTime) {
+        { host.currentTime.takeIf { it.isFinite() }?.coerceIn(0f, safeTotalTime) ?: 0f }
+    }
 
     Row(
         modifier = modifier
@@ -130,12 +141,8 @@ fun X_PlayerBottomBar(
         )
 
         // Текущее время
-        val safeCurrentTimeSec = host.currentTime
-            .takeIf { it.isFinite() && it >= 0f }
-            ?.toInt()
-            ?: 0
         Text(
-            text = formatTime(safeCurrentTimeSec),
+            text = formatTime(currentTimeSec),
             style = TextStyle(
                 color = Color.White,
                 fontFamily = FontFamily.SansSerif,
@@ -144,18 +151,13 @@ fun X_PlayerBottomBar(
         )
 
         // Прогресс-бар
-        val safeTotalTime = host.totalTime.coerceAtLeast(0).toFloat()
-        val safeCurrentTime = host.currentTime
-            .takeIf { it.isFinite() }
-            ?.coerceIn(0f, safeTotalTime)
-            ?: 0f
         val safeMaxProgress = if (safeTotalTime > 0f) safeTotalTime else 0.1f
 
         CustomSeekBar(
             modifier = Modifier
                 .weight(1f)
                 .onGloballyPositioned(onSeekBarPositioned),
-            progress = safeCurrentTime,
+            progress = currentProgress,
             maxProgress = safeMaxProgress,
             onValueChange = onSeekBarValueChange,
             onValueChangeFinished = onSeekBarValueChangeFinished,

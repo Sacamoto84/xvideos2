@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.video
 
+import com.client.xvideos.common.util.toMinSec
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -52,6 +53,17 @@ class CanvasTimeDurationLineTest {
         assertEquals(0f, calculateTimelineProgressWidth(currentTime = Float.POSITIVE_INFINITY, duration = 60, canvasWidth = 1000f), 0.001f)
         assertEquals(0f, calculateTimelineProgressWidth(currentTime = 30f, duration = 0, canvasWidth = 1000f), 0.001f)
         assertEquals(0f, calculateTimelineProgressWidth(currentTime = 30f, duration = 60, canvasWidth = 0f), 0.001f)
+    }
+
+    @Test
+    fun `timelineWholeSeconds gives the same label as the fractional time did`() {
+        val times = listOf(
+            0f, 0.4f, 0.99f, 1f, 9.2f, 68.7f, 134f, 3599.9f, 3600f,
+            -5f, Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, 3e9f,
+        )
+        for (time in times) {
+            assertEquals("time=$time", time.toDouble().toMinSec(), timelineWholeSeconds(time).toMinSec())
+        }
     }
 
     @Test

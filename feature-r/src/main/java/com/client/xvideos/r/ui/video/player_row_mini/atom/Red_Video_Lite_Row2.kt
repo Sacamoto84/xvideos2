@@ -99,7 +99,8 @@ fun Red_Video_Lite_Row2(
                 contentAlignment = Alignment.BottomCenter
             ) {
                 CanvasTimeDurationLine1(
-                    time,
+                    // Лямбдой: время меняется 20 раз в секунду (проход 217, T2).
+                    { time },
                     duration,
                     timeA = 0f,
                     timeB = 0f,

@@ -20,9 +20,10 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.DownloadIndicator
 import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
 
+/** @param currentTime время ролика поставщиком: см. [CanvasTimeDurationLine1]. */
 @Composable
 fun RedFullScreenScaffold(
-    currentTime: Float,
+    currentTime: () -> Float,
     duration: Int,
     timeA: Float,
     timeB: Float,
@@ -78,7 +79,7 @@ fun RedFullScreenScaffold(
 @Composable
 private fun RedFullScreenScaffoldPreview() {
     RedFullScreenScaffold(
-        currentTime = 10f,
+        currentTime = { 10f },
         duration = 60,
         timeA = 0f,
         timeB = 60f,

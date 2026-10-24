@@ -21,9 +21,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +42,15 @@ import com.client.xvideos.common.util.toMinSec
 import kotlinx.coroutines.coroutineScope
 import kotlin.coroutines.cancellation.CancellationException
 
+/**
+ * @param currentTime текущее время, с. Поставщиком, а не числом: плеер обновляет
+ * его 20 раз в секунду. Текст зависит только от целых секунд, полоса читает время
+ * в отрисовке — перекомпоновка раз в секунду, а не на каждое обновление
+ * (проход 217, T2).
+ */
 @Composable
 fun CanvasTimeDurationLine1(
-    currentTime: Float,
+    currentTime: () -> Float,
     duration: Int,
     modifier: Modifier = Modifier,
     timeA: Float = 0f,
@@ -58,6 +66,10 @@ fun CanvasTimeDurationLine1(
 ) {
 
     var isDragging by remember { mutableStateOf(false) }
+
+    val currentTimeProvider by rememberUpdatedState(currentTime)
+    val currentSeconds by remember { derivedStateOf { timelineWholeSeconds(currentTimeProvider()) } }
+    val currentTimeText = " " + currentSeconds.toMinSec()
 
     val infiniteTransition = rememberInfiniteTransition(label = "buffering")
     val bufferingColor by infiniteTransition.animateColor(
@@ -88,7 +100,7 @@ fun CanvasTimeDurationLine1(
         if (isVisibleTime) {
             Box {
                 Text(
-                    " " + currentTime.toDouble().toMinSec(),
+                    currentTimeText,
                     color = Color.Black,
                     fontSize = 12.sp,
                     fontFamily = Theme.R.fontFamilyPopinsRegular,
@@ -98,7 +110,7 @@ fun CanvasTimeDurationLine1(
                 )
 
                 Text(
-                    " " + currentTime.toDouble().toMinSec(),
+                    currentTimeText,
                     color = Color.White,
                     fontSize = 12.sp,
                     fontFamily = Theme.R.fontFamilyPopinsRegular,
@@ -153,7 +165,7 @@ fun CanvasTimeDurationLine1(
 
                 val progressRatioA = calculateTimelinePointX(timeA, duration, canvasWidth, defaultRatio = 0f)
                 val progressRatioB = calculateTimelinePointX(timeB, duration, canvasWidth, defaultRatio = 1f)
-                val progressWidth = calculateTimelineProgressWidth(currentTime, duration, canvasWidth)
+                val progressWidth = calculateTimelineProgressWidth(currentTime(), duration, canvasWidth)
 
                 if (!timeABEnable) {
                     drawLine(
@@ -227,6 +239,13 @@ internal fun calculateSeekTime(x: Float, width: Int, duration: Int): Float? {
     }
 }
 
+/**
+ * Целые секунды для подписи времени — то же, что `toDouble().toMinSec()` считал
+ * из дробного времени: не число и не больше нуля — ноль.
+ */
+internal fun timelineWholeSeconds(time: Float): Int =
+    if (!time.isFinite() || time <= 0f) 0 else time.toInt()
+
 internal fun calculateTimelineProgressWidth(currentTime: Float, duration: Int, canvasWidth: Float): Float {
     if (duration <= 0 || canvasWidth <= 0f) return 0f
     if (currentTime.isNaN() || currentTime.isInfinite()) return 0f
@@ -288,7 +307,7 @@ private fun Modifier.timelineSeekGestures(
 fun CanvasTimeDurationLine1Preview() {
 
     CanvasTimeDurationLine1(
-        currentTime = 7f,
+        currentTime = { 7f },
         duration = 20,
         timeA = 2f,
         timeB = 5f,
@@ -307,7 +326,7 @@ fun CanvasTimeDurationLine1Preview() {
 @Composable
 fun CanvasTimeDurationLine1BufferingPreview() {
     CanvasTimeDurationLine1(
-        currentTime = 5f,
+        currentTime = { 5f },
         duration = 20,
         timeABEnable = false,
         isBuffering = true,

@@ -21,7 +21,9 @@ fun RedFullScreenFeedScaffold(
     val percentDownload by downloadRed.downloader.percent.collectAsStateWithLifecycle()
 
     RedFullScreenScaffold(
-        currentTime = player.currentPlayerTime,
+        // Лямбдой: время меняется 20 раз в секунду, и чтение здесь перекомпоновывало
+        // бы весь скаффолд вместе с нижней панелью (проход 217, T2).
+        currentTime = { player.currentPlayerTime },
         duration = player.currentPlayerDuration,
         timeA = player.timeA,
         timeB = player.timeB,
@@ -63,7 +65,7 @@ fun RedFullScreenFeedScaffold(
 @Composable
 private fun RedFullScreenFeedScaffoldPreview() {
     RedFullScreenScaffold(
-        currentTime = 10f,
+        currentTime = { 10f },
         duration = 60,
         timeA = 0f,
         timeB = 60f,

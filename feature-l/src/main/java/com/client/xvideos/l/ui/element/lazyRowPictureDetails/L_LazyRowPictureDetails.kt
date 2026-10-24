@@ -78,37 +78,6 @@ fun L_LazyRowPictureDetails(
     val haptic = LocalHapticFeedback.current
     val gridState = host.position.rememberState()
 
-    // TEMP LDIAG: диагностика сдвигов карточек, не коммитить.
-    androidx.compose.runtime.LaunchedEffect(gridState) {
-        val sizes = HashMap<String, Int>()
-        val lanes = HashMap<String, Int>()
-        var prev = HashMap<String, Int>()
-        var frames = 0
-        androidx.compose.runtime.snapshotFlow {
-            gridState.layoutInfo.visibleItemsInfo.map {
-                val k = it.key.toString().substringAfterLast('#')
-                Triple(k, it.offset.y, it.size.height) to it.lane
-            }
-        }.collect { items ->
-            frames++
-            val cur = HashMap<String, Int>()
-            val deltas = HashMap<Int, MutableList<String>>()
-            for ((t, lane) in items) {
-                val (k, y, h) = t
-                cur[k] = y
-                val oldH = sizes.put(k, h)
-                if (oldH != null && oldH != h) Timber.w("LDIAG size #%s %d -> %d", k, oldH, h)
-                val oldLane = lanes.put(k, lane)
-                if (oldLane != null && oldLane != lane) Timber.w("LDIAG lane #%s %d -> %d", k, oldLane, lane)
-                prev[k]?.let { py -> deltas.getOrPut(y - py) { mutableListOf() }.add(k) }
-            }
-            if (deltas.size > 1) {
-                Timber.w("LDIAG jump frame %d: %s", frames, deltas.entries.joinToString { "d=${it.key}:${it.value.take(6)}" })
-            }
-            prev = cur
-        }
-    }
-
     // Без `by`: позиция скролла меняется каждый кадр, и разворачивать её здесь
     // нельзя — чтение на этом уровне перекомпоновывало бы весь экран на каждом
     // кадре прокрутки. State отдаётся скроллбару лямбдой, см. VerticalScrollbar.
