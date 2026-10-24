@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.atom
+package com.client.xvideos.xlive.ui.room.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
@@ -12,9 +12,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Плашка поверх потока XLive: какая комната играет.
+ * Плашка поверх потока: почему показывается не та комната, которую открыли.
  *
- * @param text ник комнаты, а при замене — почему показывается другая.
+ * @param text запрошенная комната, её статус и та, что показывается вместо неё.
  */
 @Composable
 fun XLiveRoomBadge(text: String, modifier: Modifier = Modifier) {

@@ -2,6 +2,7 @@ package com.client.xvideos.xlive.network
 
 import com.client.xvideos.common.net.UserAgentProvider
 import com.client.xvideos.common.net.doh.AppDns
+import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.xLiveUrlStart
 import io.ktor.client.HttpClient
@@ -54,6 +55,17 @@ object XLiveApi {
         val response = client.get("$xLiveUrlStart/api/chatvideocontext/${name.encodeURLPathPart()}/")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
         return parseXLiveRoom(response.bodyAsText()) ?: throw IOException("Ответ без room_status")
+    }
+
+    /**
+     * Анкета модели [name]: возраст, откуда, языки, «о себе», подписчики.
+     *
+     * @throws IOException нет сети, ответ с кодом ошибки или не JSON.
+     */
+    suspend fun bio(name: String): XLiveBio {
+        val response = client.get("$xLiveUrlStart/api/biocontext/${name.encodeURLPathPart()}/")
+        if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
+        return parseXLiveBio(response.bodyAsText()) ?: throw IOException("Анкета не JSON")
     }
 
     /**

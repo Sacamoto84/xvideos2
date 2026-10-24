@@ -32,7 +32,7 @@ import com.client.xvideos.screenRoot.atom.MenuButtonSelect
 import com.client.xvideos.screenRoot.molecule.MenuTopBar
 import com.client.xvideos.screenSettings.AppSettingsScreen
 import com.client.xvideos.x.screens.dashboards.ScreenXDashBoards
-import com.client.xvideos.xlive.ui.ScreenXLive
+import com.client.xvideos.xlive.ui.room.ScreenXLiveRoom
 
 /**
  * Стартовый экран выбора раздела приложения.
@@ -55,7 +55,7 @@ object MenuScreen : Screen {
         val onOpenX = remember(navigator) { { navigator.push(ScreenXDashBoards()) } }
         val onOpenL = remember(navigator) { { navigator.push(L_ScreenExplorer()) } }
         val onOpenR = remember(navigator) { { navigator.push(R_Screen_Root()) } }
-        val onOpenXLive = remember(navigator) { { navigator.push(ScreenXLive()) } }
+        val onOpenXLive = remember(navigator) { { navigator.push(ScreenXLiveRoom()) } }
 
         MenuScreenContent(
             onOpenSettings = onOpenSettings,

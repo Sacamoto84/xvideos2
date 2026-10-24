@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.atom
+package com.client.xvideos.xlive.ui.room.atom
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
@@ -6,14 +6,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.xlive.ui.XLiveColors
 
 /**
- * Сообщение по центру экрана XLive с кнопкой повтора.
+ * Сообщение по центру экрана комнаты с кнопкой повтора.
  *
- * @param text что случилось с потоком.
+ * @param text что случилось с комнатой.
  * @param onRetry повторить запрос комнаты.
  */
 @Composable
@@ -23,9 +23,9 @@ fun XLiveMessage(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = text, color = Color.White, textAlign = TextAlign.Center)
+        Text(text = text, color = XLiveColors.Value, textAlign = TextAlign.Center)
         TextButton(onClick = onRetry) {
-            Text(text = "Повторить")
+            Text(text = "Повторить", color = XLiveColors.Link)
         }
     }
 }
