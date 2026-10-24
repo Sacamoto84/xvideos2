@@ -24,7 +24,7 @@ import com.client.xvideos.x.model.ActressesIndexDropdownType
 import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.CatalogDropdownSearch
 import com.client.xvideos.x.model.CatalogProfileHit
-import com.client.xvideos.x.screens.actresses.atom.FilterButton
+import com.client.xvideos.x.screens.common.atom.FilterButton
 
 /**
  * Панель фильтров каталога актрис с 3 кнопками выпадающих списков

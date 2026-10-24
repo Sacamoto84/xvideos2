@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.actresses.atom
+package com.client.xvideos.x.screens.common.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
