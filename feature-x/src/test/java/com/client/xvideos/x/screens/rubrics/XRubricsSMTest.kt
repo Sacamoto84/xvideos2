@@ -96,6 +96,30 @@ class XRubricsSMTest {
     }
 
     @Test
+    fun `до показа новой ориентации вкладка не видит список прежней`() {
+        val sm = XRubricsSM(catalog { menuOf("Арбуз") }, scope)
+        sm.show(XCategory.STRAIGHT)
+        scheduler.advanceUntilIdle()
+
+        // Композиция уже с новой ориентацией, LaunchedEffect с show ещё не отработал.
+        assertEquals(XRubricsState.Loading, sm.stateFor(XCategory.GAY))
+    }
+
+    @Test
+    fun `уже загруженная ориентация видна сразу, до show`() {
+        val shared = catalog { url -> if (url == buildRubricMenuUrl(XCategory.GAY)) menuOf("Геи") else menuOf("Арбуз") }
+        XRubricsSM(shared, scope).show(XCategory.GAY)
+        scheduler.advanceUntilIdle()
+        val sm = XRubricsSM(shared, scope)
+        sm.show(XCategory.STRAIGHT)
+        scheduler.advanceUntilIdle()
+
+        val gay = sm.stateFor(XCategory.GAY) as XRubricsState.Ready
+
+        assertEquals(listOf("Геи"), gay.rubrics.map { it.title })
+    }
+
+    @Test
     fun `повторный show той же ориентации не перезагружает`() {
         var calls = 0
         val never = CompletableDeferred<String>()

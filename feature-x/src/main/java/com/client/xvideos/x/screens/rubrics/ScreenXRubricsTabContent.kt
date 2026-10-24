@@ -23,7 +23,7 @@ fun ScreenXRubricsTabContent(
     LaunchedEffect(category) { vm.show(category) }
 
     XRubricsGrid(
-        state = vm.state,
+        state = vm.stateFor(category),
         gridState = vm.gridPosition(category).rememberState(),
         topCutout = getTopInsetDp(),
         onOpen = onOpenRubric,

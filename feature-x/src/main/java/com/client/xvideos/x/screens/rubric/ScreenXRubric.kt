@@ -85,12 +85,12 @@ class ScreenXRubric(val id: Int, val slug: String, val title: String) : Screen {
                 localVideoOf = localVideoOf,
             )
         }
-        val header: @Composable () -> Unit = remember(screen, topCutout, filters, openGroup, vm) {
+        val subtitle = screen.title1
+        val header: @Composable () -> Unit = remember(subtitle, topCutout, filters, openGroup, vm) {
             {
                 XRubricHeader(
                     title = title,
-                    title0 = screen.title0,
-                    title1 = screen.title1,
+                    subtitle = subtitle,
                     topCutout = topCutout,
                     filterBar = {
                         XRubricFilterBar(

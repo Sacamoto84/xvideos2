@@ -34,7 +34,7 @@ sealed interface XRubricsState {
     data object Failed : XRubricsState
 
     @Immutable
-    data class Ready(val rubrics: ImmutableList<XRubric>) : XRubricsState
+    data class Ready(val orientation: XCategory, val rubrics: ImmutableList<XRubric>) : XRubricsState
 }
 
 /**
@@ -64,6 +64,20 @@ class XRubricsSM internal constructor(
     fun gridPosition(orientation: XCategory): LazyGridPosition =
         gridPositions.getOrPut(orientation) { LazyGridPosition() }
 
+    /**
+     * Что показать для ориентации [orientation] прямо сейчас.
+     *
+     * Композиция узнаёт о новой ориентации раньше, чем [show] из её эффекта:
+     * без этого кадр рисовал список прежней ориентации с позицией новой, и
+     * сетка запоминала сдвинутую позицию. Уже загруженный список отдаётся сразу.
+     */
+    fun stateFor(orientation: XCategory): XRubricsState {
+        val current = state
+        if (current is XRubricsState.Ready && current.orientation == orientation) return current
+        catalog.cached(orientation)?.let { return XRubricsState.Ready(orientation, it) }
+        return if (orientation == shown) current else XRubricsState.Loading
+    }
+
     /** Показывает список [orientation]; та же ориентация без ошибки ничего не перезапускает. */
     fun show(orientation: XCategory) {
         if (orientation == shown && state != XRubricsState.Failed) return
@@ -81,13 +95,13 @@ class XRubricsSM internal constructor(
         loadJob?.cancel()
         val cached = catalog.cached(orientation)
         if (cached != null) {
-            state = XRubricsState.Ready(cached)
+            state = XRubricsState.Ready(orientation, cached)
             return
         }
         state = XRubricsState.Loading
         loadJob = scope.launch {
             state = try {
-                XRubricsState.Ready(catalog.load(orientation))
+                XRubricsState.Ready(orientation, catalog.load(orientation))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

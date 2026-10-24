@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
+import com.client.xvideos.x.model.XCategory
 import com.client.xvideos.x.model.XRubric
 import com.client.xvideos.x.screens.rubrics.XRubricsState
 import com.client.xvideos.x.screens.rubrics.atom.XRubricTile
@@ -64,7 +65,10 @@ fun XRubricsGrid(
 @Composable
 private fun XRubricsGridPreview() {
     XRubricsGrid(
-        state = XRubricsState.Ready(persistentListOf(XRubric(1, "A", "Категория А"), XRubric(2, "B", "Категория Б"))),
+        state = XRubricsState.Ready(
+            XCategory.STRAIGHT,
+            persistentListOf(XRubric(1, "A", "Категория А"), XRubric(2, "B", "Категория Б")),
+        ),
         gridState = rememberLazyGridState(),
         topCutout = 0.dp,
         onOpen = {},

@@ -19,9 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.x.screens.common.KeepHorizontalScroll
 import com.client.xvideos.x.screens.common.atom.FilterButton
 import com.client.xvideos.x.screens.rubric.atom.XRubricOptionRow
 import com.client.xvideos.x.screens.rubric.model.XRubricFilterGroup
@@ -43,14 +44,15 @@ fun XRubricFilterBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .adaptiveContentWidth()
             .padding(vertical = 6.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // Ряд стоит в пейджере страниц: длинный свайп по нему не листает страницу.
+                .nestedScroll(KeepHorizontalScroll)
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -73,7 +75,7 @@ fun XRubricFilterBar(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color(0xFF1A1A1E))
                 ) {
