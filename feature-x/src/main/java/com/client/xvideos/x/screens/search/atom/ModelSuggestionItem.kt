@@ -7,9 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,11 +38,14 @@ fun ModelSuggestionItem(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Картинка подсказки — кадр 16:9, как на сайте; кружок обрезал его по центру.
         UrlImage(
             url = star.avatarUrl,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
+                .width(80.dp)
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(4.dp))
                 .background(Color(0xFF333333))
         )
         Spacer(modifier = Modifier.width(12.dp))
