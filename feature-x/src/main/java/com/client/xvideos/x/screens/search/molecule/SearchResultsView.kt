@@ -8,10 +8,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,12 +31,15 @@ import kotlinx.collections.immutable.toImmutableList
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
 /**
- * Отображение результатов поиска видеороликов.
+ * Одна страница выдачи поиска видеороликов.
+ *
+ * @param items Ролики страницы; `null` — страница ещё не загружена.
+ * @param isError Страница не загрузилась: сообщение и «Повторить».
+ * @param gridState Прокрутка сетки этой страницы (позиция хранится в ScreenModel).
  */
 @Composable
 fun SearchResultsView(
-    items: List<ItemsX>,
-    isLoading: Boolean,
+    items: List<ItemsX>?,
     isError: Boolean,
     onRetry: () -> Unit,
     isFavorite: (Long) -> Boolean,
@@ -40,6 +48,7 @@ fun SearchResultsView(
     onDownload: (ItemsX) -> Unit,
     onSaveToGallery: (ItemsX) -> Unit,
     openVideoPlayer: (ItemsX) -> Unit,
+    gridState: LazyGridState,
     modifier: Modifier = Modifier,
     localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
 ) {
@@ -68,7 +77,15 @@ fun SearchResultsView(
                     }
                 }
             }
-            items.isEmpty() && !isLoading -> {
+            items == null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFFFF9900), modifier = Modifier.size(36.dp))
+                }
+            }
+            items.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -81,14 +98,16 @@ fun SearchResultsView(
                 }
             }
             else -> {
+                val immutableItems = remember(items) { items.toImmutableList() }
                 DashboardsPaginatedListContent(
-                    items = items.toImmutableList(),
+                    items = immutableItems,
                     isFavorite = isFavorite,
                     onFavoriteAdd = onFavoriteAdd,
                     onFavoriteRemove = onFavoriteRemove,
                     onDownload = onDownload,
                     openVideoPlayer = openVideoPlayer,
                     onSaveToGallery = onSaveToGallery,
+                    gridState = gridState,
                     contentPadding = PaddingValues(top = 2.dp, bottom = 4.dp),
                     localVideoOf = localVideoOf,
                 )
@@ -102,7 +121,6 @@ fun SearchResultsView(
 private fun SearchResultsViewPreview() {
     SearchResultsView(
         items = emptyList(),
-        isLoading = false,
         isError = false,
         onRetry = {},
         isFavorite = { false },
@@ -110,6 +128,7 @@ private fun SearchResultsViewPreview() {
         onFavoriteRemove = {},
         onDownload = {},
         onSaveToGallery = {},
-        openVideoPlayer = {}
+        openVideoPlayer = {},
+        gridState = rememberLazyGridState(),
     )
 }

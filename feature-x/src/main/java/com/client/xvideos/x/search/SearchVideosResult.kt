@@ -12,11 +12,29 @@ import java.net.URLEncoder
  *
  * @property items Список найденных карточек видео.
  * @property maxPages Максимальное количество доступных страниц пагинации (минимум 1).
+ * @property totalCount Сколько роликов нашлось — как в заголовке выдачи сайта (`"17 809"`);
+ *   `null`, если ничего не нашлось или числа нет.
  */
 data class SearchVideosResult(
     val items: List<ItemsX>,
-    val maxPages: Int
+    val maxPages: Int,
+    val totalCount: String? = null,
 )
+
+private val RESULTS_COUNT_REGEX = Regex("""\d[\d\s]*""")
+
+/**
+ * Число найденного из заголовка выдачи: `<h2 class="page-title"> fox
+ * <span class="sub">(17 809 результаты)</span>`. При пустой выдаче там
+ * «(Нет результатов)» — цифр нет, и числа нет.
+ */
+internal fun parseSearchResultsCount(document: Document): String? {
+    val text = document.selectFirst("h2.page-title span.sub")?.text() ?: return null
+    return RESULTS_COUNT_REGEX.find(text.replace(' ', ' '))?.value
+        ?.trim()
+        ?.replace(Regex("""\s+"""), " ")
+        ?.takeIf { it.isNotEmpty() }
+}
 
 /**
  * Кодирует поисковый запрос в URL-безопасную строку.
@@ -49,7 +67,7 @@ fun parseSearchVideosPage(html: String): SearchVideosResult {
         .filter { !it.href.contains("THUMBNUM") }
         .distinctBy { it.id }
     val maxPages = parseSearchLastPage(doc)
-    return SearchVideosResult(items = items, maxPages = maxPages)
+    return SearchVideosResult(items = items, maxPages = maxPages, totalCount = parseSearchResultsCount(doc))
 }
 
 /**

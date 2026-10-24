@@ -107,5 +107,26 @@ class SearchVideosLoaderTest {
         val result = parseSearchVideosPage("")
         assertEquals(1, result.maxPages)
         assertEquals(0, result.items.size)
+        assertEquals(null, result.totalCount)
+    }
+
+    /** Число найденного — из заголовка выдачи: «fox (17 809 результаты)». */
+    @Test
+    fun `число найденного берётся из заголовка выдачи`() {
+        val html = """<h2 class="page-title"> fox <span class="sub"> (17&nbsp;809 результаты) </span></h2>"""
+
+        assertEquals("17 809", parseSearchVideosPage(html).totalCount)
+    }
+
+    @Test
+    fun `нет результатов — числа нет`() {
+        val html = """<h2 class="page-title"> zzz <span class="sub"> (Нет результатов) </span></h2>"""
+
+        assertEquals(null, parseSearchVideosPage(html).totalCount)
+    }
+
+    @Test
+    fun `без заголовка выдачи числа нет`() {
+        assertEquals(null, parseSearchVideosPage("<div>пусто</div>").totalCount)
     }
 }

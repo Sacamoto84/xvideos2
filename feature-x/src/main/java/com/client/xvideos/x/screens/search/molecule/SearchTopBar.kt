@@ -2,6 +2,7 @@ package com.client.xvideos.x.screens.search.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -25,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
@@ -48,6 +50,7 @@ fun SearchTopBar(
     onClear: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    resultsCount: String? = null,
 ) {
     Column(
         modifier = modifier
@@ -80,13 +83,24 @@ fun SearchTopBar(
                 }
             },
             trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = onClear) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Очистить",
-                            tint = Color.Gray
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Сколько нашлось — перед крестиком, чтобы не занимать место в выдаче.
+                    if (uiMode == SearchUiMode.RESULTS && resultsCount != null) {
+                        Text(
+                            text = resultsCount,
+                            color = Color(0xFF9E9E9E),
+                            fontSize = 13.sp,
+                            maxLines = 1
                         )
+                    }
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = onClear) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Очистить",
+                                tint = Color.Gray
+                            )
+                        }
                     }
                 }
             },

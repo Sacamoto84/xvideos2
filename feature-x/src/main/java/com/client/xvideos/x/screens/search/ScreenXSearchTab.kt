@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +25,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
 import com.client.xvideos.x.screens.search.molecule.SearchHistoryView
-import com.client.xvideos.x.screens.search.molecule.SearchResultsView
+import com.client.xvideos.x.screens.search.molecule.SearchResultsPager
 import com.client.xvideos.x.screens.search.molecule.SearchSuggestionsView
 import com.client.xvideos.x.screens.search.molecule.SearchTopBar
 import com.client.xvideos.x.search.model.Channel
@@ -71,9 +73,9 @@ fun ScreenXSearchTabContent(
     val uiMode by vm.uiMode.collectAsStateWithLifecycle()
     val isSuggestLoading by vm.isSuggestLoading.collectAsStateWithLifecycle()
     val suggestions by vm.suggestions.collectAsStateWithLifecycle()
-    val isVideoLoading by vm.isVideoLoading.collectAsStateWithLifecycle()
-    val videoItems by vm.videoItems.collectAsStateWithLifecycle()
-    val isSearchError by vm.isSearchError.collectAsStateWithLifecycle()
+    val currentPage by vm.currentPage.collectAsStateWithLifecycle()
+    val maxPages by vm.maxPages.collectAsStateWithLifecycle()
+    val resultsCount by vm.resultsCount.collectAsStateWithLifecycle()
     val history by vm.history.collectAsStateWithLifecycle()
 
     val focusManager = LocalFocusManager.current
@@ -127,11 +129,12 @@ fun ScreenXSearchTabContent(
         SearchTopBar(
             query = query,
             uiMode = uiMode,
-            isLoading = isSuggestLoading || isVideoLoading,
+            isLoading = isSuggestLoading || (uiMode == SearchUiMode.RESULTS && currentPage in vm.loadingResultPages),
             onQueryChange = onQueryChange,
             onSearch = onSearchKeyword,
             onClear = onClearQuery,
-            onBack = onBackClick
+            onBack = onBackClick,
+            resultsCount = resultsCount,
         )
 
         Box(
@@ -160,17 +163,31 @@ fun ScreenXSearchTabContent(
                 SearchUiMode.RESULTS -> {
                     // Сохранённые ролики в выдаче: превью и плеер — из скачанного файла.
                     val localVideoOf = rememberLocalVideoOf(vm.saved.downloads)
-                    val onRetry = remember(vm) { { vm.retrySearch() } }
                     val isFavoriteFn: (Long) -> Boolean = remember(vm) { { id -> vm.isFavorite(id) } }
                     val onFavAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
                     val onFavRemove: (ItemsX) -> Unit = remember(vm) { { item -> vm.removeFavorite(item) } }
                     val onDl: (ItemsX) -> Unit = remember(vm) { { item -> vm.download(item) } }
                     val onGallery: (ItemsX) -> Unit = remember(vm) { { item -> vm.saveToGallery(item) } }
-                    SearchResultsView(
-                        items = videoItems,
-                        isLoading = isVideoLoading,
-                        isError = isSearchError,
-                        onRetry = onRetry,
+
+                    // Пейджер и полоса номеров внизу — одна страница: свайп сообщает её
+                    // ScreenModel, а выбор номера на полосе листает пейджер. Свайп сверяется
+                    // по settledPage: промежуточные страницы долгой прокрутки не дёргают полосу.
+                    val pagerState = vm.resultsPagerPosition.rememberState { maxPages }
+                    LaunchedEffect(pagerState) {
+                        snapshotFlow { pagerState.settledPage }.collect { vm.onPageChange(it) }
+                    }
+                    LaunchedEffect(pagerState, currentPage) {
+                        if (pagerState.settledPage != currentPage) pagerState.animateScrollToPage(currentPage)
+                    }
+
+                    SearchResultsPager(
+                        pagerState = pagerState,
+                        pages = vm.resultPages,
+                        loadingPages = vm.loadingResultPages,
+                        failedPages = vm.failedResultPages,
+                        gridPosition = vm::resultGridPosition,
+                        onLoadPage = vm::loadResultsPage,
+                        onRetryPage = vm::retryResultsPage,
                         isFavorite = isFavoriteFn,
                         onFavoriteAdd = onFavAdd,
                         onFavoriteRemove = onFavRemove,
