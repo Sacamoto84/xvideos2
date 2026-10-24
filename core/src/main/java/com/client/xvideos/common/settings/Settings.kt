@@ -24,7 +24,7 @@ import timber.log.Timber
  * Настройки сгруппированы по функциональным зонам приложения:
  * - `r_*` — настройки разделов R;
  * - `l_*` — настройки разделов L;
- * - `xvideos_*` — настройки, относящиеся к основному разделу Xvideos.
+ * - `x_*` — настройки раздела X.
  *
  * Важно: [init] должен быть вызван до первого обращения к любому полю объекта,
  * иначе доступ к `pref` приведёт к ошибке инициализации.
@@ -249,12 +249,7 @@ object Settings {
 
 
 
-    //-- xvideos ---
-
-    //Вывод в дашбоард в две столбика
-    val xvideos_row2 by lazy { SettingElementBoolean(pref, "x_row2", true) }
-
-    val xvideos_shemale by lazy { SettingElementBoolean(pref, "x_shemale", true) }
+    //-- X ---
 
     //Категория X (лента, поиск, теги, рейтинг канала): имя XCategory из feature-x
     val x_category by lazy { SettingElementString(pref, "x_category", "STRAIGHT") }

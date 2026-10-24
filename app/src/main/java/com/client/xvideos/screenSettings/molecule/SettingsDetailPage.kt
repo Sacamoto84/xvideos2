@@ -23,7 +23,6 @@ import com.client.xvideos.screenSettings.section.LSettingsSection
 import com.client.xvideos.screenSettings.section.NetworkSettingsSection
 import com.client.xvideos.screenSettings.section.P2PSettingsSection
 import com.client.xvideos.screenSettings.section.RSettingsSection
-import com.client.xvideos.screenSettings.section.XSettingsSection
 
 @Composable
 internal fun SettingsDetailPage(
@@ -76,7 +75,6 @@ internal fun SettingsDetailPage(
             nichesCacheLastModifiedHour = nichesCacheLastModifiedHour,
             modifier = modifier
         )
-        SettingsPage.X -> XSettingsSection(modifier = modifier)
         SettingsPage.Appearance -> AppearanceSettingsSection(modifier = modifier)
         SettingsPage.Storage -> StorageStatisticsSection(params.storageStats, modifier = modifier)
         SettingsPage.Backup -> BackupSettingsSection(

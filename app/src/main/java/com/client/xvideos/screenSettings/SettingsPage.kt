@@ -45,11 +45,6 @@ internal enum class SettingsPage(
         icon = R.drawable.icon_red,
         subtitle = "Размеры папок, Downloads и Niches cache"
     ),
-    X(
-        title = "X",
-        icon = R.drawable.icon_xvideos_white,
-        subtitle = "Отображение и фильтры X"
-    ),
     Storage(
         title = "Статистика",
         icon = R.drawable.hard_drive_2_24,
@@ -76,7 +71,7 @@ internal enum class SettingsPage(
             Backup,
             P2P
         )
-        val contentPages: PersistentList<SettingsPage> = persistentListOf(X, L, Red)
+        val contentPages: PersistentList<SettingsPage> = persistentListOf(L, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
     }
