@@ -21,6 +21,7 @@ import io.ktor.http.isSuccess
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.coroutines.CancellationException
 import com.client.xvideos.common.util.pathForLog
+import okhttp3.CookieJar
 import timber.log.Timber
 import java.io.IOException
 
@@ -30,15 +31,19 @@ import java.io.IOException
  * Раньше `HttpClient(OkHttp)` создавался и закрывался на каждый вызов: новый пул
  * соединений и новый пул потоков на каждый запрос, нулевое переиспользование
  * keep-alive. Клиент живёт столько же, сколько процесс, поэтому close() не нужен.
+ *
+ * Cookie — общие с WebView: после входа в X прямые запросы идут от того же
+ * пользователя сайта, что и лента в WebView.
  */
-private val htmlClient: HttpClient by lazy {
+private val htmlClient: HttpClient by lazy { buildXHtmlClient(XWebViewCookieJar) }
+
+/** Клиент страниц X с хранилищем cookie [cookieJar]. */
+private fun buildXHtmlClient(cookieJar: CookieJar): HttpClient =
     HttpClient(OkHttp) {
         engine {
             config {
                 dns(AppDns)
-                // Cookie — общие с WebView: после входа в X прямые запросы идут
-                // от того же пользователя сайта, что и лента в WebView.
-                cookieJar(XWebViewCookieJar)
+                cookieJar(cookieJar)
                 // Сайт на техобслуживании отвечает 503 — плашка вместо безликой ошибки.
                 addInterceptor(SiteMaintenanceInterceptor { SiteMaintenanceReporter.report("X") })
             }
@@ -56,7 +61,6 @@ private val htmlClient: HttpClient by lazy {
             headers.appendIfNameAbsent(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
         }
     }
-}
 
 /** Ответ сервера с кодом ошибки: адрес не тот или сервер отказал. */
 class HttpStatusException(val code: Int, url: String) : IOException("HTTP $code для $url")
@@ -82,6 +86,24 @@ suspend fun fetchHtml(url: String, extraHeaders: Map<String, String> = emptyMap(
     }
     if (!response.status.isSuccess()) throw HttpStatusException(response.status.value, target)
     return response.bodyAsText()
+}
+
+/**
+ * HTML страницы по [url] в отдельной сессии сайта. Ошибки — как у [fetchHtml].
+ *
+ * Cookie этого запроса (и его редиректов) живут только в нём: не попадают ни в
+ * WebView, ни в общий клиент. Нужен там, где запрос меняет состояние сессии
+ * сайта, например ориентацию ради её меню. Таких вызовов за процесс единицы,
+ * поэтому клиент на вызов оправдан.
+ */
+suspend fun fetchHtmlInOwnSession(url: String): String {
+    val target = requireHttpUrl(url)
+    Timber.d("fetchHtmlInOwnSession %s", target.pathForLog())
+    return buildXHtmlClient(OwnSessionCookieJar()).use { client ->
+        val response = client.get(target)
+        if (!response.status.isSuccess()) throw HttpStatusException(response.status.value, target)
+        response.bodyAsText()
+    }
 }
 
 /**
