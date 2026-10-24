@@ -140,6 +140,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
                     catalog = catalog,
                     items = catalog.items,
                     isLoadingInitial = false,
+                    isLoaded = true,
                     isEndReached = !catalog.hasNextPage || catalog.items.isEmpty(),
                     error = null,
                 )

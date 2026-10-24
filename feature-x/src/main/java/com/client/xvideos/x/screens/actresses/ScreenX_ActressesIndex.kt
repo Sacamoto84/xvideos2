@@ -24,9 +24,13 @@ import com.client.xvideos.x.model.ActressesIndexFilterOption
 import com.client.xvideos.x.model.ActressesIndexItem
 import com.client.xvideos.x.model.ActressesIndexUiState
 import com.client.xvideos.x.model.CatalogProfileHit
+import com.client.xvideos.x.screens.actresses.model.ActressesIndexScreenPhase
+import com.client.xvideos.x.screens.actresses.model.actressesIndexScreenPhase
 import com.client.xvideos.x.screens.actresses.molecule.ActressesIndexGrid
 import com.client.xvideos.x.screens.actresses.molecule.ActressesIndexTopBar
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
+import com.client.xvideos.x.screens.channel.atom.ChannelLoadingView
+import com.client.xvideos.x.screens.channel.molecule.ChannelErrorView
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
@@ -108,6 +112,20 @@ fun ScreenX_ActressesIndexContent(
     onCloseDropdown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // До первой удачной загрузки — только индикатор или ошибка на весь экран, как у
+    // канала. После неё загрузку и сбой (смена страны, периода) показывает сетка.
+    when (actressesIndexScreenPhase(uiState)) {
+        ActressesIndexScreenPhase.LOADING -> {
+            ChannelLoadingView(modifier = modifier)
+            return
+        }
+        ActressesIndexScreenPhase.ERROR -> {
+            ChannelErrorView(message = uiState.error.orEmpty(), onRetry = onRetry, modifier = modifier)
+            return
+        }
+        ActressesIndexScreenPhase.CONTENT -> Unit
+    }
+
     val topCutout = getTopInsetDp()
 
     // Бесконечная пагинация при прокрутке вниз
@@ -159,7 +177,7 @@ fun ScreenX_ActressesIndexContent(
 @Composable
 private fun ScreenX_ActressesIndexContentPreview() {
     ScreenX_ActressesIndexContent(
-        uiState = ActressesIndexUiState(),
+        uiState = ActressesIndexUiState(isLoaded = true),
         gridState = rememberLazyGridState(),
         onBack = {},
         onActressClick = {},

@@ -176,6 +176,8 @@ data class ActressesIndexUiState(
     val activeDropdown: ActressesIndexDropdownType? = null,
     val dropdownSearch: CatalogDropdownSearch = CatalogDropdownSearch(),
     val isLoadingInitial: Boolean = true,
+    /** Каталог хоть раз загрузился: фильтры есть, смена фильтра экран не прячет. */
+    val isLoaded: Boolean = false,
     val isLoadingMore: Boolean = false,
     val isEndReached: Boolean = false,
     val error: String? = null,
