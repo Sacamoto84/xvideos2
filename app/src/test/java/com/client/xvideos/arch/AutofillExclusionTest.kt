@@ -7,8 +7,8 @@ import org.junit.Test
 /**
  * Сторож автозаполнения.
  *
- * Приложение не отдаёт системной службе автозаполнения ничего, кроме формы
- * входа L, — та рассчитана на менеджер паролей. Держится это на трёх вещах, и
+ * Приложение не отдаёт системной службе автозаполнения ничего, кроме форм
+ * входа L и X, — те рассчитаны на менеджер паролей. Держится это на трёх вещах, и
  * каждая уже терялась или не была сделана:
  *
  * - запрет на корне окна `MainActivity` в проходе 193 уехал вместе с экраном
@@ -42,7 +42,7 @@ class AutofillExclusionTest {
     }
 
     @Test
-    fun `окно автозаполнению открывает только форма входа L`() {
+    fun `окно автозаполнению открывают только формы входа L и X`() {
         val callers = sources()
             .filter { (path, code) -> ALLOW_CALL.containsMatchIn(code) && !path.endsWith("/AllowWindowAutofill.kt") }
             .map { (path, _) -> path }
@@ -57,7 +57,7 @@ class AutofillExclusionTest {
     }
 
     @Test
-    fun `форма входа L сама поля не закрывает`() {
+    fun `формы входа сами поля не закрывают`() {
         OPEN_TO_AUTOFILL.forEach { path ->
             val code = sources().first { it.first == path }.second
             assertTrue("В $path нет полей ввода — запись в OPEN_TO_AUTOFILL устарела", FIELD_CALL.containsMatchIn(code))
@@ -101,7 +101,14 @@ class AutofillExclusionTest {
          *
          * Форма входа L: поля объявлены как логин и пароль, сохранение завершает
          * сеанс автозаполнения — решение владельца от 13.10.2026.
+         *
+         * Форма входа X: владелец попросил окно входа «как на L» (24.10.2026) —
+         * поля так же открыты менеджеру паролей, удачный вход завершает сеанс.
+         * Поля страницы сайта в WebView входа закрыты от службы отдельно.
          */
-        val OPEN_TO_AUTOFILL = sortedSetOf("l/ui/screens/molecule/LLoginForm.kt")
+        val OPEN_TO_AUTOFILL = sortedSetOf(
+            "l/ui/screens/molecule/LLoginForm.kt",
+            "x/screens/login/molecule/XLoginForm.kt",
+        )
     }
 }

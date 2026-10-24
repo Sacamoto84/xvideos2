@@ -152,7 +152,7 @@ class GlobalStateTest {
             "common/settings/SecureCredentialStore.kt::lastFailureLooksLikeBrokenKeyset",
             // Экземпляр SharedPreferences для настроек приложения.
             "common/settings/Settings.kt::pref",
-            // Зашифрованное хранилище учетных данных L.
+            // Зашифрованное хранилище учетных данных L и X.
             "common/settings/Settings.kt::securePref",
             // Процессный дисковый кеш видео предзагрузки ExoPlayer.
             "common/videoplayer/feed/FeedVideoCache.kt::instance",

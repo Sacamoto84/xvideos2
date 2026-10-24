@@ -10,6 +10,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.ui.scroll.PagerPosition
 import com.client.xvideos.x.model.XCategory
+import com.client.xvideos.x.feature.auth.XSession
 import com.client.xvideos.x.feature.category.XCategoryState
 import com.client.xvideos.x.feature.country.CountryState
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
@@ -41,11 +42,19 @@ import com.client.xvideos.x.screens.common.playerScreenFor
  * Управляет состоянием вкладок, пагинатором, открытием плеера и действиями над избранным/загрузками.
  *
  * @property saved Фасад локальных данных раздела X ([SavedX]).
+ * @param session вход на сайт X: открытие ленты проверяет сессию сохранённого профиля.
  */
 @Stable
 class ScreenXDashBoardsScreenModel @Inject constructor(
-    val saved : SavedX
+    val saved : SavedX,
+    session: XSession,
 ) : ScreenModel {
+
+    init {
+        // Сессия сайта живёт около месяца; кончилась — X входит заново по
+        // сохранённому профилю, как L.
+        session.restoreInBackground()
+    }
 
     /** Страница горизонтального пейджера выдачи; сам пейджер создаёт экран, см. [PagerPosition]. */
     val pagerPosition = PagerPosition()
