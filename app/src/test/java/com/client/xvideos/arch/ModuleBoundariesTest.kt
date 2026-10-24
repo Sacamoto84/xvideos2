@@ -9,8 +9,8 @@ import java.io.File
  * Сторож границ будущих модулей (шаг 0 из docs/module-split-plan.md).
  *
  * Правила целевого графа:
- *   - `common` (будущий `:core`) не знает про разделы `l`, `r`, `x`;
- *   - разделы `l`, `r`, `x` не знают друг о друге;
+ *   - `common` (будущий `:core`) не знает про разделы `l`, `r`, `x`, `xlive`;
+ *   - разделы `l`, `r`, `x`, `xlive` не знают друг о друге;
  *   - ни один раздел не знает про пакеты уровня приложения ([APP_LEVEL]) —
  *     точка сборки зависит от разделов, а не наоборот.
  *
@@ -64,7 +64,7 @@ class ModuleBoundariesTest {
             .map { it.name }
             .toSet()
 
-        val expected = setOf("common", "l", "r", "x", "screenRoot", "screenSettings", "p2p", "ui")
+        val expected = setOf("common", "l", "r", "x", "xlive", "screenRoot", "screenSettings", "p2p", "ui")
         val missing = expected - scanned
         assertTrue("Не просканированы пакеты $missing; найдено: $scanned", missing.isEmpty())
     }
@@ -94,10 +94,11 @@ class ModuleBoundariesTest {
 
         /** Кто кого не имеет права импортировать. */
         val FORBIDDEN = mapOf(
-            "common" to setOf("l", "r", "x") + APP_LEVEL,
-            "l" to setOf("r", "x") + APP_LEVEL,
-            "r" to setOf("l", "x") + APP_LEVEL,
-            "x" to setOf("l", "r") + APP_LEVEL,
+            "common" to setOf("l", "r", "x", "xlive") + APP_LEVEL,
+            "l" to setOf("r", "x", "xlive") + APP_LEVEL,
+            "r" to setOf("l", "x", "xlive") + APP_LEVEL,
+            "x" to setOf("l", "r", "xlive") + APP_LEVEL,
+            "xlive" to setOf("l", "r", "x") + APP_LEVEL,
         )
 
         /**

@@ -10,7 +10,7 @@ import java.io.File
  *
  * Gson не вызывает конструкторы Kotlin и не смотрит на нуллабельность —
  * отсутствующее поле остаётся `null` в non-null типе, и падение случается
- * позже, вдали от разбора. Теперь во всех модулях (:core, :feature-l, :feature-x, :feature-r, :app)
+ * позже, вдали от разбора. Теперь во всех модулях (:core, :feature-l, :feature-x, :feature-r, :feature-xlive, :app)
  * используется kotlinx.serialization.
  */
 class UntrustedInputSerializationTest {

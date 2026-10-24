@@ -145,6 +145,11 @@ class LayerBoundariesTest {
                 "common" to "domain",
                 "ui" to "ui",
             ),
+            // Пока один пустой экран; новые пакеты раздела дописываются сюда
+            // вместе с кодом — второй тест не даст их пропустить.
+            "xlive" to mapOf(
+                "ui" to "ui",
+            ),
         )
 
         /** Пакеты, к слоям не относящиеся: DI собирает граф из всех слоёв сразу. */
@@ -152,6 +157,7 @@ class LayerBoundariesTest {
             "l" to setOf("di"),
             "x" to emptySet<String>(),
             "r" to emptySet<String>(),
+            "xlive" to emptySet<String>(),
         )
 
         /**

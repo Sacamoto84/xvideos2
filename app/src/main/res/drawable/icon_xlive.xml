@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Временная надпись для кнопки раздела XLive в меню: X белым, LIVE красным. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="40dp"
+    android:viewportWidth="80"
+    android:viewportHeight="32">
+
+    <path
+        android:pathData="M2,6 L16,26 M16,6 L2,26"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <path
+        android:pathData="M22,6 L22,26 L34,26 M40,6 L40,26 M46,6 L53,26 L60,6 M78,6 L66,6 L66,26 L78,26 M66,16 L76,16"
+        android:strokeWidth="4"
+        android:strokeColor="#E53935"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

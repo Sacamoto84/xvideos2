@@ -1,4 +1,5 @@
-// Общая настройка библиотечного модуля: :core, :feature-l, :feature-r, :feature-x.
+// Общая настройка библиотечного модуля: :core, :feature-l, :feature-r, :feature-x,
+// :feature-xlive.
 //
 // Всё, что ниже, лежало слово в слово в четырёх файлах сборки. Расходились они
 // только тремя вещами, и те остались на местах: namespace, consumerProguardFiles

@@ -44,7 +44,7 @@ Android-клиент для трёх сайтов сразу, с офлайн-б
 красный гейт, как и упавший тест.
 
 - **1641 юнит-тест** в 295 файлах (на 22.10.2026), включая сторожей архитектуры
-- **detekt** — во всех пяти модулях, `ignoreFailures = false`
+- **detekt** — во всех шести модулях, `ignoreFailures = false`
 - **lint** — с `checkDependencies = true`, то есть смотрит и библиотечные модули
 
 ---
@@ -52,12 +52,13 @@ Android-клиент для трёх сайтов сразу, с офлайн-б
 ## Модули
 
 ```
-:app          точка сборки: Activity, навигация, экран настроек, бэкап, замок
-:core         базовый слой: тема, плеер, Coil, сеть и DoH, P2P, файловая БД, настройки
-:feature-x    раздел X
-:feature-l    раздел L
-:feature-r    раздел R
-build-logic   convention-плагин xvideos.android-library
+:app           точка сборки: Activity, навигация, экран настроек, бэкап, замок
+:core          базовый слой: тема, плеер, Coil, сеть и DoH, P2P, файловая БД, настройки
+:feature-x     раздел X
+:feature-l     раздел L
+:feature-r     раздел R
+:feature-xlive раздел XLive
+build-logic    convention-плагин xvideos.android-library
 ```
 
 Разделы не знают друг о друге и не знают про `:app`; общее живёт в `:core`.

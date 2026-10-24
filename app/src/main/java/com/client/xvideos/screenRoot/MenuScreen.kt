@@ -2,10 +2,15 @@ package com.client.xvideos.screenRoot
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -27,6 +32,7 @@ import com.client.xvideos.screenRoot.atom.MenuButtonSelect
 import com.client.xvideos.screenRoot.molecule.MenuTopBar
 import com.client.xvideos.screenSettings.AppSettingsScreen
 import com.client.xvideos.x.screens.dashboards.ScreenXDashBoards
+import com.client.xvideos.xlive.ui.ScreenXLive
 
 /**
  * Стартовый экран выбора раздела приложения.
@@ -49,6 +55,7 @@ object MenuScreen : Screen {
         val onOpenX = remember(navigator) { { navigator.push(ScreenXDashBoards()) } }
         val onOpenL = remember(navigator) { { navigator.push(L_ScreenExplorer()) } }
         val onOpenR = remember(navigator) { { navigator.push(R_Screen_Root()) } }
+        val onOpenXLive = remember(navigator) { { navigator.push(ScreenXLive()) } }
 
         MenuScreenContent(
             onOpenSettings = onOpenSettings,
@@ -56,7 +63,8 @@ object MenuScreen : Screen {
             onOpenP2pReceive = onOpenP2pReceive,
             onOpenX = onOpenX,
             onOpenL = onOpenL,
-            onOpenR = onOpenR
+            onOpenR = onOpenR,
+            onOpenXLive = onOpenXLive
         )
     }
 }
@@ -69,6 +77,7 @@ fun MenuScreenContent(
     onOpenX: () -> Unit,
     onOpenL: () -> Unit,
     onOpenR: () -> Unit,
+    onOpenXLive: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -82,18 +91,29 @@ fun MenuScreenContent(
             )
         }
     ) { paddingValues ->
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF353535))
                 .padding(paddingValues)
-                .adaptiveContentWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
         ) {
-            MenuButtonSelect(R.drawable.icon_xvideos_white, onClick = onOpenX)
-            MenuButtonSelect(R.drawable.icon_luscious, tag = "buttonL", onClick = onOpenL)
-            MenuButtonSelect(R.drawable.icon_red, onClick = onOpenR)
+            // Плитки прижаты к низу, а не влезли — прокручиваются. Без прокрутки
+            // четвёртая сжималась: внутренний экран складного в альбомной при
+            // Medium (wm density 475) ниже четырёх плиток на ~6dp.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight)
+                    .adaptiveContentWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                MenuButtonSelect(R.drawable.icon_xvideos_white, onClick = onOpenX)
+                MenuButtonSelect(R.drawable.icon_luscious, tag = "buttonL", onClick = onOpenL)
+                MenuButtonSelect(R.drawable.icon_red, onClick = onOpenR)
+                MenuButtonSelect(R.drawable.icon_xlive, onClick = onOpenXLive)
+            }
         }
     }
 }
@@ -110,6 +130,7 @@ private fun MenuPreview() {
         onOpenP2pReceive = {},
         onOpenX = {},
         onOpenL = {},
-        onOpenR = {}
+        onOpenR = {},
+        onOpenXLive = {}
     )
 }

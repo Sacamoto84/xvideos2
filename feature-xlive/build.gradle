@@ -1,0 +1,19 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
+    id 'xvideos.android-library'
+}
+
+android {
+    namespace = 'com.client.xvideos.feature.xlive'
+}
+
+// Раздел пока состоит из одного пустого экрана. Hilt, сериализацию и тестовые
+// зависимости добавлять вместе с первым кодом, которому они нужны.
+dependencies {
+
+    api project(':core')
+
+    coreLibraryDesugaring libs.desugar.jdk.libs
+}

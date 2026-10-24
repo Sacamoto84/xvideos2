@@ -152,6 +152,7 @@ dependencies {
     implementation project(':feature-l')
     implementation project(':feature-x')
     implementation project(':feature-r')
+    implementation project(':feature-xlive')
 
     // Библиотеки Compose, Coil, media3, Voyager, ktor и прочие :core отдаёт
     // через api — здесь их перечислять больше не нужно. Осталось только то,
