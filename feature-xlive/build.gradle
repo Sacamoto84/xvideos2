@@ -9,11 +9,14 @@ android {
     namespace = 'com.client.xvideos.feature.xlive'
 }
 
-// Раздел пока состоит из одного пустого экрана. Hilt, сериализацию и тестовые
-// зависимости добавлять вместе с первым кодом, которому они нужны.
+// Список короткий: плеер, Ktor и kotlinx.serialization приходят из :core через
+// api. ScreenModel заводится через rememberScreenModel, поэтому Hilt разделу
+// пока не нужен — добавлять вместе с первым кодом, которому он понадобится.
 dependencies {
 
     api project(':core')
 
     coreLibraryDesugaring libs.desugar.jdk.libs
+
+    testImplementation libs.junit
 }
