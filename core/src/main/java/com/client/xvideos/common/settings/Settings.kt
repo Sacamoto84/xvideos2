@@ -256,6 +256,9 @@ object Settings {
 
     val xvideos_shemale by lazy { SettingElementBoolean(pref, "x_shemale", true) }
 
+    //Категория X (лента, поиск, теги, рейтинг канала): имя XCategory из feature-x
+    val x_category by lazy { SettingElementString(pref, "x_category", "STRAIGHT") }
+
     //Порядок списков подписок в Saved: номер в XSubscriptionsOrder (0 — сначала новые)
     val x_subscriptions_channels_order by lazy { SettingElementInt(pref, "x_subscriptions_channels_order", 0) }
     val x_subscriptions_models_order by lazy { SettingElementInt(pref, "x_subscriptions_models_order", 0) }

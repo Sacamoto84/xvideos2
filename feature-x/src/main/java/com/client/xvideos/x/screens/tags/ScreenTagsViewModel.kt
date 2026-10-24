@@ -10,6 +10,8 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.ui.scroll.LazyListPosition
+import com.client.xvideos.x.model.XCategory
+import com.client.xvideos.x.feature.category.XCategoryState
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.ModelScreenTag
@@ -138,7 +140,7 @@ class ScreenTagsViewModel @AssistedInject constructor(
         if (formattedTag.isEmpty()) {
             throw IOException("Недопустимое имя тега: $tag")
         }
-        val html = readHtmlFromURLDirect("$urlStart/tags/$formattedTag/$index")
+        val html = readHtmlFromURLDirect(buildTagPageUrl(formattedTag, index, XCategoryState.current))
         if (html.isEmpty()) {
             throw IOException("Не удалось загрузить страницу тега $tag")
         }
@@ -186,4 +188,13 @@ internal fun sanitizeTagForUrl(tag: String): String {
         .replace(SANITIZE_TAG_CHARS_REGEX, "-")
         .replace(REPEATED_HYPHENS_REGEX, "-")
         .trim('-')
+}
+
+/**
+ * Адрес страницы [index] тега: `/tags/<тег>/N`, в другой категории — с её префиксом
+ * (`/tags/t:shemale/<тег>/N`), как в ссылках пагинации сайта.
+ */
+internal fun buildTagPageUrl(formattedTag: String, index: Int, category: XCategory): String {
+    val categoryPrefix = if (category == XCategory.STRAIGHT) "" else "t:${category.siteKey}/"
+    return "$urlStart/tags/$categoryPrefix$formattedTag/$index"
 }

@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.x.model.XCategory
 import com.client.xvideos.x.feature.country.CountryState
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.normalizeXUrl
@@ -45,9 +47,12 @@ import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
 
-internal fun buildDashboardUrl(numberScreen: Int): String {
+internal fun buildDashboardUrl(numberScreen: Int, category: XCategory = XCategory.STRAIGHT): String {
     val currentNumberScreen = numberScreen.coerceIn(0, 19999)
-    val raw = urlStart + if (currentNumberScreen == 0) "" else "/new/$currentNumberScreen"
+    // Страницы гетеро-ленты — /new/N, у других категорий — номер после их главной (/gay/N).
+    // Нулевой номер сайт уводит редиректом на главную, поэтому первая страница — без него.
+    val pagesPath = if (category == XCategory.STRAIGHT) "/new" else category.feedPath
+    val raw = urlStart + if (currentNumberScreen == 0) category.feedPath else "$pagesPath/$currentNumberScreen"
     return normalizeXUrl(raw)
 }
 
@@ -58,6 +63,7 @@ internal fun buildDashboardUrl(numberScreen: Int): String {
 @Composable
 fun DashboardsPaginatedListScreen(
     pageIndex: Int,
+    category: XCategory,
     openVideoPlayer: (ItemsX) -> Unit,
     isFavorite: (Long) -> Boolean,
     onFavoriteAdd: (ItemsX) -> Unit,
@@ -70,14 +76,16 @@ fun DashboardsPaginatedListScreen(
     localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
 ) {
     // Загруженная страница хранится в ScreenModel: возврат к ней (соседняя страница
-    // пейджера, выход из плеера) показывает её сразу, без новой загрузки.
-    var videoItems by remember(pageIndex) { mutableStateOf<ImmutableList<ItemsX>>(cachedPage(pageIndex) ?: persistentListOf()) }
+    // пейджера, выход из плеера) показывает её сразу, без новой загрузки. После смены
+    // категории ролики прежней не показываются: страница начинает с индикатора.
+    var videoItems by remember(pageIndex, category) { mutableStateOf<ImmutableList<ItemsX>>(cachedPage(pageIndex) ?: persistentListOf()) }
     var hasError by remember(pageIndex) { mutableStateOf(false) }
     var isLoading by remember(pageIndex) { mutableStateOf(false) }
     var retryTrigger by remember(pageIndex) { mutableIntStateOf(0) }
-    val gridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow())
+    // Лента другой категории открывается сверху, а не с места прежней.
+    val gridState = key(category) { rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()) }
 
-    LaunchedEffect(key1 = pageIndex, key2 = CountryState.userSelectionEpoch, key3 = retryTrigger) {
+    LaunchedEffect(pageIndex, CountryState.userSelectionEpoch, category, retryTrigger) {
         hasError = false
         isLoading = true
         try {

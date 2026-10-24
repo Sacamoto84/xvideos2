@@ -3,8 +3,10 @@ package com.client.xvideos.x.screens.dashboards
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,6 +37,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.common.ui.atom.DownloadIndicator
+import com.client.xvideos.x.model.XCategory
+import com.client.xvideos.x.feature.category.XCategoryState
+import com.client.xvideos.x.feature.category.molecule.XCategorySwitch
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.channel.ScreenX_Channel
@@ -95,6 +101,18 @@ class ScreenXDashBoards : Screen {
         val pagerState = vm.pagerPosition.rememberState { 20000 }
         val savedPagerState = vm.savedPagerPosition.rememberState { SAVED_TAB_COUNT }
 
+        // Другая категория — другая лента и выдача: лента встаёт на первую страницу,
+        // открытый поиск перезапрашивается. Тот же пункт меню ничего не сбрасывает.
+        val onCategorySelect: (XCategory) -> Unit = remember(searchVm, pagerState, scope) {
+            { selected ->
+                if (selected != XCategoryState.current) {
+                    XCategoryState.select(selected)
+                    scope.launch { pagerState.scrollToPage(0) }
+                    searchVm.onCategoryChanged()
+                }
+            }
+        }
+
         ScreenXDashBoardsContent(
             mainTab = vm.mainTab,
             savedPagerState = savedPagerState,
@@ -118,6 +136,8 @@ class ScreenXDashBoards : Screen {
             onSaveToGallery = { item -> vm.saveToGallery(item) },
             onLoadDashboardPage = vm::loadDashboardPage,
             cachedDashboardPage = vm::cachedDashboardPage,
+            category = XCategoryState.current,
+            onCategorySelect = onCategorySelect,
         )
     }
 }
@@ -150,6 +170,8 @@ fun ScreenXDashBoardsContent(
     onSaveToGallery: (ItemsX) -> Unit,
     onLoadDashboardPage: suspend (Int) -> ImmutableList<ItemsX>,
     cachedDashboardPage: (Int) -> ImmutableList<ItemsX>?,
+    category: XCategory,
+    onCategorySelect: (XCategory) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val onDashboardPageChange: suspend (Int) -> Unit = remember(pagerState) {
@@ -195,12 +217,20 @@ fun ScreenXDashBoardsContent(
                     onSearchPageChange = onSearchPageChange
                 )
 
-                TabRow(
-                    titlesIcon = mainTabs,
-                    value = mainTab,
-                    onChangeState = onMainTabChange,
-                    containerColor = Theme.tabLevel0,
-                )
+                Row(
+                    modifier = Modifier.background(Theme.tabLevel0),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        TabRow(
+                            titlesIcon = mainTabs,
+                            value = mainTab,
+                            onChangeState = onMainTabChange,
+                            containerColor = Theme.tabLevel0,
+                        )
+                    }
+                    XCategorySwitch(current = category, onSelect = onCategorySelect)
+                }
 
                 DownloadIndicator(downloadPercent)
             }
@@ -234,6 +264,7 @@ fun ScreenXDashBoardsContent(
                 ) { pageIndex ->
                     DashboardsPaginatedListScreen(
                         pageIndex = pageIndex,
+                        category = category,
                         localVideoOf = localVideoOf,
                         openVideoPlayer = onOpenVideoPlayer,
                         isFavorite = onIsFavorite,

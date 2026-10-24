@@ -8,6 +8,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.scroll.PagerPosition
+import com.client.xvideos.x.feature.category.XCategoryState
 import com.client.xvideos.x.feature.net.getSearchResults
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.model.ItemsX
@@ -233,6 +234,17 @@ class ScreenXSearchSM @Inject constructor(
         job.start()
     }
 
+    /**
+     * Сменилась категория: прежняя выдача — уже не та. Открытые результаты
+     * перезапрашиваются с первой страницы, иначе выдача просто забывается.
+     */
+    fun onCategoryChanged() {
+        resetResults()
+        if (_uiMode.value != SearchUiMode.RESULTS) return
+        screenModelScope.launch { resultsPagerPosition.scrollToPage(0) }
+        loadResultsPage(0)
+    }
+
     /** Повтор страницы выдачи после сбоя. */
     fun retryResultsPage(page: Int) {
         failedResultPages.remove(page)
@@ -243,7 +255,7 @@ class ScreenXSearchSM @Inject constructor(
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return com.client.xvideos.x.search.SearchVideosResult(emptyList(), 1)
 
-        val url = com.client.xvideos.x.search.buildSearchVideosUrl(trimmed, page)
+        val url = com.client.xvideos.x.search.buildSearchVideosUrl(trimmed, page, XCategoryState.current)
         Timber.d("ScreenXSearchSM.fetchVideosPage: page=%d", page)
 
         var html = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {

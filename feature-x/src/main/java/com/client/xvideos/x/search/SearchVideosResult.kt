@@ -1,5 +1,6 @@
 package com.client.xvideos.x.search
 
+import com.client.xvideos.x.model.XCategory
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parserListVideo
 import com.client.xvideos.x.urlStart
@@ -50,11 +51,13 @@ fun encodeSearchVideosQuery(query: String): String {
  *
  * @param query Поисковый запрос.
  * @param page 0-based индекс страницы (0 = первая страница).
+ * @param category Категория: не гетеро — фильтр `typef`, как в ссылках пагинации сайта.
  */
-fun buildSearchVideosUrl(query: String, page: Int): String {
+fun buildSearchVideosUrl(query: String, page: Int, category: XCategory = XCategory.STRAIGHT): String {
     val encoded = encodeSearchVideosQuery(query)
+    val categorySuffix = if (category == XCategory.STRAIGHT) "" else "&typef=${category.siteKey}"
     val pageSuffix = if (page <= 0) "" else "&p=$page"
-    return "$urlStart/?k=$encoded$pageSuffix"
+    return "$urlStart/?k=$encoded$categorySuffix$pageSuffix"
 }
 
 /**

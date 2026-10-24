@@ -9,6 +9,8 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.ui.scroll.PagerPosition
+import com.client.xvideos.x.model.XCategory
+import com.client.xvideos.x.feature.category.XCategoryState
 import com.client.xvideos.x.feature.country.CountryState
 import com.client.xvideos.x.feature.net.readHtmlFromURLWebView
 import com.client.xvideos.x.feature.saved.SavedX
@@ -85,17 +87,19 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
 
     /**
      * Загруженные страницы дашборда. ScreenModel живёт всю сессию, поэтому страница
-     * устаревает через [DASHBOARD_PAGE_TTL_MS], а выбор другой страны сбрасывает кэш.
+     * устаревает через [DASHBOARD_PAGE_TTL_MS], а выбор другой страны или категории
+     * сбрасывает кэш.
      */
     private val dashboardPages = PageCache<ImmutableList<ItemsX>>(
         maxPages = MAX_CACHED_PAGES,
         ttlMs = DASHBOARD_PAGE_TTL_MS,
     )
     private var cachedCountryEpoch = CountryState.userSelectionEpoch
+    private var cachedCategory = XCategoryState.current
 
     /** Уже загруженная страница [index] или `null` — страницу надо грузить. */
     fun cachedDashboardPage(index: Int): ImmutableList<ItemsX>? {
-        dropPagesOfOtherCountry()
+        dropPagesOfOtherSelection()
         return dashboardPages[index]
     }
 
@@ -106,27 +110,29 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
     suspend fun loadDashboardPage(index: Int): ImmutableList<ItemsX> {
         cachedDashboardPage(index)?.let { return it }
         val epoch = CountryState.userSelectionEpoch
-        val (flag, items) = fetchDashboardPage(index)
+        val category = XCategoryState.current
+        val (flag, items) = fetchDashboardPage(index, category)
         flag?.let { CountryState.updateCurrent(it) }
         val page = items.toImmutableList()
-        // Пока шла загрузка, могли выбрать другую страну — такую страницу не кэшируем.
-        if (page.isNotEmpty() && epoch == CountryState.userSelectionEpoch) {
-            dropPagesOfOtherCountry()
+        // Пока шла загрузка, могли выбрать другую страну или категорию — такую страницу не кэшируем.
+        if (page.isNotEmpty() && epoch == CountryState.userSelectionEpoch && category == XCategoryState.current) {
+            dropPagesOfOtherSelection()
             dashboardPages[index] = page
         }
         return page
     }
 
-    private fun dropPagesOfOtherCountry() {
-        if (cachedCountryEpoch != CountryState.userSelectionEpoch) {
+    private fun dropPagesOfOtherSelection() {
+        if (cachedCountryEpoch != CountryState.userSelectionEpoch || cachedCategory != XCategoryState.current) {
             dashboardPages.clear()
             cachedCountryEpoch = CountryState.userSelectionEpoch
+            cachedCategory = XCategoryState.current
         }
     }
 
-    private suspend fun fetchDashboardPage(index: Int): Pair<String?, List<ItemsX>> {
+    private suspend fun fetchDashboardPage(index: Int, category: XCategory): Pair<String?, List<ItemsX>> {
         Timber.d("Дашборд: загрузка страницы %d", index)
-        val html = readHtmlFromURLWebView(buildDashboardUrl(index))
+        val html = readHtmlFromURLWebView(buildDashboardUrl(index, category))
         return withContext(Dispatchers.Default) {
             val document = Jsoup.parse(html)
             val flag = parseSiteCountryFlag(document)

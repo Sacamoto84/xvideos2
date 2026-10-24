@@ -9,6 +9,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
+import com.client.xvideos.x.feature.category.XCategoryState
 import com.client.xvideos.x.feature.net.fetchHtml
 import com.client.xvideos.x.feature.net.fetchProfileHtml
 import com.client.xvideos.x.feature.net.logLabel
@@ -23,6 +24,7 @@ import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.parcer.parseChannelVideosResponse
 import com.client.xvideos.x.parcer.parserChannelHeader
 import com.client.xvideos.x.parcer.parserChannelRanksJson
+import com.client.xvideos.x.screens.channel.model.buildProfileRanksUrl
 import com.client.xvideos.x.urlStart
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import androidx.compose.runtime.mutableStateMapOf
@@ -303,7 +305,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     }
                 }
 
-                // 1.5. Загрузка рейтингов автора / модели из JSON API сайта (/profiles/{slug}/ranks/straight)
+                // 1.5. Загрузка рейтингов автора / модели из JSON API сайта (/profiles/{slug}/ranks/<категория>)
                 var ranksFetched = areRanksLoaded
                 val headerWithRanks = if (areRanksLoaded) {
                     parsedHeader
@@ -311,7 +313,7 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                     // Сбой запроса — пустая строка, сбой разбора — пустой список: исключений,
                     // кроме отмены, отсюда нет, и перехватывать их незачем.
                     val ranksJson = withContext(Dispatchers.IO) {
-                        readHtmlFromURLDirect("$urlStart/profiles/$cleanSlug/ranks/straight")
+                        readHtmlFromURLDirect(buildProfileRanksUrl(cleanSlug, XCategoryState.current))
                     }
                     ranksFetched = ranksJson.isNotBlank()
                     val ranks = withContext(Dispatchers.Default) {

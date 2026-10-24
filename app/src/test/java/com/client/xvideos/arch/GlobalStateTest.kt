@@ -164,6 +164,10 @@ class GlobalStateTest {
             "x/feature/country/CountryState.kt::current",
             // Счётчик явных переключений страны пользователем для инвалидации пагинации.
             "x/feature/country/CountryState.kt::userSelectionEpoch",
+            // Выбранная категория X (гетеро, геи, трансы): глобальна по смыслу, как
+            // страна, — её читают лента, поиск, теги и канал. Хранится в Settings,
+            // а наблюдаемое зеркало нужно Compose и ScreenModel без инжекции.
+            "x/feature/category/XCategoryState.kt::current",
         )
 
         /**
