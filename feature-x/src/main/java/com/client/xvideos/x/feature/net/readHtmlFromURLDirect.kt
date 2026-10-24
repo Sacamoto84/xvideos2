@@ -3,6 +3,7 @@ package com.client.xvideos.x.feature.net
 import com.client.xvideos.common.net.SiteMaintenanceInterceptor
 import com.client.xvideos.common.net.SiteMaintenanceReporter
 import com.client.xvideos.common.net.doh.AppDns
+import com.client.xvideos.x.feature.auth.XWebViewCookieJar
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -35,6 +36,9 @@ private val htmlClient: HttpClient by lazy {
         engine {
             config {
                 dns(AppDns)
+                // Cookie — общие с WebView: после входа в X прямые запросы идут
+                // от того же пользователя сайта, что и лента в WebView.
+                cookieJar(XWebViewCookieJar)
                 // Сайт на техобслуживании отвечает 503 — плашка вместо безликой ошибки.
                 addInterceptor(SiteMaintenanceInterceptor { SiteMaintenanceReporter.report("X") })
             }

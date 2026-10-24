@@ -1,6 +1,7 @@
 package com.client.xvideos.screenSettings
 
 import android.content.Context
+import android.webkit.WebView
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
@@ -32,19 +34,25 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getFolderSize
 import com.client.xvideos.common.util.getTopInsetDp
-import com.client.xvideos.l.ui.screens.LLoginFormState
 import com.client.xvideos.l.ui.screens.molecule.LLoginForm
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.StorageStat
 import com.client.xvideos.screenSettings.components.loadStorageStats
 import com.client.xvideos.screenSettings.molecule.AppSettingsScreenBody
+import com.client.xvideos.screenSettings.molecule.SettingsXLoginForm
 import com.client.xvideos.screenSettings.model.SettingsDetailParams
+import com.client.xvideos.screenSettings.model.SettingsLoginForms
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+
+/** Превью рисуется без DI: входа в X нет. */
+private val NO_SIGN_IN_VIEW: StateFlow<WebView?> = MutableStateFlow(null)
 
 object AppSettingsScreen : Screen {
 
@@ -123,9 +131,11 @@ object AppSettingsScreen : Screen {
                 blockRed = vm.blockRed,
                 downloadRed = vm.downloadRed,
                 savedL = vm.savedL,
-                backup = vm.backup
+                backup = vm.backup,
+                xSession = vm.xSession
             )
         }
+        val loginForms = remember(vm) { SettingsLoginForms(l = vm.lLoginForm, x = vm.xLoginForm) }
 
         AppSettingsScreenContent(
             onBack = onBack,
@@ -137,7 +147,7 @@ object AppSettingsScreen : Screen {
             onClearDownload = onClearDownload,
             data = data,
             context = context,
-            lLoginForm = vm.lLoginForm,
+            loginForms = loginForms,
             onRefreshFileStats = refreshFileStats
         )
     }
@@ -154,7 +164,7 @@ internal fun AppSettingsScreenContent(
     onClearDownload: () -> Unit,
     data: SettingsDataHolders,
     context: Context,
-    lLoginForm: LLoginFormState,
+    loginForms: SettingsLoginForms,
     onRefreshFileStats: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -164,6 +174,10 @@ internal fun AppSettingsScreenContent(
     // экрана, с которого ушли: возврат с отдельного экрана открывал главную
     // страницу настроек вместо страницы L.
     var lLoginVisible by rememberSaveable { mutableStateOf(false) }
+    // Форма входа в X — так же, по кнопке «Войти» на странице X.
+    var xLoginVisible by rememberSaveable { mutableStateOf(false) }
+    val lLoginForm = loginForms.l
+    val xLoginForm = loginForms.x
     val scrollState = rememberScrollState()
 
     LaunchedEffect(currentPage) {
@@ -188,10 +202,25 @@ internal fun AppSettingsScreenContent(
     }
     val onLLoginChange = remember(lLoginForm) { lLoginForm::updateLogin }
     val onLPasswordChange = remember(lLoginForm) { lLoginForm::updatePassword }
+    // Как у L: поля заполняются при открытии. Закрытие формы отменяет идущий
+    // вход и стирает набранное; удачный вход закрывает её так же.
+    val onOpenXLogin: () -> Unit = remember(xLoginForm) {
+        {
+            xLoginForm.prefill(Settings.x_profile.field.value)
+            xLoginVisible = true
+        }
+    }
+    val onCloseXLogin: () -> Unit = remember(xLoginForm) {
+        {
+            xLoginVisible = false
+            xLoginForm.clear()
+        }
+    }
     BackHandler(enabled = currentPage != SettingsPage.Main, onBack = onMainBack)
     BackHandler(enabled = currentPage == SettingsPage.Main, onBack = onBack)
-    // Объявлен последним: пока форма открыта, «назад» закрывает её, а не страницу.
+    // Объявлены последними: пока форма открыта, «назад» закрывает её, а не страницу.
     BackHandler(enabled = lLoginVisible, onBack = onCloseLLogin)
+    BackHandler(enabled = xLoginVisible, onBack = onCloseXLogin)
 
     LaunchedEffect(currentPage) {
         if (currentPage == SettingsPage.Storage) {
@@ -217,7 +246,8 @@ internal fun AppSettingsScreenContent(
         data,
         context,
         onRefreshFileStats,
-        onOpenLLogin
+        onOpenLLogin,
+        onOpenXLogin
     ) {
         SettingsDetailParams(
             currentPage = currentPage,
@@ -230,7 +260,8 @@ internal fun AppSettingsScreenContent(
             data = data,
             context = context,
             onBackupDataChanged = onRefreshFileStats,
-            onOpenLLogin = onOpenLLogin
+            onOpenLLogin = onOpenLLogin,
+            onOpenXLogin = onOpenXLogin
         )
     }
 
@@ -243,6 +274,15 @@ internal fun AppSettingsScreenContent(
             onSaved = onCloseLLogin,
             onBack = onCloseLLogin,
             onSkip = null,
+            modifier = modifier
+        )
+    } else if (xLoginVisible) {
+        // WebView идущего входа форма держит в окне, см. XSignInWebViewHost.
+        val xSignInView by (data.xSession?.signInView ?: NO_SIGN_IN_VIEW).collectAsStateWithLifecycle()
+        SettingsXLoginForm(
+            form = xLoginForm,
+            signInWebView = xSignInView,
+            onClose = onCloseXLogin,
             modifier = modifier
         )
     } else {
@@ -287,7 +327,8 @@ private fun AppSettingsScreenPreview() {
                 data = SettingsDataHolders(),
                 context = context.applicationContext,
                 onBackupDataChanged = {},
-                onOpenLLogin = {}
+                onOpenLLogin = {},
+                onOpenXLogin = {}
             ),
             modifier = Modifier.verticalScroll(rememberScrollState())
         )

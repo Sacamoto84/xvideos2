@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.screenSettings.SettingsDataHolders
 import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.backup.BackupSettingsSection
@@ -23,6 +25,12 @@ import com.client.xvideos.screenSettings.section.LSettingsSection
 import com.client.xvideos.screenSettings.section.NetworkSettingsSection
 import com.client.xvideos.screenSettings.section.P2PSettingsSection
 import com.client.xvideos.screenSettings.section.RSettingsSection
+import com.client.xvideos.screenSettings.section.XSettingsSection
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+/** Превью рисуется без DI: отказа сайта нет. */
+private val NO_RESTORE_FAILURE: StateFlow<String?> = MutableStateFlow(null)
 
 @Composable
 internal fun SettingsDetailPage(
@@ -60,6 +68,27 @@ internal fun SettingsDetailPage(
                 lLogin = lProfile.login,
                 hasLAccount = lProfile.isComplete,
                 onLogin = params.onOpenLLogin,
+                modifier = modifier
+            )
+        }
+        SettingsPage.X -> {
+            // Как у L: профиль читается только на странице X.
+            val xProfile by Settings.x_profile.field.collectAsStateWithLifecycle()
+            val xSession = params.data.xSession
+            val restoreFailure by (xSession?.restoreFailure ?: NO_RESTORE_FAILURE).collectAsStateWithLifecycle()
+            // Выход стирает профиль сразу, сессию на сайте закрывает в фоне.
+            val onLogoutX = remember(xSession) {
+                {
+                    xSession?.signOut()
+                    SnackBar.success("Вы вышли из профиля X")
+                }
+            }
+            XSettingsSection(
+                xLogin = xProfile.login,
+                hasXAccount = xProfile.isComplete,
+                restoreFailure = restoreFailure,
+                onLogin = params.onOpenXLogin,
+                onLogout = onLogoutX,
                 modifier = modifier
             )
         }
@@ -102,7 +131,8 @@ private fun SettingsDetailPagePreview() {
             data = SettingsDataHolders(),
             context = context,
             onBackupDataChanged = {},
-            onOpenLLogin = {}
+            onOpenLLogin = {},
+            onOpenXLogin = {}
         )
     )
 }

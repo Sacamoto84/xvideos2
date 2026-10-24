@@ -125,7 +125,8 @@ private fun AppSettingsScreenBodyPreview() {
             data = SettingsDataHolders(),
             context = context,
             onBackupDataChanged = {},
-            onOpenLLogin = {}
+            onOpenLLogin = {},
+            onOpenXLogin = {}
         )
     )
 }

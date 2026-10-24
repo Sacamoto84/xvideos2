@@ -251,6 +251,11 @@ object Settings {
 
     //-- X ---
 
+    // Логин и пароль X — в том же зашифрованном хранилище, что и профиль L.
+    // Сохраняются только после удачного входа: по ним раздел X входит заново,
+    // когда сессия на сайте закончилась.
+    val x_profile by lazy { SettingElementSecureCredentials(securePref, "x_login", "x_pass") }
+
     //Категория X (лента, поиск, теги, рейтинг канала): имя XCategory из feature-x
     val x_category by lazy { SettingElementString(pref, "x_category", "STRAIGHT") }
 
