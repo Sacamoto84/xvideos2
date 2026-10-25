@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
@@ -36,6 +34,9 @@ import com.client.xvideos.xlive.ui.saved.XLiveSavedActions
 import com.client.xvideos.xlive.ui.saved.XLiveSavedState
 import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
 import com.client.xvideos.xlive.ui.saved.molecule.XLiveSavedGrid
+import com.client.xvideos.xlive.ui.search.XLiveSearchActions
+import com.client.xvideos.xlive.ui.search.XLiveSearchState
+import com.client.xvideos.xlive.ui.search.molecule.XLiveSearchContent
 import com.client.xvideos.xlive.ui.tag.ScreenXLiveTag
 import com.client.xvideos.xlive.ui.tags.XLiveTagsActions
 import com.client.xvideos.xlive.ui.tags.XLiveTagsState
@@ -43,9 +44,9 @@ import com.client.xvideos.xlive.ui.tags.molecule.XLiveTagsList
 
 /**
  * Корень раздела XLive: нижние вкладки как у X, переключатель пола, вкладки
- * «Эфиры» (сетка комнат), «Теги» (таблица тегов) и «Избранное» («Мои»,
- * «Подписки», «История»). Тап по карточке или превью открывает комнату, тап
- * по тегу — комнаты с ним.
+ * «Эфиры» (сетка комнат), «Теги» (таблица тегов), «Избранное» («Мои»,
+ * «Подписки», «История») и «Поиск» (слово и фильтры). Тап по карточке или
+ * превью открывает комнату, тап по тегу — комнаты с ним.
  */
 class ScreenXLive : Screen {
 
@@ -64,6 +65,7 @@ class ScreenXLive : Screen {
         val savedTab by vm.savedTab.collectAsStateWithLifecycle()
         val my by vm.my.collectAsStateWithLifecycle()
         val recent by vm.recent.collectAsStateWithLifecycle()
+        val search by vm.search.collectAsStateWithLifecycle()
 
         val barActions = remember(vm) {
             XLiveBarActions(
@@ -100,6 +102,21 @@ class ScreenXLive : Screen {
                 onRefresh = vm::refreshSaved,
             )
         }
+        val searchActions = remember(vm, navigator) {
+            XLiveSearchActions(
+                onQueryChange = vm::changeSearchQuery,
+                onSearch = vm::submitSearch,
+                onClear = vm::clearSearch,
+                onFilters = vm::selectSearchFilters,
+                feed = XLiveFeedActions(
+                    onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+                    onRetry = vm::reloadSearch,
+                    onRetryLoadMore = vm::retryLoadMoreSearch,
+                    onRefresh = vm::refreshSearch,
+                    onLoadMore = vm::loadMoreSearch,
+                ),
+            )
+        }
         val isHistory = savedTab == XLiveSavedTab.HISTORY
 
         ScreenXLiveContent(
@@ -112,14 +129,19 @@ class ScreenXLive : Screen {
             ),
             barActions = barActions,
             feed = feed,
-            gridState = vm.gridPosition.rememberState(),
             feedActions = feedActions,
             tags = tags,
-            tagsListState = vm.tagsPosition.rememberState(),
             tagsActions = tagsActions,
             saved = if (isHistory) recent else my,
-            savedGridState = if (isHistory) vm.recentPosition.rememberState() else vm.myPosition.rememberState(),
             savedActions = savedActions,
+            search = search,
+            searchActions = searchActions,
+            lists = XLiveListStates(
+                rooms = vm.gridPosition.rememberState(),
+                tags = vm.tagsPosition.rememberState(),
+                saved = if (isHistory) vm.recentPosition.rememberState() else vm.myPosition.rememberState(),
+                search = vm.searchPosition.rememberState(),
+            ),
         )
     }
 }
@@ -129,14 +151,14 @@ fun ScreenXLiveContent(
     bar: XLiveBarState,
     barActions: XLiveBarActions,
     feed: XLiveFeedState,
-    gridState: LazyGridState,
     feedActions: XLiveFeedActions,
     tags: XLiveTagsState,
-    tagsListState: LazyListState,
     tagsActions: XLiveTagsActions,
     saved: XLiveSavedState,
-    savedGridState: LazyGridState,
     savedActions: XLiveSavedActions,
+    search: XLiveSearchState,
+    searchActions: XLiveSearchActions,
+    lists: XLiveListStates,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -154,12 +176,12 @@ fun ScreenXLiveContent(
             contentAlignment = Alignment.Center,
         ) {
             when (bar.tab) {
-                XLiveTab.ROOMS -> XLiveRoomsGrid(feed = feed, gridState = gridState, actions = feedActions)
-                XLiveTab.TAGS -> XLiveTagsList(state = tags, listState = tagsListState, actions = tagsActions)
+                XLiveTab.ROOMS -> XLiveRoomsGrid(feed = feed, gridState = lists.rooms, actions = feedActions)
+                XLiveTab.TAGS -> XLiveTagsList(state = tags, listState = lists.tags, actions = tagsActions)
                 XLiveTab.SAVED -> when (bar.savedTab) {
                     XLiveSavedTab.MY -> XLiveSavedGrid(
                         state = saved,
-                        gridState = savedGridState,
+                        gridState = lists.saved,
                         actions = savedActions,
                         emptyText = "Здесь будут комнаты, сохранённые закладкой в шапке комнаты",
                         listName = "«Моих»",
@@ -167,13 +189,13 @@ fun ScreenXLiveContent(
                     XLiveSavedTab.FOLLOWING -> XLivePlaceholder(text = "Подписки аккаунта на сайте — следующим шагом")
                     XLiveSavedTab.HISTORY -> XLiveSavedGrid(
                         state = saved,
-                        gridState = savedGridState,
+                        gridState = lists.saved,
                         actions = savedActions,
                         emptyText = "Здесь будут комнаты, которые вы открывали",
                         listName = "истории",
                     )
                 }
-                XLiveTab.SEARCH -> XLivePlaceholder(text = "${bar.tab.title} — следующим шагом")
+                XLiveTab.SEARCH -> XLiveSearchContent(state = search, gridState = lists.search, actions = searchActions)
             }
         }
     }
@@ -186,13 +208,18 @@ private fun ScreenXLivePreview() {
         bar = XLiveBarState(),
         barActions = XLiveBarActions(),
         feed = XLiveFeedState(isLoading = true),
-        gridState = rememberLazyGridState(),
         feedActions = XLiveFeedActions(),
         tags = XLiveTagsState(),
-        tagsListState = rememberLazyListState(),
         tagsActions = XLiveTagsActions(),
         saved = XLiveSavedState(),
-        savedGridState = rememberLazyGridState(),
         savedActions = XLiveSavedActions(),
+        search = XLiveSearchState(),
+        searchActions = XLiveSearchActions(),
+        lists = XLiveListStates(
+            rooms = rememberLazyGridState(),
+            tags = rememberLazyListState(),
+            saved = rememberLazyGridState(),
+            search = rememberLazyGridState(),
+        ),
     )
 }

@@ -7,6 +7,7 @@ import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.model.XLiveRoomPage
+import com.client.xvideos.xlive.model.XLiveSearchFilters
 import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.xLiveUrlStart
@@ -90,7 +91,7 @@ object XLiveApi {
 
     /**
      * Страница списка комнат с [offset]: пол [gender], подборка [collection] и,
-     * если задан, тег [hashtag].
+     * если заданы, тег [hashtag], слово поиска [keywords] и фильтры [filters].
      *
      * @throws IOException нет сети, ответ с кодом ошибки или без списка комнат.
      */
@@ -99,8 +100,10 @@ object XLiveApi {
         collection: XLiveCollection,
         offset: Int,
         hashtag: String = "",
+        keywords: String = "",
+        filters: XLiveSearchFilters = XLiveSearchFilters(),
     ): XLiveRoomPage {
-        val query = roomListQuery(gender, collection, offset, hashtag = hashtag)
+        val query = roomListQuery(gender, collection, offset, hashtag = hashtag, keywords = keywords, filters = filters)
         val response = client.get("$xLiveUrlStart/api/ts/roomlist/room-list/?$query")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
         return parseXLiveRoomPage(response.bodyAsText()) ?: throw IOException("Ответ без списка комнат")

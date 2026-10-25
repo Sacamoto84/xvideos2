@@ -8,6 +8,7 @@ import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoomPage
 import com.client.xvideos.xlive.model.XLiveSavedRoom
+import com.client.xvideos.xlive.model.XLiveSearchFilters
 import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.network.XLiveApi
@@ -18,6 +19,7 @@ import com.client.xvideos.xlive.ui.feed.XLiveRoomsFeed
 import com.client.xvideos.xlive.ui.saved.XLiveOnlineCheck
 import com.client.xvideos.xlive.ui.saved.XLiveSavedState
 import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
+import com.client.xvideos.xlive.ui.search.XLiveSearchState
 import com.client.xvideos.xlive.ui.tags.XLiveTagsFeed
 import com.client.xvideos.xlive.ui.tags.XLiveTagsState
 import kotlinx.collections.immutable.toImmutableList
@@ -32,14 +34,16 @@ import kotlinx.coroutines.launch
 
 /**
  * Корень раздела XLive: нижняя вкладка, пол, лента «Эфиры» с подборкой,
- * таблица «Теги» с порядком и «Избранное» с подвкладками. Пол общий для
- * «Эфиров» и «Тегов».
+ * таблица «Теги» с порядком, «Избранное» с подвкладками и «Поиск» с
+ * фильтрами. Пол общий для «Эфиров», «Тегов» и «Поиска».
  *
  * Теги грузятся только при первом открытии их вкладки, эфир сохранённых
- * комнат проверяется, когда открыто «Избранное».
+ * комнат проверяется, когда открыто «Избранное», поиск идёт, когда есть
+ * отправленное слово или фильтр.
  *
  * @param loadPage источник страницы списка комнат; подменяется в тестах.
  * @param loadTags источник страницы таблицы тегов; подменяется в тестах.
+ * @param loadSearch источник страницы поиска: пол, слово, фильтры, сдвиг; подменяется в тестах.
  * @param saved «Мои»; в тестах — хранилище во временной папке.
  * @param history «История»; в тестах — хранилище во временной папке.
  * @param isOnline источник статуса эфира по нику; подменяется в тестах.
@@ -50,6 +54,10 @@ class XLiveSM(
         XLiveApi.rooms(gender, collection, offset)
     },
     private val loadTags: suspend (XLiveGender, XLiveTagSort, Int) -> XLiveTagPage = XLiveApi::tags,
+    private val loadSearch: suspend (XLiveGender, String, XLiveSearchFilters, Int) -> XLiveRoomPage =
+        { gender, keywords, filters, offset ->
+            XLiveApi.rooms(gender, XLiveCollection.POPULAR, offset, keywords = keywords, filters = filters)
+        },
     private val saved: XLiveRoomStore = XLiveSaved.my,
     private val history: XLiveRoomStore = XLiveSaved.history,
     isOnline: suspend (String) -> Boolean = XLiveApi::isOnline,
@@ -103,6 +111,34 @@ class XLiveSM(
     val myPosition = LazyGridPosition()
     val recentPosition = LazyGridPosition()
 
+    private val searchQuery = MutableStateFlow("")
+    private val searchFilters = MutableStateFlow(XLiveSearchFilters())
+
+    /** Отправленное слово: поле может уже отличаться, лента — по нему. */
+    private val searchKeywords = MutableStateFlow("")
+
+    // Слово поиска в журнал не идёт — как и теги, это может быть что угодно.
+    private val searchFeed = XLiveRoomsFeed(
+        scope = screenModelScope,
+        loadPage = { offset -> loadSearch(_gender.value, searchKeywords.value, searchFilters.value, offset) },
+        label = { "${_gender.value}/поиск" },
+    )
+
+    val search: StateFlow<XLiveSearchState> =
+        combine(searchQuery, searchFilters, searchKeywords, searchFeed.state) { query, filters, keywords, feed ->
+            XLiveSearchState(
+                query = query,
+                filters = filters,
+                isActive = keywords.isNotBlank() || !filters.isEmpty,
+                feed = feed,
+            )
+        }.stateIn(screenModelScope, SharingStarted.Eagerly, XLiveSearchState())
+
+    val searchPosition: LazyGridPosition get() = searchFeed.gridPosition
+
+    private val isSearchActive: Boolean
+        get() = searchKeywords.value.isNotBlank() || !searchFilters.value.isEmpty
+
     init {
         rooms.reload()
         // Комната, сохранённая или открытая, пока «Избранное» на экране, проверяется сразу.
@@ -150,6 +186,38 @@ class XLiveSM(
         }
     }
 
+    fun changeSearchQuery(text: String) {
+        searchQuery.value = text
+    }
+
+    /** «Найти»: слово из поля уходит в поиск. Пустое слово без фильтров — снова подсказка. */
+    fun submitSearch() {
+        searchKeywords.value = searchQuery.value.trim()
+        if (isSearchActive) searchFeed.reload()
+    }
+
+    /** Крестик: поле пустое, результат по слову уходит, фильтры остаются. */
+    fun clearSearch() {
+        searchQuery.value = ""
+        if (searchKeywords.value.isEmpty()) return
+        searchKeywords.value = ""
+        if (isSearchActive) searchFeed.reload()
+    }
+
+    fun selectSearchFilters(filters: XLiveSearchFilters) {
+        if (searchFilters.value == filters) return
+        searchFilters.value = filters
+        if (isSearchActive) searchFeed.reload()
+    }
+
+    fun reloadSearch() = searchFeed.reload()
+
+    fun refreshSearch() = searchFeed.refresh()
+
+    fun loadMoreSearch() = searchFeed.loadMore()
+
+    fun retryLoadMoreSearch() = searchFeed.retryLoadMore()
+
     private fun checkSaved(force: Boolean = false) {
         val shown = when (_savedTab.value) {
             XLiveSavedTab.MY -> saved.rooms.value
@@ -159,12 +227,16 @@ class XLiveSM(
         onlineCheck.check(shown.map { it.username }, force)
     }
 
-    /** Пол общий: лента перезапрашивается сразу, таблица тегов — если её уже открывали. */
+    /**
+     * Пол общий: лента перезапрашивается сразу, таблица тегов — если её уже
+     * открывали, поиск — если он идёт.
+     */
     fun selectGender(gender: XLiveGender) {
         if (_gender.value == gender) return
         _gender.value = gender
         rooms.reload()
         if (tagsFeed.isStarted) tagsFeed.reload()
+        if (isSearchActive) searchFeed.reload()
     }
 
     fun selectTagSort(sort: XLiveTagSort) {

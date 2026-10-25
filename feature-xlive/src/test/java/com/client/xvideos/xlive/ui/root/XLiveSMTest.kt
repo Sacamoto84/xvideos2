@@ -4,7 +4,9 @@ import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.model.XLiveRoomPage
+import com.client.xvideos.xlive.model.XLiveAgeRange
 import com.client.xvideos.xlive.model.XLiveSavedRoom
+import com.client.xvideos.xlive.model.XLiveSearchFilters
 import com.client.xvideos.xlive.model.XLiveTag
 import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
@@ -43,6 +45,15 @@ class XLiveSMTest {
     private var onlineRooms = setOf<String>()
     private var nowSeconds = 1_000L
 
+    private data class SearchRequest(
+        val gender: XLiveGender,
+        val keywords: String,
+        val filters: XLiveSearchFilters,
+        val offset: Int,
+    )
+
+    private val searchRequests = mutableListOf<SearchRequest>()
+
     private data class Request(val gender: XLiveGender, val collection: XLiveCollection, val offset: Int)
 
     private data class TagRequest(val gender: XLiveGender, val sort: XLiveTagSort, val page: Int)
@@ -75,6 +86,10 @@ class XLiveSMTest {
             val request = TagRequest(gender, sort, page)
             tagRequests += request
             tagPages(request)
+        },
+        loadSearch = { gender, keywords, filters, offset ->
+            searchRequests += SearchRequest(gender, keywords, filters, offset)
+            page(offset, "s")
         },
         saved = saved,
         history = history,
@@ -363,5 +378,95 @@ class XLiveSMTest {
         sm.selectSavedTab(XLiveSavedTab.HISTORY)
         sm.removeSaved("a")
         assertEquals(emptyList<String>(), sm.recent.value.rooms.map { it.username })
+    }
+
+    @Test
+    fun `поиск не идёт, пока нет слова или фильтра`() {
+        val sm = model()
+
+        sm.changeSearchQuery("  ")
+        sm.submitSearch()
+
+        assertEquals(emptyList<SearchRequest>(), searchRequests)
+        assertFalse(sm.search.value.isActive)
+    }
+
+    @Test
+    fun `Найти — слово без пробелов по краям, результат в сетке`() {
+        val sm = model()
+
+        sm.changeSearchQuery(" anna ")
+        sm.submitSearch()
+
+        assertEquals(listOf(SearchRequest(XLiveGender.ALL, "anna", XLiveSearchFilters(), 0)), searchRequests)
+        assertTrue(sm.search.value.isActive)
+        assertEquals(listOf("s0"), sm.search.value.feed.rooms.map { it.username })
+        assertEquals(" anna ", sm.search.value.query)
+    }
+
+    @Test
+    fun `набор текста без Найти не перезапрашивает`() {
+        val sm = model()
+        sm.changeSearchQuery("anna")
+        sm.submitSearch()
+
+        sm.changeSearchQuery("annabel")
+
+        assertEquals(1, searchRequests.size)
+    }
+
+    @Test
+    fun `фильтр без слова запускает поиск, смена фильтра — заново`() {
+        val sm = model()
+        val adults = XLiveSearchFilters(age = XLiveAgeRange.AGE_30_50)
+
+        sm.selectSearchFilters(adults)
+        sm.selectSearchFilters(adults)
+
+        assertEquals(listOf(SearchRequest(XLiveGender.ALL, "", adults, 0)), searchRequests)
+        assertTrue(sm.search.value.isActive)
+    }
+
+    @Test
+    fun `крестик — слово уходит, фильтры остаются и ищут дальше`() {
+        val sm = model()
+        val adults = XLiveSearchFilters(age = XLiveAgeRange.AGE_30_50)
+        sm.changeSearchQuery("anna")
+        sm.submitSearch()
+        sm.selectSearchFilters(adults)
+
+        sm.clearSearch()
+
+        assertEquals("", sm.search.value.query)
+        assertEquals(SearchRequest(XLiveGender.ALL, "", adults, 0), searchRequests.last())
+        assertTrue(sm.search.value.isActive)
+
+        sm.selectSearchFilters(XLiveSearchFilters())
+        assertFalse(sm.search.value.isActive)
+    }
+
+    @Test
+    fun `пол перезапрашивает поиск, только если он идёт`() {
+        val sm = model()
+        sm.selectGender(XLiveGender.MALE)
+        assertEquals(emptyList<SearchRequest>(), searchRequests)
+
+        sm.changeSearchQuery("anna")
+        sm.submitSearch()
+        sm.selectGender(XLiveGender.FEMALE)
+
+        assertEquals(SearchRequest(XLiveGender.FEMALE, "anna", XLiveSearchFilters(), 0), searchRequests.last())
+    }
+
+    @Test
+    fun `догрузка поиска — следующий сдвиг с тем же словом`() {
+        val sm = model()
+        sm.changeSearchQuery("anna")
+        sm.submitSearch()
+
+        sm.loadMoreSearch()
+
+        assertEquals(SearchRequest(XLiveGender.ALL, "anna", XLiveSearchFilters(), ROOM_PAGE_SIZE), searchRequests.last())
+        assertEquals(listOf("s0", "s$ROOM_PAGE_SIZE"), sm.search.value.feed.rooms.map { it.username })
     }
 }
