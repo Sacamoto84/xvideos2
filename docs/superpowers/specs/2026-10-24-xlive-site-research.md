@@ -1,8 +1,9 @@
 # XLive: как устроен сайт — исследование
 
-Дата: 24.10.2026. Источник — ответы сайта анониму и его JS-бандлы. Под своим
-аккаунтом ничего не проверялось: всё, что требует входа, описано по коду
-страниц и помечено «по коду».
+Дата: 24.10.2026. Источник — ответы сайта анониму и его JS-бандлы. Вход и
+подписки (разделы 4–5) проверены 25–26.10.2026 под аккаунтом владельца: вход
+он делал сам в WebView приложения, запросы шли с его сессией. Что осталось
+непроверенным, помечено «по коду».
 
 Чат на странице трансляции сознательно не разбирался: он будет отдельной
 задачей.
@@ -16,11 +17,15 @@
 - **Анониму открыто почти всё**: список комнат с фильтрами, теги, данные
   комнаты, био и живой поток — обычный JSON без cookie и Referer.
 - **Вход — только через WebView.** Форма защищена reCAPTCHA v3 с запасной
-  v2, повторить её голым HTTP нельзя. После входа cookie сессии и
-  `csrftoken` нужно передать в OkHttp — так же, как раздел X делает с
-  `XWebViewCookieJar`.
-- **Подписки требуют сессии.** Без неё `is_following` отвечает 401, списки
-  перенаправляют на страницу входа.
+  v2, а страницу входа голому HTTP Cloudflare отдаёт с 403. После входа
+  cookie сессии `sessionid` и `csrftoken` берутся из хранилища WebView в
+  OkHttp — так же, как раздел X делает с `XWebViewCookieJar`.
+- **Cookie сессии — ещё не вход.** `sessionid` появляется раньше, чем вход
+  закончен. Вход есть, когда `follow/api/online_followed_rooms/` отвечает
+  JSON, а не переадресацией на `/auth/login/`.
+- **Подписки требуют сессии.** Без неё `is_following` отвечает 401, счётчик
+  подписок уводит на страницу входа, а `room-list?follow=true` отдаёт общий
+  список комнат.
 - **Адрес потока живёт минуты**: токен в `hls_source` короткий, а сессия
   потока гаснет без запросов. Адрес берётся перед каждым запуском плеера.
 
@@ -35,7 +40,7 @@
 | `/6-tokens-per-minute-private-cams/` и ещё четыре | по цене привата | `private_prices=6\|12,18\|30,42\|60,72\|90…` — список через запятую, см. раздел 2 |
 | `/new-cams/`, `/gaming-cams/`, `/exhibitionist-cams/` | подборки | `new_cams`, `gaming`, `exhib` |
 | `/spy-on-cams/` | комнаты в приватном шоу | `private=true` |
-| `/followed-cams/`, `/followed-cams/offline/` | подписки, онлайн и офлайн | `follow=true`, `offline`; только с сессией |
+| `/followed-cams/`, `/followed-cams/offline/` | подписки, онлайн и офлайн | `follow=true`, `follow=true&offline=true`; только с сессией, см. раздел 5 |
 | `/tags/` | таблица тегов | `hashtags/tag-table-data` |
 | `/tag/<тег>/`, `/tag/<тег>/female\|male\|couple\|trans/` | комнаты с тегом | `room-list?hashtags=<тег>&genders=…` |
 | `/discover/` | витрина подборок | подробно не разбиралась |
@@ -174,7 +179,7 @@
 | `signed_recaptcha` | подписанный токен reCAPTCHA v3, его добавляет JS |
 | `sign_recaptcha_failed=1` | вместо него, если v3 не сработала |
 
-Как работает капча:
+Как работает капча (по коду):
 
 1. Перед отправкой страница получает токен reCAPTCHA v3 с `action:
    "/auth/login/"`.
@@ -186,49 +191,110 @@
 Ещё есть вход через SSO: `/auth-sso/login/<провайдер>/`. Провайдеров
 два — Google и аккаунт X (в разделе X вход уже есть).
 
-Выход — `/auth/logout/`.
+Страницу входа голым HTTP с ПК Cloudflare отдаёт с 403 — и с десктопным
+User-Agent, и с User-Agent WebView. API раздела при этом отвечает.
+
+### Шаги после формы
+
+После формы сайт может вести по своим служебным страницам. Их список —
+`AUTH_PATHS` в бандле: `/auth/…`, `/auth-sso/…` (вход через другой
+аккаунт), `/security/tfa/auth/` и `/security/tfa/auth/choose_device/`
+(второй фактор), `/accounts/age_verification/`, `/agegate/`,
+`/identity/`, `/oauth/`, `/mobile/accounts/…`.
+
+Проверено: вход владельца шёл так — `/auth/login/` → страница другого
+сайта (аккаунт для SSO) → `/auth-sso/…` дважды → главная. Cookie
+`sessionid` стояла уже до того, как вход закончился. Первая версия
+приложения сочла вход выполненным на служебной странице и оборвала
+загрузку — сайт эту сессию так и не узнал: `viewer_username` в ответах был
+`AnonymousUser`.
+
+Поэтому вход считается выполненным, только когда WebView дошёл до страницы
+сайта вне служебных и сайт ответил на `follow/api/online_followed_rooms/`
+JSON-ом.
 
 ### Cookie
 
-Анониму сайт ставит `csrftoken`, `__cf_bm` (Cloudflare) и `sbr`. Cookie
-сессии после входа — по соглашению Django `sessionid`. Не проверено: под
-аккаунтом не входили.
+Проверено после входа:
 
-### Что из этого следует
+| Cookie | Домен | Флаги | Что это |
+| --- | --- | --- | --- |
+| `sessionid` | `.www.<домен>` | `Secure`, `HttpOnly`, `SameSite=None` | сессия Django |
+| `csrftoken` | `.www.<домен>` | `Secure` | токен CSRF, его значение идёт в `X-CSRFToken` |
+| `__cf_bm` | — | — | Cloudflare |
+| `sbr`, `affkey`, `whitelabels_hc`, `__utfpp`, `_ga…` | — | — | сайт и аналитика, для подписок не нужны |
 
-Повторять капчу в коде нельзя и не нужно: вход — страница в WebView. После
-входа cookie WebView отдаются HTTP-клиенту раздела. Для POST-запросов
-нужен заголовок `X-CSRFToken` со значением cookie `csrftoken` и
-`X-Requested-With: XMLHttpRequest` — так делает сам сайт.
+- Снять `sessionid` в хранилище WebView можно только с тем же доменом —
+  `Domain=.www.<домен>` — и с `Secure`. С `Domain=.<домен>` `setCookie`
+  отвечает успехом, а cookie остаётся.
+- Сессия не привязана к User-Agent: та же `sessionid` работала с ПК с
+  десктопным User-Agent. Привязку к IP так не проверить: ПК и телефон,
+  скорее всего, выходят в сеть через один адрес.
+- С сессией `api/chatvideocontext/<ник>/` отдаёт в `viewer_username` ник
+  аккаунта, без неё — `AnonymousUser`.
+
+### Выход
+
+`POST /auth/logout/` формой с `csrfmiddlewaretoken` — так выходит кнопка
+сайта; GET в бандлах не встречается. Проверено: сайт отвечает
+переадресацией, после неё прежнюю `sessionid` он не узнаёт — счётчик
+подписок с ней уводит на вход. Клиент Ktor по переадресации после POST не
+идёт, поэтому 3xx на выход — успех.
+
+### POST-запросы
+
+Сайт шлёт их с заголовками `X-CSRFToken` (значение cookie `csrftoken`) и
+`X-Requested-With: XMLHttpRequest`. Проверено на подписке:
+
+- без `X-CSRFToken` — 403, HTML-страница;
+- без `Referer` и `Origin` — тоже 403: Django проверяет источник у POST по
+  HTTPS;
+- с `X-CSRFToken`, `X-Requested-With`, `Referer` (страница комнаты) и
+  `Origin` — 200.
 
 ## 5. Подписки
 
-По коду бандлов; анонимно проверены только GET-запросы.
+Проверено под аккаунтом владельца 25–26.10. Подписка и отписка делались на
+одной чужой комнате в эфире — запросом и кнопками приложения; после
+проверки у аккаунта, как и до неё, подписок нет.
 
-| Запрос | Что делает | Анониму |
+| Запрос | Со входом | Анониму |
 | --- | --- | --- |
-| `GET /follow/is_following/<ник>/` | подписан ли | 401, `"Login required to check if following."` |
-| `POST /follow/follow/<ник>/?redirect=error` | подписаться; тело `location=<откуда>` | не проверялось |
-| `POST /follow/unfollow/<ник>/?redirect=error` | отписаться | не проверялось |
-| `GET /follow/api/online_followed_rooms/` | сколько подписок онлайн и их превью | 302 на вход |
-| `GET /follow/api/online_followed_rooms_info/` | то же с полными данными комнат | 302 на вход |
-| `GET /api/ts/roomlist/room-list/?follow=true` | подписки онлайн как список комнат | без сессии фильтр не работает |
-| `GET /api/ts/follow/email_notifications/` | письма о начале эфира | не проверялось |
+| `GET /follow/is_following/<ник>/` | 200, `{"following": false, "notification_frequency": "…"}` | 401, JSON `{"status", "detail", "code", "ts_context"}` |
+| `POST /follow/follow/<ник>/?redirect=error`, форма `location=<откуда>` | 200, `{"following": true, "notification_frequency": "…"}` | не проверялось |
+| `POST /follow/unfollow/<ник>/?redirect=error` | 200, `{"following": false, …}` | не проверялось |
+| `GET /follow/api/online_followed_rooms/` | `{"online": 1, "total": 1, "online_rooms": [ … ]}` | 302 на `/auth/login/` |
+| `GET /follow/api/online_followed_rooms_info/` | то же, комнаты с полными данными | 302 на `/auth/login/` |
+| `GET /api/ts/roomlist/room-list/?follow=true` | только подписки в эфире, `total_count` — их число | фильтр не применяется, общий список |
+| `GET /api/ts/roomlist/room-list/?follow=true&offline=true` | подписки не в эфире | фильтр не применяется, общий список |
 
-Ответ подписки, отписки и `is_following` по коду:
+- **Ответ подписки и отписки** — только `following` и
+  `notification_frequency`. Полей `online_count` и `total_count`, которые
+  читает код бандла, в ответе нет: счётчик берётся отдельным запросом.
+- **`online_followed_rooms`** — сколько подписок всего (`total`) и в эфире
+  (`online`), плюс превью онлайн-комнат (`room`, `image`). Приложение
+  берёт его первым: это и счётчик, и проверка, что сайт узнаёт сессию.
+- **`online_followed_rooms_info`** — у комнаты `username`, `age`,
+  `gender`, `country`, `location`, `img`, `num_users`, `room_subject`,
+  `tags`, `label`, `is_following`, `start_timestamp`.
+- **`room-list?follow=true`** — те же поля, что у обычного списка
+  (раздел 2), и `is_following: true`. Подписки офлайн —
+  `follow=true&offline=true`: так строит запрос страница
+  `/followed-cams/offline/`. С сессией фильтр работает (без подписок —
+  `total_count: 0`), но офлайн-подписок у аккаунта не было, и как такой
+  список выглядит на живых данных — не проверено. `offline=true` без
+  `follow` фильтром не считается: приходит общий список.
+- **Подписка видна и в данных:** `is_following` у комнаты в `room-list` и
+  `following` в JSON комнаты (`api/chatvideocontext/<ник>/`) совпали с
+  `is_following`.
 
-```json
-{
-  "following": true,
-  "notification_frequency": "…",
-  "online_count": 3,
-  "total_count": 12
-}
-```
+По коду, не проверялось:
 
-Признак подписки есть и в данных: `is_following` у комнаты в
-`room-list`, `following` и `follow_notification_frequency` в JSON
-комнаты.
+| Запрос | Что делает |
+| --- | --- |
+| `GET /api/ts/follow/followed_usernames/?usernames=<ник>,<ник>` | на кого из списка подписан аккаунт — пачкой |
+| `POST /api/ts/follow/notifications/<ник>`, `notification_frequency` | как часто сообщать о начале эфира |
+| `GET`/`POST /api/ts/follow/email_notifications/` | письма о начале эфира |
 
 Платная подписка — фан-клуб — отдельная история: поля `fan_club_*` и
 страница `/fanclub/join/<ник>/`. Здесь не разбиралась.
@@ -306,8 +372,8 @@ HTML страницы несёт `window.initialRoomDossier` — JSON строк
 
 ## 7. Что не проверено
 
-- Всё, что требует входа: подписка и отписка, списки подписок, подписка на
-  теги, имя cookie сессии.
+- Под аккаунтом: подписка на теги, офлайн-подписки на живых данных (у
+  аккаунта их не было), уведомления о начале эфира.
 - Витрина `/discover/` и мобильная вёрстка: мобильному User-Agent сайт
   отдаёт другую HTML-страницу, а API тот же.
 - Статусы комнаты кроме `public` и `private`: что приходит у офлайн-комнаты
