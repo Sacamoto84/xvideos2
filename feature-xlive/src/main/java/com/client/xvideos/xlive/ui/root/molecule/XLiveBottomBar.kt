@@ -40,11 +40,26 @@ private val tabIcons: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Search,
 )
 
+/** Подсказки вкладок по долгому нажатию — в порядке [XLiveTab]. */
+private val tabHints: ImmutableList<String> = persistentListOf(
+    "Эфиры — комнаты в эфире",
+    "Теги — комнаты по тегам",
+    "Избранное — сохранённые комнаты",
+    "Поиск — по нику и теме",
+)
+
 /** Значки подборок — в порядке [XLiveCollection]. */
 private val collectionIcons: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.LocalFireDepartment,
     Icons.Outlined.FiberNew,
     Icons.Outlined.Shuffle,
+)
+
+/** Подсказки подборок — в порядке [XLiveCollection]. */
+private val collectionHints: ImmutableList<String> = persistentListOf(
+    "Популярные — больше всего зрителей",
+    "Новые комнаты",
+    "Случайные комнаты",
 )
 
 /** Значки порядка тегов — в порядке [XLiveTagSort]: зрители, комнаты, А–Я. */
@@ -54,13 +69,21 @@ private val tagSortIcons: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.SortByAlpha,
 )
 
+/** Подсказки порядка тегов — в порядке [XLiveTagSort]. */
+private val tagSortHints: ImmutableList<String> = persistentListOf(
+    "Теги по числу зрителей",
+    "Теги по числу комнат",
+    "Теги по алфавиту",
+)
+
 /**
  * Нижняя панель раздела XLive — двухуровневая, как у X: сверху ряд текущей
  * вкладки (подборки «Эфиров», порядок «Тегов»), снизу вкладки и справа
  * переключатель пола.
  *
  * Второй ряд — значки, как подвкладки «Сохранённого» у X: подборки — разные
- * ленты, порядок — разные таблицы, а не фильтр внутри одной.
+ * ленты, порядок — разные таблицы, а не фильтр внутри одной. Что значит
+ * значок, говорит подсказка по долгому нажатию.
  */
 @Composable
 fun XLiveBottomBar(
@@ -76,12 +99,14 @@ fun XLiveBottomBar(
                 value = bar.collection.ordinal,
                 onChangeState = { actions.onCollection(XLiveCollection.entries[it]) },
                 containerColor = Theme.tabLevel1,
+                tooltips = collectionHints,
             )
             XLiveTab.TAGS -> TabRow(
                 titlesIcon = tagSortIcons,
                 value = bar.tagSort.ordinal,
                 onChangeState = { actions.onTagSort(XLiveTagSort.entries[it]) },
                 containerColor = Theme.tabLevel1,
+                tooltips = tagSortHints,
             )
             XLiveTab.SAVED, XLiveTab.SEARCH -> Unit
         }
@@ -95,6 +120,7 @@ fun XLiveBottomBar(
                     value = bar.tab.ordinal,
                     onChangeState = { actions.onTab(XLiveTab.entries[it]) },
                     containerColor = Theme.tabLevel0,
+                    tooltips = tabHints,
                 )
             }
             XLiveGenderSwitch(current = bar.gender, onSelect = actions.onGender)

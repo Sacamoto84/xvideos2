@@ -20,12 +20,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.ui.root.atom.XLiveGenderIcon
 
 /**
  * Переключатель пола у нижних вкладок — тот же вид, что у переключателя
- * категории X: кнопка со значком текущего пола, по нажатию — меню.
+ * категории X: кнопка со значком текущего пола, по нажатию — меню, по долгому
+ * нажатию — подсказка, что это за кнопка.
  *
  * @param current выбранный пол.
  * @param onSelect выбор пункта меню, в том числе текущего.
@@ -38,15 +40,17 @@ fun XLiveGenderSwitch(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = modifier.size(48.dp), contentAlignment = Alignment.Center) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .clickable { expanded = true },
-            contentAlignment = Alignment.Center
-        ) {
-            // Приглушён до яркости неактивных вкладок, как у X: кнопку жмут редко.
-            XLiveGenderIcon(gender = current, modifier = Modifier.alpha(ICON_ALPHA))
+        HintTooltip(text = "Пол комнат: ${current.title}") {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable { expanded = true },
+                contentAlignment = Alignment.Center
+            ) {
+                // Приглушён до яркости неактивных вкладок, как у X: кнопку жмут редко.
+                XLiveGenderIcon(gender = current, modifier = Modifier.alpha(ICON_ALPHA))
+            }
         }
         DropdownMenu(
             expanded = expanded,

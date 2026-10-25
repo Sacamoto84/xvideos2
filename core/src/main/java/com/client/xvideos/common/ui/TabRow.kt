@@ -54,6 +54,8 @@ import kotlinx.collections.immutable.toPersistentList
  *   колонок). Один параметр вместо прежних шести слотов `overlay0`…`overlay5`.
  * @param tags тестовые теги вкладок. Пустой список — теги не навешиваются,
  *   поведение ровно как у прежней L-версии.
+ * @param tooltips подсказки вкладок по номеру: всплывают по долгому нажатию и
+ *   служат описанием значка. Пустой список — подсказок нет, как раньше.
  */
 @Composable
 fun TabRow(
@@ -62,7 +64,8 @@ fun TabRow(
     value: Int,
     containerColor: Color = Theme.background,
     overlay: @Composable (index: Int) -> Unit = {},
-    tags: ImmutableList<String> = persistentListOf()
+    tags: ImmutableList<String> = persistentListOf(),
+    tooltips: ImmutableList<String> = persistentListOf(),
 ) {
 
     val haptic = LocalHapticFeedback.current
@@ -92,7 +95,8 @@ fun TabRow(
             divider = {}
         ) {
             titlesIcon.forEachIndexed { index, item ->
-                Box(modifier = Modifier.background(Color.Transparent)) {
+                val tooltip = tooltips.getOrElse(index) { "" }
+                HintTooltip(text = tooltip, modifier = Modifier.background(Color.Transparent)) {
                     Tab(
                         modifier = Modifier.then(
                             if (tags.isNotEmpty()) {
@@ -109,7 +113,7 @@ fun TabRow(
                         icon = {
                             Box {
                                 Icon(
-                                    item, contentDescription = null,
+                                    item, contentDescription = tooltip.ifEmpty { null },
                                     tint = if (index == state) Color.White else Color.Gray,
                                     modifier = Modifier.size(24.dp)
                                 )
