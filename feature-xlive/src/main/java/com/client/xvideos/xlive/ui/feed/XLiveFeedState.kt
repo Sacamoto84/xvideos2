@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.root
+package com.client.xvideos.xlive.ui.feed
 
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import kotlinx.collections.immutable.ImmutableList

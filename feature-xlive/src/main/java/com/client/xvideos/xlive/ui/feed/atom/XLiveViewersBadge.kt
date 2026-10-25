@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.root.atom
+package com.client.xvideos.xlive.ui.feed.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

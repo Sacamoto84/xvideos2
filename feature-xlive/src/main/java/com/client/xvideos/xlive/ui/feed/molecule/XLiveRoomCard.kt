@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.root.molecule
+package com.client.xvideos.xlive.ui.feed.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +28,7 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.model.flagEmoji
 import com.client.xvideos.xlive.ui.XLiveColors
-import com.client.xvideos.xlive.ui.root.atom.XLiveViewersBadge
+import com.client.xvideos.xlive.ui.feed.atom.XLiveViewersBadge
 
 private const val THUMBNAIL_ASPECT_RATIO = 16f / 9f
 private val CardShape = RoundedCornerShape(8.dp)

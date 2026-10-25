@@ -38,6 +38,11 @@ class XLiveRoomSM(
     /** Анкета показанной комнаты; `null`, пока не пришла или если не удалась. */
     val bio: StateFlow<XLiveBio?> = _bio.asStateFlow()
 
+    private val _muted = MutableStateFlow(true)
+
+    /** Звук эфира выключен. Комната открывается без звука, включает его кнопка на видео. */
+    val muted: StateFlow<Boolean> = _muted.asStateFlow()
+
     private val _aboutExpanded = MutableStateFlow(false)
 
     /** «О себе» в карточке модели развёрнуто целиком. */
@@ -159,6 +164,10 @@ class XLiveRoomSM(
      */
     fun onBuffering(isBuffering: Boolean) {
         Timber.i("XLive: буферизация — %s", if (isBuffering) "да" else "нет")
+    }
+
+    fun toggleMute() {
+        _muted.value = !_muted.value
     }
 
     fun toggleAbout() {

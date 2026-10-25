@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.root.molecule
+package com.client.xvideos.xlive.ui.feed.molecule
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,11 +29,11 @@ import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.ui.XLiveColors
+import com.client.xvideos.xlive.ui.feed.XLiveFeedActions
+import com.client.xvideos.xlive.ui.feed.XLiveFeedState
+import com.client.xvideos.xlive.ui.feed.atom.XLiveLoadMoreError
+import com.client.xvideos.xlive.ui.feed.atom.XLivePlaceholder
 import com.client.xvideos.xlive.ui.room.atom.XLiveMessage
-import com.client.xvideos.xlive.ui.root.XLiveFeedActions
-import com.client.xvideos.xlive.ui.root.XLiveFeedState
-import com.client.xvideos.xlive.ui.root.atom.XLiveLoadMoreError
-import com.client.xvideos.xlive.ui.root.atom.XLivePlaceholder
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter

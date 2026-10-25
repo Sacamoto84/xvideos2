@@ -11,7 +11,10 @@ import androidx.compose.material.icons.outlined.LiveTv
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Shuffle
+import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.material.icons.outlined.Videocam
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,7 +25,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.xlive.model.XLiveCollection
-import com.client.xvideos.xlive.model.XLiveGender
+import com.client.xvideos.xlive.model.XLiveTagSort
+import com.client.xvideos.xlive.ui.root.XLiveBarActions
+import com.client.xvideos.xlive.ui.root.XLiveBarState
 import com.client.xvideos.xlive.ui.root.XLiveTab
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -42,32 +47,43 @@ private val collectionIcons: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Shuffle,
 )
 
+/** Значки порядка тегов — в порядке [XLiveTagSort]: зрители, комнаты, А–Я. */
+private val tagSortIcons: ImmutableList<ImageVector> = persistentListOf(
+    Icons.Outlined.Visibility,
+    Icons.Outlined.Videocam,
+    Icons.Outlined.SortByAlpha,
+)
+
 /**
- * Нижняя панель раздела XLive — двухуровневая, как у X: сверху ряд
- * подборок «Эфиров», снизу вкладки и справа переключатель пола.
+ * Нижняя панель раздела XLive — двухуровневая, как у X: сверху ряд текущей
+ * вкладки (подборки «Эфиров», порядок «Тегов»), снизу вкладки и справа
+ * переключатель пола.
  *
- * Подборки — ряд значков на втором уровне, как подвкладки «Сохранённого» у X:
- * это разные ленты, а не фильтр внутри одной.
+ * Второй ряд — значки, как подвкладки «Сохранённого» у X: подборки — разные
+ * ленты, порядок — разные таблицы, а не фильтр внутри одной.
  */
 @Composable
 fun XLiveBottomBar(
-    tab: XLiveTab,
-    onTab: (XLiveTab) -> Unit,
-    collection: XLiveCollection,
-    onCollection: (XLiveCollection) -> Unit,
-    gender: XLiveGender,
-    onGender: (XLiveGender) -> Unit,
+    bar: XLiveBarState,
+    actions: XLiveBarActions,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         HorizontalDivider(color = Color(0xFF333333))
-        if (tab == XLiveTab.ROOMS) {
-            TabRow(
+        when (bar.tab) {
+            XLiveTab.ROOMS -> TabRow(
                 titlesIcon = collectionIcons,
-                value = collection.ordinal,
-                onChangeState = { onCollection(XLiveCollection.entries[it]) },
+                value = bar.collection.ordinal,
+                onChangeState = { actions.onCollection(XLiveCollection.entries[it]) },
                 containerColor = Theme.tabLevel1,
             )
+            XLiveTab.TAGS -> TabRow(
+                titlesIcon = tagSortIcons,
+                value = bar.tagSort.ordinal,
+                onChangeState = { actions.onTagSort(XLiveTagSort.entries[it]) },
+                containerColor = Theme.tabLevel1,
+            )
+            XLiveTab.SAVED, XLiveTab.SEARCH -> Unit
         }
         Row(
             modifier = Modifier.background(Theme.tabLevel0),
@@ -76,12 +92,12 @@ fun XLiveBottomBar(
             Box(modifier = Modifier.weight(1f)) {
                 TabRow(
                     titlesIcon = tabIcons,
-                    value = tab.ordinal,
-                    onChangeState = { onTab(XLiveTab.entries[it]) },
+                    value = bar.tab.ordinal,
+                    onChangeState = { actions.onTab(XLiveTab.entries[it]) },
                     containerColor = Theme.tabLevel0,
                 )
             }
-            XLiveGenderSwitch(current = gender, onSelect = onGender)
+            XLiveGenderSwitch(current = bar.gender, onSelect = actions.onGender)
         }
     }
 }
@@ -89,12 +105,5 @@ fun XLiveBottomBar(
 @Preview
 @Composable
 private fun XLiveBottomBarPreview() {
-    XLiveBottomBar(
-        tab = XLiveTab.ROOMS,
-        onTab = {},
-        collection = XLiveCollection.POPULAR,
-        onCollection = {},
-        gender = XLiveGender.ALL,
-        onGender = {},
-    )
+    XLiveBottomBar(bar = XLiveBarState(), actions = XLiveBarActions())
 }

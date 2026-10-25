@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.root
+package com.client.xvideos.xlive.ui.feed
 
 import androidx.compose.runtime.Immutable
 

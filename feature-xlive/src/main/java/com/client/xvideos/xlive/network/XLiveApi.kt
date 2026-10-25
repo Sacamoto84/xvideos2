@@ -7,6 +7,8 @@ import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.model.XLiveRoomPage
+import com.client.xvideos.xlive.model.XLiveTagPage
+import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.xLiveUrlStart
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -72,13 +74,31 @@ object XLiveApi {
     }
 
     /**
-     * Страница списка комнат с [offset]: пол [gender], подборка [collection].
+     * Страница списка комнат с [offset]: пол [gender], подборка [collection] и,
+     * если задан, тег [hashtag].
      *
      * @throws IOException нет сети, ответ с кодом ошибки или без списка комнат.
      */
-    suspend fun rooms(gender: XLiveGender, collection: XLiveCollection, offset: Int): XLiveRoomPage {
-        val response = client.get("$xLiveUrlStart/api/ts/roomlist/room-list/?${roomListQuery(gender, collection, offset)}")
+    suspend fun rooms(
+        gender: XLiveGender,
+        collection: XLiveCollection,
+        offset: Int,
+        hashtag: String = "",
+    ): XLiveRoomPage {
+        val query = roomListQuery(gender, collection, offset, hashtag = hashtag)
+        val response = client.get("$xLiveUrlStart/api/ts/roomlist/room-list/?$query")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
         return parseXLiveRoomPage(response.bodyAsText()) ?: throw IOException("Ответ без списка комнат")
+    }
+
+    /**
+     * Страница [page] таблицы тегов: пол [gender], порядок [sort].
+     *
+     * @throws IOException нет сети, ответ с кодом ошибки или без списка тегов.
+     */
+    suspend fun tags(gender: XLiveGender, sort: XLiveTagSort, page: Int): XLiveTagPage {
+        val response = client.get("$xLiveUrlStart/api/ts/hashtags/tag-table-data/?${tagTableQuery(gender, sort, page)}")
+        if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
+        return parseXLiveTagPage(response.bodyAsText()) ?: throw IOException("Ответ без списка тегов")
     }
 }

@@ -28,6 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRoom
@@ -40,6 +42,7 @@ import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomAboutCard
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomHeader
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomPlayer
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomTopic
+import com.client.xvideos.xlive.ui.tag.ScreenXLiveTag
 
 /**
  * Комната XLive: живой поток сверху, под ним шапка модели, тема с тегами и
@@ -51,20 +54,25 @@ class ScreenXLiveRoom(private val room: String) : Screen {
 
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val vm = rememberScreenModel { XLiveRoomSM(room) }
         val state by vm.state.collectAsStateWithLifecycle()
         val bio by vm.bio.collectAsStateWithLifecycle()
         val aboutExpanded by vm.aboutExpanded.collectAsStateWithLifecycle()
+        val muted by vm.muted.collectAsStateWithLifecycle()
 
         ScreenXLiveRoomContent(
             state = state,
             bio = bio,
             aboutExpanded = aboutExpanded,
+            muted = muted,
             onRetry = vm::reload,
+            onToggleMute = vm::toggleMute,
             onPlayerStarted = vm::onPlayerStarted,
             onPlayerError = vm::onPlayerError,
             onBuffering = vm::onBuffering,
             onToggleAbout = vm::toggleAbout,
+            onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag)) },
         )
     }
 }
@@ -77,11 +85,14 @@ fun ScreenXLiveRoomContent(
     state: XLiveRoomState,
     bio: XLiveBio?,
     aboutExpanded: Boolean,
+    muted: Boolean,
     onRetry: () -> Unit,
+    onToggleMute: () -> Unit,
     onPlayerStarted: (String) -> Unit,
     onPlayerError: (String) -> Unit,
     onBuffering: (Boolean) -> Unit,
     onToggleAbout: () -> Unit,
+    onOpenTag: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Над переключением состояний: позиция переживает и «Повторить», и сложение складного.
@@ -114,6 +125,8 @@ fun ScreenXLiveRoomContent(
 
                 XLiveRoomPlayer(
                     hlsUrl = info.hlsUrl,
+                    muted = muted,
+                    onToggleMute = onToggleMute,
                     onStarted = onPlayerStarted,
                     onError = onPlayerError,
                     onBuffering = onBuffering,
@@ -144,7 +157,7 @@ fun ScreenXLiveRoomContent(
                             ratingPercent = info.ratingPercent,
                         )
                         if (topic.text.isNotBlank() || topic.tags.isNotEmpty()) {
-                            XLiveRoomTopic(topic = topic)
+                            XLiveRoomTopic(topic = topic, onOpenTag = onOpenTag)
                         }
                         if (bio != null) {
                             XLiveRoomAboutCard(
@@ -178,10 +191,13 @@ private fun ScreenXLiveRoomPreview() {
         ),
         bio = XLiveBio(realName = "Anna", age = 24, languages = "English", followers = 20332, aboutMe = "Hello!"),
         aboutExpanded = false,
+        muted = true,
         onRetry = {},
+        onToggleMute = {},
         onPlayerStarted = {},
         onPlayerError = {},
         onBuffering = {},
         onToggleAbout = {},
+        onOpenTag = {},
     )
 }

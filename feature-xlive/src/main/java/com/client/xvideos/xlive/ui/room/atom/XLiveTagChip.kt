@@ -2,6 +2,7 @@ package com.client.xvideos.xlive.ui.room.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,16 +24,17 @@ import com.client.xvideos.xlive.ui.XLiveColors
 /**
  * Чип тега комнаты — тот же вид, что у тегов плеера X.
  *
- * Пока не нажимается: списка комнат по тегу в разделе ещё нет.
+ * @param onClick открыть комнаты с этим тегом.
  */
 @Composable
-fun XLiveTagChip(text: String, modifier: Modifier = Modifier) {
+fun XLiveTagChip(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .height(28.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(XLiveColors.ChipBackground)
             .border(1.dp, XLiveColors.ChipBorder, RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick)
             .padding(horizontal = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -51,5 +53,5 @@ fun XLiveTagChip(text: String, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun XLiveTagChipPreview() {
-    XLiveTagChip(text = "petite")
+    XLiveTagChip(text = "petite", onClick = {})
 }

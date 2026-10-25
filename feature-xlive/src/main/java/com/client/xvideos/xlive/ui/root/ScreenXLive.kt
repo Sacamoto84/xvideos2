@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,17 +25,22 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.xlive.model.XLiveCollection
-import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.ui.XLiveColors
+import com.client.xvideos.xlive.ui.feed.XLiveFeedActions
+import com.client.xvideos.xlive.ui.feed.XLiveFeedState
+import com.client.xvideos.xlive.ui.feed.atom.XLivePlaceholder
+import com.client.xvideos.xlive.ui.feed.molecule.XLiveRoomsGrid
 import com.client.xvideos.xlive.ui.room.ScreenXLiveRoom
-import com.client.xvideos.xlive.ui.root.atom.XLivePlaceholder
 import com.client.xvideos.xlive.ui.root.molecule.XLiveBottomBar
-import com.client.xvideos.xlive.ui.root.molecule.XLiveRoomsGrid
+import com.client.xvideos.xlive.ui.tag.ScreenXLiveTag
+import com.client.xvideos.xlive.ui.tags.XLiveTagsActions
+import com.client.xvideos.xlive.ui.tags.XLiveTagsState
+import com.client.xvideos.xlive.ui.tags.molecule.XLiveTagsList
 
 /**
- * Корень раздела XLive: нижние вкладки как у X, переключатель пола, вкладка
- * «Эфиры» с сеткой комнат. Тап по карточке открывает комнату.
+ * Корень раздела XLive: нижние вкладки как у X, переключатель пола, вкладки
+ * «Эфиры» (сетка комнат) и «Теги» (таблица тегов). Тап по карточке или
+ * превью открывает комнату, тап по тегу — комнаты с ним.
  */
 class ScreenXLive : Screen {
 
@@ -46,9 +53,19 @@ class ScreenXLive : Screen {
         val tab by vm.tab.collectAsStateWithLifecycle()
         val gender by vm.gender.collectAsStateWithLifecycle()
         val collection by vm.collection.collectAsStateWithLifecycle()
+        val tagSort by vm.tagSort.collectAsStateWithLifecycle()
         val feed by vm.feed.collectAsStateWithLifecycle()
+        val tags by vm.tags.collectAsStateWithLifecycle()
 
-        val actions = remember(vm, navigator) {
+        val barActions = remember(vm) {
+            XLiveBarActions(
+                onTab = vm::selectTab,
+                onGender = vm::selectGender,
+                onCollection = vm::selectCollection,
+                onTagSort = vm::selectTagSort,
+            )
+        }
+        val feedActions = remember(vm, navigator) {
             XLiveFeedActions(
                 onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
                 onRetry = vm::reload,
@@ -57,47 +74,45 @@ class ScreenXLive : Screen {
                 onLoadMore = vm::loadMore,
             )
         }
+        val tagsActions = remember(vm, navigator) {
+            XLiveTagsActions(
+                onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag, vm.gender.value)) },
+                onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+                onRetry = vm::reloadTags,
+                onRetryLoadMore = vm::retryLoadMoreTags,
+                onLoadMore = vm::loadMoreTags,
+            )
+        }
 
         ScreenXLiveContent(
-            tab = tab,
-            gender = gender,
-            collection = collection,
+            bar = XLiveBarState(tab = tab, gender = gender, collection = collection, tagSort = tagSort),
+            barActions = barActions,
             feed = feed,
             gridState = vm.gridPosition.rememberState(),
-            onTab = vm::selectTab,
-            onGender = vm::selectGender,
-            onCollection = vm::selectCollection,
-            actions = actions,
+            feedActions = feedActions,
+            tags = tags,
+            tagsListState = vm.tagsPosition.rememberState(),
+            tagsActions = tagsActions,
         )
     }
 }
 
 @Composable
 fun ScreenXLiveContent(
-    tab: XLiveTab,
-    gender: XLiveGender,
-    collection: XLiveCollection,
+    bar: XLiveBarState,
+    barActions: XLiveBarActions,
     feed: XLiveFeedState,
     gridState: LazyGridState,
-    onTab: (XLiveTab) -> Unit,
-    onGender: (XLiveGender) -> Unit,
-    onCollection: (XLiveCollection) -> Unit,
-    actions: XLiveFeedActions,
+    feedActions: XLiveFeedActions,
+    tags: XLiveTagsState,
+    tagsListState: LazyListState,
+    tagsActions: XLiveTagsActions,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = XLiveColors.Background,
-        bottomBar = {
-            XLiveBottomBar(
-                tab = tab,
-                onTab = onTab,
-                collection = collection,
-                onCollection = onCollection,
-                gender = gender,
-                onGender = onGender,
-            )
-        },
+        bottomBar = { XLiveBottomBar(bar = bar, actions = barActions) },
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         // Сверху — отступ на вырез, как у меню и шапок X.
@@ -108,13 +123,10 @@ fun ScreenXLiveContent(
                 .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top)),
             contentAlignment = Alignment.Center,
         ) {
-            when (tab) {
-                XLiveTab.ROOMS -> XLiveRoomsGrid(
-                    feed = feed,
-                    gridState = gridState,
-                    actions = actions,
-                )
-                else -> XLivePlaceholder(text = "${tab.title} — следующим шагом")
+            when (bar.tab) {
+                XLiveTab.ROOMS -> XLiveRoomsGrid(feed = feed, gridState = gridState, actions = feedActions)
+                XLiveTab.TAGS -> XLiveTagsList(state = tags, listState = tagsListState, actions = tagsActions)
+                XLiveTab.SAVED, XLiveTab.SEARCH -> XLivePlaceholder(text = "${bar.tab.title} — следующим шагом")
             }
         }
     }
@@ -124,14 +136,13 @@ fun ScreenXLiveContent(
 @Composable
 private fun ScreenXLivePreview() {
     ScreenXLiveContent(
-        tab = XLiveTab.ROOMS,
-        gender = XLiveGender.ALL,
-        collection = XLiveCollection.POPULAR,
+        bar = XLiveBarState(),
+        barActions = XLiveBarActions(),
         feed = XLiveFeedState(isLoading = true),
         gridState = rememberLazyGridState(),
-        onTab = {},
-        onGender = {},
-        onCollection = {},
-        actions = XLiveFeedActions(),
+        feedActions = XLiveFeedActions(),
+        tags = XLiveTagsState(),
+        tagsListState = rememberLazyListState(),
+        tagsActions = XLiveTagsActions(),
     )
 }

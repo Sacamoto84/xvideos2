@@ -4,7 +4,11 @@ import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.model.XLiveRoomPage
+import com.client.xvideos.xlive.model.XLiveTag
+import com.client.xvideos.xlive.model.XLiveTagPage
+import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.network.ROOM_PAGE_SIZE
+import com.client.xvideos.xlive.network.TAG_PAGE_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -26,8 +30,12 @@ class XLiveSMTest {
 
     private data class Request(val gender: XLiveGender, val collection: XLiveCollection, val offset: Int)
 
+    private data class TagRequest(val gender: XLiveGender, val sort: XLiveTagSort, val page: Int)
+
     private val requests = mutableListOf<Request>()
     private var pages: (Request) -> XLiveRoomPage = { page(it.offset, "a", "b") }
+    private val tagRequests = mutableListOf<TagRequest>()
+    private var tagPages: (TagRequest) -> XLiveTagPage = { XLiveTagPage(listOf(XLiveTag("t${it.page}", 1, 1)), 1000) }
 
     @Before
     fun setUp() {
@@ -42,11 +50,18 @@ class XLiveSMTest {
     private fun page(offset: Int, vararg names: String, total: Int = 1000) =
         XLiveRoomPage(names.map { XLiveRoomItem(username = "$it$offset") }, total)
 
-    private fun model() = XLiveSM(loadPage = { gender, collection, offset ->
-        val request = Request(gender, collection, offset)
-        requests += request
-        pages(request)
-    })
+    private fun model() = XLiveSM(
+        loadPage = { gender, collection, offset ->
+            val request = Request(gender, collection, offset)
+            requests += request
+            pages(request)
+        },
+        loadTags = { gender, sort, page ->
+            val request = TagRequest(gender, sort, page)
+            tagRequests += request
+            tagPages(request)
+        },
+    )
 
     private fun XLiveSM.names() = feed.value.rooms.map { it.username }
 
@@ -168,12 +183,85 @@ class XLiveSMTest {
     }
 
     @Test
-    fun `вкладка меняется без запросов`() {
+    fun `вкладка меняется без запросов эфиров`() {
         val sm = model()
 
         sm.selectTab(XLiveTab.TAGS)
 
         assertEquals(XLiveTab.TAGS, sm.tab.value)
         assertEquals(1, requests.size)
+    }
+
+    @Test
+    fun `теги — только при первом открытии вкладки, повторное открытие без запроса`() {
+        val sm = model()
+        assertEquals(emptyList<TagRequest>(), tagRequests)
+
+        sm.selectTab(XLiveTab.TAGS)
+        sm.selectTab(XLiveTab.ROOMS)
+        sm.selectTab(XLiveTab.TAGS)
+
+        assertEquals(listOf(TagRequest(XLiveGender.ALL, XLiveTagSort.VIEWERS, 1)), tagRequests)
+        assertEquals(listOf("t1"), sm.tags.value.tags.map { it.name })
+    }
+
+    @Test
+    fun `теги — догрузка следующей страницы без повторов`() {
+        tagPages = { XLiveTagPage(listOf(XLiveTag("same", 1, 1), XLiveTag("t${it.page}", 1, 1)), 1000) }
+        val sm = model()
+        sm.selectTab(XLiveTab.TAGS)
+
+        sm.loadMoreTags()
+
+        assertEquals(2, tagRequests.last().page)
+        assertEquals(listOf("same", "t1", "t2"), sm.tags.value.tags.map { it.name })
+    }
+
+    @Test
+    fun `теги — конец, когда страницы покрыли total`() {
+        tagPages = { XLiveTagPage(listOf(XLiveTag("a", 1, 1)), total = TAG_PAGE_SIZE) }
+        val sm = model()
+        sm.selectTab(XLiveTab.TAGS)
+
+        assertTrue(sm.tags.value.isEndReached)
+        sm.loadMoreTags()
+        assertEquals(1, tagRequests.size)
+    }
+
+    @Test
+    fun `порядок тегов — таблица с нуля`() {
+        val sm = model()
+        sm.selectTab(XLiveTab.TAGS)
+
+        sm.selectTagSort(XLiveTagSort.NAME)
+
+        assertEquals(TagRequest(XLiveGender.ALL, XLiveTagSort.NAME, 1), tagRequests.last())
+        assertEquals(XLiveTagSort.NAME, sm.tagSort.value)
+    }
+
+    @Test
+    fun `пол — теги перезапрашиваются, только если их уже открывали`() {
+        val sm = model()
+        sm.selectGender(XLiveGender.MALE)
+        assertEquals("теги не открывали — запроса нет", emptyList<TagRequest>(), tagRequests)
+
+        sm.selectTab(XLiveTab.TAGS)
+        sm.selectGender(XLiveGender.TRANS)
+
+        assertEquals(TagRequest(XLiveGender.TRANS, XLiveTagSort.VIEWERS, 1), tagRequests.last())
+    }
+
+    @Test
+    fun `теги не пришли — ошибка, Повторить грузит снова`() {
+        tagPages = { throw IOException("нет сети") }
+        val sm = model()
+        sm.selectTab(XLiveTab.TAGS)
+        assertEquals("Не удалось загрузить теги", sm.tags.value.error)
+
+        tagPages = { XLiveTagPage(listOf(XLiveTag("a", 1, 1)), 1000) }
+        sm.reloadTags()
+
+        assertNull(sm.tags.value.error)
+        assertEquals(listOf("a"), sm.tags.value.tags.map { it.name })
     }
 }

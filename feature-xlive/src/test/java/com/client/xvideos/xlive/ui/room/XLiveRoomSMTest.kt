@@ -63,6 +63,18 @@ class XLiveRoomSMTest {
     }
 
     @Test
+    fun `комната открывается без звука, кнопка его включает и выключает`() {
+        val sm = model()
+        assertEquals(true, sm.muted.value)
+
+        sm.toggleMute()
+        assertEquals(false, sm.muted.value)
+
+        sm.toggleMute()
+        assertEquals(true, sm.muted.value)
+    }
+
+    @Test
     fun `нет сети — ошибка с классом исключения`() {
         assertEquals(XLiveRoomState.Failed("IOException"), model(rooms = emptyMap()).state.value)
     }

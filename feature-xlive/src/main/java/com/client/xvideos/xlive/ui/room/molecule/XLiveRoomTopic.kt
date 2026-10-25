@@ -15,10 +15,14 @@ import com.client.xvideos.xlive.model.XLiveTopic
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.room.atom.XLiveTagChip
 
-/** Тема комнаты: текст и под ним теги чипами, как теги плеера X. */
+/**
+ * Тема комнаты: текст и под ним теги чипами, как теги плеера X.
+ *
+ * @param onOpenTag тап по чипу; аргумент — тег без `#`.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun XLiveRoomTopic(topic: XLiveTopic, modifier: Modifier = Modifier) {
+fun XLiveRoomTopic(topic: XLiveTopic, onOpenTag: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -36,7 +40,7 @@ fun XLiveRoomTopic(topic: XLiveTopic, modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                topic.tags.forEach { tag -> XLiveTagChip(text = tag) }
+                topic.tags.forEach { tag -> XLiveTagChip(text = tag, onClick = { onOpenTag(tag) }) }
             }
         }
     }
@@ -45,5 +49,5 @@ fun XLiveRoomTopic(topic: XLiveTopic, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun XLiveRoomTopicPreview() {
-    XLiveRoomTopic(topic = XLiveTopic(text = "goal: 100 tk", tags = listOf("petite", "ginger", "new")))
+    XLiveRoomTopic(topic = XLiveTopic(text = "goal: 100 tk", tags = listOf("petite", "ginger", "new")), onOpenTag = {})
 }

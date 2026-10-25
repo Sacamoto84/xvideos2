@@ -1,4 +1,4 @@
-package com.client.xvideos.xlive.ui.root.atom
+package com.client.xvideos.xlive.ui.feed.atom
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
