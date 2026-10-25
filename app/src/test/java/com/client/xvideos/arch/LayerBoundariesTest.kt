@@ -152,6 +152,8 @@ class LayerBoundariesTest {
                 "network" to "data",
                 // Хранилища «Моих» и «Истории» на диске — тот же слой, что и сеть.
                 "saved" to "data",
+                // Вход на сайт: cookie WebView для клиента и сессия — тоже данные.
+                "auth" to "data",
                 "ui" to "ui",
             ),
         )

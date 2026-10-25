@@ -37,3 +37,15 @@ fun roomListQuery(
     if (keywords.isNotBlank()) add("keywords" to keywords.trim().encodeURLQueryComponent())
     addAll(filters.params)
 }.joinToString("&") { (key, value) -> "$key=$value" }
+
+/**
+ * Query-строка списка подписок: в эфире (`follow=true`) или не в эфире
+ * ([offline]: ещё и `offline=true`, как у страницы подписок офлайн).
+ * Работает только с сессией: анониму сайт отдаёт общий список.
+ */
+fun followedRoomsQuery(offline: Boolean, offset: Int, limit: Int = ROOM_PAGE_SIZE): String = buildList {
+    add("limit=$limit")
+    add("offset=$offset")
+    add("follow=true")
+    if (offline) add("offline=true")
+}.joinToString("&")

@@ -1,6 +1,8 @@
 package com.client.xvideos.xlive.ui.root
 
+import com.client.xvideos.xlive.auth.TestAccount
 import com.client.xvideos.xlive.model.XLiveCollection
+import com.client.xvideos.xlive.model.XLiveFollowed
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.model.XLiveRoomPage
@@ -61,6 +63,9 @@ class XLiveSMTest {
     private val requests = mutableListOf<Request>()
     private var pages: (Request) -> XLiveRoomPage = { page(it.offset, "a", "b") }
     private val tagRequests = mutableListOf<TagRequest>()
+    private val account = TestAccount()
+    private var followedLoads = 0
+    private val followCalls = mutableListOf<Pair<String, Boolean>>()
     private var tagPages: (TagRequest) -> XLiveTagPage = { XLiveTagPage(listOf(XLiveTag("t${it.page}", 1, 1)), 1000) }
 
     @Before
@@ -98,6 +103,15 @@ class XLiveSMTest {
             name in onlineRooms
         },
         nowSeconds = { nowSeconds },
+        account = account,
+        loadFollowed = {
+            followedLoads++
+            XLiveFollowed(online = listOf(XLiveRoomItem("f1")), offline = listOf(XLiveRoomItem("f2")))
+        },
+        setFollowing = { name, follow ->
+            followCalls += name to follow
+            follow
+        },
     )
 
     private fun XLiveSM.names() = feed.value.rooms.map { it.username }
@@ -378,6 +392,47 @@ class XLiveSMTest {
         sm.selectSavedTab(XLiveSavedTab.HISTORY)
         sm.removeSaved("a")
         assertEquals(emptyList<String>(), sm.recent.value.rooms.map { it.username })
+    }
+
+    @Test
+    fun `Подписки грузятся при открытии подвкладки, эфир сохранённых при этом не проверяется`() {
+        saved.put(XLiveSavedRoom("a"))
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+        assertEquals(0, followedLoads)
+        onlineAsked.clear()
+
+        sm.selectSavedTab(XLiveSavedTab.FOLLOWING)
+
+        assertEquals(1, followedLoads)
+        assertEquals(emptyList<String>(), onlineAsked)
+        assertEquals(listOf("f1", "f2"), sm.following.value.list.rooms.map { it.username })
+    }
+
+    @Test
+    fun `свайп вниз и убрать в Подписках — с сайта, перечитать и отписаться`() {
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+        sm.selectSavedTab(XLiveSavedTab.FOLLOWING)
+
+        sm.refreshSaved()
+        assertEquals(2, followedLoads)
+
+        sm.removeSaved("f1")
+        assertEquals(listOf("f1" to false), followCalls)
+    }
+
+    @Test
+    fun `Выйти — выход аккаунта, Подписки пустые`() {
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+        sm.selectSavedTab(XLiveSavedTab.FOLLOWING)
+
+        sm.signOut()
+
+        assertEquals(1, account.signOuts)
+        assertFalse(sm.following.value.isSignedIn)
+        assertEquals(emptyList<String>(), sm.following.value.list.rooms.map { it.username })
     }
 
     @Test

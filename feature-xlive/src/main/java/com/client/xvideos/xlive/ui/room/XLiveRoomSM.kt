@@ -2,10 +2,16 @@ package com.client.xvideos.xlive.ui.room
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.client.xvideos.common.eventBus.Event
+import com.client.xvideos.common.eventBus.EventBus
+import com.client.xvideos.common.snackbar.UiMessage
+import com.client.xvideos.xlive.auth.XLiveAccount
+import com.client.xvideos.xlive.auth.XLiveSession
 import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.model.XLiveSavedRoom
 import com.client.xvideos.xlive.network.XLiveApi
+import com.client.xvideos.xlive.network.XLiveSignInRequiredException
 import com.client.xvideos.xlive.saved.XLiveRoomStore
 import com.client.xvideos.xlive.saved.XLiveSaved
 import kotlinx.coroutines.CancellationException
@@ -14,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -25,12 +32,17 @@ import java.io.IOException
  *
  * Анкета грузится отдельно от комнаты: видео не ждёт её. Комната попадает в
  * «Историю» при открытии, возраст дописывается, когда придёт анкета.
+ * Подписка спрашивается у сайта, когда есть вход, — при открытии и после
+ * входа со страницы комнаты.
  *
  * @param loadRoom источник комнаты; подменяется в тестах.
  * @param loadBio источник анкеты; подменяется в тестах.
  * @param nowMs монотонные часы в миллисекундах; подменяются в тестах.
  * @param saved «Мои»; в тестах — хранилище во временной папке.
  * @param history «История»; в тестах — хранилище во временной папке.
+ * @param account вход на сайт; подменяется в тестах.
+ * @param isFollowing подписка аккаунта на комнату; подменяется в тестах.
+ * @param setFollowing подписка и отписка; подменяются в тестах.
  */
 class XLiveRoomSM(
     private val room: String,
@@ -39,6 +51,9 @@ class XLiveRoomSM(
     private val nowMs: () -> Long = { System.nanoTime() / NANOS_PER_MS },
     private val saved: XLiveRoomStore = XLiveSaved.my,
     private val history: XLiveRoomStore = XLiveSaved.history,
+    private val account: XLiveAccount = XLiveSession,
+    private val isFollowing: suspend (String) -> Boolean = XLiveApi::isFollowing,
+    private val setFollowing: suspend (String, Boolean) -> Boolean = XLiveApi::setFollowing,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow<XLiveRoomState>(XLiveRoomState.Loading)
@@ -64,7 +79,17 @@ class XLiveRoomSM(
         .map { rooms -> rooms.any { it.username == room } }
         .stateIn(screenModelScope, SharingStarted.Eagerly, room in saved)
 
+    private val _following = MutableStateFlow(false)
+    private val _followBusy = MutableStateFlow(false)
+
+    /** Кнопка «подписаться»: есть ли вход, подписка, запрос в пути. */
+    val follow: StateFlow<XLiveFollowState> =
+        combine(account.signedIn, _following, _followBusy) { signedIn, following, busy ->
+            XLiveFollowState(isSignedIn = signedIn, following = signedIn && following, isBusy = busy)
+        }.stateIn(screenModelScope, SharingStarted.Eagerly, XLiveFollowState(isSignedIn = account.signedIn.value))
+
     private var loadJob: Job? = null
+    private var followJob: Job? = null
     private var bioJob: Job? = null
     private var bioRoom: String? = null
     private var loadedAtMs = 0L
@@ -75,6 +100,17 @@ class XLiveRoomSM(
     init {
         history.put(XLiveSavedRoom(room))
         reload()
+        screenModelScope.launch {
+            account.signedIn.collect { signedIn ->
+                if (signedIn) {
+                    refreshFollowing()
+                } else {
+                    followJob?.cancel()
+                    _following.value = false
+                    _followBusy.value = false
+                }
+            }
+        }
     }
 
     /** Комната с нуля: экран загрузки и свежий адрес потока. Первый запуск и кнопка «Повторить». */
@@ -191,6 +227,54 @@ class XLiveRoomSM(
 
     fun toggleAbout() {
         _aboutExpanded.value = !_aboutExpanded.value
+    }
+
+    /** Подписка на комнату — с сайта: при открытии и после входа. */
+    private fun refreshFollowing() {
+        followJob?.cancel()
+        followJob = screenModelScope.launch {
+            try {
+                _following.value = isFollowing(room)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: XLiveSignInRequiredException) {
+                Timber.w("XLive: подписка — %s", e.message)
+                account.onSessionLost()
+            } catch (e: IOException) {
+                Timber.w("XLive: подписка не получена — %s", e.javaClass.simpleName)
+            }
+        }
+    }
+
+    /**
+     * «Подписаться» со входом: подписаться на сайте или отписаться. Пока запрос
+     * в пути, повторное нажатие не в счёт. Без входа кнопка ведёт на страницу
+     * входа — это решает экран.
+     */
+    fun toggleFollow() {
+        if (!account.signedIn.value || _followBusy.value) return
+        val target = !_following.value
+        _followBusy.value = true
+        followJob?.cancel()
+        followJob = screenModelScope.launch {
+            try {
+                _following.value = setFollowing(room, target)
+                Timber.i("XLive: %s", if (target) "подписка выполнена" else "отписка выполнена")
+                account.onFollowChanged()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: XLiveSignInRequiredException) {
+                Timber.w("XLive: подписка — %s", e.message)
+                account.onSessionLost()
+                EventBus.postEvent(Event.ShowSnackBar(UiMessage.Error("Войдите на сайт заново")))
+            } catch (e: IOException) {
+                Timber.w("XLive: подписка не изменена — %s", e.javaClass.simpleName)
+                val text = if (target) "Не удалось подписаться" else "Не удалось отписаться"
+                EventBus.postEvent(Event.ShowSnackBar(UiMessage.Error(text)))
+            } finally {
+                _followBusy.value = false
+            }
+        }
     }
 
     /** Кнопка в шапке: сохранить комнату в «Мои» или убрать оттуда. */

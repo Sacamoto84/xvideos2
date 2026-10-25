@@ -75,4 +75,10 @@ class XLiveRoomQueryTest {
         assertEquals(true, XLiveSearchFilters().isEmpty)
         assertEquals(false, XLiveSearchFilters(price = XLivePrivatePrice.PRICE_6).isEmpty)
     }
+
+    @Test
+    fun `подписки — в эфире только follow, не в эфире ещё и offline`() {
+        assertEquals("limit=90&offset=0&follow=true", followedRoomsQuery(offline = false, offset = 0))
+        assertEquals("limit=90&offset=90&follow=true&offline=true", followedRoomsQuery(offline = true, offset = 90))
+    }
 }

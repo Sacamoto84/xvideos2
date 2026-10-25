@@ -13,6 +13,8 @@ import androidx.compose.runtime.Immutable
  * @property onBuffering плеер ждёт данных или снова играет.
  * @property onToggleAbout развернуть или свернуть «О себе».
  * @property onToggleSaved кнопка «в мои» в шапке.
+ * @property onToggleFollow «подписаться» в шапке, когда есть вход.
+ * @property onSignIn «подписаться» в шапке без входа: страница входа.
  * @property onOpenTag тап по тегу темы; аргумент — тег без `#`.
  */
 @Immutable
@@ -24,5 +26,7 @@ data class XLiveRoomActions(
     val onBuffering: (Boolean) -> Unit = {},
     val onToggleAbout: () -> Unit = {},
     val onToggleSaved: () -> Unit = {},
+    val onToggleFollow: () -> Unit = {},
+    val onSignIn: () -> Unit = {},
     val onOpenTag: (String) -> Unit = {},
 )

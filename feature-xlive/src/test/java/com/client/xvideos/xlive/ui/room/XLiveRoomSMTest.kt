@@ -1,8 +1,10 @@
 package com.client.xvideos.xlive.ui.room
 
+import com.client.xvideos.xlive.auth.TestAccount
 import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.model.XLiveSavedRoom
+import com.client.xvideos.xlive.network.XLiveSignInRequiredException
 import com.client.xvideos.xlive.saved.testRoomStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +36,11 @@ class XLiveRoomSMTest {
     private val live = XLiveRoom(status = "public", hlsUrl = "https://edge.test/a.m3u8", username = "room_a")
     private var nowMs = 0L
     private var roomCalls = 0
+    private var account = TestAccount(signedIn = false)
+    private var followingOnSite = false
+    private var followingAsked = 0
+    private val followCalls = mutableListOf<Boolean>()
+    private var setFollowing: (Boolean) -> Boolean = { it }
 
     @Before
     fun setUp() {
@@ -58,6 +65,15 @@ class XLiveRoomSMTest {
         nowMs = { nowMs },
         saved = saved,
         history = history,
+        account = account,
+        isFollowing = {
+            followingAsked++
+            followingOnSite
+        },
+        setFollowing = { _, follow ->
+            followCalls += follow
+            setFollowing(follow)
+        },
     )
 
     @Test
@@ -220,5 +236,78 @@ class XLiveRoomSMTest {
         saved.put(XLiveSavedRoom("room_a"))
 
         assertTrue(model().isSaved.value)
+    }
+
+    @Test
+    fun `без входа — подписка не спрашивается, нажатие не в счёт`() {
+        val sm = model()
+
+        sm.toggleFollow()
+
+        assertEquals(XLiveFollowState(isSignedIn = false), sm.follow.value)
+        assertEquals(0, followingAsked)
+        assertEquals(emptyList<Boolean>(), followCalls)
+    }
+
+    @Test
+    fun `со входом — подписка с сайта`() {
+        account = TestAccount()
+        followingOnSite = true
+
+        val sm = model()
+
+        assertEquals(XLiveFollowState(isSignedIn = true, following = true), sm.follow.value)
+        assertEquals(1, followingAsked)
+    }
+
+    @Test
+    fun `вход со страницы комнаты — подписка спрашивается сразу`() {
+        val sm = model()
+        followingOnSite = true
+
+        account.signedIn.value = true
+
+        assertEquals(1, followingAsked)
+        assertTrue(sm.follow.value.following)
+    }
+
+    @Test
+    fun `нажатие — подписка и отписка на сайте, Подписки узнают об этом`() {
+        account = TestAccount()
+        val sm = model()
+
+        sm.toggleFollow()
+        assertEquals(listOf(true), followCalls)
+        assertTrue(sm.follow.value.following)
+        assertFalse(sm.follow.value.isBusy)
+
+        sm.toggleFollow()
+        assertEquals(listOf(true, false), followCalls)
+        assertFalse(sm.follow.value.following)
+        assertEquals(2, account.followRevision.value)
+    }
+
+    @Test
+    fun `подписка не прошла — состояние прежнее, Подписки не перечитываются`() {
+        account = TestAccount()
+        setFollowing = { throw IOException("нет сети") }
+        val sm = model()
+
+        sm.toggleFollow()
+
+        assertEquals(XLiveFollowState(isSignedIn = true), sm.follow.value)
+        assertEquals(0, account.followRevision.value)
+    }
+
+    @Test
+    fun `сайт не узнал сессию при подписке — вход снимается`() {
+        account = TestAccount()
+        setFollowing = { throw XLiveSignInRequiredException() }
+        val sm = model()
+
+        sm.toggleFollow()
+
+        assertEquals(1, account.sessionLost)
+        assertEquals(XLiveFollowState(isSignedIn = false), sm.follow.value)
     }
 }

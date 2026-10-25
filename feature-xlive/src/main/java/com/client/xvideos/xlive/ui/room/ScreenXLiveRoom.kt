@@ -37,6 +37,7 @@ import com.client.xvideos.xlive.model.genderLabel
 import com.client.xvideos.xlive.model.onAirLabel
 import com.client.xvideos.xlive.model.splitRoomTitle
 import com.client.xvideos.xlive.ui.XLiveColors
+import com.client.xvideos.xlive.ui.login.ScreenXLiveLogin
 import com.client.xvideos.xlive.ui.room.atom.XLiveMessage
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomAboutCard
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomHeader
@@ -61,6 +62,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
         val aboutExpanded by vm.aboutExpanded.collectAsStateWithLifecycle()
         val muted by vm.muted.collectAsStateWithLifecycle()
         val isSaved by vm.isSaved.collectAsStateWithLifecycle()
+        val follow by vm.follow.collectAsStateWithLifecycle()
 
         val actions = remember(vm, navigator) {
             XLiveRoomActions(
@@ -71,6 +73,8 @@ class ScreenXLiveRoom(private val room: String) : Screen {
                 onBuffering = vm::onBuffering,
                 onToggleAbout = vm::toggleAbout,
                 onToggleSaved = vm::toggleSaved,
+                onToggleFollow = vm::toggleFollow,
+                onSignIn = { navigator.push(ScreenXLiveLogin()) },
                 onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag)) },
             )
         }
@@ -81,6 +85,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
             aboutExpanded = aboutExpanded,
             muted = muted,
             isSaved = isSaved,
+            follow = follow,
             actions = actions,
         )
     }
@@ -96,6 +101,7 @@ fun ScreenXLiveRoomContent(
     aboutExpanded: Boolean,
     muted: Boolean,
     isSaved: Boolean,
+    follow: XLiveFollowState,
     actions: XLiveRoomActions,
     modifier: Modifier = Modifier,
 ) {
@@ -161,6 +167,9 @@ fun ScreenXLiveRoomContent(
                             ratingPercent = info.ratingPercent,
                             isSaved = isSaved,
                             onToggleSaved = actions.onToggleSaved,
+                            follow = follow,
+                            onToggleFollow = actions.onToggleFollow,
+                            onSignIn = actions.onSignIn,
                         )
                         if (topic.text.isNotBlank() || topic.tags.isNotEmpty()) {
                             XLiveRoomTopic(topic = topic, onOpenTag = actions.onOpenTag)
@@ -199,6 +208,7 @@ private fun ScreenXLiveRoomPreview() {
         aboutExpanded = false,
         muted = true,
         isSaved = false,
+        follow = XLiveFollowState(),
         actions = XLiveRoomActions(),
     )
 }

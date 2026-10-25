@@ -4,7 +4,10 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.scroll.LazyListPosition
+import com.client.xvideos.xlive.auth.XLiveAccount
+import com.client.xvideos.xlive.auth.XLiveSession
 import com.client.xvideos.xlive.model.XLiveCollection
+import com.client.xvideos.xlive.model.XLiveFollowed
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoomPage
 import com.client.xvideos.xlive.model.XLiveSavedRoom
@@ -16,6 +19,8 @@ import com.client.xvideos.xlive.saved.XLiveRoomStore
 import com.client.xvideos.xlive.saved.XLiveSaved
 import com.client.xvideos.xlive.ui.feed.XLiveFeedState
 import com.client.xvideos.xlive.ui.feed.XLiveRoomsFeed
+import com.client.xvideos.xlive.ui.following.XLiveFollowingList
+import com.client.xvideos.xlive.ui.following.XLiveFollowingState
 import com.client.xvideos.xlive.ui.saved.XLiveOnlineCheck
 import com.client.xvideos.xlive.ui.saved.XLiveSavedState
 import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
@@ -38,8 +43,8 @@ import kotlinx.coroutines.launch
  * фильтрами. Пол общий для «Эфиров», «Тегов» и «Поиска».
  *
  * Теги грузятся только при первом открытии их вкладки, эфир сохранённых
- * комнат проверяется, когда открыто «Избранное», поиск идёт, когда есть
- * отправленное слово или фильтр.
+ * комнат проверяется, когда открыто «Избранное», подписки — когда открыты
+ * «Подписки» и есть вход, поиск идёт, когда есть отправленное слово или фильтр.
  *
  * @param loadPage источник страницы списка комнат; подменяется в тестах.
  * @param loadTags источник страницы таблицы тегов; подменяется в тестах.
@@ -48,6 +53,9 @@ import kotlinx.coroutines.launch
  * @param history «История»; в тестах — хранилище во временной папке.
  * @param isOnline источник статуса эфира по нику; подменяется в тестах.
  * @param nowSeconds часы для метки снимков; подменяются в тестах.
+ * @param account вход на сайт; подменяется в тестах.
+ * @param loadFollowed подписки аккаунта; подменяются в тестах.
+ * @param setFollowing подписка и отписка по нику; подменяются в тестах.
  */
 class XLiveSM(
     private val loadPage: suspend (XLiveGender, XLiveCollection, Int) -> XLiveRoomPage = { gender, collection, offset ->
@@ -62,6 +70,9 @@ class XLiveSM(
     private val history: XLiveRoomStore = XLiveSaved.history,
     isOnline: suspend (String) -> Boolean = XLiveApi::isOnline,
     private val nowSeconds: () -> Long = { System.currentTimeMillis() / MILLIS_PER_SECOND },
+    private val account: XLiveAccount = XLiveSession,
+    loadFollowed: suspend () -> XLiveFollowed = XLiveApi::followed,
+    setFollowing: suspend (String, Boolean) -> Boolean = XLiveApi::setFollowing,
 ) : ScreenModel {
 
     private val _tab = MutableStateFlow(XLiveTab.ROOMS)
@@ -110,6 +121,12 @@ class XLiveSM(
 
     val myPosition = LazyGridPosition()
     val recentPosition = LazyGridPosition()
+
+    private val followingList = XLiveFollowingList(screenModelScope, account, loadFollowed, setFollowing, nowSeconds)
+
+    /** «Подписки»: вход, список с сайта, ошибки. */
+    val following: StateFlow<XLiveFollowingState> get() = followingList.state
+    val followingPosition: LazyGridPosition get() = followingList.gridPosition
 
     private val searchQuery = MutableStateFlow("")
     private val searchFilters = MutableStateFlow(XLiveSearchFilters())
@@ -171,20 +188,29 @@ class XLiveSM(
         checkSaved()
     }
 
-    /** Свайп вниз в «Избранном»: эфир заново у всех, свежие снимки. */
+    /** Свайп вниз в «Избранном»: эфир заново у всех, свежие снимки; «Подписки» — с сайта заново. */
     fun refreshSaved() {
+        if (_savedTab.value == XLiveSavedTab.FOLLOWING) {
+            followingList.refresh()
+            return
+        }
         snapshotStamp.value = nowSeconds()
         checkSaved(force = true)
     }
 
-    /** Убрать комнату [username] из показанной подвкладки. */
+    /** Убрать комнату [username] из показанной подвкладки; из «Подписок» — отписаться на сайте. */
     fun removeSaved(username: String) {
         when (_savedTab.value) {
             XLiveSavedTab.MY -> saved.remove(username)
             XLiveSavedTab.HISTORY -> history.remove(username)
-            XLiveSavedTab.FOLLOWING -> Unit
+            XLiveSavedTab.FOLLOWING -> followingList.unfollow(username)
         }
     }
+
+    fun retryFollowing() = followingList.retry()
+
+    /** «Выйти» в «Подписках». */
+    fun signOut() = account.signOut()
 
     fun changeSearchQuery(text: String) {
         searchQuery.value = text
@@ -222,7 +248,10 @@ class XLiveSM(
         val shown = when (_savedTab.value) {
             XLiveSavedTab.MY -> saved.rooms.value
             XLiveSavedTab.HISTORY -> history.rooms.value
-            XLiveSavedTab.FOLLOWING -> return
+            XLiveSavedTab.FOLLOWING -> {
+                followingList.show()
+                return
+            }
         }
         onlineCheck.check(shown.map { it.username }, force)
     }

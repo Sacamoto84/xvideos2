@@ -26,14 +26,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.xlive.ui.XLiveColors
+import com.client.xvideos.xlive.ui.room.XLiveFollowState
 import com.client.xvideos.xlive.ui.room.atom.XLiveAvatar
+import com.client.xvideos.xlive.ui.room.atom.XLiveFollowButton
 import com.client.xvideos.xlive.ui.room.atom.XLiveLiveBadge
 import com.client.xvideos.xlive.ui.room.atom.XLiveSaveButton
 import com.client.xvideos.xlive.ui.room.atom.XLiveStatPill
 
 /**
- * Шапка комнаты: аватар, ник, настоящее имя, плашка «В эфире», справа кнопка
- * «в мои», под ними счётчики — раскладка шапки канала X.
+ * Шапка комнаты: аватар, ник, настоящее имя, плашка «В эфире», справа кнопки
+ * «подписаться» и «в мои», под ними счётчики — раскладка шапки канала X.
  *
  * @param realName имя из анкеты; пустое — строки нет.
  * @param followers подписчики из анкеты; `null` — анкета ещё не пришла.
@@ -41,6 +43,9 @@ import com.client.xvideos.xlive.ui.room.atom.XLiveStatPill
  * @param ratingPercent доля положительных оценок; `null` — оценок нет.
  * @param isSaved комната в «Моих».
  * @param onToggleSaved кнопка «в мои»: сохранить или убрать.
+ * @param follow подписка на сайте.
+ * @param onToggleFollow «подписаться» со входом: подписаться или отписаться.
+ * @param onSignIn «подписаться» без входа: страница входа.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -53,6 +58,9 @@ fun XLiveRoomHeader(
     ratingPercent: Int?,
     isSaved: Boolean,
     onToggleSaved: () -> Unit,
+    follow: XLiveFollowState,
+    onToggleFollow: () -> Unit,
+    onSignIn: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -81,6 +89,13 @@ fun XLiveRoomHeader(
                 Spacer(modifier = Modifier.height(4.dp))
                 XLiveLiveBadge()
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            XLiveFollowButton(
+                signedIn = follow.isSignedIn,
+                following = follow.following,
+                busy = follow.isBusy,
+                onClick = if (follow.isSignedIn) onToggleFollow else onSignIn,
+            )
             Spacer(modifier = Modifier.width(8.dp))
             XLiveSaveButton(saved = isSaved, onClick = onToggleSaved)
         }
@@ -115,5 +130,8 @@ private fun XLiveRoomHeaderPreview() {
         ratingPercent = 97,
         isSaved = false,
         onToggleSaved = {},
+        follow = XLiveFollowState(isSignedIn = true, following = true),
+        onToggleFollow = {},
+        onSignIn = {},
     )
 }

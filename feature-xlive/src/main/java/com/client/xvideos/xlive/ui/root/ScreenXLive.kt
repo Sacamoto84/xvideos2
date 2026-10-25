@@ -26,12 +26,15 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.feed.XLiveFeedActions
 import com.client.xvideos.xlive.ui.feed.XLiveFeedState
-import com.client.xvideos.xlive.ui.feed.atom.XLivePlaceholder
 import com.client.xvideos.xlive.ui.feed.molecule.XLiveRoomsGrid
+import com.client.xvideos.xlive.ui.following.XLiveFollowingActions
+import com.client.xvideos.xlive.ui.following.molecule.XLiveFollowingContent
+import com.client.xvideos.xlive.ui.login.ScreenXLiveLogin
 import com.client.xvideos.xlive.ui.room.ScreenXLiveRoom
 import com.client.xvideos.xlive.ui.root.molecule.XLiveBottomBar
+import com.client.xvideos.xlive.ui.saved.XLiveFavoritesActions
+import com.client.xvideos.xlive.ui.saved.XLiveFavoritesState
 import com.client.xvideos.xlive.ui.saved.XLiveSavedActions
-import com.client.xvideos.xlive.ui.saved.XLiveSavedState
 import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
 import com.client.xvideos.xlive.ui.saved.molecule.XLiveSavedGrid
 import com.client.xvideos.xlive.ui.search.XLiveSearchActions
@@ -66,6 +69,7 @@ class ScreenXLive : Screen {
         val my by vm.my.collectAsStateWithLifecycle()
         val recent by vm.recent.collectAsStateWithLifecycle()
         val search by vm.search.collectAsStateWithLifecycle()
+        val following by vm.following.collectAsStateWithLifecycle()
 
         val barActions = remember(vm) {
             XLiveBarActions(
@@ -95,11 +99,18 @@ class ScreenXLive : Screen {
             )
         }
 
-        val savedActions = remember(vm, navigator) {
-            XLiveSavedActions(
-                onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
-                onRemove = vm::removeSaved,
-                onRefresh = vm::refreshSaved,
+        val favoritesActions = remember(vm, navigator) {
+            XLiveFavoritesActions(
+                grid = XLiveSavedActions(
+                    onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+                    onRemove = vm::removeSaved,
+                    onRefresh = vm::refreshSaved,
+                ),
+                following = XLiveFollowingActions(
+                    onSignIn = { navigator.push(ScreenXLiveLogin()) },
+                    onSignOut = vm::signOut,
+                    onRetry = vm::retryFollowing,
+                ),
             )
         }
         val searchActions = remember(vm, navigator) {
@@ -132,14 +143,18 @@ class ScreenXLive : Screen {
             feedActions = feedActions,
             tags = tags,
             tagsActions = tagsActions,
-            saved = if (isHistory) recent else my,
-            savedActions = savedActions,
+            favorites = XLiveFavoritesState(saved = if (isHistory) recent else my, following = following),
+            favoritesActions = favoritesActions,
             search = search,
             searchActions = searchActions,
             lists = XLiveListStates(
                 rooms = vm.gridPosition.rememberState(),
                 tags = vm.tagsPosition.rememberState(),
-                saved = if (isHistory) vm.recentPosition.rememberState() else vm.myPosition.rememberState(),
+                saved = when (savedTab) {
+                    XLiveSavedTab.MY -> vm.myPosition.rememberState()
+                    XLiveSavedTab.FOLLOWING -> vm.followingPosition.rememberState()
+                    XLiveSavedTab.HISTORY -> vm.recentPosition.rememberState()
+                },
                 search = vm.searchPosition.rememberState(),
             ),
         )
@@ -154,8 +169,8 @@ fun ScreenXLiveContent(
     feedActions: XLiveFeedActions,
     tags: XLiveTagsState,
     tagsActions: XLiveTagsActions,
-    saved: XLiveSavedState,
-    savedActions: XLiveSavedActions,
+    favorites: XLiveFavoritesState,
+    favoritesActions: XLiveFavoritesActions,
     search: XLiveSearchState,
     searchActions: XLiveSearchActions,
     lists: XLiveListStates,
@@ -180,17 +195,22 @@ fun ScreenXLiveContent(
                 XLiveTab.TAGS -> XLiveTagsList(state = tags, listState = lists.tags, actions = tagsActions)
                 XLiveTab.SAVED -> when (bar.savedTab) {
                     XLiveSavedTab.MY -> XLiveSavedGrid(
-                        state = saved,
+                        state = favorites.saved,
                         gridState = lists.saved,
-                        actions = savedActions,
+                        actions = favoritesActions.grid,
                         emptyText = "Здесь будут комнаты, сохранённые закладкой в шапке комнаты",
                         listName = "«Моих»",
                     )
-                    XLiveSavedTab.FOLLOWING -> XLivePlaceholder(text = "Подписки аккаунта на сайте — следующим шагом")
-                    XLiveSavedTab.HISTORY -> XLiveSavedGrid(
-                        state = saved,
+                    XLiveSavedTab.FOLLOWING -> XLiveFollowingContent(
+                        state = favorites.following,
                         gridState = lists.saved,
-                        actions = savedActions,
+                        actions = favoritesActions.following,
+                        gridActions = favoritesActions.grid,
+                    )
+                    XLiveSavedTab.HISTORY -> XLiveSavedGrid(
+                        state = favorites.saved,
+                        gridState = lists.saved,
+                        actions = favoritesActions.grid,
                         emptyText = "Здесь будут комнаты, которые вы открывали",
                         listName = "истории",
                     )
@@ -211,8 +231,8 @@ private fun ScreenXLivePreview() {
         feedActions = XLiveFeedActions(),
         tags = XLiveTagsState(),
         tagsActions = XLiveTagsActions(),
-        saved = XLiveSavedState(),
-        savedActions = XLiveSavedActions(),
+        favorites = XLiveFavoritesState(),
+        favoritesActions = XLiveFavoritesActions(),
         search = XLiveSearchState(),
         searchActions = XLiveSearchActions(),
         lists = XLiveListStates(
