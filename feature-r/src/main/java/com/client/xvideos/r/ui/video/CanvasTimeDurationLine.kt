@@ -274,7 +274,11 @@ private fun Modifier.timelineSeekGestures(
     coroutineScope {
         while (true) {
             awaitPointerEventScope {
-                val down = awaitFirstDown()
+                // Касание забираем сразу: полоса перематывает уже на нём, а без
+                // consume() тап доходил и до клика карточки мини-плеера R, и тот
+                // гасил видео (проход 217, C1). Clickable предка не начинает
+                // нажатие по поглощённому касанию.
+                val down = awaitFirstDown().also { it.consume() }
                 calculateSeekTime(down.position.x, size.width, duration)?.let(onSeek)
 
                 try {
