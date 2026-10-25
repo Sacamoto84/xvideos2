@@ -56,6 +56,10 @@ object AppPath {
     val x_history: String get() = "$main/${Folder.X.value}/History"
     val x_subscriptions: String get() = "$main/${Folder.X.value}/Subscriptions"
 
+    //--- XLive: внутри X, чтобы ехать в резервной копии вместе с секцией X ---
+    val xlive_saved: String get() = "$main/${Folder.X.value}/Live/Saved"
+    val xlive_history: String get() = "$main/${Folder.X.value}/Live/History"
+
     //--- R ---
     /**
      * Путь к папке с кешем загруженных файлов для предпросмотра
@@ -141,6 +145,8 @@ object AppPath {
         File(x_cache_download).mkdirs()
         File(x_history).mkdirs()
         File(x_subscriptions).mkdirs()
+        File(xlive_saved).mkdirs()
+        File(xlive_history).mkdirs()
 
         File(p2p_inbox).mkdirs()
         File(p2p_outbox).mkdirs()

@@ -28,16 +28,19 @@ import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.room.atom.XLiveAvatar
 import com.client.xvideos.xlive.ui.room.atom.XLiveLiveBadge
+import com.client.xvideos.xlive.ui.room.atom.XLiveSaveButton
 import com.client.xvideos.xlive.ui.room.atom.XLiveStatPill
 
 /**
- * Шапка комнаты: аватар, ник, настоящее имя, плашка «В эфире» и счётчики —
- * раскладка шапки канала X.
+ * Шапка комнаты: аватар, ник, настоящее имя, плашка «В эфире», справа кнопка
+ * «в мои», под ними счётчики — раскладка шапки канала X.
  *
  * @param realName имя из анкеты; пустое — строки нет.
  * @param followers подписчики из анкеты; `null` — анкета ещё не пришла.
  * @param onAir сколько идёт эфир; `null` — неизвестно.
  * @param ratingPercent доля положительных оценок; `null` — оценок нет.
+ * @param isSaved комната в «Моих».
+ * @param onToggleSaved кнопка «в мои»: сохранить или убрать.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -48,6 +51,8 @@ fun XLiveRoomHeader(
     followers: Int?,
     onAir: String?,
     ratingPercent: Int?,
+    isSaved: Boolean,
+    onToggleSaved: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -76,6 +81,8 @@ fun XLiveRoomHeader(
                 Spacer(modifier = Modifier.height(4.dp))
                 XLiveLiveBadge()
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            XLiveSaveButton(saved = isSaved, onClick = onToggleSaved)
         }
         Spacer(modifier = Modifier.height(10.dp))
         FlowRow(
@@ -106,5 +113,7 @@ private fun XLiveRoomHeaderPreview() {
         followers = 20332,
         onAir = "2 ч 05 мин",
         ratingPercent = 97,
+        isSaved = false,
+        onToggleSaved = {},
     )
 }

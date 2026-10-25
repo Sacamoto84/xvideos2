@@ -150,6 +150,8 @@ class LayerBoundariesTest {
             "xlive" to mapOf(
                 "model" to "model",
                 "network" to "data",
+                // Хранилища «Моих» и «Истории» на диске — тот же слой, что и сеть.
+                "saved" to "data",
                 "ui" to "ui",
             ),
         )

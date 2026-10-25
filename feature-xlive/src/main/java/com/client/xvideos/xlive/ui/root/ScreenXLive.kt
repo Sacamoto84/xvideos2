@@ -32,6 +32,10 @@ import com.client.xvideos.xlive.ui.feed.atom.XLivePlaceholder
 import com.client.xvideos.xlive.ui.feed.molecule.XLiveRoomsGrid
 import com.client.xvideos.xlive.ui.room.ScreenXLiveRoom
 import com.client.xvideos.xlive.ui.root.molecule.XLiveBottomBar
+import com.client.xvideos.xlive.ui.saved.XLiveSavedActions
+import com.client.xvideos.xlive.ui.saved.XLiveSavedState
+import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
+import com.client.xvideos.xlive.ui.saved.molecule.XLiveSavedGrid
 import com.client.xvideos.xlive.ui.tag.ScreenXLiveTag
 import com.client.xvideos.xlive.ui.tags.XLiveTagsActions
 import com.client.xvideos.xlive.ui.tags.XLiveTagsState
@@ -39,8 +43,9 @@ import com.client.xvideos.xlive.ui.tags.molecule.XLiveTagsList
 
 /**
  * Корень раздела XLive: нижние вкладки как у X, переключатель пола, вкладки
- * «Эфиры» (сетка комнат) и «Теги» (таблица тегов). Тап по карточке или
- * превью открывает комнату, тап по тегу — комнаты с ним.
+ * «Эфиры» (сетка комнат), «Теги» (таблица тегов) и «Избранное» («Мои»,
+ * «Подписки», «История»). Тап по карточке или превью открывает комнату, тап
+ * по тегу — комнаты с ним.
  */
 class ScreenXLive : Screen {
 
@@ -56,6 +61,9 @@ class ScreenXLive : Screen {
         val tagSort by vm.tagSort.collectAsStateWithLifecycle()
         val feed by vm.feed.collectAsStateWithLifecycle()
         val tags by vm.tags.collectAsStateWithLifecycle()
+        val savedTab by vm.savedTab.collectAsStateWithLifecycle()
+        val my by vm.my.collectAsStateWithLifecycle()
+        val recent by vm.recent.collectAsStateWithLifecycle()
 
         val barActions = remember(vm) {
             XLiveBarActions(
@@ -63,6 +71,7 @@ class ScreenXLive : Screen {
                 onGender = vm::selectGender,
                 onCollection = vm::selectCollection,
                 onTagSort = vm::selectTagSort,
+                onSavedTab = vm::selectSavedTab,
             )
         }
         val feedActions = remember(vm, navigator) {
@@ -84,8 +93,23 @@ class ScreenXLive : Screen {
             )
         }
 
+        val savedActions = remember(vm, navigator) {
+            XLiveSavedActions(
+                onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+                onRemove = vm::removeSaved,
+                onRefresh = vm::refreshSaved,
+            )
+        }
+        val isHistory = savedTab == XLiveSavedTab.HISTORY
+
         ScreenXLiveContent(
-            bar = XLiveBarState(tab = tab, gender = gender, collection = collection, tagSort = tagSort),
+            bar = XLiveBarState(
+                tab = tab,
+                gender = gender,
+                collection = collection,
+                tagSort = tagSort,
+                savedTab = savedTab,
+            ),
             barActions = barActions,
             feed = feed,
             gridState = vm.gridPosition.rememberState(),
@@ -93,6 +117,9 @@ class ScreenXLive : Screen {
             tags = tags,
             tagsListState = vm.tagsPosition.rememberState(),
             tagsActions = tagsActions,
+            saved = if (isHistory) recent else my,
+            savedGridState = if (isHistory) vm.recentPosition.rememberState() else vm.myPosition.rememberState(),
+            savedActions = savedActions,
         )
     }
 }
@@ -107,6 +134,9 @@ fun ScreenXLiveContent(
     tags: XLiveTagsState,
     tagsListState: LazyListState,
     tagsActions: XLiveTagsActions,
+    saved: XLiveSavedState,
+    savedGridState: LazyGridState,
+    savedActions: XLiveSavedActions,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -126,7 +156,24 @@ fun ScreenXLiveContent(
             when (bar.tab) {
                 XLiveTab.ROOMS -> XLiveRoomsGrid(feed = feed, gridState = gridState, actions = feedActions)
                 XLiveTab.TAGS -> XLiveTagsList(state = tags, listState = tagsListState, actions = tagsActions)
-                XLiveTab.SAVED, XLiveTab.SEARCH -> XLivePlaceholder(text = "${bar.tab.title} — следующим шагом")
+                XLiveTab.SAVED -> when (bar.savedTab) {
+                    XLiveSavedTab.MY -> XLiveSavedGrid(
+                        state = saved,
+                        gridState = savedGridState,
+                        actions = savedActions,
+                        emptyText = "Здесь будут комнаты, сохранённые закладкой в шапке комнаты",
+                        listName = "«Моих»",
+                    )
+                    XLiveSavedTab.FOLLOWING -> XLivePlaceholder(text = "Подписки аккаунта на сайте — следующим шагом")
+                    XLiveSavedTab.HISTORY -> XLiveSavedGrid(
+                        state = saved,
+                        gridState = savedGridState,
+                        actions = savedActions,
+                        emptyText = "Здесь будут комнаты, которые вы открывали",
+                        listName = "истории",
+                    )
+                }
+                XLiveTab.SEARCH -> XLivePlaceholder(text = "${bar.tab.title} — следующим шагом")
             }
         }
     }
@@ -144,5 +191,8 @@ private fun ScreenXLivePreview() {
         tags = XLiveTagsState(),
         tagsListState = rememberLazyListState(),
         tagsActions = XLiveTagsActions(),
+        saved = XLiveSavedState(),
+        savedGridState = rememberLazyGridState(),
+        savedActions = XLiveSavedActions(),
     )
 }

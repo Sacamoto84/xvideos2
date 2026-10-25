@@ -4,12 +4,18 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRoom
+import com.client.xvideos.xlive.model.XLiveSavedRoom
 import com.client.xvideos.xlive.network.XLiveApi
+import com.client.xvideos.xlive.saved.XLiveRoomStore
+import com.client.xvideos.xlive.saved.XLiveSaved
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.IOException
@@ -17,17 +23,22 @@ import java.io.IOException
 /**
  * Комната [room]: поток, шапка и анкета модели.
  *
- * Анкета грузится отдельно от комнаты: видео не ждёт её.
+ * Анкета грузится отдельно от комнаты: видео не ждёт её. Комната попадает в
+ * «Историю» при открытии, возраст дописывается, когда придёт анкета.
  *
  * @param loadRoom источник комнаты; подменяется в тестах.
  * @param loadBio источник анкеты; подменяется в тестах.
  * @param nowMs монотонные часы в миллисекундах; подменяются в тестах.
+ * @param saved «Мои»; в тестах — хранилище во временной папке.
+ * @param history «История»; в тестах — хранилище во временной папке.
  */
 class XLiveRoomSM(
     private val room: String,
     private val loadRoom: suspend (String) -> XLiveRoom = XLiveApi::room,
     private val loadBio: suspend (String) -> XLiveBio = XLiveApi::bio,
     private val nowMs: () -> Long = { System.nanoTime() / NANOS_PER_MS },
+    private val saved: XLiveRoomStore = XLiveSaved.my,
+    private val history: XLiveRoomStore = XLiveSaved.history,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow<XLiveRoomState>(XLiveRoomState.Loading)
@@ -48,6 +59,11 @@ class XLiveRoomSM(
     /** «О себе» в карточке модели развёрнуто целиком. */
     val aboutExpanded: StateFlow<Boolean> = _aboutExpanded.asStateFlow()
 
+    /** Комната в «Моих». */
+    val isSaved: StateFlow<Boolean> = saved.rooms
+        .map { rooms -> rooms.any { it.username == room } }
+        .stateIn(screenModelScope, SharingStarted.Eagerly, room in saved)
+
     private var loadJob: Job? = null
     private var bioJob: Job? = null
     private var bioRoom: String? = null
@@ -57,6 +73,7 @@ class XLiveRoomSM(
     private var startedUrl: String? = null
 
     init {
+        history.put(XLiveSavedRoom(room))
         reload()
     }
 
@@ -108,7 +125,9 @@ class XLiveRoomSM(
         _aboutExpanded.value = false
         bioJob = screenModelScope.launch {
             try {
-                _bio.value = loadBio(username)
+                val bio = loadBio(username)
+                _bio.value = bio
+                history.put(XLiveSavedRoom(room, age = bio.age))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IOException) {
@@ -172,6 +191,11 @@ class XLiveRoomSM(
 
     fun toggleAbout() {
         _aboutExpanded.value = !_aboutExpanded.value
+    }
+
+    /** Кнопка в шапке: сохранить комнату в «Мои» или убрать оттуда. */
+    fun toggleSaved() {
+        if (room in saved) saved.remove(room) else saved.put(XLiveSavedRoom(room, age = _bio.value?.age))
     }
 
     private companion object {

@@ -17,6 +17,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
 import io.ktor.util.appendIfNameAbsent
@@ -71,6 +72,20 @@ object XLiveApi {
         val response = client.get("$xLiveUrlStart/api/biocontext/${name.encodeURLPathPart()}/")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
         return parseXLiveBio(response.bodyAsText()) ?: throw IOException("Анкета не JSON")
+    }
+
+    /**
+     * В эфире ли комната [name]. `true` — модель онлайн, в том числе в
+     * привате: открытый ли эфир, скажет только [room]. Комнаты, которой нет,
+     * сайт отвечает 404 — это «не в эфире».
+     *
+     * @throws IOException нет сети, другой код ошибки или ответ без `online`.
+     */
+    suspend fun isOnline(name: String): Boolean {
+        val response = client.get("$xLiveUrlStart/api/online/${name.encodeURLPathPart()}/")
+        if (response.status == HttpStatusCode.NotFound) return false
+        if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
+        return parseXLiveOnline(response.bodyAsText()) ?: throw IOException("Ответ без online")
     }
 
     /**

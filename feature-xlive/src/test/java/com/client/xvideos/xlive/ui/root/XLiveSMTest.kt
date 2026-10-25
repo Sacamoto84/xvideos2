@@ -4,11 +4,14 @@ import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.model.XLiveRoomPage
+import com.client.xvideos.xlive.model.XLiveSavedRoom
 import com.client.xvideos.xlive.model.XLiveTag
 import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.network.ROOM_PAGE_SIZE
 import com.client.xvideos.xlive.network.TAG_PAGE_SIZE
+import com.client.xvideos.xlive.saved.testRoomStore
+import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -20,13 +23,25 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.IOException
 
 // Без runTest: загрузчик отвечает сразу, а неограниченный диспетчер гонит
 // корутины screenModelScope до конца прямо внутри вызова.
 @OptIn(ExperimentalCoroutinesApi::class)
 class XLiveSMTest {
+
+    @get:Rule
+    val tmp = TemporaryFolder()
+
+    private var clock = 0L
+    private val saved by lazy { testRoomStore(tmp.newFolder("my"), now = { ++clock }) }
+    private val history by lazy { testRoomStore(tmp.newFolder("history"), now = { ++clock }) }
+    private val onlineAsked = mutableListOf<String>()
+    private var onlineRooms = setOf<String>()
+    private var nowSeconds = 1_000L
 
     private data class Request(val gender: XLiveGender, val collection: XLiveCollection, val offset: Int)
 
@@ -61,6 +76,13 @@ class XLiveSMTest {
             tagRequests += request
             tagPages(request)
         },
+        saved = saved,
+        history = history,
+        isOnline = { name ->
+            onlineAsked += name
+            name in onlineRooms
+        },
+        nowSeconds = { nowSeconds },
     )
 
     private fun XLiveSM.names() = feed.value.rooms.map { it.username }
@@ -263,5 +285,83 @@ class XLiveSMTest {
 
         assertNull(sm.tags.value.error)
         assertEquals(listOf("a"), sm.tags.value.tags.map { it.name })
+    }
+
+    private fun XLiveSM.myNames() = my.value.rooms.map { it.username }
+
+    @Test
+    fun `эфир сохранённых не проверяется, пока Избранное не открыли`() {
+        saved.put(XLiveSavedRoom("a"))
+        model()
+
+        assertEquals(emptyList<String>(), onlineAsked)
+    }
+
+    @Test
+    fun `Мои — сначала в эфире, внутри — от недавно сохранённых`() {
+        listOf("a", "b", "c", "d").forEach { saved.put(XLiveSavedRoom(it)) }
+        onlineRooms = setOf("a", "c")
+        val sm = model()
+
+        sm.selectTab(XLiveTab.SAVED)
+
+        assertEquals(listOf("d", "c", "b", "a"), onlineAsked)
+        assertEquals(listOf("c", "a", "d", "b"), sm.myNames())
+        assertEquals(mapOf("a" to true, "b" to false, "c" to true, "d" to false), sm.my.value.online)
+    }
+
+    @Test
+    fun `История — от недавних, проверяется при переходе на неё`() {
+        listOf("a", "b").forEach { history.put(XLiveSavedRoom(it)) }
+        onlineRooms = setOf("a")
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+
+        sm.selectSavedTab(XLiveSavedTab.HISTORY)
+
+        assertEquals(listOf("b", "a"), onlineAsked)
+        assertEquals(listOf("b", "a"), sm.recent.value.rooms.map { it.username })
+    }
+
+    @Test
+    fun `комната, сохранённая при открытом Избранном, проверяется сразу`() {
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+
+        saved.put(XLiveSavedRoom("a"))
+
+        assertEquals(listOf("a"), onlineAsked)
+        assertEquals(false, sm.my.value.online["a"])
+    }
+
+    @Test
+    fun `свайп вниз — эфир заново у всех и свежие снимки`() {
+        saved.put(XLiveSavedRoom("a"))
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+        assertEquals(1_000L, sm.my.value.snapshotStamp)
+
+        nowSeconds = 1_090L
+        onlineRooms = setOf("a")
+        sm.refreshSaved()
+
+        assertEquals(listOf("a", "a"), onlineAsked)
+        assertEquals(true, sm.my.value.online["a"])
+        assertEquals(1_090L, sm.my.value.snapshotStamp)
+    }
+
+    @Test
+    fun `убрать — из показанной подвкладки`() {
+        saved.put(XLiveSavedRoom("a"))
+        history.put(XLiveSavedRoom("a"))
+        val sm = model()
+
+        sm.removeSaved("a")
+        assertEquals(emptyList<String>(), sm.myNames())
+        assertEquals(listOf("a"), sm.recent.value.rooms.map { it.username })
+
+        sm.selectSavedTab(XLiveSavedTab.HISTORY)
+        sm.removeSaved("a")
+        assertEquals(emptyList<String>(), sm.recent.value.rooms.map { it.username })
     }
 }

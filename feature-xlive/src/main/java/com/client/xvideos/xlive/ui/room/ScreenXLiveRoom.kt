@@ -60,19 +60,28 @@ class ScreenXLiveRoom(private val room: String) : Screen {
         val bio by vm.bio.collectAsStateWithLifecycle()
         val aboutExpanded by vm.aboutExpanded.collectAsStateWithLifecycle()
         val muted by vm.muted.collectAsStateWithLifecycle()
+        val isSaved by vm.isSaved.collectAsStateWithLifecycle()
+
+        val actions = remember(vm, navigator) {
+            XLiveRoomActions(
+                onRetry = vm::reload,
+                onToggleMute = vm::toggleMute,
+                onPlayerStarted = vm::onPlayerStarted,
+                onPlayerError = vm::onPlayerError,
+                onBuffering = vm::onBuffering,
+                onToggleAbout = vm::toggleAbout,
+                onToggleSaved = vm::toggleSaved,
+                onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag)) },
+            )
+        }
 
         ScreenXLiveRoomContent(
             state = state,
             bio = bio,
             aboutExpanded = aboutExpanded,
             muted = muted,
-            onRetry = vm::reload,
-            onToggleMute = vm::toggleMute,
-            onPlayerStarted = vm::onPlayerStarted,
-            onPlayerError = vm::onPlayerError,
-            onBuffering = vm::onBuffering,
-            onToggleAbout = vm::toggleAbout,
-            onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag)) },
+            isSaved = isSaved,
+            actions = actions,
         )
     }
 }
@@ -86,13 +95,8 @@ fun ScreenXLiveRoomContent(
     bio: XLiveBio?,
     aboutExpanded: Boolean,
     muted: Boolean,
-    onRetry: () -> Unit,
-    onToggleMute: () -> Unit,
-    onPlayerStarted: (String) -> Unit,
-    onPlayerError: (String) -> Unit,
-    onBuffering: (Boolean) -> Unit,
-    onToggleAbout: () -> Unit,
-    onOpenTag: (String) -> Unit,
+    isSaved: Boolean,
+    actions: XLiveRoomActions,
     modifier: Modifier = Modifier,
 ) {
     // Над переключением состояний: позиция переживает и «Повторить», и сложение складного.
@@ -111,10 +115,10 @@ fun ScreenXLiveRoomContent(
                 CircularProgressIndicator(color = Color.White)
             }
             is XLiveRoomState.Offline -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                XLiveMessage(text = "Комната не в открытом эфире: ${state.status}", onRetry = onRetry)
+                XLiveMessage(text = "Комната не в открытом эфире: ${state.status}", onRetry = actions.onRetry)
             }
             is XLiveRoomState.Failed -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                XLiveMessage(text = "Не удалось получить поток: ${state.reason}", onRetry = onRetry)
+                XLiveMessage(text = "Не удалось получить поток: ${state.reason}", onRetry = actions.onRetry)
             }
             is XLiveRoomState.Live -> {
                 val info = state.room
@@ -126,10 +130,10 @@ fun ScreenXLiveRoomContent(
                 XLiveRoomPlayer(
                     hlsUrl = info.hlsUrl,
                     muted = muted,
-                    onToggleMute = onToggleMute,
-                    onStarted = onPlayerStarted,
-                    onError = onPlayerError,
-                    onBuffering = onBuffering,
+                    onToggleMute = actions.onToggleMute,
+                    onStarted = actions.onPlayerStarted,
+                    onError = actions.onPlayerError,
+                    onBuffering = actions.onBuffering,
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(VIDEO_ASPECT_RATIO),
@@ -155,16 +159,18 @@ fun ScreenXLiveRoomContent(
                             followers = bio?.followers,
                             onAir = onAir,
                             ratingPercent = info.ratingPercent,
+                            isSaved = isSaved,
+                            onToggleSaved = actions.onToggleSaved,
                         )
                         if (topic.text.isNotBlank() || topic.tags.isNotEmpty()) {
-                            XLiveRoomTopic(topic = topic, onOpenTag = onOpenTag)
+                            XLiveRoomTopic(topic = topic, onOpenTag = actions.onOpenTag)
                         }
                         if (bio != null) {
                             XLiveRoomAboutCard(
                                 bio = bio,
                                 gender = genderLabel(info.gender),
                                 aboutExpanded = aboutExpanded,
-                                onToggleAbout = onToggleAbout,
+                                onToggleAbout = actions.onToggleAbout,
                             )
                         }
                     }
@@ -192,12 +198,7 @@ private fun ScreenXLiveRoomPreview() {
         bio = XLiveBio(realName = "Anna", age = 24, languages = "English", followers = 20332, aboutMe = "Hello!"),
         aboutExpanded = false,
         muted = true,
-        onRetry = {},
-        onToggleMute = {},
-        onPlayerStarted = {},
-        onPlayerError = {},
-        onBuffering = {},
-        onToggleAbout = {},
-        onOpenTag = {},
+        isSaved = false,
+        actions = XLiveRoomActions(),
     )
 }

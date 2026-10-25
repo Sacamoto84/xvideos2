@@ -17,6 +17,7 @@ import com.client.xvideos.screenSettings.redDownloadRecoveryConsoleText
 import com.client.xvideos.screenSettings.shouldAutoRecoverL
 import com.client.xvideos.screenSettings.shouldAutoRecoverRedDownload
 import com.client.xvideos.x.feature.saved.SavedX
+import com.client.xvideos.xlive.saved.XLiveSaved
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
@@ -109,6 +110,8 @@ class XlrBackupEngine @Inject constructor(
             downloadRed.refreshDownloadList()
             savedX.get().refreshAll()
             savedL.refreshAll()
+            // «Мои» и «История» XLive лежат в секции X и едут с ней в архиве.
+            XLiveSaved.refreshAll()
         }
         coroutineScope {
             if (shouldAutoRecoverL(paths)) {

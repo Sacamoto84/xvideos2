@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Bookmarks
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FiberNew
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.LiveTv
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Search
@@ -29,6 +32,7 @@ import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.ui.root.XLiveBarActions
 import com.client.xvideos.xlive.ui.root.XLiveBarState
 import com.client.xvideos.xlive.ui.root.XLiveTab
+import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -76,10 +80,24 @@ private val tagSortHints: ImmutableList<String> = persistentListOf(
     "Теги по алфавиту",
 )
 
+/** Значки подвкладок «Избранного» — в порядке [XLiveSavedTab]. */
+private val savedTabIcons: ImmutableList<ImageVector> = persistentListOf(
+    Icons.Outlined.Bookmarks,
+    Icons.Outlined.FavoriteBorder,
+    Icons.Outlined.History,
+)
+
+/** Подсказки подвкладок «Избранного» — в порядке [XLiveSavedTab]. */
+private val savedTabHints: ImmutableList<String> = persistentListOf(
+    "Мои — сохранённые в приложении",
+    "Подписки аккаунта на сайте",
+    "История — недавно открытые",
+)
+
 /**
  * Нижняя панель раздела XLive — двухуровневая, как у X: сверху ряд текущей
- * вкладки (подборки «Эфиров», порядок «Тегов»), снизу вкладки и справа
- * переключатель пола.
+ * вкладки (подборки «Эфиров», порядок «Тегов», подвкладки «Избранного»),
+ * снизу вкладки и справа переключатель пола.
  *
  * Второй ряд — значки, как подвкладки «Сохранённого» у X: подборки — разные
  * ленты, порядок — разные таблицы, а не фильтр внутри одной. Что значит
@@ -108,7 +126,14 @@ fun XLiveBottomBar(
                 containerColor = Theme.tabLevel1,
                 tooltips = tagSortHints,
             )
-            XLiveTab.SAVED, XLiveTab.SEARCH -> Unit
+            XLiveTab.SAVED -> TabRow(
+                titlesIcon = savedTabIcons,
+                value = bar.savedTab.ordinal,
+                onChangeState = { actions.onSavedTab(XLiveSavedTab.entries[it]) },
+                containerColor = Theme.tabLevel1,
+                tooltips = savedTabHints,
+            )
+            XLiveTab.SEARCH -> Unit
         }
         Row(
             modifier = Modifier.background(Theme.tabLevel0),

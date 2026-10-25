@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.detekt)
     id 'xvideos.android-library'
 }
@@ -10,8 +11,10 @@ android {
 }
 
 // Список короткий: плеер, Ktor и kotlinx.serialization приходят из :core через
-// api. ScreenModel заводится через rememberScreenModel, поэтому Hilt разделу
-// пока не нужен — добавлять вместе с первым кодом, которому он понадобится.
+// api; плагин сериализации — для записей «Моих» и «Истории» на диске.
+// ScreenModel заводится через rememberScreenModel, а хранилища — процессный
+// объект `XLiveSaved`, поэтому Hilt разделу пока не нужен — добавлять вместе с
+// первым кодом, которому он понадобится.
 dependencies {
 
     api project(':core')
