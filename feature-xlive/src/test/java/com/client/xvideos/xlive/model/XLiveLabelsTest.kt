@@ -26,6 +26,15 @@ class XLiveLabelsTest {
     }
 
     @Test
+    fun `флаг страны из двух букв, иначе пусто`() {
+        assertEquals("🇺🇸", flagEmoji("US"))
+        assertEquals("🇺🇦", flagEmoji(" ua "))
+        assertEquals("", flagEmoji(""))
+        assertEquals("", flagEmoji("USA"))
+        assertEquals("", flagEmoji("1A"))
+    }
+
+    @Test
     fun `сколько идёт эфир`() {
         assertEquals("15 мин", onAirLabel(startedAtSec = 1_000, nowSec = 1_000 + 15 * 60 + 59))
         assertEquals("2 ч 05 мин", onAirLabel(startedAtSec = 1_000, nowSec = 1_000 + 2 * 3600 + 5 * 60))

@@ -35,7 +35,6 @@ class XLiveRoomSMTest {
 
     private fun model(
         rooms: Map<String, XLiveRoom> = mapOf("room_a" to live),
-        publicRooms: List<String> = emptyList(),
         bio: suspend (String) -> XLiveBio = { XLiveBio(realName = "Anna of $it") },
     ) = XLiveRoomSM(
         room = "room_a",
@@ -43,7 +42,6 @@ class XLiveRoomSMTest {
             roomCalls++
             rooms[name] ?: throw IOException("нет комнаты")
         },
-        loadPublicRooms = { publicRooms },
         loadBio = bio,
         nowMs = { nowMs },
     )
@@ -57,22 +55,10 @@ class XLiveRoomSMTest {
     }
 
     @Test
-    fun `комната в привате — первая открытая из списка, со статусом запрошенной`() {
-        val other = XLiveRoom(status = "public", hlsUrl = "https://edge.test/b.m3u8")
-        val sm = model(
-            rooms = mapOf("room_a" to XLiveRoom("private", ""), "room_b" to other),
-            publicRooms = listOf("room_a", "room_b"),
-        )
+    fun `не в открытом эфире — статус комнаты, без анкеты`() {
+        val sm = model(rooms = mapOf("room_a" to XLiveRoom("private", "")))
 
-        assertEquals(XLiveRoomState.Live(other.copy(username = "room_b"), requestedStatus = "private"), sm.state.value)
-        assertEquals("Anna of room_b", sm.bio.value?.realName)
-    }
-
-    @Test
-    fun `замены нет — офлайн со статусом комнаты`() {
-        val sm = model(rooms = mapOf("room_a" to XLiveRoom("offline", "")))
-
-        assertEquals(XLiveRoomState.Offline("offline"), sm.state.value)
+        assertEquals(XLiveRoomState.Offline("private"), sm.state.value)
         assertNull(sm.bio.value)
     }
 
@@ -135,7 +121,6 @@ class XLiveRoomSMTest {
                 seenDuringLoad += sm?.state?.value
                 live
             },
-            loadPublicRooms = { emptyList() },
             loadBio = { XLiveBio(realName = "Anna") },
             nowMs = { nowMs },
         )

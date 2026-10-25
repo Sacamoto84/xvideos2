@@ -31,6 +31,15 @@ fun ageLabel(age: Int): String {
     return "$age $word"
 }
 
+private const val REGIONAL_INDICATOR_A = 0x1F1E6
+
+/** Флаг страны из кода в две латинские буквы (`US` → 🇺🇸); иначе пустая строка. */
+fun flagEmoji(countryCode: String): String {
+    val code = countryCode.trim().uppercase()
+    if (code.length != 2 || code.any { it !in 'A'..'Z' }) return ""
+    return code.map { String(Character.toChars(REGIONAL_INDICATOR_A + (it - 'A'))) }.joinToString("")
+}
+
 private const val SECONDS_PER_MINUTE = 60L
 private const val MINUTES_PER_HOUR = 60L
 

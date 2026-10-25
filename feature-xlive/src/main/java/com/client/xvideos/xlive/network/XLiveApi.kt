@@ -3,7 +3,10 @@ package com.client.xvideos.xlive.network
 import com.client.xvideos.common.net.UserAgentProvider
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.xlive.model.XLiveBio
+import com.client.xvideos.xlive.model.XLiveCollection
+import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoom
+import com.client.xvideos.xlive.model.XLiveRoomPage
 import com.client.xvideos.xlive.xLiveUrlStart
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -69,15 +72,13 @@ object XLiveApi {
     }
 
     /**
-     * Ники открытых комнат с первой страницы списка, самые популярные первыми.
+     * Страница списка комнат с [offset]: пол [gender], подборка [collection].
      *
-     * @throws IOException нет сети или ответ с кодом ошибки.
+     * @throws IOException нет сети, ответ с кодом ошибки или без списка комнат.
      */
-    suspend fun publicRooms(limit: Int = ROOM_LIST_LIMIT): List<String> {
-        val response = client.get("$xLiveUrlStart/api/ts/roomlist/room-list/?limit=$limit&offset=0")
+    suspend fun rooms(gender: XLiveGender, collection: XLiveCollection, offset: Int): XLiveRoomPage {
+        val response = client.get("$xLiveUrlStart/api/ts/roomlist/room-list/?${roomListQuery(gender, collection, offset)}")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-        return parseXLivePublicRooms(response.bodyAsText())
+        return parseXLiveRoomPage(response.bodyAsText()) ?: throw IOException("Ответ без списка комнат")
     }
-
-    private const val ROOM_LIST_LIMIT = 10
 }

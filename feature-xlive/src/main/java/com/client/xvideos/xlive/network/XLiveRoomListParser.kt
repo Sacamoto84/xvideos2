@@ -1,29 +1,49 @@
 package com.client.xvideos.xlive.network
 
-import com.client.xvideos.xlive.model.XLiveRoom
+import com.client.xvideos.xlive.model.XLiveRoomItem
+import com.client.xvideos.xlive.model.XLiveRoomPage
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
+
+/** Возраст, которым сайт отмечает «не указан». */
+private const val AGE_NOT_SET = 99
 
 /**
- * Ники открытых комнат из ответа `api/ts/roomlist/room-list/`, в порядке сайта.
+ * Страница списка из ответа `api/ts/roomlist/room-list/`.
  *
- * Берутся комнаты с `current_show = public` и без пароля: остальные поток
- * анониму не отдают.
+ * Комнаты без ника пропускаются. `total_count` сайт отдаёт строкой.
  *
- * @return пустой список, если ответ не тот или открытых комнат нет.
+ * @return `null`, если ответ не JSON-объект или в нём нет списка `rooms`
+ * (например, ошибка параметров: `{"errors": {...}}`).
  */
-fun parseXLivePublicRooms(json: String): List<String> {
-    val root = runCatching { Json.parseToJsonElement(json) }.getOrNull() as? JsonObject ?: return emptyList()
-    val rooms = root["rooms"] as? JsonArray ?: return emptyList()
-    return rooms.mapNotNull { element ->
-        val room = element as? JsonObject ?: return@mapNotNull null
-        val username = (room["username"] as? JsonPrimitive)?.contentOrNull
-        val show = (room["current_show"] as? JsonPrimitive)?.contentOrNull
-        val hasPassword = (room["has_password"] as? JsonPrimitive)?.booleanOrNull == true
-        username?.takeIf { it.isNotBlank() && show == XLiveRoom.STATUS_PUBLIC && !hasPassword }
-    }
+fun parseXLiveRoomPage(json: String): XLiveRoomPage? {
+    val root = runCatching { Json.parseToJsonElement(json) }.getOrNull() as? JsonObject ?: return null
+    val rooms = root["rooms"] as? JsonArray ?: return null
+    return XLiveRoomPage(
+        rooms = rooms.mapNotNull { (it as? JsonObject)?.toRoomItem() },
+        total = root.string("total_count")?.toIntOrNull() ?: 0,
+    )
+}
+
+private fun JsonObject.toRoomItem(): XLiveRoomItem? {
+    val username = string("username")?.takeIf { it.isNotBlank() } ?: return null
+    return XLiveRoomItem(
+        username = username,
+        age = primitive("display_age")?.intOrNull?.takeIf { it < AGE_NOT_SET },
+        gender = string("gender").orEmpty(),
+        country = string("country").orEmpty(),
+        viewers = primitive("num_users")?.intOrNull ?: 0,
+        subject = string("room_subject").orEmpty().trim(),
+        tags = (this["tags"] as? JsonArray)
+            ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }
+            .orEmpty(),
+        thumbnail = string("img").orEmpty(),
+        isNew = primitive("is_new")?.booleanOrNull == true,
+        isPromoted = string("label") == "promoted",
+    )
 }

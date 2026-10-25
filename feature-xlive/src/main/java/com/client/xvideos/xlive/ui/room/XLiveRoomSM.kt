@@ -17,21 +17,15 @@ import java.io.IOException
 /**
  * Комната [room]: поток, шапка и анкета модели.
  *
- * Комната не в открытом эфире — берётся первая открытая из списка сайта,
- * чтобы экран показывал живой поток в любой момент. Списка комнат в разделе
- * пока нет, это временная замена.
- *
  * Анкета грузится отдельно от комнаты: видео не ждёт её.
  *
  * @param loadRoom источник комнаты; подменяется в тестах.
- * @param loadPublicRooms ники открытых комнат; подменяется в тестах.
  * @param loadBio источник анкеты; подменяется в тестах.
  * @param nowMs монотонные часы в миллисекундах; подменяются в тестах.
  */
 class XLiveRoomSM(
     private val room: String,
     private val loadRoom: suspend (String) -> XLiveRoom = XLiveApi::room,
-    private val loadPublicRooms: suspend () -> List<String> = { XLiveApi.publicRooms() },
     private val loadBio: suspend (String) -> XLiveBio = XLiveApi::bio,
     private val nowMs: () -> Long = { System.nanoTime() / NANOS_PER_MS },
 ) : ScreenModel {
@@ -97,14 +91,7 @@ class XLiveRoomSM(
 
     private suspend fun resolve(): XLiveRoomState {
         val info = loadRoom(room)
-        if (info.isLive) return XLiveRoomState.Live(info.withUsername(room))
-        val other = loadPublicRooms().firstOrNull { it != room } ?: return XLiveRoomState.Offline(info.status)
-        val replacement = loadRoom(other)
-        return if (replacement.isLive) {
-            XLiveRoomState.Live(replacement.withUsername(other), requestedStatus = info.status)
-        } else {
-            XLiveRoomState.Offline(info.status)
-        }
+        return if (info.isLive) XLiveRoomState.Live(info.withUsername(room)) else XLiveRoomState.Offline(info.status)
     }
 
     /** Анкета той же комнаты не перезапрашивается: повтор потока не должен мигать карточкой. */

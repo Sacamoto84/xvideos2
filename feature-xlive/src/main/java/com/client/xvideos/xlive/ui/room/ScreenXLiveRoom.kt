@@ -45,7 +45,7 @@ import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomTopic
  * Комната XLive: живой поток сверху, под ним шапка модели, тема с тегами и
  * карточка «О модели». Чата пока нет.
  */
-class ScreenXLiveRoom(private val room: String = EXPERIMENT_ROOM) : Screen {
+class ScreenXLiveRoom(private val room: String) : Screen {
 
     override val key: ScreenKey = "ScreenXLiveRoom_$room"
 
@@ -60,7 +60,6 @@ class ScreenXLiveRoom(private val room: String = EXPERIMENT_ROOM) : Screen {
             state = state,
             bio = bio,
             aboutExpanded = aboutExpanded,
-            requestedRoom = room,
             onRetry = vm::reload,
             onPlayerStarted = vm::onPlayerStarted,
             onPlayerError = vm::onPlayerError,
@@ -70,9 +69,6 @@ class ScreenXLiveRoom(private val room: String = EXPERIMENT_ROOM) : Screen {
     }
 }
 
-/** Комната, которую открывает кнопка меню, пока в разделе нет списка комнат. */
-private const val EXPERIMENT_ROOM = "glossybabe_"
-
 private const val VIDEO_ASPECT_RATIO = 16f / 9f
 private const val MILLIS_PER_SECOND = 1000L
 
@@ -81,7 +77,6 @@ fun ScreenXLiveRoomContent(
     state: XLiveRoomState,
     bio: XLiveBio?,
     aboutExpanded: Boolean,
-    requestedRoom: String,
     onRetry: () -> Unit,
     onPlayerStarted: (String) -> Unit,
     onPlayerError: (String) -> Unit,
@@ -119,7 +114,6 @@ fun ScreenXLiveRoomContent(
 
                 XLiveRoomPlayer(
                     hlsUrl = info.hlsUrl,
-                    badgeText = state.requestedStatus?.let { "$requestedRoom: $it · показываю ${info.username}" },
                     onStarted = onPlayerStarted,
                     onError = onPlayerError,
                     onBuffering = onBuffering,
@@ -184,7 +178,6 @@ private fun ScreenXLiveRoomPreview() {
         ),
         bio = XLiveBio(realName = "Anna", age = 24, languages = "English", followers = 20332, aboutMe = "Hello!"),
         aboutExpanded = false,
-        requestedRoom = "room_a",
         onRetry = {},
         onPlayerStarted = {},
         onPlayerError = {},
