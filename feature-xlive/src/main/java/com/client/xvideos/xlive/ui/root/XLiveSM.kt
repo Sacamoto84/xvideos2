@@ -9,12 +9,15 @@ import com.client.xvideos.xlive.auth.XLiveSession
 import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveFollowed
 import com.client.xvideos.xlive.model.XLiveGender
+import com.client.xvideos.xlive.model.XLiveRecord
 import com.client.xvideos.xlive.model.XLiveRoomPage
 import com.client.xvideos.xlive.model.XLiveSavedRoom
 import com.client.xvideos.xlive.model.XLiveSearchFilters
 import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.network.XLiveApi
+import com.client.xvideos.xlive.record.XLiveRecordStore
+import com.client.xvideos.xlive.record.XLiveRecordings
 import com.client.xvideos.xlive.saved.XLiveRoomStore
 import com.client.xvideos.xlive.saved.XLiveSaved
 import com.client.xvideos.xlive.ui.feed.XLiveFeedState
@@ -23,19 +26,24 @@ import com.client.xvideos.xlive.ui.following.XLiveFollowingList
 import com.client.xvideos.xlive.ui.following.XLiveFollowingState
 import com.client.xvideos.xlive.ui.saved.XLiveOnlineCheck
 import com.client.xvideos.xlive.ui.saved.XLiveSavedState
+import com.client.xvideos.xlive.ui.saved.XLiveRecordsState
 import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
 import com.client.xvideos.xlive.ui.search.XLiveSearchState
 import com.client.xvideos.xlive.ui.tags.XLiveTagsFeed
 import com.client.xvideos.xlive.ui.tags.XLiveTagsState
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 
 /**
  * Корень раздела XLive: нижняя вкладка, пол, лента «Эфиры» с подборкой,
@@ -51,6 +59,8 @@ import kotlinx.coroutines.launch
  * @param loadSearch источник страницы поиска: пол, слово, фильтры, сдвиг; подменяется в тестах.
  * @param saved «Мои»; в тестах — хранилище во временной папке.
  * @param history «История»; в тестах — хранилище во временной папке.
+ * @param records «Записи»; в тестах — хранилище во временной папке.
+ * @param finishPendingRecords доклейка записей, оборванных вместе с процессом; подменяется в тестах.
  * @param isOnline источник статуса эфира по нику; подменяется в тестах.
  * @param nowSeconds часы для метки снимков; подменяются в тестах.
  * @param account вход на сайт; подменяется в тестах.
@@ -68,6 +78,8 @@ class XLiveSM(
         },
     private val saved: XLiveRoomStore = XLiveSaved.my,
     private val history: XLiveRoomStore = XLiveSaved.history,
+    private val records: XLiveRecordStore = XLiveRecordings.store,
+    private val finishPendingRecords: () -> Unit = XLiveRecordings::finishPending,
     isOnline: suspend (String) -> Boolean = XLiveApi::isOnline,
     private val nowSeconds: () -> Long = { System.currentTimeMillis() / MILLIS_PER_SECOND },
     private val account: XLiveAccount = XLiveSession,
@@ -121,6 +133,13 @@ class XLiveSM(
 
     val myPosition = LazyGridPosition()
     val recentPosition = LazyGridPosition()
+
+    /** «Записи»: от новых к старым. */
+    val recordsState: StateFlow<XLiveRecordsState> = records.records
+        .map(::recordsStateOf)
+        .stateIn(screenModelScope, SharingStarted.Eagerly, recordsStateOf(records.records.value))
+
+    val recordsPosition = LazyGridPosition()
 
     private val followingList = XLiveFollowingList(screenModelScope, account, loadFollowed, setFollowing, nowSeconds)
 
@@ -194,6 +213,10 @@ class XLiveSM(
             followingList.refresh()
             return
         }
+        if (_savedTab.value == XLiveSavedTab.RECORDS) {
+            records.refresh()
+            return
+        }
         snapshotStamp.value = nowSeconds()
         checkSaved(force = true)
     }
@@ -204,7 +227,20 @@ class XLiveSM(
             XLiveSavedTab.MY -> saved.remove(username)
             XLiveSavedTab.HISTORY -> history.remove(username)
             XLiveSavedTab.FOLLOWING -> followingList.unfollow(username)
+            // Записи удаляются по id — removeRecord.
+            XLiveSavedTab.RECORDS -> Unit
         }
+    }
+
+    private fun recordsStateOf(list: ImmutableList<XLiveRecord>) = XLiveRecordsState(
+        records = list,
+        snapshots = list.associate { it.id to File(records.dirOf(it.id), XLiveRecordStore.SNAPSHOT).path }
+            .toImmutableMap(),
+    )
+
+    /** Удалить запись [id] вместе с её файлами. */
+    fun removeRecord(id: Long) {
+        records.remove(id)
     }
 
     fun retryFollowing() = followingList.retry()
@@ -250,6 +286,11 @@ class XLiveSM(
             XLiveSavedTab.HISTORY -> history.rooms.value
             XLiveSavedTab.FOLLOWING -> {
                 followingList.show()
+                return
+            }
+            XLiveSavedTab.RECORDS -> {
+                // Эфир у записей не проверяется; оборванные — доклеиваются.
+                finishPendingRecords()
                 return
             }
         }

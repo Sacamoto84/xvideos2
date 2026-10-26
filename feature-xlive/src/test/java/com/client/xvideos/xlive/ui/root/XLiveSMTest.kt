@@ -3,6 +3,7 @@ package com.client.xvideos.xlive.ui.root
 import com.client.xvideos.xlive.auth.TestAccount
 import com.client.xvideos.xlive.model.XLiveCollection
 import com.client.xvideos.xlive.model.XLiveFollowed
+import com.client.xvideos.xlive.model.XLiveRecord
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.model.XLiveRoomPage
@@ -14,10 +15,13 @@ import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.network.ROOM_PAGE_SIZE
 import com.client.xvideos.xlive.network.TAG_PAGE_SIZE
+import com.client.xvideos.xlive.record.XLiveRecordStore
 import com.client.xvideos.xlive.saved.testRoomStore
 import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -43,6 +47,8 @@ class XLiveSMTest {
     private var clock = 0L
     private val saved by lazy { testRoomStore(tmp.newFolder("my"), now = { ++clock }) }
     private val history by lazy { testRoomStore(tmp.newFolder("history"), now = { ++clock }) }
+    private val records by lazy { XLiveRecordStore(tmp.newFolder("records").path, CoroutineScope(Job()), Dispatchers.Unconfined) }
+    private var pendingFinishes = 0
     private val onlineAsked = mutableListOf<String>()
     private var onlineRooms = setOf<String>()
     private var nowSeconds = 1_000L
@@ -98,6 +104,8 @@ class XLiveSMTest {
         },
         saved = saved,
         history = history,
+        records = records,
+        finishPendingRecords = { pendingFinishes++ },
         isOnline = { name ->
             onlineAsked += name
             name in onlineRooms
@@ -523,5 +531,40 @@ class XLiveSMTest {
 
         assertEquals(SearchRequest(XLiveGender.ALL, "anna", XLiveSearchFilters(), ROOM_PAGE_SIZE), searchRequests.last())
         assertEquals(listOf("s0", "s$ROOM_PAGE_SIZE"), sm.search.value.feed.rooms.map { it.username })
+    }
+
+    private fun record(id: Long) = XLiveRecord(id = id, username = "room_$id")
+
+    @Test
+    fun `Записи — от новых к старым`() {
+        records.put(record(1))
+        records.put(record(3))
+        records.put(record(2))
+        val sm = model()
+
+        assertEquals(listOf(3L, 2L, 1L), sm.recordsState.value.records.map { it.id })
+    }
+
+    @Test
+    fun `удаление записи убирает её из списка и с диска`() {
+        records.put(record(1))
+        val sm = model()
+
+        sm.removeRecord(1)
+
+        assertTrue(sm.recordsState.value.records.isEmpty())
+        assertFalse(records.dirOf(1).exists())
+    }
+
+    @Test
+    fun `вкладка Записи доклеивает оборванные записи и эфир не проверяет`() {
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+        val asked = onlineAsked.size
+
+        sm.selectSavedTab(XLiveSavedTab.RECORDS)
+
+        assertEquals(1, pendingFinishes)
+        assertEquals(asked, onlineAsked.size)
     }
 }

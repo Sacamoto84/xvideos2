@@ -5,6 +5,8 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.snackbar.UiMessage
+import com.client.xvideos.common.videoplayer.storyboard.LocalStoryboards
+import com.client.xvideos.common.videoplayer.storyboard.RetrieverStoryboardRenderer
 import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRecord
 import com.client.xvideos.xlive.model.XLiveRecordRoom
@@ -59,8 +61,22 @@ object XLiveRecordings {
     }
     private val core by coreLazy
 
+    /** Сетки кадров записей для превью перемотки: `.storyboard.jpg` в папке записи, в копию не идёт. */
+    private val storyboards by lazy {
+        LocalStoryboards(
+            dir = AppPath.xlive_records,
+            scope = scope,
+            renderer = RetrieverStoryboardRenderer,
+            videoFile = { File(store.dirOf(it), VIDEO) },
+            storyboardFile = { File(store.dirOf(it), XLiveRecordStore.STORYBOARD) },
+        )
+    }
+
     /** Записи на диске. */
     val store: XLiveRecordStore get() = core.store
+
+    /** Сетка кадров записи [id]: готовая или собранная сейчас; `null` — не вышло. */
+    suspend fun storyboard(id: Long): File? = storyboards.obtain(id)
 
     /** Начать запись комнаты [room]; идущая запись другой комнаты останавливается. */
     fun start(room: XLiveRoom, bio: XLiveBio?): XLiveRecordingHandle = core.start(room, bio)

@@ -1,8 +1,11 @@
 package com.client.xvideos.xlive.model
 
+import com.client.xvideos.common.util.formatBytes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class XLiveLabelsTest {
 
@@ -45,6 +48,18 @@ class XLiveLabelsTest {
     fun `начало неизвестно или в будущем — null`() {
         assertNull(onAirLabel(startedAtSec = 0, nowSec = 1_000))
         assertNull(onAirLabel(startedAtSec = 2_000, nowSec = 1_000))
+    }
+
+    @Test
+    fun `дата начала записи и её размер`() {
+        val zone = ZoneId.of("Europe/Moscow")
+        val startedAt = ZonedDateTime.of(2026, 10, 26, 21, 40, 15, 0, zone).toInstant().toEpochMilli()
+        val size = 2_254_857_830L
+
+        val label = recordDateSizeLabel(startedAt, size, zone)
+
+        assertEquals("26 окт, 21:40 · ${formatBytes(size)}", label)
+        assertEquals("ЗАПИСЬ · 26 ОКТ 21:40", recordBadgeLabel(startedAt, zone))
     }
 
     @Test

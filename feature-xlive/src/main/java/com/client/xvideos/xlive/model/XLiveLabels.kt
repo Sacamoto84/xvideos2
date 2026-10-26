@@ -1,5 +1,30 @@
 package com.client.xvideos.xlive.model
 
+import com.client.xvideos.common.util.formatBytes
+import java.time.Instant
+import java.time.ZoneId
+
+/** Месяцы для дат записей: «26 окт». */
+private val SHORT_MONTHS = listOf("янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек")
+
+private fun dayMonthTime(startedAtMs: Long, zone: ZoneId): Triple<Int, String, String> {
+    val time = Instant.ofEpochMilli(startedAtMs).atZone(zone)
+    val clock = "${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}"
+    return Triple(time.dayOfMonth, SHORT_MONTHS[time.monthValue - 1], clock)
+}
+
+/** Подпись карточки записи: начало и размер — «26 окт, 21:40 · 2,1 ГБ». */
+fun recordDateSizeLabel(startedAtMs: Long, sizeBytes: Long, zone: ZoneId = ZoneId.systemDefault()): String {
+    val (day, month, clock) = dayMonthTime(startedAtMs, zone)
+    return "$day $month, $clock · ${formatBytes(sizeBytes)}"
+}
+
+/** Плашка экрана записи вместо «В эфире»: «ЗАПИСЬ · 26 ОКТ 21:40». */
+fun recordBadgeLabel(startedAtMs: Long, zone: ZoneId = ZoneId.systemDefault()): String {
+    val (day, month, clock) = dayMonthTime(startedAtMs, zone)
+    return "ЗАПИСЬ · $day ${month.uppercase()} $clock"
+}
+
 /** Пол комнаты по-русски; незнакомое значение остаётся как есть. */
 fun genderLabel(gender: String): String = when (gender) {
     "female" -> "Женщина"

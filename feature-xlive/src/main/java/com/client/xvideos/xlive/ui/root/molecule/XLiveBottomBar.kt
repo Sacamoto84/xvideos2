@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.HorizontalDivider
@@ -85,6 +86,7 @@ private val savedTabIcons: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Bookmarks,
     Icons.Outlined.FavoriteBorder,
     Icons.Outlined.History,
+    Icons.Outlined.VideoLibrary,
 )
 
 /** Подсказки подвкладок «Избранного» — в порядке [XLiveSavedTab]. */
@@ -92,6 +94,7 @@ private val savedTabHints: ImmutableList<String> = persistentListOf(
     "Мои — сохранённые в приложении",
     "Подписки аккаунта на сайте",
     "История — недавно открытые",
+    "Записи — сохранённые эфиры",
 )
 
 /**

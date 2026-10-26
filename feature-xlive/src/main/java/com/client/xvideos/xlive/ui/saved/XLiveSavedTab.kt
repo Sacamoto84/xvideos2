@@ -5,4 +5,5 @@ enum class XLiveSavedTab(val title: String) {
     MY("Мои"),
     FOLLOWING("Подписки"),
     HISTORY("История"),
+    RECORDS("Записи"),
 }

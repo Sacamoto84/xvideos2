@@ -9,9 +9,11 @@ import com.client.xvideos.xlive.ui.following.XLiveFollowingState
  *
  * @property saved показанная подвкладка из «Моих» и «Истории».
  * @property following «Подписки».
+ * @property records «Записи».
  */
 @Immutable
 data class XLiveFavoritesState(
     val saved: XLiveSavedState = XLiveSavedState(),
     val following: XLiveFollowingState = XLiveFollowingState(),
+    val records: XLiveRecordsState = XLiveRecordsState(),
 )
