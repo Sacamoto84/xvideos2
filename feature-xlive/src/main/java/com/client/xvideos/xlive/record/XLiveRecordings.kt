@@ -22,6 +22,7 @@ import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.SNAPSHOT
 import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.VIDEO
 import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.VIDEO_RAW
 import com.client.xvideos.xlive.saved.XLiveSaved
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -131,29 +132,46 @@ internal class XLiveRecordingsCore(
         previous?.stop(XLiveRecordStop.LEFT_ROOM)
         scope.launch { saveSnapshot(room.username, dir) }
         scope.launch {
-            val reason = recorder.run()
-            session.finishing()
-            val stats = recorder.stats.value
-            store.update(id) {
-                it.copy(status = XLiveRecordStatus.FINISHING, gaps = stats.gaps, width = stats.width, height = stats.height)
-            }
-            val outcome = finishRecord(id, hasVideo = stats.videoSegments > 0)
-            notify(
-                when (outcome) {
-                    Outcome.READY -> if (reason.isError) UiMessage.Error(reason.message) else UiMessage.Success(reason.message)
-                    Outcome.EMPTY -> UiMessage.Error("Запись не сохранена: нет данных")
-                    Outcome.BROKEN -> UiMessage.Error("Запись не склеилась")
+            // Сессия не должна ни уронить процесс, ни оставить запись «идущей»:
+            // что бы ни случилось, записанное склеивается, а занятость снимается.
+            try {
+                val reason = runRecorder(recorder)
+                session.finishing()
+                val stats = recorder.stats.value
+                store.update(id) {
+                    it.copy(status = XLiveRecordStatus.FINISHING, gaps = stats.gaps, width = stats.width, height = stats.height)
                 }
-            )
-            session.done()
-            synchronized(lock) {
-                busy -= id
-                if (current === session) current = null
+                val outcome = finishRecord(id, hasVideo = stats.videoSegments > 0)
+                notify(
+                    when (outcome) {
+                        Outcome.READY -> if (reason.isError) UiMessage.Error(reason.message) else UiMessage.Success(reason.message)
+                        Outcome.EMPTY -> UiMessage.Error("Запись не сохранена: нет данных")
+                        Outcome.BROKEN -> UiMessage.Error("Запись не склеилась")
+                    }
+                )
+            } finally {
+                session.done()
+                synchronized(lock) {
+                    busy -= id
+                    if (current === session) current = null
+                }
             }
         }
         return session
     }
 
+    /** Запись до остановки; неожиданное исключение — тоже остановка, с сохранением записанного. */
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun runRecorder(recorder: XLiveRecorder): XLiveRecordStop = try {
+        recorder.run()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.w("XLive: запись прервалась — %s", e.javaClass.simpleName)
+        XLiveRecordStop.ERROR
+    }
+
+    @Suppress("TooGenericExceptionCaught")
     fun finishPending() {
         scope.launch {
             val pending = store.snapshot().filter {
@@ -164,6 +182,11 @@ internal class XLiveRecordingsCore(
                 try {
                     val outcome = finishRecord(record.id, hasVideo = true)
                     Timber.i("XLive: доклейка записи — %s", outcome)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Одна испорченная запись не мешает доклеить остальные.
+                    Timber.w("XLive: доклейка не удалась — %s", e.javaClass.simpleName)
                 } finally {
                     synchronized(lock) { busy -= record.id }
                 }
@@ -182,10 +205,18 @@ internal class XLiveRecordingsCore(
     }
 
     /** Склеить сырые дорожки записи [id] в `video.mp4`; без видео — удалить запись. */
+    @Suppress("TooGenericExceptionCaught")
     private suspend fun finishRecord(id: Long, hasVideo: Boolean): Outcome {
         val dir = store.dirOf(id)
         val videoRaw = File(dir, VIDEO_RAW)
         val audioRaw = File(dir, AUDIO_RAW)
+        val video = File(dir, VIDEO)
+        // Склейка уже прошла, а статус в JSON не успел стать «готова» (процесс
+        // убит между переименованием и записью JSON): готовый файл не трогаем.
+        if (!videoRaw.isFile && video.isFile && video.length() > 0L) {
+            store.update(id) { it.copy(status = XLiveRecordStatus.READY, sizeBytes = video.length()) }
+            return Outcome.READY
+        }
         if (!hasVideo || !videoRaw.isFile || videoRaw.length() == 0L) {
             store.remove(id)
             return Outcome.EMPTY
@@ -193,7 +224,6 @@ internal class XLiveRecordingsCore(
         val temp = File(dir, MUX_TEMP).apply { delete() }
         return try {
             val durationMs = muxer.mux(videoRaw, audioRaw.takeIf { it.isFile && it.length() > 0L }, temp)
-            val video = File(dir, VIDEO)
             if (!temp.renameTo(video)) throw IOException("Склейка не переименована")
             videoRaw.delete()
             audioRaw.delete()
@@ -201,7 +231,10 @@ internal class XLiveRecordingsCore(
                 it.copy(status = XLiveRecordStatus.READY, durationMs = durationMs, sizeBytes = video.length())
             }
             Outcome.READY
-        } catch (e: IOException) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // MediaMuxer бросает и не IOException; сырые дорожки остаются для повтора.
             Timber.w("XLive: запись не склеилась — %s", e.javaClass.simpleName)
             temp.delete()
             store.update(id) { it.copy(status = XLiveRecordStatus.BROKEN) }

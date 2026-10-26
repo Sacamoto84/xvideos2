@@ -77,6 +77,18 @@ class XLiveLegacyFolderTest {
     }
 
     @Test
+    fun `файл не перенёсся — старая папка остаётся, ничего не теряется`() {
+        val main = tmp.newFolder("main")
+        main.writeFile("X/Live/Saved/a.room", "old")
+        // На месте папки нового места — файл: перенос в неё невозможен.
+        main.writeFile("XLive/Saved", "не папка")
+
+        XLiveLegacyFolder.move(main, XlrRestoreMode.MERGE)
+
+        assertEquals("old", File(main, "X/Live/Saved/a.room").readText())
+    }
+
+    @Test
     fun `пустые папки нового места, созданные при запуске, заполняются`() {
         val main = tmp.newFolder("main")
         File(main, "XLive/Saved").mkdirs()

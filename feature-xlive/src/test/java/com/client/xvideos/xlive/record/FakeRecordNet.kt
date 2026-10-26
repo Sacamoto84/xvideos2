@@ -34,6 +34,20 @@ class FakeRecordNet(private val clock: () -> Long) : XLiveRecordNet {
     /** Сколько следующих запросов бросят IOException. */
     var failNext = 0
 
+    /** Сайт комнаты недоступен: запрос комнаты бросает IOException (429, 5xx). */
+    var roomDown = false
+
+    /**
+     * Проверять истечение адреса и после ожидания сегмента. `false` — как у
+     * сервера, который смотрит токен только в начале запроса: ждущий запрос
+     * доживает до ответа и после истечения.
+     */
+    var recheckAfterWait = true
+
+    /** После стольких сегментов любой запрос бросит не-IOException — сбой клиента. */
+    var crashAfterSegments: Int? = null
+    private var segmentsServed = 0
+
     var roomCalls = 0
         private set
     var textCalls = 0
@@ -56,6 +70,7 @@ class FakeRecordNet(private val clock: () -> Long) : XLiveRecordNet {
     override suspend fun room(name: String): XLiveRoom {
         failIfDown()
         roomCalls++
+        if (roomDown) throw IOException("HTTP 429")
         generation++
         val live = roomStatus == XLiveRoom.STATUS_PUBLIC
         return XLiveRoom(
@@ -74,14 +89,23 @@ class FakeRecordNet(private val clock: () -> Long) : XLiveRecordNet {
         val kind = if ("/v.m3u8" in url) "v" else "a"
         val wanted = Regex("_HLS_msn=(\\d+)").find(url)?.groupValues?.get(1)?.toLong()
         if (wanted != null) {
-            while (edge(gen) < wanted) delay(segmentMs / 4)
+            // Как LL-HLS: номер дальше края больше чем на два — 400.
+            if (wanted > edge(gen) + 2) return XLiveHttp(400, null)
+            // Ждёт не дольше трёх целевых длительностей, потом 503 — тоже как LL-HLS.
+            val deadline = clock() + BLOCKING_LIMIT_MS
+            while (edge(gen) < wanted) {
+                if (clock() >= deadline) return XLiveHttp(503, null)
+                delay(segmentMs / 4)
+            }
         }
-        if (gen < expireBefore) return XLiveHttp(403, null)
+        if (recheckAfterWait && gen < expireBefore) return XLiveHttp(403, null)
         return XLiveHttp(200, media(kind, edge(gen)))
     }
 
     override suspend fun bytes(url: String): XLiveHttp<ByteArray> {
         failIfDown()
+        crashAfterSegments?.let { if (segmentsServed >= it) error("сбой клиента") }
+        segmentsServed++
         if (genOf(url) < expireBefore) return XLiveHttp(403, null)
         val name = url.substringAfterLast('/').substringBefore('?')
         val body = when {
@@ -89,6 +113,10 @@ class FakeRecordNet(private val clock: () -> Long) : XLiveRecordNet {
             else -> name.removeSuffix(".m4s").replace("seg_", "")
         }
         return XLiveHttp(200, body.toByteArray())
+    }
+
+    private companion object {
+        const val BLOCKING_LIMIT_MS = 6_000L
     }
 
     private fun master() = """

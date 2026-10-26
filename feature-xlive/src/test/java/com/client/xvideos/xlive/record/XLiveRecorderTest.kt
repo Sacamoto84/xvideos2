@@ -161,6 +161,68 @@ class XLiveRecorderTest {
     }
 
     @Test
+    fun `после 403 сайт комнаты недоступен — запросы с паузой, через предел нет сети`() {
+        val recorder = recorder()
+        val result = recorder.start()
+        advance(1_700)
+        net.expireBefore = 2
+        net.roomDown = true
+        advance(30_000)
+
+        assertEquals(XLiveRecordStop.NO_NETWORK, result.getCompleted())
+        assertTrue("запросов комнаты: ${net.roomCalls}", net.roomCalls < 100)
+    }
+
+    @Test
+    fun `перенумерация на новом адресе — обе дорожки продолжают с края`() {
+        net.recheckAfterWait = false
+        val recorder = recorder()
+        val result = recorder.start()
+        advance(1_700)
+        net.numberShift = { gen -> if (gen >= 2) -95L else 0L }
+        net.expireBefore = 2
+        advance(5_000)
+        stop(recorder, result)
+
+        assertTrue(video.text().contains("v8"))
+        assertTrue("звук не застрял на старом номере", audio.text().contains("a8"))
+    }
+
+    /** Номер последнего записанного сегмента дорожки [kind] ("v" или "a"). */
+    private fun File.lastNumber(kind: String): Long =
+        Regex("$kind(\\d+)").findAll(text()).last().groupValues[1].toLong()
+
+    @Test
+    fun `номера на том же адресе начались заново — 400 и запись с края`() {
+        val recorder = recorder()
+        val result = recorder.start()
+        advance(1_700)
+        net.numberShift = { -95L }
+        advance(14_000)
+        stop(recorder, result)
+
+        assertTrue("видео: ${video.lastNumber("v")}", video.lastNumber("v") < 50)
+        assertTrue("звук: ${audio.lastNumber("a")}", audio.lastNumber("a") < 50)
+        assertTrue(recorder.stats.value.gaps >= 1)
+    }
+
+    @Test
+    fun `сбой записи на диск — остановка с сохранением, без исключения`() {
+        val recorder = XLiveRecorder(
+            username = "room_a",
+            videoOut = File(tmp.root, "нет-папки/video.part"),
+            audioOut = audio,
+            net = net,
+            usableBytes = { Long.MAX_VALUE },
+            nowMs = { scheduler.currentTime },
+        )
+        val result = recorder.start()
+        advance(1_700)
+
+        assertEquals(XLiveRecordStop.NO_SPACE, result.getCompleted())
+    }
+
+    @Test
     fun `остановка снаружи возвращает её причину`() {
         val recorder = recorder()
         val result = recorder.start()

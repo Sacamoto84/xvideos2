@@ -48,7 +48,8 @@ internal data class FolderSnapshot(
 internal val EmptyStorageStats: List<StorageStat> = persistentListOf(
     StorageStat(key = "X", title = "X"),
     StorageStat(key = "L", title = "L"),
-    StorageStat(key = "R", title = "R")
+    StorageStat(key = "R", title = "R"),
+    StorageStat(key = "XLive", title = "XLive")
 )
 
 @Composable
@@ -166,6 +167,7 @@ private fun storageIcon(key: String): Int {
     return when (key) {
         "X" -> R.drawable.icon_xvideos_mini
         "L" -> R.drawable.icon_luscious
+        "XLive" -> R.drawable.icon_xlive
         else -> R.drawable.icon_red
     }
 }
@@ -174,16 +176,14 @@ private fun sectionSubtitle(key: String): String {
     return when (key) {
         "X" -> "XVideos"
         "L" -> "Luscious"
+        "XLive" -> "Мои, История, Записи"
         else -> "RedGifs"
     }
 }
 
-internal fun loadStorageStats(): List<StorageStat> {
-    return listOf(
-        "X" to File(AppPath.main, "X"),
-        "L" to File(AppPath.main, "L"),
-        "R" to File(AppPath.main, "R")
-    ).map { (key, folder) ->
+/** Размер разделов в корне хранилища [root]; XLive — свой раздел, с записями эфиров. */
+internal fun loadStorageStats(root: File = File(AppPath.main)): List<StorageStat> {
+    return listOf("X", "L", "R", "XLive").map { key -> key to File(root, key) }.map { (key, folder) ->
         val snapshot = folder.collectSnapshot()
         StorageStat(
             key = key,

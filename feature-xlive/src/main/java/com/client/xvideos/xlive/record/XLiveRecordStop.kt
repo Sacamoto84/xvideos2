@@ -12,4 +12,7 @@ enum class XLiveRecordStop(val message: String, val isError: Boolean) {
     STREAM_ENDED("Эфир закончился — запись сохранена", false),
     NO_NETWORK("Нет сети — запись сохранена", true),
     NO_SPACE("Кончилось место — запись сохранена", true),
+
+    /** Неожиданный сбой внутри записи: записанное до него склеивается. */
+    ERROR("Запись прервалась — записанное сохранено", true),
 }

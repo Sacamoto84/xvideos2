@@ -168,6 +168,12 @@ class XLiveRecorder(
         /** Адрес только что сменился: номера на новом могли начаться заново. */
         private var afterRefresh = false
 
+        /**
+         * Поколение адреса, с которым дорожка работала. Свежий адрес могла взять
+         * другая дорожка — тогда эта узнаёт о смене здесь, а не по своему 403.
+         */
+        private var seenGeneration = -1
+
         private val playlistUrl: String?
             get() = variant?.let { if (isVideo) it.videoUrl else it.audioUrl }
 
@@ -175,24 +181,27 @@ class XLiveRecorder(
             // Остановка проверяется в цикле, а не только отменой: шаг, который
             // сам решил остановить запись (нет места), возвращается без
             // приостановки, и без проверки дорожка крутилась бы, не отдав поток.
-            FileOutputStream(out).use { stream ->
-                while (!stop.isCompleted) {
-                    currentCoroutineContext().ensureActive()
-                    step(stream)
+            // Файл не открылся или запись на диск не прошла (обычно — место
+            // кончилось между проверками): запись заканчивается, записанное
+            // остаётся, исключение дальше не идёт.
+            try {
+                FileOutputStream(out).use { stream ->
+                    while (!stop.isCompleted) {
+                        currentCoroutineContext().ensureActive()
+                        step(stream)
+                    }
                 }
+            } catch (e: IOException) {
+                Timber.w("XLive: запись — файл не пишется, %s", e.javaClass.simpleName)
+                finish(XLiveRecordStop.NO_SPACE)
             }
         }
 
         private suspend fun step(stream: FileOutputStream) {
             val gen = generation
-            val url = playlistUrl ?: return finish(XLiveRecordStop.STREAM_ENDED)
-            // После смены адреса — без блокировки: номера на новом могли начаться
-            // заново, и сервер ждал бы сегмент, которого не будет.
-            val wanted = next?.takeUnless { afterRefresh }
-            val response = request { net.text(wanted?.let { blockingReloadUrl(url, it) } ?: url) } ?: return
-            if (response.code in NEW_ADDRESS || response.code in GONE) return renew(gen)
-            val playlist = response.body?.takeIf { response.isSuccess }?.let { parseMediaPlaylist(it, url) }
-            val last = playlist?.lastMsn ?: return waitRetry()
+            noteGeneration(gen)
+            val playlist = readPlaylist(gen) ?: return
+            val last = playlist.lastMsn ?: return waitRetry()
             if (!initWritten && !writeInit(stream, playlist.initUrl, gen)) return
             var expected = next ?: last
             if (afterRefresh && last < expected) {
@@ -207,9 +216,38 @@ class XLiveRecorder(
             writeSegments(stream, fresh, gen)
         }
 
+        /** Адрес сменился с прошлого шага — возможно, его взяла другая дорожка. */
+        private fun noteGeneration(gen: Int) {
+            if (gen == seenGeneration) return
+            if (seenGeneration >= 0) afterRefresh = true
+            seenGeneration = gen
+        }
+
+        /** Медиаплейлист текущего адреса; `null` — шаг повторится (пауза, свежий адрес или конец). */
+        private suspend fun readPlaylist(gen: Int): XLiveMediaPlaylist? {
+            val url = playlistUrl ?: return null.also { finish(XLiveRecordStop.STREAM_ENDED) }
+            // После смены адреса — без блокировки: номера на новом могли начаться
+            // заново, и сервер ждал бы сегмент, которого не будет.
+            val wanted = next?.takeUnless { afterRefresh }
+            val response = request { net.text(wanted?.let { blockingReloadUrl(url, it) } ?: url) } ?: return null
+            if (response.code in NEW_ADDRESS || response.code in GONE) return null.also { renew(gen) }
+            // 400 на блокирующее перечитывание — такого номера сервер не ждёт
+            // (нумерация началась заново): перечитать без номера.
+            if (response.code == BAD_REQUEST && wanted != null) {
+                afterRefresh = true
+                return null
+            }
+            val playlist = response.body?.takeIf { response.isSuccess }?.let { parseMediaPlaylist(it, url) }
+            if (playlist == null) waitRetry()
+            return playlist
+        }
+
         private suspend fun renew(gen: Int) {
             refreshAddress(gen)
             afterRefresh = true
+            // Свежий адрес не получен (сайт комнаты не ответил): пауза и предел
+            // «нет сети», а не шквал запросов, который сам вызвал бы 429.
+            if (generation == gen) waitRetry()
         }
 
         /** `false` — init не записан, шаг повторится. */
@@ -266,6 +304,8 @@ class XLiveRecorder(
 
         /** Адрес истёк или сменился — нужен свежий. */
         val NEW_ADDRESS = setOf(403, 401)
+
+        const val BAD_REQUEST = 400
 
         /** Сегмента уже нет: выпал из окна. */
         val GONE = setOf(404, 410)

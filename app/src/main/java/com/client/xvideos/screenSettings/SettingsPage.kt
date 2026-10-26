@@ -53,7 +53,7 @@ internal enum class SettingsPage(
     Storage(
         title = "Статистика",
         icon = R.drawable.hard_drive_2_24,
-        subtitle = "Статистика по X, L и R"
+        subtitle = "Статистика по X, L, R и XLive"
     ),
     Backup(
         title = "Backup",

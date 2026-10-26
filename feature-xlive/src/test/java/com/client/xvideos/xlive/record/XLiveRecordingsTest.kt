@@ -201,6 +201,60 @@ class XLiveRecordingsTest {
     }
 
     @Test
+    fun `сбой внутри записи не роняет процесс — записанное склеивается`() {
+        net.crashAfterSegments = 4
+        val core = core()
+        val session = core.start(room, null)
+        advance(3_300)
+        scheduler.advanceUntilIdle()
+
+        assertEquals(XLiveRecordStatus.READY, core.only().status)
+        assertEquals(listOf<UiMessage>(UiMessage.Error("Запись прервалась — записанное сохранено")), messages)
+        assertFalse(session.state.value.isRecording || session.state.value.isFinishing)
+        net.crashAfterSegments = null
+        assertTrue("новая запись начинается", core.start(room, null).state.value.isRecording)
+    }
+
+    @Test
+    fun `склейка бросила не IOException — запись не завершена, процесс жив`() {
+        val core = XLiveRecordingsCore(
+            store = XLiveRecordStore(dir.path, scope, Dispatchers.Unconfined),
+            scope = scope,
+            net = net,
+            muxer = { _, _, _ -> error("MediaMuxer") },
+            usableBytes = { Long.MAX_VALUE },
+            newId = { clockId++ },
+            elapsedMs = { scheduler.currentTime },
+            fetchSnapshot = { null },
+            notify = { messages += it },
+        )
+        val session = core.start(room, null)
+        advance(1_700)
+        session.stop(XLiveRecordStop.BUTTON)
+        scheduler.advanceUntilIdle()
+
+        assertEquals(XLiveRecordStatus.BROKEN, core.only().status)
+        assertEquals(listOf<UiMessage>(UiMessage.Error("Запись не склеилась")), messages)
+    }
+
+    @Test
+    fun `доклейка при готовом video_mp4 без сырых файлов — запись готова, файл цел`() {
+        leftover(7)
+        File(dir, "7/${XLiveRecordStore.VIDEO_RAW}").delete()
+        File(dir, "7/${XLiveRecordStore.AUDIO_RAW}").delete()
+        File(dir, "7/${XLiveRecordStore.VIDEO}").writeText("готово")
+        val core = core()
+
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+
+        assertEquals(XLiveRecordStatus.READY, core.only().status)
+        assertEquals("готово", File(dir, "7/${XLiveRecordStore.VIDEO}").readText())
+        assertEquals(File(dir, "7/${XLiveRecordStore.VIDEO}").length(), core.only().sizeBytes)
+        assertTrue(muxed.isEmpty())
+    }
+
+    @Test
     fun `анкета, пришедшая после старта, дописывается в запись`() {
         val core = core()
         val session = core.start(room, null)

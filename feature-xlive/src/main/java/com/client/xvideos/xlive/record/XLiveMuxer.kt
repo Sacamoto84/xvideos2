@@ -2,6 +2,7 @@ package com.client.xvideos.xlive.record
 
 import android.media.MediaCodec
 import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMuxer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -32,6 +33,9 @@ object MediaMuxerJoin : XLiveMuxer {
     private const val SAMPLE_BUFFER_BYTES = 8 * 1024 * 1024
     private const val US_PER_MS = 1_000L
 
+    /** Расхождение длительности, которое ещё не считается обрывом: последний кадр и округления. */
+    private const val VERIFY_TOLERANCE_US = 2_000_000L
+
     override suspend fun mux(video: File, audio: File?, out: File): Long = withContext(Dispatchers.IO) {
         try {
             join(listOfNotNull(video, audio), out)
@@ -58,10 +62,32 @@ object MediaMuxerJoin : XLiveMuxer {
             muxer.start()
             val lastUs = writeInterleaved(extractors, tracks, muxer, base)
             muxer.stop()
+            verify(out, lastUs)
             return lastUs / US_PER_MS
         } finally {
             extractors.forEach { it.release() }
             muxer.release()
+        }
+    }
+
+    /**
+     * Готовый файл не короче записанного. MediaMuxer пишет mp4 с 32-битными
+     * смещениями и на пределе ~4 ГБ молча обрывает файл, а `stop()` проходит
+     * без ошибки. Без проверки сырые дорожки удалились бы после «успеха».
+     */
+    private fun verify(out: File, expectedUs: Long) {
+        val check = MediaExtractor()
+        try {
+            check.setDataSource(out.path)
+            val durationUs = (0 until check.trackCount)
+                .map { check.getTrackFormat(it) }
+                .filter { it.containsKey(MediaFormat.KEY_DURATION) }
+                .maxOfOrNull { it.getLong(MediaFormat.KEY_DURATION) } ?: 0L
+            if (durationUs < expectedUs - VERIFY_TOLERANCE_US) {
+                throw IOException("Склейка неполная: ${durationUs / US_PER_MS} из ${expectedUs / US_PER_MS} мс")
+            }
+        } finally {
+            check.release()
         }
     }
 

@@ -35,6 +35,7 @@ object XLiveLegacyFolder {
         val legacy = File(mainRoot, LEGACY)
         if (!legacy.isDirectory) return false
         var moved = false
+        var failed = false
         for (name in FOLDERS) {
             val from = File(legacy, name)
             if (!from.isDirectory) continue
@@ -44,10 +45,16 @@ object XLiveLegacyFolder {
             from.listFiles()?.forEach { file ->
                 val target = File(to, file.name)
                 if (target.exists()) return@forEach
-                moved = moveFile(file, target) || moved
+                if (moveFile(file, target)) moved = true else failed = true
             }
         }
-        if (!legacy.deleteRecursively()) Timber.w("XLive: прежняя папка удалена не целиком")
+        // Файл, который не перенёсся, остаётся на старом месте: следующий
+        // запуск попробует снова. Удалить его — значит потерять комнату.
+        if (failed) {
+            Timber.w("XLive: перенесено не всё, прежняя папка оставлена")
+        } else if (!legacy.deleteRecursively()) {
+            Timber.w("XLive: прежняя папка удалена не целиком")
+        }
         return moved
     }
 
