@@ -27,6 +27,15 @@ import kotlin.coroutines.resume
 private const val WEB_VIEW_LOAD_TIMEOUT_MS = 45_000L
 
 /**
+ * Окно headless-WebView, dp. Главная X держит в DOM только карточки у видимой
+ * области (`virtual-listing`), а WebView вне иерархии View нулевого размера, и в
+ * разметку попадало 8 карточек из 48. Лента главной при такой ширине — около
+ * 3000 dp, высота взята с запасом.
+ */
+private const val WEB_VIEW_WIDTH_DP = 412
+private const val WEB_VIEW_HEIGHT_DP = 8_000
+
+/**
  * Загружает страницу в headless-WebView и возвращает её HTML после выполнения JS.
  *
  * Возвращает пустую строку, если страница не догрузилась за
@@ -64,6 +73,9 @@ private suspend fun loadHtmlInWebView(url: String): String =
         val context = AppContextHolder.applicationContext
 
         val webView = WebView(context)
+        // Без размера у страницы нет видимой области, см. WEB_VIEW_HEIGHT_DP.
+        val density = context.resources.displayMetrics.density
+        webView.layout(0, 0, (WEB_VIEW_WIDTH_DP * density).toInt(), (WEB_VIEW_HEIGHT_DP * density).toInt())
 
         // WebView не добавляется в иерархию View, поэтому View.post() мог бы
         // никогда не выполниться. Уничтожаем через main-handler и ровно один раз.
