@@ -217,7 +217,7 @@ internal fun BackupSettingsSection(
     SettingsGroup(modifier = modifier) {
         SettingsValueRow(
             icon = R.drawable.hard_drive_2_24,
-            text = "Backup X/L/R",
+            text = "Backup X/L/R/XLive",
             value = backupHeaderValue
         )
         BackupModeSelector(

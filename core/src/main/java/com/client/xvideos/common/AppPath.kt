@@ -10,7 +10,8 @@ private enum class Folder(val value: String) {
     CACHE_DOWNLOAD_RED("Download"),
     RED("R"),
     L("L"),
-    X("X")
+    X("X"),
+    XLIVE("XLive")
 }
 
 /**
@@ -56,9 +57,10 @@ object AppPath {
     val x_history: String get() = "$main/${Folder.X.value}/History"
     val x_subscriptions: String get() = "$main/${Folder.X.value}/Subscriptions"
 
-    //--- XLive: внутри X, чтобы ехать в резервной копии вместе с секцией X ---
-    val xlive_saved: String get() = "$main/${Folder.X.value}/Live/Saved"
-    val xlive_history: String get() = "$main/${Folder.X.value}/Live/History"
+    //--- XLive: свой раздел резервной копии; прежде лежал в X/Live (см. XLiveLegacyFolder) ---
+    val xlive_saved: String get() = "$main/${Folder.XLIVE.value}/Saved"
+    val xlive_history: String get() = "$main/${Folder.XLIVE.value}/History"
+    val xlive_records: String get() = "$main/${Folder.XLIVE.value}/Records"
 
     //--- R ---
     /**
@@ -147,6 +149,7 @@ object AppPath {
         File(x_subscriptions).mkdirs()
         File(xlive_saved).mkdirs()
         File(xlive_history).mkdirs()
+        File(xlive_records).mkdirs()
 
         File(p2p_inbox).mkdirs()
         File(p2p_outbox).mkdirs()

@@ -135,6 +135,7 @@ internal fun backupItemIcon(section: String): Int {
         "X" -> R.drawable.icon_xvideos_white
         "L" -> R.drawable.icon_luscious
         "R" -> R.drawable.icon_red
+        "XLive" -> R.drawable.icon_xlive
         else -> R.drawable.hard_drive_2_24
     }
 }

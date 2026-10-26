@@ -294,7 +294,7 @@ internal fun BackupSelectionActions(
             enabled = enabled,
             onClick = onSelectAll
         ) {
-            Text("Все X/L/R")
+            Text("Все разделы")
         }
         Spacer(Modifier.width(8.dp))
         TextButton(

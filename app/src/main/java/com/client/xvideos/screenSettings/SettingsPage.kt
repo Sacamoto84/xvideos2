@@ -58,7 +58,7 @@ internal enum class SettingsPage(
     Backup(
         title = "Backup",
         icon = R.drawable.hard_drive_2_24,
-        subtitle = "X, L, R в ZIP"
+        subtitle = "X, L, R, XLive в ZIP"
     ),
     P2P(
         title = "P2P",

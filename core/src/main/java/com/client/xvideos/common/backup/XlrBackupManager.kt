@@ -31,7 +31,7 @@ import java.util.zip.ZipOutputStream
  *
  * Архитектурные особенности:
  * - Поддерживает формат шифрования XLRB (AES-256-GCM с потоковыми блоками по 64 КБ) и legacy ZIP.
- * - Охватывает разделы X, L, R с возможностью выбора детальности (FULL/MINI).
+ * - Охватывает разделы X, L, R, XLive; у L и R — выбор детальности (FULL/MINI).
  * - Транзакционное восстановление данных: перед заменой папок данные откладываются в скрытые
  *   папки `.xlr_old_*`, обеспечивая автоматический откат при сбоях или обрывах питания.
  * - Восстановление в двух режимах [XlrRestoreMode]: заменить папки содержимым архива или
@@ -57,7 +57,7 @@ object XlrBackupManager {
     private const val RESTORE_JOURNAL_NAME = ".xlr_restore_journal"
     private const val RESTORE_TEMP_DIR_NAME = ".xlr_restore_tmp"
 
-    private val sections = listOf("X", "L", "R")
+    private val sections = listOf("X", "L", "R", XLiveLegacyFolder.CURRENT)
 
     /**
      * Генерирует стандартное имя файла бэкапа с временной меткой: "xvideos-xlr-backup-YYYYMMDD-HHmmss.xlr".
@@ -320,6 +320,8 @@ object XlrBackupManager {
         try {
             val report = extractBackup(openZip, tempRoot, restorePaths)
             applyRestoredPaths(mainRoot, tempRoot, restorePaths, mode)
+            // Старый архив кладёт сохранённое XLive в X/Live — переносим в XLive.
+            XLiveLegacyFolder.move(mainRoot, mode)
             return report
         } finally {
             tempRoot.deleteRecursively()

@@ -37,7 +37,7 @@ data class XlrBackupReport(
  *
  * @property path Относительный путь внутри архива (например, "L/Likes").
  * @property title Отображаемое имя категории или раздела.
- * @property section Идентификатор корневой секции ("X", "L" или "R").
+ * @property section Идентификатор корневой секции ("X", "L", "R" или "XLive").
  * @property parentPath Относительный путь родительского элемента (null для корневых секций).
  * @property files Количество файлов внутри элемента.
  * @property bytes Размер данных элемента в байтах.

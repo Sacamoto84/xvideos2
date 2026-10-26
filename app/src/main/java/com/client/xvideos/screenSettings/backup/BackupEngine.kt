@@ -110,7 +110,8 @@ class XlrBackupEngine @Inject constructor(
             downloadRed.refreshDownloadList()
             savedX.get().refreshAll()
             savedL.refreshAll()
-            // «Мои» и «История» XLive лежат в секции X и едут с ней в архиве.
+            // «Мои» и «История» XLive — свой раздел копии; из старого архива их
+            // переносит в XLive само восстановление (XLiveLegacyFolder).
             XLiveSaved.refreshAll()
         }
         coroutineScope {
