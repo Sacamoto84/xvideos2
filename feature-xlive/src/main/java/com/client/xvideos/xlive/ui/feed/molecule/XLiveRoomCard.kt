@@ -50,7 +50,7 @@ fun XLiveRoomCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(4.dp)
+            .padding(2.dp)
             .clip(CardShape)
             .background(Color(0xFF141418))
             .border(1.dp, Color(0xFF26262C), CardShape)
@@ -97,15 +97,16 @@ fun XLiveRoomCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            if (meta.isNotEmpty()) {
-                Text(
-                    text = meta,
-                    fontSize = 11.sp,
-                    color = XLiveColors.Label,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            // Строка выводится и пустой: без возраста и тегов она держит высоту
+            // карточки, иначе карточки в одном ряду сетки разной высоты.
+            Text(
+                text = meta,
+                fontSize = 11.sp,
+                color = XLiveColors.Label,
+                minLines = 1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
