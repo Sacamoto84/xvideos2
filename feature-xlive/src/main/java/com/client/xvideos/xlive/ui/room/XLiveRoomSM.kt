@@ -78,6 +78,11 @@ class XLiveRoomSM(
     /** Звук эфира выключен. Комната открывается без звука, включает его кнопка на видео. */
     val muted: StateFlow<Boolean> = _muted.asStateFlow()
 
+    private val _isFullScreen = MutableStateFlow(false)
+
+    /** Открыто ли видео на весь экран (альбомный режим). */
+    val isFullScreen: StateFlow<Boolean> = _isFullScreen.asStateFlow()
+
     private val _aboutExpanded = MutableStateFlow(false)
 
     /** «О себе» в карточке модели развёрнуто целиком. */
@@ -135,6 +140,7 @@ class XLiveRoomSM(
 
     /** Комната с нуля: экран загрузки и свежий адрес потока. Первый запуск и кнопка «Повторить». */
     fun reload() {
+        _isFullScreen.value = false
         _state.value = XLiveRoomState.Loading
         load()
     }
@@ -251,6 +257,14 @@ class XLiveRoomSM(
 
     fun toggleAbout() {
         _aboutExpanded.value = !_aboutExpanded.value
+    }
+
+    fun toggleFullScreen() {
+        _isFullScreen.value = !_isFullScreen.value
+    }
+
+    fun exitFullScreen() {
+        _isFullScreen.value = false
     }
 
     /** Подписка на комнату — с сайта: при открытии и после входа. */

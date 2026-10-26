@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -76,29 +75,31 @@ fun XLiveRoomsGrid(
         onRefresh = actions.onRefresh,
         modifier = modifier.fillMaxSize(),
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(adaptiveGridColumns()),
-            state = gridState,
-            contentPadding = adaptiveListPadding(PaddingValues(horizontal = 4.dp, vertical = 8.dp)),
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            when {
-                feed.isLoading -> item(span = { GridItemSpan(maxLineSpan) }) {
-                    Box(Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = XLiveColors.Accent)
+        when {
+            feed.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = XLiveColors.Accent)
+            }
+            feed.error != null -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                XLiveMessage(text = feed.error, onRetry = actions.onRetry)
+            }
+            else -> LazyVerticalGrid(
+                columns = GridCells.Fixed(adaptiveGridColumns()),
+                state = gridState,
+                contentPadding = adaptiveListPadding(PaddingValues(horizontal = 4.dp, vertical = 8.dp)),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                if (feed.rooms.isEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
+                            XLivePlaceholder(text = "Сейчас нет эфиров по этому отбору")
+                        }
                     }
-                }
-                feed.error != null -> item(span = { GridItemSpan(maxLineSpan) }) {
-                    Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        XLiveMessage(text = feed.error, onRetry = actions.onRetry)
-                    }
-                }
-                feed.rooms.isEmpty() -> item(span = { GridItemSpan(maxLineSpan) }) {
-                    Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
-                        XLivePlaceholder(text = "Сейчас нет эфиров по этому отбору")
-                    }
-                }
-                else -> {
+                } else {
                     items(items = feed.rooms, key = { it.username }) { room ->
                         XLiveRoomCard(item = room, onClick = { actions.onOpenRoom(room.username) })
                     }

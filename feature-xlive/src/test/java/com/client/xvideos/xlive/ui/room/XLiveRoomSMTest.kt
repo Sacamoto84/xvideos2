@@ -423,4 +423,16 @@ class XLiveRoomSMTest {
 
         assertEquals(listOf(XLiveRecordStop.LEFT_ROOM), recordings.single().stops)
     }
+
+    @Test
+    fun `переключение и выход из полноэкранного режима`() {
+        val sm = model()
+        assertFalse(sm.isFullScreen.value)
+
+        sm.toggleFullScreen()
+        assertTrue(sm.isFullScreen.value)
+
+        sm.exitFullScreen()
+        assertFalse(sm.isFullScreen.value)
+    }
 }

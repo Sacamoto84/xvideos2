@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,28 +61,30 @@ fun XLiveTagsList(
             .collect { currentOnLoadMore() }
     }
 
-    LazyColumn(
-        state = listState,
-        contentPadding = adaptiveListPadding(PaddingValues(horizontal = 4.dp, vertical = 8.dp)),
-        modifier = modifier.fillMaxSize(),
-    ) {
-        when {
-            state.isLoading -> item {
-                Box(Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = XLiveColors.Accent)
+    when {
+        state.isLoading -> Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = XLiveColors.Accent)
+        }
+        state.error != null -> Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            XLiveMessage(text = state.error, onRetry = actions.onRetry)
+        }
+        else -> LazyColumn(
+            state = listState,
+            contentPadding = adaptiveListPadding(PaddingValues(horizontal = 4.dp, vertical = 8.dp)),
+            modifier = modifier.fillMaxSize(),
+        ) {
+            if (state.tags.isEmpty()) {
+                item {
+                    Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
+                        XLivePlaceholder(text = "Тегов нет")
+                    }
                 }
-            }
-            state.error != null -> item {
-                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    XLiveMessage(text = state.error, onRetry = actions.onRetry)
-                }
-            }
-            state.tags.isEmpty() -> item {
-                Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
-                    XLivePlaceholder(text = "Тегов нет")
-                }
-            }
-            else -> {
+            } else {
                 items(items = state.tags, key = { it.name }) { tag ->
                     XLiveTagRow(
                         tag = tag,

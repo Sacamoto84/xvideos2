@@ -1,6 +1,8 @@
 package com.client.xvideos.xlive.ui.room
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import com.client.xvideos.common.videoplayer.local.atom.OrientationAndSystemBarsEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,6 +74,10 @@ class ScreenXLiveRoom(private val room: String) : Screen {
         val isSaved by vm.isSaved.collectAsStateWithLifecycle()
         val follow by vm.follow.collectAsStateWithLifecycle()
         val recording by vm.recording.collectAsStateWithLifecycle()
+        val isFullScreen by vm.isFullScreen.collectAsStateWithLifecycle()
+
+        OrientationAndSystemBarsEffect(isFullScreen)
+        BackHandler(enabled = isFullScreen, onBack = vm::exitFullScreen)
 
         // Запись — пока открыт экран комнаты: уход с него и уход приложения в
         // фон её заканчивают. Пересоздание Activity (поворот, складывание) —
@@ -98,6 +104,8 @@ class ScreenXLiveRoom(private val room: String) : Screen {
                 onToggleFollow = vm::toggleFollow,
                 onSignIn = { navigator.push(ScreenXLiveLogin()) },
                 onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag)) },
+                onToggleFullScreen = vm::toggleFullScreen,
+                onExitFullScreen = vm::exitFullScreen,
             )
         }
 
@@ -110,6 +118,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
             follow = follow,
             recording = recording,
             actions = actions,
+            isFullScreen = isFullScreen,
         )
     }
 }
@@ -128,6 +137,7 @@ fun ScreenXLiveRoomContent(
     recording: XLiveRecordingUi,
     actions: XLiveRoomActions,
     modifier: Modifier = Modifier,
+    isFullScreen: Boolean = false,
 ) {
     // Над переключением состояний: позиция переживает и «Повторить», и сложение складного.
     val scrollState = rememberScrollState()
@@ -138,7 +148,10 @@ fun ScreenXLiveRoomContent(
         modifier = modifier
             .fillMaxSize()
             .background(XLiveColors.Background)
-            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
+            .windowInsetsPadding(
+            if (isFullScreen) WindowInsets(0, 0, 0, 0)
+            else WindowInsets.displayCutout.only(WindowInsetsSides.Top)
+        )
     ) {
         when (state) {
             XLiveRoomState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -164,11 +177,20 @@ fun ScreenXLiveRoomContent(
                     onStarted = actions.onPlayerStarted,
                     onError = actions.onPlayerError,
                     onBuffering = actions.onBuffering,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(VIDEO_ASPECT_RATIO),
+                    modifier = if (isFullScreen) {
+                        Modifier.fillMaxSize()
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(VIDEO_ASPECT_RATIO)
+                    },
+                    isFullScreen = isFullScreen,
+                    title = info.username,
+                    onToggleFullScreen = actions.onToggleFullScreen,
+                    onExitFullScreen = actions.onExitFullScreen,
                     recordingStartedAt = recording.startedAtElapsedMs.takeIf { recording.isRecording },
                 )
+                if (isFullScreen) return@Column
                 // Прокрутка на всю ширину, содержимое — по центру с лимитом ширины
                 // на раскрытом складном: свайп работает и по краям.
                 Column(

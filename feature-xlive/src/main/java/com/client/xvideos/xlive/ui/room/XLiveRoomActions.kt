@@ -17,6 +17,8 @@ import androidx.compose.runtime.Immutable
  * @property onSignIn «подписаться» в шапке без входа: страница входа.
  * @property onOpenTag тап по тегу темы; аргумент — тег без `#`.
  * @property onToggleRecording кнопка записи в шапке: начать или остановить запись.
+ * @property onToggleFullScreen переключить полноэкранный режим.
+ * @property onExitFullScreen выйти из полноэкранного режима.
  */
 @Immutable
 data class XLiveRoomActions(
@@ -31,4 +33,6 @@ data class XLiveRoomActions(
     val onToggleFollow: () -> Unit = {},
     val onSignIn: () -> Unit = {},
     val onOpenTag: (String) -> Unit = {},
+    val onToggleFullScreen: () -> Unit = {},
+    val onExitFullScreen: () -> Unit = {},
 )
