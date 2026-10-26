@@ -46,6 +46,8 @@ class XLiveRecordingsTest {
 
     private val dir by lazy { tmp.newFolder("records") }
     private var clockId = 1_000L
+    private var freeBytes = Long.MAX_VALUE
+    private val replaced = mutableListOf<Long>()
 
     /** Кадр из видео: подделка пишет «кадр» и помнит, из какого файла. */
     private val grabbed = mutableListOf<File>()
@@ -64,12 +66,13 @@ class XLiveRecordingsTest {
             net = net,
             muxer = muxer,
             frameGrabber = grabber,
-            usableBytes = { Long.MAX_VALUE },
+            usableBytes = { freeBytes },
             // Остальное — подмены: часы планировщика, без снимка и без EventBus.
             newId = { clockId++ },
             elapsedMs = { scheduler.currentTime },
             fetchSnapshot = { null },
             notify = { messages += it },
+            onVideoReplaced = { replaced += it },
         )
     }
 
@@ -98,6 +101,7 @@ class XLiveRecordingsTest {
         assertEquals("muxed", File(folder, XLiveRecordStore.VIDEO).readText())
         assertEquals(5L, record.sizeBytes)
         assertEquals(1_234L, record.durationMs)
+        assertEquals(XLIVE_KEY_FRAMES_VERSION, record.keyFramesVersion)
         assertEquals(1080, record.height)
         assertEquals("тема #тег", record.room.title)
         assertEquals(
@@ -303,7 +307,8 @@ class XLiveRecordingsTest {
     @Test
     fun `готовым записям без кадра кадр достаётся при доклейке`() {
         val folder = File(dir, "7").apply { mkdirs() }
-        File(folder, XLiveRecordStore.RECORD_JSON).writeText("""{"id":7,"username":"room_b","status":"READY"}""")
+        File(folder, XLiveRecordStore.RECORD_JSON)
+            .writeText("""{"id":7,"username":"room_b","status":"READY","keyFramesVersion":$XLIVE_KEY_FRAMES_VERSION}""")
         File(folder, XLiveRecordStore.VIDEO).writeText("видео")
         val core = core()
 
@@ -319,7 +324,7 @@ class XLiveRecordingsTest {
     fun `кадр прежнего способа пересобирается один раз`() {
         val folder = File(dir, "7").apply { mkdirs() }
         File(folder, XLiveRecordStore.RECORD_JSON)
-            .writeText("""{"id":7,"username":"room_b","status":"READY","hasFrame":true}""")
+            .writeText("""{"id":7,"username":"room_b","status":"READY","hasFrame":true,"keyFramesVersion":$XLIVE_KEY_FRAMES_VERSION}""")
         File(folder, XLiveRecordStore.VIDEO).writeText("видео")
         File(folder, "frame.jpg").writeText("старый кадр")
         val core = core()
@@ -335,6 +340,74 @@ class XLiveRecordingsTest {
         assertTrue(XLiveRecordStore.FRAME != "frame.jpg")
         assertFalse(File(folder, "frame.jpg").exists())
         assertEquals("кадр", File(folder, XLiveRecordStore.FRAME).readText())
+    }
+
+    /** Готовая запись первой склейки: ключевые кадры размечены по флагам фрагментов. */
+    private fun oldRecord(id: Long): File {
+        val folder = File(dir, id.toString()).apply { mkdirs() }
+        File(folder, XLiveRecordStore.RECORD_JSON)
+            .writeText("""{"id":$id,"username":"room_b","status":"READY","hasFrame":true,"frameVersion":$XLIVE_FRAME_VERSION}""")
+        File(folder, XLiveRecordStore.VIDEO).writeText("видео")
+        return folder
+    }
+
+    @Test
+    fun `запись со старой разметкой ключевых кадров переклеивается один раз, сетка сбрасывается`() {
+        val folder = oldRecord(7)
+        val core = core()
+
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+
+        val video = File(folder, XLiveRecordStore.VIDEO)
+        assertEquals(listOf<Pair<File, File?>>(video to null), muxed)
+        assertEquals("muxed", video.readText())
+        assertFalse(File(folder, XLiveRecordStore.MUX_TEMP).exists())
+        assertEquals(listOf(7L), replaced)
+        assertEquals(XLIVE_KEY_FRAMES_VERSION, core.only().keyFramesVersion)
+        assertEquals(video.length(), core.only().sizeBytes)
+        assertTrue("кадр карточки не пересобирается", grabbed.isEmpty())
+    }
+
+    @Test
+    fun `переклейка не удалась — прежнее видео цело, второй раз не пробуется`() {
+        val folder = oldRecord(7)
+        muxFails = true
+        val core = core()
+
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+        muxFails = false
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+
+        assertEquals("видео", File(folder, XLiveRecordStore.VIDEO).readText())
+        assertFalse(File(folder, XLiveRecordStore.MUX_TEMP).exists())
+        assertTrue(muxed.isEmpty() && replaced.isEmpty())
+        assertEquals(XLiveRecordStatus.READY, core.only().status)
+        assertEquals(XLIVE_KEY_FRAMES_VERSION, core.only().keyFramesVersion)
+    }
+
+    @Test
+    fun `места на копию нет — переклейка ждёт следующего входа`() {
+        val folder = oldRecord(7)
+        freeBytes = 1_000L
+        val core = core()
+
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+
+        assertTrue(muxed.isEmpty())
+        assertEquals("видео", File(folder, XLiveRecordStore.VIDEO).readText())
+        assertEquals(0, core.only().keyFramesVersion)
+
+        freeBytes = Long.MAX_VALUE
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+
+        assertEquals("muxed", File(folder, XLiveRecordStore.VIDEO).readText())
     }
 
     @Test

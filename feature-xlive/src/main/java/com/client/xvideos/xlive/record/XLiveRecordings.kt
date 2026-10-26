@@ -60,6 +60,11 @@ object XLiveRecordings {
                 XLiveApi.fetchBytes(xLiveSnapshotUrl(name, System.currentTimeMillis() / MILLIS_PER_SECOND)).body
             },
             notify = { message -> EventBus.postEvent(Event.ShowSnackBar(message)) },
+            onVideoReplaced = { id ->
+                // Идущая сборка читает прежний файл: её сетка готовой стать не должна.
+                storyboards.cancel(id)
+                storyboards.file(id).delete()
+            },
         )
     }
     private val core by coreLazy
@@ -105,9 +110,16 @@ internal class XLiveRecordingsCore(
     private val elapsedMs: () -> Long,
     private val fetchSnapshot: suspend (String) -> ByteArray?,
     private val notify: (UiMessage) -> Unit,
+    /** `video.mp4` записи переклеен: сетка превью по прежнему файлу больше не годится. */
+    private val onVideoReplaced: (Long) -> Unit = {},
 ) {
 
     private enum class Outcome { READY, EMPTY, BROKEN }
+
+    private companion object {
+        /** Запас места сверх копии видео при переклейке — как у записи. */
+        const val REMUX_RESERVE_BYTES = 300L * 1024 * 1024
+    }
 
     private val lock = Any()
     private var current: XLiveRecordingSession? = null
@@ -194,6 +206,19 @@ internal class XLiveRecordingsCore(
                     synchronized(lock) { busy -= record.id }
                 }
             }
+            // Записи со старой разметкой ключевых кадров переклеиваются один раз.
+            val staleKeyFrames = store.snapshot().filter {
+                it.status == XLiveRecordStatus.READY && it.keyFramesVersion < XLIVE_KEY_FRAMES_VERSION &&
+                    File(store.dirOf(it.id), VIDEO).isFile
+            }
+            for (record in staleKeyFrames) {
+                if (!synchronized(lock) { busy.add(record.id) }) continue
+                try {
+                    remux(record.id)
+                } finally {
+                    synchronized(lock) { busy -= record.id }
+                }
+            }
             // Записи без кадра нынешнего способа (готовые раньше или со старым кадром) получают его сейчас.
             val withoutFrame = store.snapshot().filter {
                 it.status == XLiveRecordStatus.READY && it.frameVersion < XLIVE_FRAME_VERSION &&
@@ -208,6 +233,34 @@ internal class XLiveRecordingsCore(
                 }
             }
         }
+    }
+
+    /**
+     * Готовое видео записи [id] — заново через склейку, сама в себя: ключевые
+     * кадры размечаются по потоку ([XLIVE_KEY_FRAMES_VERSION]). Места на копию
+     * нет — в другой раз. Не склеилось — прежнее видео остаётся, а версия
+     * пишется, чтобы файл не перечитывался при каждом входе во вкладку.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun remux(id: Long) {
+        val dir = store.dirOf(id)
+        val video = File(dir, VIDEO)
+        if (usableBytes() < video.length() + REMUX_RESERVE_BYTES) return
+        val temp = File(dir, MUX_TEMP).apply { delete() }
+        try {
+            muxer.mux(video, null, temp)
+            if (!temp.renameTo(video)) throw IOException("Переклейка не переименована")
+            onVideoReplaced(id)
+            Timber.i("XLive: запись переклеена — ключевые кадры по потоку")
+        } catch (e: CancellationException) {
+            temp.delete()
+            throw e
+        } catch (e: Exception) {
+            // MediaMuxer бросает и не IOException.
+            Timber.w("XLive: переклейка не удалась — %s", e.javaClass.simpleName)
+            temp.delete()
+        }
+        store.update(id) { it.copy(keyFramesVersion = XLIVE_KEY_FRAMES_VERSION, sizeBytes = video.length()) }
     }
 
     /** Кадр начала из готового видео — картинка карточки; не вышел — остаётся снимок сайта. */
@@ -242,7 +295,9 @@ internal class XLiveRecordingsCore(
         // Склейка уже прошла, а статус в JSON не успел стать «готова» (процесс
         // убит между переименованием и записью JSON): готовый файл не трогаем.
         if (!videoRaw.isFile && video.isFile && video.length() > 0L) {
-            store.update(id) { it.copy(status = XLiveRecordStatus.READY, sizeBytes = video.length()) }
+            store.update(id) {
+                it.copy(status = XLiveRecordStatus.READY, sizeBytes = video.length(), keyFramesVersion = XLIVE_KEY_FRAMES_VERSION)
+            }
             return Outcome.READY
         }
         if (!hasVideo || !videoRaw.isFile || videoRaw.length() == 0L) {
@@ -256,7 +311,12 @@ internal class XLiveRecordingsCore(
             videoRaw.delete()
             audioRaw.delete()
             store.update(id) {
-                it.copy(status = XLiveRecordStatus.READY, durationMs = durationMs, sizeBytes = video.length())
+                it.copy(
+                    status = XLiveRecordStatus.READY,
+                    durationMs = durationMs,
+                    sizeBytes = video.length(),
+                    keyFramesVersion = XLIVE_KEY_FRAMES_VERSION,
+                )
             }
             grabFrame(id)
             Outcome.READY

@@ -14,7 +14,9 @@ import java.nio.ByteBuffer
 fun interface XLiveMuxer {
 
     /**
-     * Видео [video] и звук [audio] — в [out], без перекодирования.
+     * Все дорожки [video] и [audio] — в [out], без перекодирования. Сырые
+     * дорожки записи — по одной в файле; готовый `video.mp4` с обеими
+     * переклеивается сам в себя ([XLIVE_KEY_FRAMES_VERSION]).
      *
      * @return длительность, мс.
      * @throws IOException не склеилось.
@@ -27,6 +29,9 @@ fun interface XLiveMuxer {
  * дорожек, [MediaMuxer] пишет обычный mp4. Время в сырых файлах — время
  * эфира (часы от начала трансляции), поэтому из каждой метки вычитается
  * самая ранняя метка обеих дорожек: запись начинается с нуля.
+ *
+ * Ключевой кадр видео определяется по самому потоку ([isKeyFrameInStream]),
+ * а не по флагу фрагмента: сайт ставит флаг на начало каждого фрагмента.
  */
 object MediaMuxerJoin : XLiveMuxer {
 
@@ -47,26 +52,36 @@ object MediaMuxerJoin : XLiveMuxer {
     }
 
     private fun join(inputs: List<File>, out: File): Long {
-        val extractors = inputs.map { file ->
-            MediaExtractor().apply {
-                setDataSource(file.path)
-                if (trackCount < 1) throw IOException("В дорожке нет данных")
-                selectTrack(0)
-            }
-        }
-        val muxer = MediaMuxer(out.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+        // По извлекателю на дорожку: у сырых файлов она одна, у готового видео — две.
+        val extractors = mutableListOf<MediaExtractor>()
+        val formats = mutableListOf<MediaFormat>()
         try {
-            val tracks = extractors.map { muxer.addTrack(it.getTrackFormat(0)) }
-            val base = extractors.map { it.sampleTime }.filter { it >= 0 }.minOrNull()
-                ?: throw IOException("В записи нет кадров")
-            muxer.start()
-            val lastUs = writeInterleaved(extractors, tracks, muxer, base)
-            muxer.stop()
-            verify(out, lastUs)
-            return lastUs / US_PER_MS
+            for (file in inputs) {
+                var track = 0
+                do {
+                    val extractor = MediaExtractor().also { extractors += it }
+                    extractor.setDataSource(file.path)
+                    if (extractor.trackCount < 1) throw IOException("В дорожке нет данных")
+                    extractor.selectTrack(track)
+                    formats += extractor.getTrackFormat(track)
+                } while (++track < extractor.trackCount)
+            }
+            val muxer = MediaMuxer(out.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            try {
+                val tracks = formats.map { muxer.addTrack(it) }
+                val mimes = formats.map { it.getString(MediaFormat.KEY_MIME) }
+                val base = extractors.map { it.sampleTime }.filter { it >= 0 }.minOrNull()
+                    ?: throw IOException("В записи нет кадров")
+                muxer.start()
+                val lastUs = writeInterleaved(extractors, tracks, mimes, muxer, base)
+                muxer.stop()
+                verify(out, lastUs)
+                return lastUs / US_PER_MS
+            } finally {
+                muxer.release()
+            }
         } finally {
             extractors.forEach { it.release() }
-            muxer.release()
         }
     }
 
@@ -95,6 +110,7 @@ object MediaMuxerJoin : XLiveMuxer {
     private fun writeInterleaved(
         extractors: List<MediaExtractor>,
         tracks: List<Int>,
+        mimes: List<String?>,
         muxer: MediaMuxer,
         base: Long,
     ): Long {
@@ -113,11 +129,9 @@ object MediaMuxerJoin : XLiveMuxer {
                 continue
             }
             val timeUs = extractor.sampleTime - base
-            val flags = if (extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) {
-                MediaCodec.BUFFER_FLAG_KEY_FRAME
-            } else {
-                0
-            }
+            val key = isKeyFrameInStream(mimes[index], buffer, size)
+                ?: (extractor.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0)
+            val flags = if (key) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0
             info.set(0, size, timeUs, flags)
             muxer.writeSampleData(tracks[index], buffer, info)
             lastUs = maxOf(lastUs, timeUs)

@@ -30,6 +30,8 @@ data class XLiveRecordRoom(
  * @property hasFrame есть кадр начала из самого видео — картинка карточки;
  *   иначе карточка показывает снимок сайта.
  * @property frameVersion каким способом брался кадр; старый — пересобрать.
+ * @property keyFramesVersion как размечены ключевые кадры в `video.mp4`;
+ *   старая разметка — переклеить.
  */
 @Serializable
 data class XLiveRecord(
@@ -46,6 +48,7 @@ data class XLiveRecord(
     val bio: XLiveBio? = null,
     val hasFrame: Boolean = false,
     val frameVersion: Int = 0,
+    val keyFramesVersion: Int = 0,
 )
 
 /**
