@@ -27,6 +27,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
 import io.ktor.client.statement.request
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -82,6 +83,29 @@ object XLiveApi {
         val response = client.get("$xLiveUrlStart/api/chatvideocontext/${name.encodeURLPathPart()}/")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
         return parseXLiveRoom(response.bodyAsText()) ?: throw IOException("Ответ без room_status")
+    }
+
+    /**
+     * Плейлист потока для записи — с кодом ответа: 403 значит «нужен свежий
+     * адрес», и это решает запись, а не исключение.
+     *
+     * @throws IOException нет сети.
+     */
+    suspend fun fetchText(url: String): XLiveHttp<String> {
+        val response = client.get(url)
+        val ok = response.status.isSuccess()
+        return XLiveHttp(response.status.value, if (ok) response.bodyAsText() else null)
+    }
+
+    /**
+     * Сегмент потока для записи — с кодом ответа, как [fetchText].
+     *
+     * @throws IOException нет сети.
+     */
+    suspend fun fetchBytes(url: String): XLiveHttp<ByteArray> {
+        val response = client.get(url)
+        val ok = response.status.isSuccess()
+        return XLiveHttp(response.status.value, if (ok) response.readRawBytes() else null)
     }
 
     /**

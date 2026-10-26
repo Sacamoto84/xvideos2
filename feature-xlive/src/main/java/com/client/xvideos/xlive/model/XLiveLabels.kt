@@ -42,6 +42,18 @@ fun flagEmoji(countryCode: String): String {
 
 private const val SECONDS_PER_MINUTE = 60L
 private const val MINUTES_PER_HOUR = 60L
+private const val SECONDS_PER_HOUR = 3_600L
+private const val MILLIS_PER_SECOND = 1_000L
+
+/** Сколько идёт запись или сколько она длится: «03:12», «1:02:05». */
+fun recordingElapsedLabel(elapsedMs: Long): String {
+    val totalSec = elapsedMs.coerceAtLeast(0L) / MILLIS_PER_SECOND
+    val hours = totalSec / SECONDS_PER_HOUR
+    val minutes = (totalSec % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+    val seconds = totalSec % SECONDS_PER_MINUTE
+    val mmss = "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+    return if (hours > 0) "$hours:$mmss" else mmss
+}
 
 /**
  * Сколько идёт эфир: «2 ч 05 мин», «15 мин».

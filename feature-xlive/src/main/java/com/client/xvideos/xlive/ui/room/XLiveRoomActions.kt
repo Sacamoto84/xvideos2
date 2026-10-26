@@ -16,6 +16,7 @@ import androidx.compose.runtime.Immutable
  * @property onToggleFollow «подписаться» в шапке, когда есть вход.
  * @property onSignIn «подписаться» в шапке без входа: страница входа.
  * @property onOpenTag тап по тегу темы; аргумент — тег без `#`.
+ * @property onToggleRecording кнопка записи в шапке: начать или остановить запись.
  */
 @Immutable
 data class XLiveRoomActions(
@@ -25,6 +26,7 @@ data class XLiveRoomActions(
     val onPlayerError: (String) -> Unit = {},
     val onBuffering: (Boolean) -> Unit = {},
     val onToggleAbout: () -> Unit = {},
+    val onToggleRecording: () -> Unit = {},
     val onToggleSaved: () -> Unit = {},
     val onToggleFollow: () -> Unit = {},
     val onSignIn: () -> Unit = {},

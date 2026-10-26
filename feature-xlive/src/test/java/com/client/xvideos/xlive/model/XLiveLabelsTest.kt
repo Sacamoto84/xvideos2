@@ -46,4 +46,12 @@ class XLiveLabelsTest {
         assertNull(onAirLabel(startedAtSec = 0, nowSec = 1_000))
         assertNull(onAirLabel(startedAtSec = 2_000, nowSec = 1_000))
     }
+
+    @Test
+    fun `время записи — минуты и секунды, с часом — часы`() {
+        assertEquals("00:00", recordingElapsedLabel(0))
+        assertEquals("03:12", recordingElapsedLabel(192_000))
+        assertEquals("1:02:05", recordingElapsedLabel(3_725_000))
+        assertEquals("00:00", recordingElapsedLabel(-5))
+    }
 }

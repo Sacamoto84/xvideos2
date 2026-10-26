@@ -5,9 +5,15 @@ import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.model.XLiveSavedRoom
 import com.client.xvideos.xlive.network.XLiveSignInRequiredException
+import com.client.xvideos.xlive.record.XLiveRecordStop
+import com.client.xvideos.xlive.record.XLiveRecordingHandle
+import com.client.xvideos.xlive.record.XLiveRecordingUi
 import com.client.xvideos.xlive.saved.testRoomStore
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -52,10 +58,30 @@ class XLiveRoomSMTest {
         Dispatchers.resetMain()
     }
 
+    /** Поддельная запись: помнит, с чем начата, и причины остановки. */
+    private inner class FakeRecording(val room: XLiveRoom, val bio: XLiveBio?) : XLiveRecordingHandle {
+        val stops = mutableListOf<XLiveRecordStop>()
+        val bios = mutableListOf<XLiveBio>()
+        private val _state = MutableStateFlow(XLiveRecordingUi(isRecording = true, startedAtElapsedMs = 42))
+        override val state: StateFlow<XLiveRecordingUi> = _state
+
+        override fun attachBio(bio: XLiveBio) {
+            bios += bio
+        }
+
+        override fun stop(reason: XLiveRecordStop) {
+            stops += reason
+            _state.value = XLiveRecordingUi()
+        }
+    }
+
+    private val recordings = mutableListOf<FakeRecording>()
+
     private fun model(
         rooms: Map<String, XLiveRoom> = mapOf("room_a" to live),
         bio: suspend (String) -> XLiveBio = { XLiveBio(realName = "Anna of $it") },
     ) = XLiveRoomSM(
+        startRecording = { room, bio -> FakeRecording(room, bio).also { recordings += it } },
         room = "room_a",
         loadRoom = { name ->
             roomCalls++
@@ -309,5 +335,92 @@ class XLiveRoomSMTest {
 
         assertEquals(1, account.sessionLost)
         assertEquals(XLiveFollowState(isSignedIn = false), sm.follow.value)
+    }
+
+    @Test
+    fun `запись в эфире начинается с комнатой и анкетой`() {
+        val sm = model()
+
+        sm.toggleRecording()
+
+        val recording = recordings.single()
+        assertEquals("room_a", recording.room.username)
+        assertEquals("Anna of room_a", recording.bio?.realName)
+        assertTrue(sm.recording.value.isRecording)
+    }
+
+    @Test
+    fun `не в эфире запись не начинается`() {
+        val sm = model(rooms = mapOf("room_a" to XLiveRoom("private", "")))
+
+        sm.toggleRecording()
+
+        assertTrue(recordings.isEmpty())
+        assertFalse(sm.recording.value.isRecording)
+    }
+
+    @Test
+    fun `второе нажатие останавливает запись кнопкой`() {
+        val sm = model()
+
+        sm.toggleRecording()
+        sm.toggleRecording()
+
+        assertEquals(listOf(XLiveRecordStop.BUTTON), recordings.single().stops)
+        assertFalse(sm.recording.value.isRecording)
+    }
+
+    @Test
+    fun `уход с экрана останавливает запись`() {
+        val sm = model()
+        sm.toggleRecording()
+
+        sm.onScreenGone(changingConfigurations = false)
+
+        assertEquals(listOf(XLiveRecordStop.LEFT_ROOM), recordings.single().stops)
+    }
+
+    @Test
+    fun `пересоздание Activity запись не останавливает`() {
+        val sm = model()
+        sm.toggleRecording()
+
+        sm.onScreenGone(changingConfigurations = true)
+        sm.onAppBackground(changingConfigurations = true)
+
+        assertTrue(recordings.single().stops.isEmpty())
+        assertTrue(sm.recording.value.isRecording)
+    }
+
+    @Test
+    fun `уход приложения в фон останавливает запись`() {
+        val sm = model()
+        sm.toggleRecording()
+
+        sm.onAppBackground(changingConfigurations = false)
+
+        assertEquals(listOf(XLiveRecordStop.BACKGROUND), recordings.single().stops)
+    }
+
+    @Test
+    fun `анкета, пришедшая после старта записи, дописывается`() {
+        val bioGate = CompletableDeferred<XLiveBio>()
+        val sm = model(bio = { bioGate.await() })
+        sm.toggleRecording()
+        assertNull(recordings.single().bio)
+
+        bioGate.complete(XLiveBio(realName = "Anna", age = 24))
+
+        assertEquals(listOf(24), recordings.single().bios.map { it.age })
+    }
+
+    @Test
+    fun `закрытие ScreenModel останавливает запись`() {
+        val sm = model()
+        sm.toggleRecording()
+
+        sm.onDispose()
+
+        assertEquals(listOf(XLiveRecordStop.LEFT_ROOM), recordings.single().stops)
     }
 }

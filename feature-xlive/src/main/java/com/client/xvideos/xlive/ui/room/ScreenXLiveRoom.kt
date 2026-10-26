@@ -17,13 +17,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -31,15 +35,19 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.util.KeepScreenOn
+import com.client.xvideos.common.util.findActivity
 import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.model.genderLabel
 import com.client.xvideos.xlive.model.onAirLabel
 import com.client.xvideos.xlive.model.splitRoomTitle
+import com.client.xvideos.xlive.record.XLiveRecordingUi
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.login.ScreenXLiveLogin
 import com.client.xvideos.xlive.ui.room.atom.XLiveMessage
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomAboutCard
+import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomButtons
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomHeader
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomPlayer
 import com.client.xvideos.xlive.ui.room.molecule.XLiveRoomTopic
@@ -63,6 +71,19 @@ class ScreenXLiveRoom(private val room: String) : Screen {
         val muted by vm.muted.collectAsStateWithLifecycle()
         val isSaved by vm.isSaved.collectAsStateWithLifecycle()
         val follow by vm.follow.collectAsStateWithLifecycle()
+        val recording by vm.recording.collectAsStateWithLifecycle()
+
+        // Запись — пока открыт экран комнаты: уход с него и уход приложения в
+        // фон её заканчивают. Пересоздание Activity (поворот, складывание) —
+        // тоже уход композиции, но запись при нём продолжается.
+        val activity = LocalContext.current.findActivity()
+        DisposableEffect(vm) {
+            onDispose { vm.onScreenGone(activity?.isChangingConfigurations == true) }
+        }
+        LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+            vm.onAppBackground(activity?.isChangingConfigurations == true)
+        }
+        KeepScreenOn(active = recording.isRecording)
 
         val actions = remember(vm, navigator) {
             XLiveRoomActions(
@@ -73,6 +94,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
                 onBuffering = vm::onBuffering,
                 onToggleAbout = vm::toggleAbout,
                 onToggleSaved = vm::toggleSaved,
+                onToggleRecording = vm::toggleRecording,
                 onToggleFollow = vm::toggleFollow,
                 onSignIn = { navigator.push(ScreenXLiveLogin()) },
                 onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag)) },
@@ -86,6 +108,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
             muted = muted,
             isSaved = isSaved,
             follow = follow,
+            recording = recording,
             actions = actions,
         )
     }
@@ -102,6 +125,7 @@ fun ScreenXLiveRoomContent(
     muted: Boolean,
     isSaved: Boolean,
     follow: XLiveFollowState,
+    recording: XLiveRecordingUi,
     actions: XLiveRoomActions,
     modifier: Modifier = Modifier,
 ) {
@@ -143,6 +167,7 @@ fun ScreenXLiveRoomContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(VIDEO_ASPECT_RATIO),
+                    recordingStartedAt = recording.startedAtElapsedMs.takeIf { recording.isRecording },
                 )
                 // Прокрутка на всю ширину, содержимое — по центру с лимитом ширины
                 // на раскрытом складном: свайп работает и по краям.
@@ -165,11 +190,17 @@ fun ScreenXLiveRoomContent(
                             followers = bio?.followers,
                             onAir = onAir,
                             ratingPercent = info.ratingPercent,
-                            isSaved = isSaved,
-                            onToggleSaved = actions.onToggleSaved,
-                            follow = follow,
-                            onToggleFollow = actions.onToggleFollow,
-                            onSignIn = actions.onSignIn,
+                            buttons = {
+                                XLiveRoomButtons(
+                                    follow = follow,
+                                    onToggleFollow = actions.onToggleFollow,
+                                    onSignIn = actions.onSignIn,
+                                    isSaved = isSaved,
+                                    onToggleSaved = actions.onToggleSaved,
+                                    recording = recording,
+                                    onToggleRecording = actions.onToggleRecording,
+                                )
+                            },
                         )
                         if (topic.text.isNotBlank() || topic.tags.isNotEmpty()) {
                             XLiveRoomTopic(topic = topic, onOpenTag = actions.onOpenTag)
@@ -209,6 +240,7 @@ private fun ScreenXLiveRoomPreview() {
         muted = true,
         isSaved = false,
         follow = XLiveFollowState(),
+        recording = XLiveRecordingUi(),
         actions = XLiveRoomActions(),
     )
 }

@@ -17,6 +17,7 @@ import com.client.xvideos.screenSettings.redDownloadRecoveryConsoleText
 import com.client.xvideos.screenSettings.shouldAutoRecoverL
 import com.client.xvideos.screenSettings.shouldAutoRecoverRedDownload
 import com.client.xvideos.x.feature.saved.SavedX
+import com.client.xvideos.xlive.record.XLiveRecordings
 import com.client.xvideos.xlive.saved.XLiveSaved
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -113,6 +114,7 @@ class XlrBackupEngine @Inject constructor(
             // «Мои» и «История» XLive — свой раздел копии; из старого архива их
             // переносит в XLive само восстановление (XLiveLegacyFolder).
             XLiveSaved.refreshAll()
+            XLiveRecordings.refresh()
         }
         coroutineScope {
             if (shouldAutoRecoverL(paths)) {

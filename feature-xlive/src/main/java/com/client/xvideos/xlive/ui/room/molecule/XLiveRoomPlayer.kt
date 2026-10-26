@@ -19,6 +19,7 @@ import com.client.xvideos.common.videoplayer.model.PlayerPlaybackCallbacks
 import com.client.xvideos.common.videoplayer.model.PlayerPlaybackConfig
 import com.client.xvideos.common.videoplayer.util.CMPPlayer2
 import com.client.xvideos.xlive.ui.room.atom.XLiveMuteButton
+import com.client.xvideos.xlive.ui.room.atom.XLiveRecordingBadge
 
 /**
  * Живой поток комнаты.
@@ -32,6 +33,7 @@ import com.client.xvideos.xlive.ui.room.atom.XLiveMuteButton
  * @param onStarted плеер этого экземпляра начал играть адрес — сайт отдаёт его на один плеер.
  * @param onError плеер не смог играть; текст без адреса потока.
  * @param onBuffering плеер ждёт данных (`true`) или снова играет (`false`).
+ * @param recordingStartedAt начало идущей записи по монотонным часам; `null` — записи нет, плашки нет.
  */
 @Composable
 fun XLiveRoomPlayer(
@@ -42,6 +44,7 @@ fun XLiveRoomPlayer(
     onError: (String) -> Unit,
     onBuffering: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    recordingStartedAt: Long? = null,
 ) {
     val currentOnStarted by rememberUpdatedState(onStarted)
     val currentOnError by rememberUpdatedState(onError)
@@ -77,6 +80,14 @@ fun XLiveRoomPlayer(
                 .align(Alignment.BottomEnd)
                 .padding(8.dp),
         )
+        if (recordingStartedAt != null) {
+            XLiveRecordingBadge(
+                startedAtElapsedMs = recordingStartedAt,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp),
+            )
+        }
     }
 }
 

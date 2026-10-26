@@ -1,5 +1,7 @@
 package com.client.xvideos.xlive.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * Анкета модели из `api/biocontext/<ник>/`.
  *
@@ -8,6 +10,7 @@ package com.client.xvideos.xlive.model
  * @property aboutMe «О себе» простым текстом: HTML сайта уже разобран.
  * @property interestedIn кто интересует, как отдаёт сайт: `Women`, `Men`, `Couples`, `Trans`.
  */
+@Serializable
 data class XLiveBio(
     val realName: String = "",
     val age: Int? = null,

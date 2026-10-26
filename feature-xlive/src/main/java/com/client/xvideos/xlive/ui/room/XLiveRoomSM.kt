@@ -12,15 +12,22 @@ import com.client.xvideos.xlive.model.XLiveRoom
 import com.client.xvideos.xlive.model.XLiveSavedRoom
 import com.client.xvideos.xlive.network.XLiveApi
 import com.client.xvideos.xlive.network.XLiveSignInRequiredException
+import com.client.xvideos.xlive.record.XLiveRecordStop
+import com.client.xvideos.xlive.record.XLiveRecordingHandle
+import com.client.xvideos.xlive.record.XLiveRecordingUi
+import com.client.xvideos.xlive.record.XLiveRecordings
 import com.client.xvideos.xlive.saved.XLiveRoomStore
 import com.client.xvideos.xlive.saved.XLiveSaved
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -43,9 +50,11 @@ import java.io.IOException
  * @param account вход на сайт; подменяется в тестах.
  * @param isFollowing подписка аккаунта на комнату; подменяется в тестах.
  * @param setFollowing подписка и отписка; подменяются в тестах.
+ * @param startRecording начать запись эфира; подменяется в тестах.
  */
 class XLiveRoomSM(
     private val room: String,
+    private val startRecording: (XLiveRoom, XLiveBio?) -> XLiveRecordingHandle = XLiveRecordings::start,
     private val loadRoom: suspend (String) -> XLiveRoom = XLiveApi::room,
     private val loadBio: suspend (String) -> XLiveBio = XLiveApi::bio,
     private val nowMs: () -> Long = { System.nanoTime() / NANOS_PER_MS },
@@ -87,6 +96,17 @@ class XLiveRoomSM(
         combine(account.signedIn, _following, _followBusy) { signedIn, following, busy ->
             XLiveFollowState(isSignedIn = signedIn, following = signedIn && following, isBusy = busy)
         }.stateIn(screenModelScope, SharingStarted.Eagerly, XLiveFollowState(isSignedIn = account.signedIn.value))
+
+    private val handle = MutableStateFlow<XLiveRecordingHandle?>(null)
+
+    /** Анкеты не было, когда запись началась: дописать её, когда придёт. */
+    private var recordingWaitsBio = false
+
+    /** Запись эфира: кнопка в шапке и плашка с временем на видео. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val recording: StateFlow<XLiveRecordingUi> = handle
+        .flatMapLatest { it?.state ?: flowOf(XLiveRecordingUi()) }
+        .stateIn(screenModelScope, SharingStarted.Eagerly, XLiveRecordingUi())
 
     private var loadJob: Job? = null
     private var followJob: Job? = null
@@ -164,6 +184,10 @@ class XLiveRoomSM(
                 val bio = loadBio(username)
                 _bio.value = bio
                 history.put(XLiveSavedRoom(room, age = bio.age))
+                if (recordingWaitsBio && recording.value.isRecording) {
+                    recordingWaitsBio = false
+                    handle.value?.attachBio(bio)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IOException) {
@@ -280,6 +304,45 @@ class XLiveRoomSM(
     /** Кнопка в шапке: сохранить комнату в «Мои» или убрать оттуда. */
     fun toggleSaved() {
         if (room in saved) saved.remove(room) else saved.put(XLiveSavedRoom(room, age = _bio.value?.age))
+    }
+
+    /**
+     * Кнопка записи: начать запись открытого эфира или остановить идущую.
+     * Пока прежняя запись склеивается, кнопка ничего не делает.
+     */
+    fun toggleRecording() {
+        val now = recording.value
+        when {
+            now.isRecording -> stopRecording(XLiveRecordStop.BUTTON)
+            now.isFinishing -> Unit
+            else -> {
+                val live = _state.value as? XLiveRoomState.Live ?: return
+                val bio = _bio.value
+                recordingWaitsBio = bio == null
+                handle.value = startRecording(live.room, bio)
+            }
+        }
+    }
+
+    /**
+     * Экран комнаты ушёл из композиции. Пересоздание Activity (поворот,
+     * складывание) — тоже уход, но запись при нём продолжается.
+     */
+    fun onScreenGone(changingConfigurations: Boolean) {
+        if (!changingConfigurations) stopRecording(XLiveRecordStop.LEFT_ROOM)
+    }
+
+    /** Приложение ушло в фон: свернули, погасили экран, звонок. */
+    fun onAppBackground(changingConfigurations: Boolean) {
+        if (!changingConfigurations) stopRecording(XLiveRecordStop.BACKGROUND)
+    }
+
+    override fun onDispose() {
+        stopRecording(XLiveRecordStop.LEFT_ROOM)
+    }
+
+    private fun stopRecording(reason: XLiveRecordStop) {
+        if (recording.value.isRecording) handle.value?.stop(reason)
     }
 
     private companion object {
