@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -112,7 +113,9 @@ fun MenuScreenContent(
                 MenuButtonSelect(R.drawable.icon_xvideos_white, onClick = onOpenX)
                 MenuButtonSelect(R.drawable.icon_luscious, tag = "buttonL", onClick = onOpenL)
                 MenuButtonSelect(R.drawable.icon_red, onClick = onOpenR)
-                MenuButtonSelect(R.drawable.icon_xlive, onClick = onOpenXLive)
+                // Картинка вытянутее надписи X: при высоте 80dp не влезла бы в плитку,
+                // а на 58dp она той же ширины, что надпись X.
+                MenuButtonSelect(R.drawable.icon_xlive, iconHeight = 58.dp, onClick = onOpenXLive)
             }
         }
     }
