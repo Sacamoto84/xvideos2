@@ -12,7 +12,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
-import com.client.xvideos.x.screens.videoplayer.atom.OrientationAndSystemBarsEffect
+import com.client.xvideos.common.videoplayer.local.atom.OrientationAndSystemBarsEffect
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerContentView
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerErrorView
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerLoadingView

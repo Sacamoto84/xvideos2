@@ -1,4 +1,4 @@
-package com.client.xvideos.x.feature.saved
+package com.client.xvideos.common.videoplayer.storyboard
 
 import com.client.xvideos.common.kdownloader.utils.getTempPath
 import kotlinx.coroutines.CancellationException
@@ -39,6 +39,8 @@ class LocalStoryboards(
     private val scope: CoroutineScope,
     private val renderer: StoryboardRenderer,
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val videoFile: (Long) -> File = { File(dir, "$it.mp4") },
+    private val storyboardFile: (Long) -> File = { File(dir, localStoryboardFileName(it)) },
 ) {
     /** Идущие сборки по id ролика; запись снимается, когда сборка закончилась. */
     private val builds = HashMap<Long, Deferred<File?>>()
@@ -52,7 +54,7 @@ class LocalStoryboards(
     private val renderPermits = Semaphore(MAX_PARALLEL_RENDERS)
 
     /** Файл сетки ролика [id], готовый или нет. */
-    fun file(id: Long): File = File(dir, localStoryboardFileName(id))
+    fun file(id: Long): File = storyboardFile(id)
 
     /**
      * Сетка ролика [id]: готовая с диска, иначе — результат идущей или новой
@@ -94,9 +96,10 @@ class LocalStoryboards(
     }
 
     private suspend fun build(id: Long): File? {
-        val video = File(dir, "$id.mp4")
+        val video = videoFile(id)
         if (!video.isFile) return null
-        val temp = File(getTempPath(dir, localStoryboardFileName(id)))
+        val target = file(id)
+        val temp = File(getTempPath(target.parent.orEmpty(), target.name))
         try {
             val rendered = try {
                 renderPermits.withPermit { renderer.render(video, temp) }

@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.molecule
+package com.client.xvideos.common.videoplayer.local.molecule
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,9 +12,9 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
-import com.client.xvideos.x.screens.videoplayer.model.seekPreviewAnchorX
-import com.client.xvideos.x.screens.videoplayer.model.storyboardFrameIndex
+import com.client.xvideos.common.videoplayer.local.model.SeekScrub
+import com.client.xvideos.common.videoplayer.local.model.seekPreviewAnchorX
+import com.client.xvideos.common.videoplayer.local.model.storyboardFrameIndex
 
 /**
  * Превью кадра при перемотке поверх плеера, пока палец ведёт ползунок

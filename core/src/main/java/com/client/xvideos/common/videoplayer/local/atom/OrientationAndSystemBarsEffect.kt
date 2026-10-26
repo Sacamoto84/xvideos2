@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.atom
+package com.client.xvideos.common.videoplayer.local.atom
 
 import android.content.pm.ActivityInfo
 import androidx.compose.runtime.Composable

@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.atom
+package com.client.xvideos.common.videoplayer.local.atom
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding

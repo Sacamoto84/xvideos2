@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.atom
+package com.client.xvideos.common.videoplayer.local.atom
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
@@ -13,7 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.x.screens.videoplayer.model.storyboardFrameRect
+import com.client.xvideos.common.videoplayer.local.model.storyboardFrameRect
 import kotlin.math.roundToInt
 
 /**

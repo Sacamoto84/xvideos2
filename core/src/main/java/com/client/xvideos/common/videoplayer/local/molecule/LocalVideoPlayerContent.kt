@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.molecule
+package com.client.xvideos.common.videoplayer.local.molecule
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
@@ -33,10 +33,10 @@ import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
-import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
-import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
-import com.client.xvideos.x.screens.videoplayer.model.rememberStoryboardImage
-import com.client.xvideos.x.screens.videoplayer.model.shouldAutoHideControls
+import com.client.xvideos.common.videoplayer.local.atom.ResumePlaybackPill
+import com.client.xvideos.common.videoplayer.local.model.SeekScrub
+import com.client.xvideos.common.videoplayer.local.model.rememberStoryboardImage
+import com.client.xvideos.common.videoplayer.local.model.shouldAutoHideControls
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.io.File
@@ -54,6 +54,8 @@ import java.io.File
  * @param title Название ролика для верхней панели на весь экран.
  * @param onToggleFullScreen Кнопка полного экрана в нижней панели.
  * @param onExitFullScreen Выход из полного экрана («назад» сверху и системный «Назад»).
+ * @param muted Звук выключен. Ролики X всегда без звука; у записи эфира звук включает кнопка.
+ * @param onToggleMute Кнопка звука в нижней панели; `null` — кнопки нет.
  */
 @OptIn(UnstableApi::class)
 @Suppress("LongMethod")
@@ -69,6 +71,8 @@ fun LocalVideoPlayerContent(
     title: String = "",
     onToggleFullScreen: () -> Unit = {},
     onExitFullScreen: () -> Unit = {},
+    muted: Boolean = true,
+    onToggleMute: (() -> Unit)? = null,
 ) {
     if (LocalInspectionMode.current) {
         Box(
@@ -91,12 +95,17 @@ fun LocalVideoPlayerContent(
     val host = remember(fileUrl) {
         MediaPlayerHost(
             mediaUrl = fileUrl,
-            isMuted = true, // видео X всегда без звука
+            isMuted = muted, // видео X всегда без звука; запись эфира — по кнопке
             isLooping = false,
             startTimeInSeconds = resumePosition,
             // В портрете Crop срезал бы края кадра; на весь экран — Fill (ниже).
             initialVideoFitMode = ScreenResize.FIT,
         )
+    }
+
+    // Хост создаётся по адресу, а кнопка звука меняет только громкость.
+    LaunchedEffect(host, muted) {
+        if (muted) host.mute() else host.unmute()
     }
 
     // Видимость панелей: на весь экран они прячутся по таймеру и возвращаются тапом.
@@ -251,11 +260,13 @@ fun LocalVideoPlayerContent(
                     exit = fadeOut(),
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
-                    X_PlayerBottomBar(
+                    PlayerBottomBar(
                         host = host,
                         isFullScreen = isFullScreen,
                         onFullScreen = onToggleFullScreen,
-                        onScrub = onScrub
+                        onScrub = onScrub,
+                        muted = muted,
+                        onToggleMute = onToggleMute,
                     )
                 }
             }

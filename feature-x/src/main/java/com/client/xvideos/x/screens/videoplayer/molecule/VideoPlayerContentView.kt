@@ -40,15 +40,17 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
+import com.client.xvideos.common.videoplayer.local.atom.ResumePlaybackPill
+import com.client.xvideos.common.videoplayer.local.model.SeekScrub
+import com.client.xvideos.common.videoplayer.local.model.rememberStoryboardImage
+import com.client.xvideos.common.videoplayer.local.model.shouldAutoHideControls
+import com.client.xvideos.common.videoplayer.local.molecule.PlayerBottomBar
+import com.client.xvideos.common.videoplayer.local.molecule.SeekPreviewOverlay
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
-import com.client.xvideos.x.screens.videoplayer.atom.ResumePlaybackPill
-import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
-import com.client.xvideos.x.screens.videoplayer.model.rememberStoryboardImage
-import com.client.xvideos.x.screens.videoplayer.model.shouldAutoHideControls
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -405,7 +407,7 @@ fun VideoPlayerContentView(
                     exit = fadeOut(),
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
-                    X_PlayerBottomBar(
+                    PlayerBottomBar(
                         host = host,
                         isFullScreen = isFullScreen,
                         onFullScreen = onToggleFullScreen,

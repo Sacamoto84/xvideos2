@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.model
+package com.client.xvideos.common.videoplayer.local.model
 
 /**
  * Прятать ли панель управления по таймеру: только на весь экран, пока видео

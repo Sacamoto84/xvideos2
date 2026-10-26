@@ -1,4 +1,4 @@
-package com.client.xvideos.x.feature.saved
+package com.client.xvideos.common.videoplayer.storyboard
 
 import androidx.compose.ui.unit.IntOffset
 import org.junit.Assert.assertEquals

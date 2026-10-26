@@ -1,4 +1,4 @@
-package com.client.xvideos.x.feature.saved
+package com.client.xvideos.common.videoplayer.storyboard
 
 import com.client.xvideos.common.kdownloader.utils.getTempPath
 import kotlinx.coroutines.CompletableDeferred
@@ -74,6 +74,27 @@ class LocalStoryboardsTest {
     private fun temp(id: Long) = File(getTempPath(dir.path, "$id.storyboard.jpg"))
 
     private fun LocalStoryboards.obtainAsync(id: Long): Deferred<File?> = scope.async { obtain(id) }
+
+    @Test
+    fun `свои пути — ролик и сетка в папке записи`() {
+        File(dir, "7").mkdirs()
+        File(dir, "7/video.mp4").writeBytes(byteArrayOf(1))
+        val storyboards = LocalStoryboards(
+            dir.path,
+            scope,
+            renderer(),
+            dispatcher,
+            videoFile = { File(dir, "$it/video.mp4") },
+            storyboardFile = { File(dir, "$it/.storyboard.jpg") },
+        )
+
+        val result = storyboards.obtainAsync(7L)
+        scheduler.advanceUntilIdle()
+
+        assertEquals(File(dir, "7/.storyboard.jpg"), result.getCompleted())
+        assertEquals(1, renders)
+        assertEquals(listOf(".storyboard.jpg", "video.mp4"), File(dir, "7").list()!!.sorted())
+    }
 
     @Test
     fun `готовая сетка на диске — без сборки`() {

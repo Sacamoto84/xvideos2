@@ -13,8 +13,8 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.screens.videoplayer.molecule.LocalVideoPlayerContent
-import com.client.xvideos.x.screens.videoplayer.atom.OrientationAndSystemBarsEffect
+import com.client.xvideos.common.videoplayer.local.molecule.LocalVideoPlayerContent
+import com.client.xvideos.common.videoplayer.local.atom.OrientationAndSystemBarsEffect
 import com.client.xvideos.x.screens.videoplayer.molecule.VideoPlayerLoadingView
 import java.io.File
 

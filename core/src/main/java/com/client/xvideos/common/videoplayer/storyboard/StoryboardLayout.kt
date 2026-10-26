@@ -1,4 +1,4 @@
-package com.client.xvideos.x.model
+package com.client.xvideos.common.videoplayer.storyboard
 
 /**
  * Раскладка раскадровки X: сетка 10×10 кадров, по строкам слева направо, кадр

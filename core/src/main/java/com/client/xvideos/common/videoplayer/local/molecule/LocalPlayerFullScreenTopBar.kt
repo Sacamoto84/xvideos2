@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.molecule
+package com.client.xvideos.common.videoplayer.local.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.x.screens.videoplayer.model.panelTouchTarget
+import com.client.xvideos.common.videoplayer.local.model.panelTouchTarget
 
 /**
  * Верхняя панель плеера скачанного ролика на весь экран: «назад» (выход из

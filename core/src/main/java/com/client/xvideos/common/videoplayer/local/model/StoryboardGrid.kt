@@ -1,8 +1,8 @@
-package com.client.xvideos.x.screens.videoplayer.model
+package com.client.xvideos.common.videoplayer.local.model
 
 import androidx.compose.ui.unit.IntRect
-import com.client.xvideos.x.model.STORYBOARD_COLUMNS
-import com.client.xvideos.x.model.STORYBOARD_ROWS
+import com.client.xvideos.common.videoplayer.storyboard.STORYBOARD_COLUMNS
+import com.client.xvideos.common.videoplayer.storyboard.STORYBOARD_ROWS
 import kotlin.math.floor
 
 /**

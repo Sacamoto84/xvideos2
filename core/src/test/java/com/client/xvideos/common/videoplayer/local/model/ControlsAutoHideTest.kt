@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.model
+package com.client.xvideos.common.videoplayer.local.model
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

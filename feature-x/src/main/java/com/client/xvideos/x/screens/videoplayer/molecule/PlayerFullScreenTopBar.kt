@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
-import com.client.xvideos.x.screens.videoplayer.model.panelTouchTarget
+import com.client.xvideos.common.videoplayer.local.model.panelTouchTarget
 
 /**
  * Верхняя панель управления видеоплеером в полноэкранном режиме.

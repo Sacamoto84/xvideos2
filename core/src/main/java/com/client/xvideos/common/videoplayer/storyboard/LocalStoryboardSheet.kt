@@ -1,8 +1,6 @@
-package com.client.xvideos.x.feature.saved
+package com.client.xvideos.common.videoplayer.storyboard
 
 import androidx.compose.ui.unit.IntOffset
-import com.client.xvideos.x.model.STORYBOARD_COLUMNS
-import com.client.xvideos.x.model.STORYBOARD_ROWS
 
 /**
  * Сетка кадров скачанного ролика X — та же раскладка, что у раскадровки сайта

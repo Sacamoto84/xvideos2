@@ -1,12 +1,10 @@
-package com.client.xvideos.x.feature.saved
+package com.client.xvideos.common.videoplayer.storyboard
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.media.MediaMetadataRetriever
 import androidx.core.graphics.createBitmap
-import com.client.xvideos.x.model.STORYBOARD_COLUMNS
-import com.client.xvideos.x.model.STORYBOARD_ROWS
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import java.io.File

@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.molecule
+package com.client.xvideos.common.videoplayer.local.molecule
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,8 +27,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.x.screens.videoplayer.atom.StoryboardFrame
-import com.client.xvideos.x.screens.videoplayer.model.seekPreviewFollowLeft
+import com.client.xvideos.common.videoplayer.local.atom.StoryboardFrame
+import com.client.xvideos.common.videoplayer.local.model.seekPreviewFollowLeft
 import kotlin.math.roundToInt
 
 private val FRAME_SHAPE = RoundedCornerShape(8.dp)

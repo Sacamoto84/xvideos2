@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.videoplayer.molecule
+package com.client.xvideos.common.videoplayer.local.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,15 +38,17 @@ import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
-import com.client.xvideos.x.screens.videoplayer.atom.FitModeToggle
-import com.client.xvideos.x.screens.videoplayer.model.SeekScrub
-import com.client.xvideos.x.screens.videoplayer.model.finishSeekDrag
-import com.client.xvideos.x.screens.videoplayer.model.finishSeekDragIfActive
-import com.client.xvideos.x.screens.videoplayer.model.panelTouchTarget
+import com.client.xvideos.common.videoplayer.local.atom.FitModeToggle
+import com.client.xvideos.common.videoplayer.local.atom.PlayerMuteButton
+import com.client.xvideos.common.videoplayer.local.model.SeekScrub
+import com.client.xvideos.common.videoplayer.local.model.finishSeekDrag
+import com.client.xvideos.common.videoplayer.local.model.finishSeekDragIfActive
+import com.client.xvideos.common.videoplayer.local.model.panelTouchTarget
 import java.util.Locale
 
 /**
- * Нижняя панель управления X-плеером поверх видео.
+ * Нижняя панель управления плеером поверх видео: ролики X (из сети и
+ * скачанные) и записи эфиров XLive.
  *
  * Время в [MediaPlayerHost] хранится в секундах: `currentTime` — Float, `totalTime` — Int.
  * Пока палец ведёт ползунок, видео стоит (`isSliding = true`), а позицию под
@@ -57,14 +59,18 @@ import java.util.Locale
  * @param onFullScreen переход в полноэкранный режим (текущую позицию прокидывает экран).
  * @param onScrub позиция под пальцем и границы полосы, пока палец ведёт ползунок;
  * `null` — палец отпущен.
+ * @param muted звук выключен — для кнопки звука.
+ * @param onToggleMute кнопка звука; `null` — кнопки нет (ролики X всегда без звука).
  */
 @Composable
-fun X_PlayerBottomBar(
+fun PlayerBottomBar(
     host: MediaPlayerHost,
     isFullScreen: Boolean = false,
     onFullScreen: (() -> Unit)? = null,
     onScrub: (SeekScrub?) -> Unit = {},
     modifier: Modifier = Modifier,
+    muted: Boolean = true,
+    onToggleMute: (() -> Unit)? = null,
 ) {
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
     var sliderValue by remember(host) { mutableFloatStateOf(0f) }
@@ -178,6 +184,9 @@ fun X_PlayerBottomBar(
             )
         )
 
+        // Звук — только у плеера, которому он нужен (записи эфиров).
+        if (onToggleMute != null) PlayerMuteButton(muted = muted, onClick = onToggleMute)
+
         // Меню выбора скорости воспроизведения
         PlaybackSpeedMenu(
             currentSpeed = host.speed,
@@ -221,14 +230,14 @@ fun formatTime(totalSeconds: Int): String {
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-private fun X_PlayerBottomBarPreview() {
+private fun PlayerBottomBarPreview() {
     val host = remember {
         MediaPlayerHost().apply {
             totalTime = 600
             currentTime = 125f
         }
     }
-    X_PlayerBottomBar(
+    PlayerBottomBar(
         host = host,
         isFullScreen = true,
         onFullScreen = {}
