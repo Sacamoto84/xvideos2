@@ -1,9 +1,13 @@
 package com.client.xvideos.xlive.ui.record
 
+import android.content.Context
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.client.xvideos.common.AppContextHolder
+import com.client.xvideos.common.gallery.GallerySaver
 import com.client.xvideos.xlive.model.XLiveRecord
 import com.client.xvideos.xlive.model.XLiveSavedRoom
+import com.client.xvideos.xlive.model.isRecordPlaybackFinished
 import com.client.xvideos.xlive.record.XLiveRecordStore
 import com.client.xvideos.xlive.record.XLiveRecordings
 import com.client.xvideos.xlive.saved.XLiveRoomStore
@@ -94,8 +98,23 @@ class XLiveRecordSM(
     }
 
     /** Где остановился просмотр, секунды — для «Продолжить с …». */
-    fun savePosition(seconds: Float) {
-        if (record.value?.positionSec == seconds) return
-        store.update(id) { it.copy(positionSec = seconds) }
+    fun savePosition(seconds: Float, totalSec: Int = 0) {
+        val durSec = if (totalSec > 0) totalSec.toFloat() else (record.value?.durationMs ?: 0L) / 1000f
+        val isFinished = isRecordPlaybackFinished(seconds, durSec)
+        val target = if (isFinished) 0f else seconds
+        if (record.value?.positionSec == target) return
+        store.update(id) { it.copy(positionSec = target) }
+    }
+
+    /** Экспорт видеозаписи в системную галерею через MediaStore. */
+    fun saveToGallery(
+        context: Context = AppContextHolder.applicationContext,
+        saver: (Context, File, String) -> Unit = GallerySaver::saveLocal,
+    ) {
+        val rec = record.value ?: return
+        val src = File(store.dirOf(id), XLiveRecordStore.VIDEO)
+        val cleanUser = rec.username.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        val fileName = "xlive_${cleanUser}_${rec.id}.mp4"
+        saver(context, src, fileName)
     }
 }

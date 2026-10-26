@@ -17,11 +17,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,6 +39,7 @@ import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRecord
 import com.client.xvideos.xlive.model.XLiveRecordRoom
 import com.client.xvideos.xlive.model.genderLabel
+import com.client.xvideos.xlive.model.isPlaybackFinished
 import com.client.xvideos.xlive.model.splitRoomTitle
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.record.molecule.XLiveRecordHeader
@@ -49,8 +52,8 @@ import java.io.File
 /**
  * Запись эфира: плеер сверху, под ним шапка, тема с тегами и «О модели» —
  * как в комнате, но на момент записи. Плеер — плеер скачанного ролика X:
- * панель, превью кадра, на весь экран с поворотом, «Продолжить с …»; у
- * записи есть звук, включает его кнопка.
+ * панель, превью кадра, на весь экран с поворотом; у записи есть звук,
+ * включает его кнопка.
  */
 class ScreenXLiveRecord(private val id: Long) : Screen {
 
@@ -59,6 +62,7 @@ class ScreenXLiveRecord(private val id: Long) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
         val vm = rememberScreenModel { XLiveRecordSM(id) }
         val record by vm.record.collectAsStateWithLifecycle()
         val storyboard by vm.storyboard.collectAsStateWithLifecycle()
@@ -69,17 +73,18 @@ class ScreenXLiveRecord(private val id: Long) : Screen {
 
         OrientationAndSystemBarsEffect(isFullScreen)
 
-        val actions = remember(vm, navigator) {
+        val actions = remember(vm, navigator, context) {
             XLiveRecordActions(
                 onBack = { navigator.pop() },
                 onOpenRoom = { vm.record.value?.let { navigator.push(ScreenXLiveRoom(it.username)) } },
                 onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag)) },
                 onToggleSaved = vm::toggleSaved,
+                onSaveToGallery = { vm.saveToGallery(context) },
                 onToggleMute = vm::toggleMute,
                 onToggleFullScreen = vm::toggleFullScreen,
                 onExitFullScreen = vm::exitFullScreen,
                 onToggleAbout = vm::toggleAbout,
-                onSavePosition = { seconds, _ -> vm.savePosition(seconds) },
+                onSavePosition = { seconds, totalSec -> vm.savePosition(seconds, totalSec) },
             )
         }
 
@@ -124,8 +129,18 @@ fun ScreenXLiveRecordContent(
             }
             return@Column
         }
-        // Позиция старта берётся плеером один раз — при создании.
-        val resume = remember(record.id) { record.positionSec.takeIf { it > 0f } }
+        // Позиция старта берётся плеером один раз — при создании. Если прошлый
+        // просмотр был завершён (позиция в конце), перекидываем в начало.
+        val resume = remember(record.id) {
+            if (record.isPlaybackFinished) null else record.positionSec.takeIf { it > 0f }
+        }
+
+        LaunchedEffect(record.id, record.isPlaybackFinished) {
+            if (record.isPlaybackFinished) {
+                actions.onSavePosition(0f, (record.durationMs / 1000f).toInt())
+            }
+        }
+
         LocalVideoPlayerContent(
             fileUrl = videoUrl,
             resumePosition = resume,
@@ -143,6 +158,7 @@ fun ScreenXLiveRecordContent(
             onExitFullScreen = actions.onExitFullScreen,
             muted = muted,
             onToggleMute = actions.onToggleMute,
+            showResumeNotice = false,
         )
         if (isFullScreen) return@Column
 
@@ -166,6 +182,7 @@ fun ScreenXLiveRecordContent(
                     isSaved = isSaved,
                     onToggleSaved = actions.onToggleSaved,
                     onOpenRoom = actions.onOpenRoom,
+                    onSaveToGallery = actions.onSaveToGallery,
                 )
                 if (topic.text.isNotBlank() || topic.tags.isNotEmpty()) {
                     XLiveRoomTopic(topic = topic, onOpenTag = actions.onOpenTag)

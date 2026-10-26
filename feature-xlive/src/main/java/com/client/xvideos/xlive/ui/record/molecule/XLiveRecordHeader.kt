@@ -35,14 +35,15 @@ import com.client.xvideos.xlive.model.recordingElapsedLabel
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.record.atom.XLiveOpenRoomButton
 import com.client.xvideos.xlive.ui.record.atom.XLiveRecordBadge
+import com.client.xvideos.xlive.ui.record.atom.XLiveSaveToGalleryButton
 import com.client.xvideos.xlive.ui.room.atom.XLiveAvatar
 import com.client.xvideos.xlive.ui.room.atom.XLiveSaveButton
 import com.client.xvideos.xlive.ui.room.atom.XLiveStatPill
 
 /**
  * Шапка записи — раскладка шапки комнаты, но всё на момент записи: серая
- * плашка «Запись · дата» вместо «В эфире», справа «в мои» и «открыть
- * комнату», под ними длительность, размер, зрители, рейтинг, подписчики.
+ * плашка «Запись · дата» вместо «В эфире», справа кнопки действий («в галерею»,
+ * «в мои» и «открыть комнату»), под ними длительность, размер, зрители, рейтинг, подписчики.
  *
  * @param isSaved комната записи в «Моих».
  */
@@ -53,6 +54,7 @@ fun XLiveRecordHeader(
     isSaved: Boolean,
     onToggleSaved: () -> Unit,
     onOpenRoom: () -> Unit,
+    onSaveToGallery: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val realName = record.bio?.realName.orEmpty()
@@ -84,6 +86,7 @@ fun XLiveRecordHeader(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                XLiveSaveToGalleryButton(onClick = onSaveToGallery)
                 XLiveSaveButton(saved = isSaved, onClick = onToggleSaved)
                 XLiveOpenRoomButton(onClick = onOpenRoom)
             }
@@ -119,5 +122,6 @@ private fun XLiveRecordHeaderPreview() {
         isSaved = true,
         onToggleSaved = {},
         onOpenRoom = {},
+        onSaveToGallery = {},
     )
 }

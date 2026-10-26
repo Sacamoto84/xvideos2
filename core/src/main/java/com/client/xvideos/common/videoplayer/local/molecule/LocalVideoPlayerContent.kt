@@ -58,7 +58,7 @@ import java.io.File
  * @param onToggleMute Кнопка звука в нижней панели; `null` — кнопки нет.
  */
 @OptIn(UnstableApi::class)
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 fun LocalVideoPlayerContent(
     fileUrl: String,
@@ -73,6 +73,7 @@ fun LocalVideoPlayerContent(
     onExitFullScreen: () -> Unit = {},
     muted: Boolean = true,
     onToggleMute: (() -> Unit)? = null,
+    showResumeNotice: Boolean = true,
 ) {
     if (LocalInspectionMode.current) {
         Box(
@@ -84,10 +85,14 @@ fun LocalVideoPlayerContent(
         return
     }
 
-    var resumeNoticeText by remember(fileUrl) {
+    var resumeNoticeText by remember(fileUrl, showResumeNotice) {
         mutableStateOf(
-            resumePosition?.let { sec ->
-                "Возобновлено с ${formatTime(sec.toInt())}"
+            if (showResumeNotice) {
+                resumePosition?.let { sec ->
+                    "Возобновлено с ${formatTime(sec.toInt())}"
+                }
+            } else {
+                null
             }
         )
     }

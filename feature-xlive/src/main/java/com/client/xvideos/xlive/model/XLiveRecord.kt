@@ -47,3 +47,15 @@ data class XLiveRecord(
     val hasFrame: Boolean = false,
     val frameVersion: Int = 0,
 )
+
+/**
+ * Считается ли просмотр записи завершённым (досмотрена до конца или почти до конца).
+ */
+fun isRecordPlaybackFinished(positionSec: Float, durationSec: Float): Boolean {
+    if (durationSec <= 0f || positionSec <= 0f) return false
+    return positionSec >= durationSec - 2f || positionSec >= durationSec * 0.95f
+}
+
+/** Завершён ли просмотр этой записи. */
+val XLiveRecord.isPlaybackFinished: Boolean
+    get() = isRecordPlaybackFinished(positionSec, durationMs / 1000f)

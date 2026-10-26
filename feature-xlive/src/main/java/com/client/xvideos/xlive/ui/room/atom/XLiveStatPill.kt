@@ -20,36 +20,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.xlive.ui.XLiveColors
 
-/** Плашка счётчика шапки комнаты: иконка вместо подписи и число — как у канала X. */
+/**
+ * Плашка счётчика шапки комнаты: иконка вместо подписи и число — как у канала X.
+ *
+ * @param tooltip текст всплывающей подсказки; по умолчанию [contentDescription].
+ */
 @Composable
 fun XLiveStatPill(
     icon: ImageVector,
     contentDescription: String,
     text: String,
     modifier: Modifier = Modifier,
+    tooltip: String = contentDescription,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(XLiveColors.Pill)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = XLiveColors.PillContent,
-            modifier = Modifier.size(14.dp)
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = text,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = XLiveColors.PillContent
-        )
+    HintTooltip(text = tooltip, modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(XLiveColors.Pill)
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = XLiveColors.PillContent,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = text,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = XLiveColors.PillContent
+            )
+        }
     }
 }
 

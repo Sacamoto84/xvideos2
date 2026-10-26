@@ -1,8 +1,10 @@
 package com.client.xvideos.xlive.ui.record
 
+import android.content.ContextWrapper
 import com.client.xvideos.xlive.model.XLiveBio
 import com.client.xvideos.xlive.model.XLiveRecord
 import com.client.xvideos.xlive.model.XLiveRecordStatus
+import com.client.xvideos.xlive.model.isRecordPlaybackFinished
 import com.client.xvideos.xlive.record.XLiveRecordStore
 import com.client.xvideos.xlive.saved.testRoomStore
 import kotlinx.coroutines.CoroutineScope
@@ -77,6 +79,52 @@ class XLiveRecordSMTest {
         sm.savePosition(12.5f)
 
         assertEquals(12.5f, records.records.value.single().positionSec)
+    }
+
+    @Test
+    fun `позиция в конце сбрасывается в начало`() {
+        records.put(record.copy(durationMs = 26_000L))
+        val sm = model()
+
+        // 25.5с из 26с — досмотрено до конца, сброс в 0
+        sm.savePosition(25.5f, 26)
+        assertEquals(0f, records.records.value.single().positionSec)
+
+        // 10с из 26с — середина, сохраняется как есть
+        sm.savePosition(10f, 26)
+        assertEquals(10f, records.records.value.single().positionSec)
+    }
+
+    @Test
+    fun `isRecordPlaybackFinished правильно определяет конец воспроизведения`() {
+        // Досмотрено почти до конца (в пределах 2 сек)
+        assertTrue(isRecordPlaybackFinished(25f, 26f))
+        // Досмотрено более 95%
+        assertTrue(isRecordPlaybackFinished(96f, 100f))
+        // В середине
+        assertFalse(isRecordPlaybackFinished(10f, 26f))
+        // Нулевая позиция
+        assertFalse(isRecordPlaybackFinished(0f, 26f))
+        // Нулевая длительность
+        assertFalse(isRecordPlaybackFinished(10f, 0f))
+    }
+
+    @Test
+    fun `сохранение в галерею передаёт файл записи и чистое имя`() {
+        records.put(record)
+        val sm = model()
+
+        var savedFile: File? = null
+        var savedName: String? = null
+        val dummyContext = object : ContextWrapper(null) {}
+
+        sm.saveToGallery(dummyContext) { _, file, name ->
+            savedFile = file
+            savedName = name
+        }
+
+        assertEquals(File(records.dirOf(7L), XLiveRecordStore.VIDEO), savedFile)
+        assertEquals("xlive_room_a_7.mp4", savedName)
     }
 
     @Test

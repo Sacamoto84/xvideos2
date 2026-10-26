@@ -93,7 +93,12 @@ fun XLiveRoomHeader(
                 XLiveStatPill(Icons.Outlined.Group, "Подписчики", followers.toLong().toPrettyCount())
             }
             if (onAir != null) {
-                XLiveStatPill(Icons.Outlined.Schedule, "В эфире", onAir)
+                XLiveStatPill(
+                    icon = Icons.Outlined.Schedule,
+                    contentDescription = "В эфире",
+                    text = onAir,
+                    tooltip = "Время в эфире"
+                )
             }
             if (ratingPercent != null) {
                 XLiveStatPill(Icons.Outlined.ThumbUp, "Рейтинг", "$ratingPercent%")

@@ -8,6 +8,8 @@ import androidx.compose.runtime.Immutable
  * @property onBack «Назад» из плеера в портрете.
  * @property onOpenRoom «открыть комнату»: живая комната по нику записи.
  * @property onOpenTag тап по тегу темы; аргумент — тег без `#`.
+ * @property onToggleSaved сохранить в «Мои» или убрать.
+ * @property onSaveToGallery сохранить видеозапись в системную галерею.
  * @property onSavePosition позиция просмотра и длина, секунды — от плеера.
  */
 @Immutable
@@ -16,6 +18,7 @@ data class XLiveRecordActions(
     val onOpenRoom: () -> Unit = {},
     val onOpenTag: (String) -> Unit = {},
     val onToggleSaved: () -> Unit = {},
+    val onSaveToGallery: () -> Unit = {},
     val onToggleMute: () -> Unit = {},
     val onToggleFullScreen: () -> Unit = {},
     val onExitFullScreen: () -> Unit = {},
