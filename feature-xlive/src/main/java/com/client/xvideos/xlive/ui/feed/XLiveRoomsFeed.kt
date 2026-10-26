@@ -63,6 +63,13 @@ class XLiveRoomsFeed(
         loadFirstPage()
     }
 
+    /** Нажатие на открытую подборку: сетка в начало, дальше как [refresh]. */
+    fun refreshFromTop() {
+        if (_state.value.isLoading) return
+        scope.launch { gridPosition.scrollToItem(0) }
+        refresh()
+    }
+
     /**
      * Следующая страница, когда сетка докрутилась до конца. Повторные вызовы во
      * время загрузки не в счёт, как и вызовы без первой страницы.

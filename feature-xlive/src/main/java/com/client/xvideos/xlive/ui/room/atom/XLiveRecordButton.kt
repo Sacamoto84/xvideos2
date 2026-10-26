@@ -43,7 +43,7 @@ fun XLiveRecordButton(
             onClick = onClick,
             enabled = !finishing,
             modifier = Modifier
-                .size(40.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(if (recording) XLiveColors.Accent else XLiveColors.Pill)
         ) {

@@ -203,7 +203,12 @@ class XLiveSM(
         if (tab == XLiveTab.SAVED) checkSaved()
     }
 
+    /** Подвкладка «Избранного»; нажатие на уже открытую — как свайп вниз. */
     fun selectSavedTab(tab: XLiveSavedTab) {
+        if (_savedTab.value == tab) {
+            refreshSaved()
+            return
+        }
         _savedTab.value = tab
         checkSaved()
     }
@@ -316,14 +321,18 @@ class XLiveSM(
         if (isSearchActive) searchFeed.reload()
     }
 
+    /** Порядок тегов; нажатие на уже выбранный — таблица заново (свайпа вниз у неё нет). */
     fun selectTagSort(sort: XLiveTagSort) {
-        if (_tagSort.value == sort) return
         _tagSort.value = sort
         tagsFeed.reload()
     }
 
+    /** Подборка «Эфиров»; нажатие на уже открытую — обновить, как свайпом вниз, с начала сетки. */
     fun selectCollection(collection: XLiveCollection) {
-        if (_collection.value == collection) return
+        if (_collection.value == collection) {
+            rooms.refreshFromTop()
+            return
+        }
         _collection.value = collection
         rooms.reload()
     }

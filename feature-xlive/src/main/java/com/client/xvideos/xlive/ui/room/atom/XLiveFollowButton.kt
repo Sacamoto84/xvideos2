@@ -47,7 +47,7 @@ fun XLiveFollowButton(
             onClick = onClick,
             enabled = !busy,
             modifier = Modifier
-                .size(40.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(XLiveColors.Pill)
         ) {

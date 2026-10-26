@@ -23,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -186,6 +187,21 @@ class XLiveSMTest {
     }
 
     @Test
+    fun `нажатие на открытую подборку — первая страница заново, сетка в начало`() {
+        val sm = model()
+        sm.loadMore()
+        runBlocking { sm.gridPosition.scrollToItem(30) }
+
+        sm.selectCollection(XLiveCollection.POPULAR)
+
+        assertEquals(3, requests.size)
+        assertEquals(Request(XLiveGender.ALL, XLiveCollection.POPULAR, 0), requests.last())
+        assertEquals(listOf("a0", "b0"), sm.names())
+        assertEquals(0, sm.gridPosition.index)
+        assertFalse(sm.feed.value.isRefreshing)
+    }
+
+    @Test
     fun `первая страница не пришла — ошибка, Повторить грузит снова`() {
         pages = { throw IOException("нет сети") }
         val sm = model()
@@ -301,6 +317,18 @@ class XLiveSMTest {
     }
 
     @Test
+    fun `нажатие на открытый порядок тегов — таблица заново`() {
+        val sm = model()
+        sm.selectTab(XLiveTab.TAGS)
+        val before = tagRequests.size
+
+        sm.selectTagSort(XLiveTagSort.VIEWERS)
+
+        assertEquals(before + 1, tagRequests.size)
+        assertEquals(TagRequest(XLiveGender.ALL, XLiveTagSort.VIEWERS, 1), tagRequests.last())
+    }
+
+    @Test
     fun `пол — теги перезапрашиваются, только если их уже открывали`() {
         val sm = model()
         sm.selectGender(XLiveGender.MALE)
@@ -385,6 +413,20 @@ class XLiveSMTest {
         sm.refreshSaved()
 
         assertEquals(listOf("a", "a"), onlineAsked)
+        assertEquals(true, sm.my.value.online["a"])
+        assertEquals(1_090L, sm.my.value.snapshotStamp)
+    }
+
+    @Test
+    fun `нажатие на открытую подвкладку Избранного — как свайп вниз`() {
+        saved.put(XLiveSavedRoom("a"))
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+
+        nowSeconds = 1_090L
+        onlineRooms = setOf("a")
+        sm.selectSavedTab(XLiveSavedTab.MY)
+
         assertEquals(true, sm.my.value.online["a"])
         assertEquals(1_090L, sm.my.value.snapshotStamp)
     }
