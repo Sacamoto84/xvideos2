@@ -116,6 +116,15 @@ class XLiveRecordStore(
     companion object {
         const val RECORD_JSON = "record.json"
         const val SNAPSHOT = "snapshot.jpg"
+
+        /**
+         * Кадр начала из видео. Версия способа — в имени: пересобранный кадр
+         * получает новый путь, и карточка не показывает прежний из кэша картинок.
+         */
+        const val FRAME = "frame-$XLIVE_FRAME_VERSION.jpg"
+
+        /** Начало имени любого файла кадра — прежние версии удаляются. */
+        const val FRAME_PREFIX = "frame"
         const val VIDEO = "video.mp4"
         const val VIDEO_RAW = "video.part"
         const val AUDIO_RAW = "audio.part"

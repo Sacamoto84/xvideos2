@@ -36,10 +36,11 @@ private const val THUMBNAIL_ASPECT_RATIO = 16f / 9f
 private val CardShape = RoundedCornerShape(8.dp)
 
 /**
- * Карточка записи — вид карточки «Моих»: снимок комнаты в начале записи, на
- * нём длительность или состояние; ник; дата и время начала и размер.
+ * Карточка записи — вид карточки «Моих»: кадр начала записи (или снимок
+ * комнаты, пока кадра нет), на нём длительность или состояние; ник; дата и
+ * время начала и размер.
  *
- * @param snapshot файл снимка; `null` — снимка нет, на его месте фон.
+ * @param snapshot файл картинки; `null` — картинки нет, на её месте фон.
  * @param onLongClick долгое нажатие — удалить запись.
  */
 @Composable
@@ -72,8 +73,10 @@ fun XLiveRecordCard(
                 .background(Color(0xFF1F1F24))
         ) {
             if (snapshot != null) {
+                // Абсолютный путь, а не File.toURI(): та даёт «file:/…» с одной
+                // чертой, UrlImage принимает её за относительное имя и не находит файл.
                 UrlImage(
-                    url = snapshot.toURI().toString(),
+                    url = snapshot.absolutePath,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )

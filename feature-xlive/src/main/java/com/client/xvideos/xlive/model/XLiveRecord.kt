@@ -27,6 +27,9 @@ data class XLiveRecordRoom(
  * @property gaps сколько раз запись не успела за эфиром и потеряла кусок.
  * @property positionSec где остановился просмотр записи, секунды.
  * @property bio анкета модели; `null` — не пришла.
+ * @property hasFrame есть кадр начала из самого видео — картинка карточки;
+ *   иначе карточка показывает снимок сайта.
+ * @property frameVersion каким способом брался кадр; старый — пересобрать.
  */
 @Serializable
 data class XLiveRecord(
@@ -41,4 +44,6 @@ data class XLiveRecord(
     val positionSec: Float = 0f,
     val room: XLiveRecordRoom = XLiveRecordRoom(),
     val bio: XLiveBio? = null,
+    val hasFrame: Boolean = false,
+    val frameVersion: Int = 0,
 )

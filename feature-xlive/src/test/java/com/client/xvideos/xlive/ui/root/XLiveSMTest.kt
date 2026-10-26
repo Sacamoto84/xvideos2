@@ -15,6 +15,7 @@ import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.network.ROOM_PAGE_SIZE
 import com.client.xvideos.xlive.network.TAG_PAGE_SIZE
+import com.client.xvideos.xlive.record.XLIVE_FRAME_VERSION
 import com.client.xvideos.xlive.record.XLiveRecordStore
 import com.client.xvideos.xlive.saved.testRoomStore
 import com.client.xvideos.xlive.ui.saved.XLiveSavedTab
@@ -34,6 +35,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import java.io.IOException
 
 // Без runTest: загрузчик отвечает сразу, а неограниченный диспетчер гонит
@@ -543,6 +545,21 @@ class XLiveSMTest {
         val sm = model()
 
         assertEquals(listOf(3L, 2L, 1L), sm.recordsState.value.records.map { it.id })
+    }
+
+    @Test
+    fun `картинка карточки — кадр из видео, если он есть, иначе снимок сайта`() {
+        records.put(record(1).copy(hasFrame = true, frameVersion = XLIVE_FRAME_VERSION))
+        records.put(record(2))
+        // Кадр прежней версии ещё не пересобран: пока — снимок, чтобы путь
+        // сменился после пересборки и карточка загрузила новый кадр.
+        records.put(record(3).copy(hasFrame = true, frameVersion = XLIVE_FRAME_VERSION - 1))
+        val sm = model()
+
+        val snapshots = sm.recordsState.value.snapshots
+        assertEquals(File(records.dirOf(1), XLiveRecordStore.FRAME).absolutePath, snapshots.getValue(1))
+        assertEquals(File(records.dirOf(2), XLiveRecordStore.SNAPSHOT).absolutePath, snapshots.getValue(2))
+        assertEquals(File(records.dirOf(3), XLiveRecordStore.SNAPSHOT).absolutePath, snapshots.getValue(3))
     }
 
     @Test

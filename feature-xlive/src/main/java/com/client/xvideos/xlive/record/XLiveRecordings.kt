@@ -17,6 +17,7 @@ import com.client.xvideos.xlive.network.XLiveApiRecordNet
 import com.client.xvideos.xlive.network.XLiveRecordNet
 import com.client.xvideos.xlive.network.xLiveSnapshotUrl
 import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.AUDIO_RAW
+import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.FRAME
 import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.MUX_TEMP
 import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.SNAPSHOT
 import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.VIDEO
@@ -51,6 +52,7 @@ object XLiveRecordings {
             scope = scope,
             net = XLiveApiRecordNet,
             muxer = MediaMuxerJoin,
+            frameGrabber = RetrieverFrameGrabber,
             usableBytes = { File(AppPath.xlive_records).usableSpace },
             newId = System::currentTimeMillis,
             elapsedMs = SystemClock::elapsedRealtime,
@@ -97,6 +99,7 @@ internal class XLiveRecordingsCore(
     private val scope: CoroutineScope,
     private val net: XLiveRecordNet,
     private val muxer: XLiveMuxer,
+    private val frameGrabber: XLiveFrameGrabber,
     private val usableBytes: () -> Long,
     private val newId: () -> Long,
     private val elapsedMs: () -> Long,
@@ -191,7 +194,32 @@ internal class XLiveRecordingsCore(
                     synchronized(lock) { busy -= record.id }
                 }
             }
+            // Записи без кадра нынешнего способа (готовые раньше или со старым кадром) получают его сейчас.
+            val withoutFrame = store.snapshot().filter {
+                it.status == XLiveRecordStatus.READY && it.frameVersion < XLIVE_FRAME_VERSION &&
+                    File(store.dirOf(it.id), VIDEO).isFile
+            }
+            for (record in withoutFrame) {
+                if (!synchronized(lock) { busy.add(record.id) }) continue
+                try {
+                    grabFrame(record.id)
+                } finally {
+                    synchronized(lock) { busy -= record.id }
+                }
+            }
         }
+    }
+
+    /** Кадр начала из готового видео — картинка карточки; не вышел — остаётся снимок сайта. */
+    private suspend fun grabFrame(id: Long) {
+        val dir = store.dirOf(id)
+        val grabbed = frameGrabber.grab(File(dir, VIDEO), File(dir, FRAME))
+        if (grabbed) {
+            dir.listFiles { file -> file.name.startsWith(XLiveRecordStore.FRAME_PREFIX) && file.name != FRAME }
+                ?.forEach { it.delete() }
+        }
+        // Версия пишется и при неудаче: иначе кадр пробовался бы при каждом входе во вкладку.
+        store.update(id) { it.copy(hasFrame = grabbed || it.hasFrame, frameVersion = XLIVE_FRAME_VERSION) }
     }
 
     private suspend fun saveSnapshot(username: String, dir: File) {
@@ -230,6 +258,7 @@ internal class XLiveRecordingsCore(
             store.update(id) {
                 it.copy(status = XLiveRecordStatus.READY, durationMs = durationMs, sizeBytes = video.length())
             }
+            grabFrame(id)
             Outcome.READY
         } catch (e: CancellationException) {
             throw e

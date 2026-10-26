@@ -16,6 +16,7 @@ import com.client.xvideos.xlive.model.XLiveSearchFilters
 import com.client.xvideos.xlive.model.XLiveTagPage
 import com.client.xvideos.xlive.model.XLiveTagSort
 import com.client.xvideos.xlive.network.XLiveApi
+import com.client.xvideos.xlive.record.XLIVE_FRAME_VERSION
 import com.client.xvideos.xlive.record.XLiveRecordStore
 import com.client.xvideos.xlive.record.XLiveRecordings
 import com.client.xvideos.xlive.saved.XLiveRoomStore
@@ -234,8 +235,14 @@ class XLiveSM(
 
     private fun recordsStateOf(list: ImmutableList<XLiveRecord>) = XLiveRecordsState(
         records = list,
-        snapshots = list.associate { it.id to File(records.dirOf(it.id), XLiveRecordStore.SNAPSHOT).path }
-            .toImmutableMap(),
+        // Картинка карточки — кадр начала из видео; пока кадра нынешнего способа
+        // нет — снимок сайта. Путь меняется, когда кадр готов, и карточка
+        // загружает его заново: запрос картинки помнится по пути.
+        snapshots = list.associate {
+            val frameReady = it.hasFrame && it.frameVersion == XLIVE_FRAME_VERSION
+            val name = if (frameReady) XLiveRecordStore.FRAME else XLiveRecordStore.SNAPSHOT
+            it.id to File(records.dirOf(it.id), name).absolutePath
+        }.toImmutableMap(),
     )
 
     /** Удалить запись [id] вместе с её файлами. */
