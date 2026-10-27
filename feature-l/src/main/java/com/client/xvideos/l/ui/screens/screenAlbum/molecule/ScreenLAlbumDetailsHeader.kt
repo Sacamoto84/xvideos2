@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
@@ -29,9 +28,6 @@ import com.client.xvideos.l.model.isLFavoriteLikeStatus
 import com.client.xvideos.l.net.AlbumPicsDetails
 import com.client.xvideos.l.ui.screens.screenAlbum.LAlbumNetworkIssuePanel
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
-import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonSaveAlbum
-import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonServerFavorite
-import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonShareAlbum
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoDescription
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoGreeting
@@ -54,7 +50,8 @@ fun ScreenLAlbumDetailsHeader(
     onTagClick: (String) -> Unit,
     onRequestDelete: (AlbumDetails) -> Unit
 ) {
-    Column(modifier = Modifier.adaptiveContentWidth()) {
+    // На всю ширину и на раскрытом складном: под шапкой сетка картинок тоже во всю ширину.
+    Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             UrlImage(
                 parsed.cover?.url.orEmpty(),
@@ -116,20 +113,20 @@ fun ScreenLAlbumDetailsHeader(
         }
         AlbumInfoTags({ activeTags }, onTagClick)
         AlbumInfoDescription(parsed.description)
-        AlbumInfoButtonSaveAlbum(saved, onClick = {
-            if (!saved) {
-                actions.onSaveAlbum()
-            } else {
-                onRequestDelete(parsed)
-            }
-        })
-        val isFavorite = state.isServerFavorite ?: parsed.likeStatus.isLFavoriteLikeStatus()
-        AlbumInfoButtonServerFavorite(
-            isFavorite = isFavorite,
-            isLoading = state.isServerFavoriteLoading,
-            onClick = { actions.onToggleServerFavorite(parsed) }
+        AlbumInfoActionButtons(
+            saved = saved,
+            isFavorite = state.isServerFavorite ?: parsed.likeStatus.isLFavoriteLikeStatus(),
+            isFavoriteLoading = state.isServerFavoriteLoading,
+            onSaveClick = {
+                if (!saved) {
+                    actions.onSaveAlbum()
+                } else {
+                    onRequestDelete(parsed)
+                }
+            },
+            onFavoriteClick = { actions.onToggleServerFavorite(parsed) },
+            onShareClick = { actions.onShareAlbum(parsed) }
         )
-        AlbumInfoButtonShareAlbum(onClick = { actions.onShareAlbum(parsed) })
         AlbumInfoFilterButton(
             parsed = parsed,
             checked = state.showOnlyAnimated,

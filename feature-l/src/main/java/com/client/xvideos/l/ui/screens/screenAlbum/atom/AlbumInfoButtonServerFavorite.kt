@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
@@ -67,9 +68,11 @@ fun AlbumInfoButtonServerFavorite(
                 strokeWidth = 2.dp
             )
         } else {
+            // Отступ и одна строка — для узкой кнопки в ряду из трёх на широком окне.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 8.dp)
             ) {
                 Icon(
                     imageVector = iconVector,
@@ -80,7 +83,9 @@ fun AlbumInfoButtonServerFavorite(
                 Text(
                     text = buttonText,
                     color = Color.White,
-                    style = buttonTextStyle
+                    style = buttonTextStyle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
