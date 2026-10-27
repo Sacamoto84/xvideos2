@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.xlive.model.XLiveTag
 import com.client.xvideos.xlive.model.XLiveTagRoom
 import com.client.xvideos.xlive.ui.XLiveColors
@@ -38,8 +37,8 @@ private const val LOAD_MORE_THRESHOLD = 8
 
 /**
  * Список вкладки «Теги»: строки тегов с превью комнат, догрузка в подвале.
- * Список на всю ширину окна, строки — не шире лимита по центру: свайп
- * работает и по краям раскрытого складного.
+ * Строки на всю ширину окна: на раскрытом складном лента превью показывает
+ * больше комнат.
  */
 @Composable
 fun XLiveTagsList(
@@ -75,7 +74,7 @@ fun XLiveTagsList(
         }
         else -> LazyColumn(
             state = listState,
-            contentPadding = adaptiveListPadding(PaddingValues(horizontal = 4.dp, vertical = 8.dp)),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
             modifier = modifier.fillMaxSize(),
         ) {
             if (state.tags.isEmpty()) {

@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.feed.XLiveFeedActions
@@ -43,7 +42,7 @@ private const val LOAD_MORE_THRESHOLD = 12
 /**
  * Сетка вкладки «Эфиры»: карточки комнат, догрузка в подвале, обновление
  * свайпом вниз. Колонки — адаптивные: две на телефоне, больше на раскрытом
- * складном.
+ * складном; сетка там на всю ширину окна, без полей по бокам.
  *
  * Догрузка — здесь же: когда до конца остаётся [LOAD_MORE_THRESHOLD]
  * карточек, сетка зовёт [XLiveFeedActions.onLoadMore].
@@ -90,7 +89,7 @@ fun XLiveRoomsGrid(
             else -> LazyVerticalGrid(
                 columns = GridCells.Fixed(adaptiveGridColumns()),
                 state = gridState,
-                contentPadding = adaptiveListPadding(PaddingValues(horizontal = 4.dp, vertical = 8.dp)),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 if (feed.rooms.isEmpty()) {

@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.xlive.model.XLiveRecord
 import com.client.xvideos.xlive.model.XLiveRecordStatus
 import com.client.xvideos.xlive.ui.feed.atom.XLivePlaceholder
@@ -48,7 +47,7 @@ fun XLiveRecordsGrid(
     LazyVerticalGrid(
         columns = GridCells.Fixed(adaptiveGridColumns()),
         state = gridState,
-        contentPadding = adaptiveListPadding(PaddingValues(horizontal = 4.dp, vertical = 8.dp)),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
         modifier = modifier.fillMaxSize(),
     ) {
         if (state.records.isEmpty()) {
