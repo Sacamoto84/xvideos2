@@ -335,6 +335,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                 P2pBackgroundOverlay()
                                 StatusBarHost(
                                     hideRequests = statusBarRequests.hideRequests,
+                                    noScrimRequests = statusBarRequests.noScrimRequests,
                                     onVisibleChange = ::applyStatusBarVisibility,
                                 )
                                 // После подложки бара: нарисованный раньше, он уходил под её градиент.

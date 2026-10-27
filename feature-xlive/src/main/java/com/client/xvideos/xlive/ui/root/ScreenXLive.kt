@@ -23,6 +23,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.feed.XLiveFeedActions
 import com.client.xvideos.xlive.ui.feed.XLiveFeedState
@@ -61,6 +62,8 @@ class ScreenXLive : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        // Под баром у всех экранов XLive почти чёрный фон: подложка темы на нём светится серым.
+        NoStatusBarScrimEffect()
         val vm = rememberScreenModel { XLiveSM() }
         val tab by vm.tab.collectAsStateWithLifecycle()
         val gender by vm.gender.collectAsStateWithLifecycle()

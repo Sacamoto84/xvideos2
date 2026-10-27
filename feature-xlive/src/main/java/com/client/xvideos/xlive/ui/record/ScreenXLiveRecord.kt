@@ -33,6 +33,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.common.videoplayer.local.atom.OrientationAndSystemBarsEffect
 import com.client.xvideos.common.videoplayer.local.molecule.LocalVideoPlayerContent
 import com.client.xvideos.xlive.model.XLiveBio
@@ -72,6 +73,7 @@ class ScreenXLiveRecord(private val id: Long) : Screen {
         val aboutExpanded by vm.aboutExpanded.collectAsStateWithLifecycle()
 
         OrientationAndSystemBarsEffect(isFullScreen)
+        NoStatusBarScrimEffect()
 
         val actions = remember(vm, navigator, context) {
             XLiveRecordActions(

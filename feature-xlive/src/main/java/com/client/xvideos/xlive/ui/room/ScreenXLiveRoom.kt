@@ -37,6 +37,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.common.util.KeepScreenOn
 import com.client.xvideos.common.util.findActivity
 import com.client.xvideos.xlive.model.XLiveBio
@@ -77,6 +78,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
         val isFullScreen by vm.isFullScreen.collectAsStateWithLifecycle()
 
         OrientationAndSystemBarsEffect(isFullScreen)
+        NoStatusBarScrimEffect()
         BackHandler(enabled = isFullScreen, onBack = vm::exitFullScreen)
 
         // Запись — пока открыт экран комнаты: уход с него и уход приложения в

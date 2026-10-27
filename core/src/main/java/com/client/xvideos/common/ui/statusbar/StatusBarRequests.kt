@@ -16,7 +16,8 @@ fun shouldShowStatusBar(hasTopCutout: Boolean, hideRequests: Int): Boolean =
     hasTopCutout && hideRequests == 0
 
 /**
- * Заявки полноэкранных экранов на скрытие статус-бара.
+ * Заявки экранов к статус-бару: полноэкранные просят скрыть бар, тёмные —
+ * убрать подложку под ним.
  *
  * Счётчик, а не флаг: при переходе между двумя полноэкранными экранами новый
  * входит в композицию раньше, чем старый её покидает.
@@ -37,10 +38,25 @@ class StatusBarRequests {
     fun releaseHide() {
         hideRequests = (hideRequests - 1).coerceAtLeast(0)
     }
+
+    /**
+     * Число живых заявок на бар без подложки. Их подают экраны, у которых под
+     * баром и так почти чёрный фон: подложка цвета общей темы на нём светится серым.
+     */
+    var noScrimRequests: Int by mutableIntStateOf(0)
+        private set
+
+    fun acquireNoScrim() {
+        noScrimRequests += 1
+    }
+
+    fun releaseNoScrim() {
+        noScrimRequests = (noScrimRequests - 1).coerceAtLeast(0)
+    }
 }
 
 /**
- * Заявки на скрытие статус-бара от корня приложения. Вне корня (превью) —
+ * Заявки к статус-бару от корня приложения. Вне корня (превью) —
  * отдельный экземпляр, на который никто не смотрит.
  */
 val LocalStatusBarRequests = staticCompositionLocalOf { StatusBarRequests() }

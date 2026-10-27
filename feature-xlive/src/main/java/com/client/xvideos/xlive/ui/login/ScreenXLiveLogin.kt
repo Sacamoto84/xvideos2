@@ -16,6 +16,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.xlive.auth.X_LIVE_SIGN_IN_URL
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.login.molecule.XLiveLoginPage
@@ -33,6 +34,7 @@ class ScreenXLiveLogin : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        NoStatusBarScrimEffect()
         val vm = rememberScreenModel { XLiveLoginSM() }
         val ready by vm.ready.collectAsStateWithLifecycle()
         val done by vm.done.collectAsStateWithLifecycle()

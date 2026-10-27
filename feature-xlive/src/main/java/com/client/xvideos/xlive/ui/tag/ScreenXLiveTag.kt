@@ -16,6 +16,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.xlive.model.XLiveGender
 import com.client.xvideos.xlive.ui.XLiveColors
 import com.client.xvideos.xlive.ui.feed.XLiveFeedActions
@@ -39,6 +40,7 @@ class ScreenXLiveTag(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        NoStatusBarScrimEffect()
         val vm = rememberScreenModel { XLiveTagSM(tag, gender) }
         val feed by vm.feed.collectAsStateWithLifecycle()
 

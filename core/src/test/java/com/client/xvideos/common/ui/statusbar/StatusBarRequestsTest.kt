@@ -41,4 +41,17 @@ class StatusBarRequestsTest {
         requests.releaseHide()
         assertEquals(0, requests.hideRequests)
     }
+
+    @Test
+    fun `заявки без подложки считаются отдельно от скрытия`() {
+        val requests = StatusBarRequests()
+        requests.acquireNoScrim()
+        requests.acquireNoScrim()
+        assertEquals(2, requests.noScrimRequests)
+        assertEquals(0, requests.hideRequests)
+        requests.releaseNoScrim()
+        requests.releaseNoScrim()
+        requests.releaseNoScrim()
+        assertEquals(0, requests.noScrimRequests)
+    }
 }

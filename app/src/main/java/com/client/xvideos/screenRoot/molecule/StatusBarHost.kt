@@ -63,19 +63,22 @@ private val StatusBarScrimBrush = Brush.verticalGradient(
  * у нижнего края бара.
  *
  * @param hideRequests Число заявок полноэкранных экранов на скрытие бара.
+ * @param noScrimRequests Число заявок тёмных экранов на бар без подложки: у них
+ *   под баром свой почти чёрный фон, он и держит значки белыми.
  */
 @Composable
 fun StatusBarHost(
     hideRequests: Int,
     onVisibleChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    noScrimRequests: Int = 0,
 ) {
     val hasTopCutout = WindowInsets.displayCutout.getTop(LocalDensity.current) > 0
     val visible = shouldShowStatusBar(hasTopCutout, hideRequests)
 
     LaunchedEffect(visible) { onVisibleChange(visible) }
 
-    if (visible) {
+    if (visible && noScrimRequests == 0) {
         Box(
             modifier = modifier
                 .fillMaxWidth()
