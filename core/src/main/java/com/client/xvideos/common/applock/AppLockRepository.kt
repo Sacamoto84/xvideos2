@@ -32,6 +32,8 @@ object AppLockRepository {
 
     private const val KEY_PASSWORD_HASH = "app_lock_password_hash"
     private const val KEY_PASSWORD_SALT = "app_lock_password_salt"
+    private const val KEY_DURESS_HASH = "app_lock_duress_hash"
+    private const val KEY_DURESS_SALT = "app_lock_duress_salt"
     private const val KEY_SECURE_LOCK_ENABLED = "app_lock_secure_enabled"
     private const val KEY_LEGACY_SETTINGS_ENABLED = "app_lock_enabled"
     private const val KEY_ARMED = "app_lock_armed"
@@ -164,6 +166,13 @@ object AppLockRepository {
         return hash.isNotBlank() && salt.isNotBlank() && hash.fromBase64() != null && salt.fromBase64() != null
     }
 
+    fun isDuressCodeSet(context: Context? = null): Boolean {
+        val prefs = getPrefs(context) ?: return false
+        val hash = prefs.getString(KEY_DURESS_HASH, null) ?: return false
+        val salt = prefs.getString(KEY_DURESS_SALT, null) ?: return false
+        return hash.isNotBlank() && salt.isNotBlank() && hash.fromBase64() != null && salt.fromBase64() != null
+    }
+
     /**
      * Проверяет, включена ли защита приложения.
      *
@@ -230,6 +239,11 @@ object AppLockRepository {
     suspend fun setPassword(context: Context? = null, password: String): Result<Unit> = runCatching {
         require(password.length >= MIN_PASSWORD_LENGTH) {
             "Код доступа должен быть не короче $MIN_PASSWORD_LENGTH символов"
+        }
+        if (isDuressCodeSet(context)) {
+            require(!verifyDuressCode(context, password)) {
+                "Код доступа не может совпадать с кодом уничтожения"
+            }
         }
 
         val salt = ByteArray(SALT_BYTES).also { SecureRandom().nextBytes(it) }
@@ -298,6 +312,123 @@ object AppLockRepository {
             return AppLockCheckResult.Success
         }
         return AppLockCheckResult.Wrong(lockoutRemainingMs = registerFailedAttempt(context))
+    }
+
+    suspend fun setDuressCode(context: Context? = null, code: String): Result<Unit> = runCatching {
+        require(code.length >= MIN_PASSWORD_LENGTH) {
+            "Код уничтожения должен быть не короче $MIN_PASSWORD_LENGTH символов"
+        }
+        require(!verifyPassword(context, code)) {
+            "Код уничтожения не может совпадать с кодом доступа"
+        }
+
+        val salt = ByteArray(SALT_BYTES).also { SecureRandom().nextBytes(it) }
+        val hash = withContext(Dispatchers.Default) { hashPassword(code, salt) }
+        val prefs = getPrefs(context) ?: error("Хранилище настроек недоступно для сохранения кода уничтожения")
+
+        withContext(Dispatchers.IO) {
+            val saved = prefs.edit().apply {
+                putString(KEY_DURESS_SALT, salt.toBase64())
+                putString(KEY_DURESS_HASH, hash.toBase64())
+            }.commit()
+            if (!saved) {
+                error("Не удалось сохранить код уничтожения")
+            }
+        }
+    }
+
+    fun clearDuressCode(context: Context? = null) {
+        val prefs = getPrefs(context) ?: return
+        prefs.edit {
+            remove(KEY_DURESS_SALT)
+            remove(KEY_DURESS_HASH)
+        }
+    }
+
+    suspend fun verifyDuressCode(context: Context? = null, code: String): Boolean {
+        if (AppLockSecurityDetector.isProcessCompromised()) {
+            Timber.w("AppLockRepository: скомпрометированная среда, проверка кода уничтожения отклонена")
+            registerFailedAttempt(context)
+            return false
+        }
+        val prefs = getPrefs(context) ?: return false
+        val salt = prefs.getString(KEY_DURESS_SALT, null)?.fromBase64() ?: return false
+        val expectedHash = prefs.getString(KEY_DURESS_HASH, null)?.fromBase64() ?: return false
+        val actualHash = withContext(Dispatchers.Default) { hashPassword(code, salt) }
+        return MessageDigest.isEqual(expectedHash, actualHash)
+    }
+
+    suspend fun verifyDuressCodeThrottled(context: Context? = null, code: String): AppLockCheckResult {
+        val remainingBefore = lockoutRemainingMillis(context)
+        if (remainingBefore > 0L) return AppLockCheckResult.LockedOut(remainingBefore)
+        if (verifyDuressCode(context, code)) {
+            resetFailedAttempts(context)
+            return AppLockCheckResult.Success
+        }
+        return AppLockCheckResult.Wrong(lockoutRemainingMs = registerFailedAttempt(context))
+    }
+
+    /**
+     * Проверка кода на экране замка в постоянное время.
+     *
+     * Если код уничтожения задан, оба хеша (кода доступа и кода уничтожения)
+     * считаются всегда, какой бы код ни совпал — это исключает timing side-channel
+     * утечку о том, какой именно код был введён.
+     */
+    suspend fun verifyUnlockCode(context: Context? = null, code: String): AppLockUnlockResult {
+        if (AppLockSecurityDetector.isProcessCompromised()) {
+            Timber.w("AppLockRepository: скомпрометированная среда, проверка разблокировки отклонена")
+            return AppLockUnlockResult.Wrong
+        }
+        val prefs = getPrefs(context) ?: return AppLockUnlockResult.Wrong
+        val accessSalt = prefs.getString(KEY_PASSWORD_SALT, null)?.fromBase64()
+        val accessHash = prefs.getString(KEY_PASSWORD_HASH, null)?.fromBase64()
+        if (accessSalt == null || accessHash == null) return AppLockUnlockResult.Wrong
+
+        val duressSalt = prefs.getString(KEY_DURESS_SALT, null)?.fromBase64()
+        val duressHash = prefs.getString(KEY_DURESS_HASH, null)?.fromBase64()
+
+        return withContext(Dispatchers.Default) {
+            val actualAccessHash = hashPassword(code, accessSalt)
+            val accessMatches = MessageDigest.isEqual(accessHash, actualAccessHash)
+
+            if (duressSalt != null && duressHash != null) {
+                val actualDuressHash = hashPassword(code, duressSalt)
+                val duressMatches = MessageDigest.isEqual(duressHash, actualDuressHash)
+
+                when {
+                    accessMatches -> AppLockUnlockResult.AccessGranted
+                    duressMatches -> AppLockUnlockResult.DuressTriggered
+                    else -> AppLockUnlockResult.Wrong
+                }
+            } else {
+                if (accessMatches) AppLockUnlockResult.AccessGranted else AppLockUnlockResult.Wrong
+            }
+        }
+    }
+
+    /**
+     * Заменяет текущий код доступа кодом уничтожения, удаляет код уничтожения
+     * и сбрасывает счётчики троттлинга. Замок остаётся включённым и взведённым.
+     */
+    fun promoteDuressCodeToAccessCode(context: Context? = null): Boolean {
+        val prefs = getPrefs(context) ?: return false
+        val duressSalt = prefs.getString(KEY_DURESS_SALT, null) ?: return false
+        val duressHash = prefs.getString(KEY_DURESS_HASH, null) ?: return false
+        val saved = prefs.edit().apply {
+            putString(KEY_PASSWORD_SALT, duressSalt)
+            putString(KEY_PASSWORD_HASH, duressHash)
+            remove(KEY_DURESS_SALT)
+            remove(KEY_DURESS_HASH)
+            remove(KEY_FAILED_ATTEMPTS)
+            remove(KEY_LOCKOUT_UNTIL)
+            remove(KEY_LOCKOUT_UNTIL_ELAPSED)
+            putBoolean(KEY_SECURE_LOCK_ENABLED, true)
+        }.commit()
+        if (saved) {
+            setArmed(context, true)
+        }
+        return saved
     }
 
     /**
@@ -377,6 +508,8 @@ object AppLockRepository {
         prefs?.edit {
             remove(KEY_PASSWORD_SALT)
             remove(KEY_PASSWORD_HASH)
+            remove(KEY_DURESS_SALT)
+            remove(KEY_DURESS_HASH)
             putBoolean(KEY_SECURE_LOCK_ENABLED, false)
         }
         if (Settings.isInitialized) {

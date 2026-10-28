@@ -57,6 +57,9 @@ import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import com.client.xvideos.screenSettings.atom.SettingsOutlinedButton
+import com.client.xvideos.screenSettings.molecule.DuressCodeDialog
+import com.client.xvideos.screenSettings.molecule.DuressCodeRow
+import com.client.xvideos.screenSettings.molecule.DuressDialogMode
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
@@ -85,7 +88,9 @@ fun AppLockSettingsSection(
     val keyboardIncognito by Settings.keyboard_incognito_enabled.field.collectAsStateWithLifecycle()
     val blurRecentTasks by Settings.blur_recent_tasks.field.collectAsStateWithLifecycle()
     var passwordSet by remember { mutableStateOf(AppLockRepository.isPasswordSet(context)) }
+    var duressCodeSet by remember { mutableStateOf(AppLockRepository.isDuressCodeSet(context)) }
     var dialogMode by remember { mutableStateOf<AppLockDialogMode?>(null) }
+    var duressDialogMode by remember { mutableStateOf<DuressDialogMode?>(null) }
     val enabled = appLockEnabled && passwordSet
     val scope = rememberCoroutineScope()
     var showCamouflageVerificationDialog by remember { mutableStateOf(false) }
@@ -102,6 +107,7 @@ fun AppLockSettingsSection(
     }
 
     val onDismissDialogMode: () -> Unit = remember { { dialogMode = null } }
+    val onDismissDuressDialogMode: () -> Unit = remember { { duressDialogMode = null } }
     val onDismissCamouflageVerification: () -> Unit = remember { { showCamouflageVerificationDialog = false } }
     val onDismissTimeoutDialog: () -> Unit = remember { { showTimeoutDialog = false } }
     val onSelectTimeout: (AppLockTimeout) -> Unit = remember {
@@ -113,22 +119,33 @@ fun AppLockSettingsSection(
     val onPasswordDialogComplete: () -> Unit = remember(context) {
         {
             passwordSet = AppLockRepository.isPasswordSet(context)
+            duressCodeSet = AppLockRepository.isDuressCodeSet(context)
             dialogMode = null
+        }
+    }
+    val onDuressDialogComplete: () -> Unit = remember(context) {
+        {
+            duressCodeSet = AppLockRepository.isDuressCodeSet(context)
+            duressDialogMode = null
         }
     }
     val onSetOrChangeLock: () -> Unit = remember(enabled) {
         { dialogMode = if (enabled) AppLockDialogMode.CHANGE else AppLockDialogMode.SET }
     }
     val onDisableLock: () -> Unit = remember { { dialogMode = AppLockDialogMode.DISABLE } }
+    val onSetDuressCode: () -> Unit = remember { { duressDialogMode = DuressDialogMode.SET } }
+    val onChangeDuressCode: () -> Unit = remember { { duressDialogMode = DuressDialogMode.CHANGE } }
+    val onRemoveDuressCode: () -> Unit = remember { { duressDialogMode = DuressDialogMode.REMOVE } }
     val onShowTimeoutClick: () -> Unit = remember { { showTimeoutDialog = true } }
     val onEnableCamouflageRequested: () -> Unit = remember { { showCamouflageVerificationDialog = true } }
     val onToggleIncognito: (Boolean) -> Unit = remember { { enabledValue -> Settings.keyboard_incognito_enabled.setValue(enabledValue) } }
     val onToggleBlurRecent: (Boolean) -> Unit = remember { { enabledValue -> Settings.blur_recent_tasks.setValue(enabledValue) } }
 
-    val isAnyDialogOpen = dialogMode != null || showCamouflageVerificationDialog || showTimeoutDialog
+    val isAnyDialogOpen = dialogMode != null || duressDialogMode != null || showCamouflageVerificationDialog || showTimeoutDialog
     val onBackDismiss = remember {
         {
             dialogMode = null
+            duressDialogMode = null
             showCamouflageVerificationDialog = false
             showTimeoutDialog = false
         }
@@ -140,6 +157,14 @@ fun AppLockSettingsSection(
             mode = mode,
             onDismiss = onDismissDialogMode,
             onComplete = onPasswordDialogComplete
+        )
+    }
+
+    duressDialogMode?.let { mode ->
+        DuressCodeDialog(
+            mode = mode,
+            onDismiss = onDismissDuressDialogMode,
+            onComplete = onDuressDialogComplete,
         )
     }
 
@@ -219,6 +244,14 @@ fun AppLockSettingsSection(
                 text = "Код доступа",
                 subtitle = "Отключить блокировку приложения",
                 trailing = disableTrailing
+            )
+
+            SettingsDivider2()
+            DuressCodeRow(
+                isSet = duressCodeSet,
+                onSetClick = onSetDuressCode,
+                onChangeClick = onChangeDuressCode,
+                onRemoveClick = onRemoveDuressCode,
             )
         }
 
@@ -452,6 +485,13 @@ internal fun AppLockPasswordDialog(
                     errorText = "При включённой маскировке код доступа — только цифры, не длиннее " +
                         "${CalculatorState.MAX_CODE_DIGITS}"
                     return@launch
+                }
+
+                if (needsNewPassword && AppLockRepository.isDuressCodeSet(context)) {
+                    if (AppLockRepository.verifyDuressCode(context, newPassword)) {
+                        errorText = "Код доступа не может совпадать с кодом уничтожения"
+                        return@launch
+                    }
                 }
 
                 when (mode) {

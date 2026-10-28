@@ -26,7 +26,9 @@ import com.client.xvideos.applock.molecule.AppLockGate
 import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
+import com.client.xvideos.common.applock.AppLockUnlockResult
 import com.client.xvideos.common.applock.WindowPrivacy
+import com.client.xvideos.duress.DuressLauncher
 import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -127,11 +129,27 @@ class LockActivity : ComponentActivity() {
      */
     private suspend fun tryUnlock(code: String): Boolean {
         if (AppLockRepository.lockoutRemainingMillis(this) > 0L) return false
-        if (!AppLockRepository.verifyPassword(this, code)) return false
-        AppLockRepository.resetFailedAttempts(this)
-        AppLockSession.unlock()
-        finishWithoutAnimation()
-        return true
+        return when (AppLockRepository.verifyUnlockCode(this, code)) {
+            is AppLockUnlockResult.AccessGranted -> {
+                AppLockRepository.resetFailedAttempts(this)
+                AppLockSession.unlock()
+                finishWithoutAnimation()
+                true
+            }
+            is AppLockUnlockResult.DuressTriggered -> {
+                AppLockRepository.resetFailedAttempts(this)
+                val success = DuressLauncher.execute(this)
+                if (!success) {
+                    // Если изоляция не удалась, отвечаем как на неверный код (спека, пункт 8)
+                    false
+                } else {
+                    true
+                }
+            }
+            is AppLockUnlockResult.Wrong -> {
+                false
+            }
+        }
     }
 
     /** Сеанс уже открыт — показывать нечего. */

@@ -2,6 +2,8 @@ package com.client.xvideos
 
 import android.app.Application
 import android.content.Context
+import android.os.Build
+import com.client.xvideos.common.duress.DuressWipeIsolation
 import com.client.xvideos.common.util.defaultSharedPreferences
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
 import coil3.ImageLoader
@@ -72,12 +74,23 @@ class App : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
 
+        // Процесс перезапуска после кода уничтожения не инициализирует сервисы и Hilt
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (getProcessName().endsWith(":restart")) {
+                return
+            }
+        }
+
         // BuildConfig генерируется на модуль, у :core он свой — поля приложения
         // базовый слой получает отсюда.
         AppBuildInfo.init(debug = BuildConfig.DEBUG, versionName = BuildConfig.VERSION_NAME)
         // Контекст для кода в модулях, до которого не дотягивается ни DI, ни
         // Compose: класс приложения им не виден.
         AppContextHolder.init(this)
+
+        // Если процесс был убит посреди стирания данных, доделываем изоляцию
+        // строго до создания Hilt-синглтонов и AppPath.init()
+        DuressWipeIsolation.ensureIsolatedBeforeStartup(this)
 
         // Строго первым делом: Hilt-синглтоны читают пути прямо в конструкторе.
         // init() только назначает пути и создаёт папки — на главном потоке это
@@ -96,6 +109,7 @@ class App : Application(), SingletonImageLoader.Factory {
                 runCatching { XlrBackupManager.recoverInterruptedRestore() }
                     .onFailure { Timber.e(it, "App: откат оборванного восстановления не удался") }
                 AppPath.cleanupTransientDirs()
+                DuressWipeIsolation.cleanPendingWipe(this@App)
             }
 
         if (BuildConfig.DEBUG) {

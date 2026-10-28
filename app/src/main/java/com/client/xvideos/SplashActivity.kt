@@ -8,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
+import com.client.xvideos.common.duress.DuressTokenStore
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
@@ -108,7 +109,11 @@ class SplashActivity : ComponentActivity() {
                 Timber.e(e, "SplashActivity: ошибка при фоновой инициализации приложения")
             }
             isReady = true
-            if (AppLockRepository.isEnabled(this@SplashActivity)) {
+            val duressToken = intent.getStringExtra(DuressTokenStore.EXTRA_DURESS_TOKEN)
+            val duressUnlocked = DuressTokenStore.consumeTokenIfValid(this@SplashActivity, duressToken)
+            if (duressUnlocked) {
+                AppLockSession.unlock()
+            } else if (AppLockRepository.isEnabled(this@SplashActivity)) {
                 AppLockSession.lock()
             }
             // Extra про необходимость замка сюда больше не кладём: MainActivity

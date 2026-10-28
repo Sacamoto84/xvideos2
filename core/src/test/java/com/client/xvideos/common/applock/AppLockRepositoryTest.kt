@@ -349,6 +349,128 @@ class AppLockRepositoryTest {
         assertFalse(AppLockSession.isUnlocked())
     }
 
+    @Test
+    fun `isDuressCodeSet returns false initially and true after setDuressCode`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        assertFalse(AppLockRepository.isDuressCodeSet())
+
+        val result = AppLockRepository.setDuressCode(null, "9876")
+        assertTrue(result.isSuccess)
+        assertTrue(AppLockRepository.isDuressCodeSet())
+
+        assertTrue(securePrefs.contains("app_lock_duress_hash"))
+        assertTrue(securePrefs.contains("app_lock_duress_salt"))
+    }
+
+    @Test
+    fun `setDuressCode fails if code shorter than 4 characters`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        val result = AppLockRepository.setDuressCode(null, "123")
+        assertTrue(result.isFailure)
+        assertFalse(AppLockRepository.isDuressCodeSet())
+    }
+
+    @Test
+    fun `setDuressCode fails if code matches access password`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        val result = AppLockRepository.setDuressCode(null, "1234")
+        assertTrue(result.isFailure)
+        assertFalse(AppLockRepository.isDuressCodeSet())
+    }
+
+    @Test
+    fun `setPassword fails if new password matches duress code`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockRepository.setDuressCode(null, "9876")
+
+        val result = AppLockRepository.setPassword(null, "9876")
+        assertTrue(result.isFailure)
+        // Старый пароль сохранился
+        assertTrue(AppLockRepository.verifyPassword(null, "1234"))
+    }
+
+    @Test
+    fun `verifyDuressCode validates correctly`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockRepository.setDuressCode(null, "9876")
+
+        assertTrue(AppLockRepository.verifyDuressCode(null, "9876"))
+        assertFalse(AppLockRepository.verifyDuressCode(null, "1234"))
+        assertFalse(AppLockRepository.verifyDuressCode(null, "0000"))
+    }
+
+    @Test
+    fun `clearDuressCode removes duress secrets but preserves access password`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockRepository.setDuressCode(null, "9876")
+
+        AppLockRepository.clearDuressCode(null)
+        assertFalse(AppLockRepository.isDuressCodeSet())
+        assertTrue(AppLockRepository.isPasswordSet())
+        assertTrue(AppLockRepository.verifyPassword(null, "1234"))
+        assertFalse(securePrefs.contains("app_lock_duress_hash"))
+        assertFalse(securePrefs.contains("app_lock_duress_salt"))
+    }
+
+    @Test
+    fun `clearPassword removes both access password and duress code`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockRepository.setDuressCode(null, "9876")
+
+        AppLockRepository.clearPassword(null)
+        assertFalse(AppLockRepository.isPasswordSet())
+        assertFalse(AppLockRepository.isDuressCodeSet())
+        assertFalse(securePrefs.contains("app_lock_duress_hash"))
+        assertFalse(securePrefs.contains("app_lock_duress_salt"))
+    }
+
+    @Test
+    fun `verifyUnlockCode correctly identifies access code, duress code and wrong code`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockRepository.setDuressCode(null, "9876")
+
+        assertEquals(
+            AppLockUnlockResult.AccessGranted,
+            AppLockRepository.verifyUnlockCode(null, "1234")
+        )
+        assertEquals(
+            AppLockUnlockResult.DuressTriggered,
+            AppLockRepository.verifyUnlockCode(null, "9876")
+        )
+        assertEquals(
+            AppLockUnlockResult.Wrong,
+            AppLockRepository.verifyUnlockCode(null, "0000")
+        )
+    }
+
+    @Test
+    fun `verifyUnlockCode without duress code configured`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+
+        assertEquals(
+            AppLockUnlockResult.AccessGranted,
+            AppLockRepository.verifyUnlockCode(null, "1234")
+        )
+        assertEquals(
+            AppLockUnlockResult.Wrong,
+            AppLockRepository.verifyUnlockCode(null, "9876")
+        )
+    }
+
+    @Test
+    fun `promoteDuressCodeToAccessCode makes duress code the new access password`() = runTest {
+        AppLockRepository.setPassword(null, "1234")
+        AppLockRepository.setDuressCode(null, "9876")
+
+        assertTrue(AppLockRepository.promoteDuressCodeToAccessCode(null))
+        assertFalse(AppLockRepository.isDuressCodeSet())
+        assertTrue(AppLockRepository.isPasswordSet())
+
+        // Теперь новый код доступа — 9876, а 1234 больше не подходит
+        assertTrue(AppLockRepository.verifyPassword(null, "9876"))
+        assertFalse(AppLockRepository.verifyPassword(null, "1234"))
+    }
+
     /**
      * @param failCommits `commit()` сообщает об отказе, как при сбое записи на
      *   диск. В памяти значения при этом меняются — так ведёт себя и настоящая
