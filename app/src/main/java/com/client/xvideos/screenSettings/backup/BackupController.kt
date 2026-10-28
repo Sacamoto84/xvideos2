@@ -270,7 +270,14 @@ class BackupController(
         }
     }
 
-    /** Расшифровывает архив, выбранный в [openArchive], паролем [password]. */
+    /**
+     * Расшифровывает архив, выбранный в [openArchive], паролем [password].
+     *
+     * Верный пароль читает весь архив — на 1.5 ГБ это ~20 с, и всё это время
+     * диалог открыт и показывает чтение ([isWorking]). Раньше он оставался
+     * открытым с пустым полем, будто пароль не принят, а повторный ввод здесь
+     * молча отбрасывался: пароль вводили по нескольку раз.
+     */
     fun decryptArchive(password: CharArray) {
         val uri = pendingRestoreUri
         if (uri == null || isWorking) {
@@ -305,7 +312,16 @@ class BackupController(
         }
     }
 
+    /**
+     * Закрывает диалог пароля. Пока архив читается — ничего не делает: чтение
+     * не прерывается, и раньше архив открывался уже после «Отмены».
+     */
     fun dismissRestorePassword() {
+        if (isWorking) return
+        hideRestorePassword()
+    }
+
+    private fun hideRestorePassword() {
         showRestorePasswordDialog = false
         pendingRestoreUri = null
         restorePasswordError = null
@@ -341,7 +357,7 @@ class BackupController(
         restoreUri = null
         restoreItems = emptyList()
         selectedRestorePaths = emptySet()
-        dismissRestorePassword()
+        hideRestorePassword()
         wipeCreatePassword()
     }
 

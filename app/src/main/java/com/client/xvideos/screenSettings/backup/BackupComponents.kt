@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -553,16 +555,22 @@ internal fun BackupCreatePasswordDialog(
     )
 }
 
+/**
+ * @param busy Пароль принят к проверке, архив читается: поле и кнопки
+ * выключены, вместо ошибки — строка чтения. Без неё диалог с пустым полем
+ * выглядел так, будто пароль не принят, и его вводили снова.
+ */
 @Composable
 internal fun BackupRestorePasswordDialog(
     errorMessage: String?,
+    busy: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (password: CharArray) -> Unit,
 ) {
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val isValid = password.isNotEmpty()
+    val isValid = password.isNotEmpty() && !busy
 
     LavenderDialog(
         title = "Ввод пароля бэкапа",
@@ -570,6 +578,7 @@ internal fun BackupRestorePasswordDialog(
             password = ""
             onDismiss()
         },
+        dismissEnabled = !busy,
         confirmText = "Открыть",
         confirmEnabled = isValid,
         onConfirm = {
@@ -593,6 +602,7 @@ internal fun BackupRestorePasswordDialog(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
+                    enabled = !busy,
                     label = { Text(TEXT_PASSWORD_LABEL) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
@@ -621,7 +631,21 @@ internal fun BackupRestorePasswordDialog(
                 )
             }
 
-            if (!errorMessage.isNullOrBlank()) {
+            if (busy) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        color = dialogTheme.bodyColor,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Проверка пароля и чтение архива…",
+                        style = Theme.L.Type.dialogBody.copy(color = dialogTheme.bodyColor)
+                    )
+                }
+            } else if (!errorMessage.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = errorMessage,
@@ -703,5 +727,5 @@ private fun BackupCreatePasswordDialogPreview() = SettingsPreview {
 @Preview(showBackground = true, backgroundColor = 0xFF353535)
 @Composable
 private fun BackupRestorePasswordDialogPreview() = SettingsPreview {
-    BackupRestorePasswordDialog(errorMessage = "Неверный пароль архива", onDismiss = {}, onConfirm = {})
+    BackupRestorePasswordDialog(errorMessage = "Неверный пароль архива", busy = false, onDismiss = {}, onConfirm = {})
 }

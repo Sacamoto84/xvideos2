@@ -36,6 +36,7 @@ class BackupControllerTest {
         )
         var archiveType = XlrBackupType.ENCRYPTED_XLR
         var inspectError: Throwable? = null
+        var inspectGate: CompletableDeferred<Unit>? = null
         var createGate: CompletableDeferred<Unit>? = null
         var createProgress = emptyList<XlrBackupReport>()
         var afterRestoreGate: CompletableDeferred<Unit>? = null
@@ -64,6 +65,7 @@ class BackupControllerTest {
 
         override suspend fun inspect(uri: String, password: CharArray?): Result<List<XlrBackupItem>> {
             inspectedWith += password?.concatToString()
+            inspectGate?.await()
             inspectError?.let { return Result.failure(it) }
             return Result.success(items)
         }
@@ -231,6 +233,29 @@ class BackupControllerTest {
 
         assertEquals(listOf<String?>("secret", "secret"), engine.restoredWith)
         assertEquals(2, backup.restoreCount)
+    }
+
+    @Test
+    fun `пока архив читается, диалог пароля не закрывается`() = runTest(dispatcher) {
+        engine.inspectGate = CompletableDeferred()
+        val backup = controller()
+        advanceUntilIdle()
+        backup.openArchive("content://backup.xlr")
+        advanceUntilIdle()
+        backup.decryptArchive("secret".toCharArray())
+        advanceUntilIdle()
+        assertTrue(backup.isWorking)
+
+        // Большой архив читается десятки секунд. Раньше «Отмена» закрывала
+        // диалог, а архив всё равно открывался, когда чтение заканчивалось.
+        backup.dismissRestorePassword()
+        assertTrue("диалог закрылся посреди чтения архива", backup.showRestorePasswordDialog)
+
+        engine.inspectGate?.complete(Unit)
+        advanceUntilIdle()
+        assertFalse(backup.showRestorePasswordDialog)
+        assertEquals("content://backup.xlr", backup.restoreUri)
+        assertEquals(listOf<String?>("secret"), engine.inspectedWith)
     }
 
     @Test

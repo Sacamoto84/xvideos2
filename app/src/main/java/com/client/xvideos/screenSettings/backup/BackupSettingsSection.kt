@@ -350,6 +350,7 @@ internal fun BackupSettingsSection(
     if (showRestorePasswordDialog) {
         BackupRestorePasswordDialog(
             errorMessage = backup.restorePasswordError,
+            busy = isWorking,
             onDismiss = onDismissRestorePasswordDialog,
             onConfirm = { password -> backup.decryptArchive(password) }
         )

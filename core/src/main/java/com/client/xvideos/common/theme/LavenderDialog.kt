@@ -29,6 +29,7 @@ import androidx.compose.ui.window.Dialog
 /**
  * Канонический лавандовый диалог (стиль A). Все настройки — из [Theme.L.DialogLavande].
  * Кнопки: filled главная + text отмена; destructive=true → красная заливка.
+ * dismissEnabled=false — диалог не закрывается ни отменой, ни «Назад», ни касанием мимо.
  */
 @Composable
 fun LavenderDialog(
@@ -42,11 +43,12 @@ fun LavenderDialog(
     confirmEnabled: Boolean = true,
     destructive: Boolean = false,
     dismissText: String = "Отмена",
+    dismissEnabled: Boolean = true,
 ) {
     val dialogTheme = Theme.DialogLavande
     val centered = icon != null
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(onDismissRequest = { if (dismissEnabled) onDismiss() }) {
         Surface(shape = RoundedCornerShape(dialogTheme.cornerRadius), color = dialogTheme.content) {
             Column(Modifier.padding(24.dp)) {
 
@@ -83,7 +85,7 @@ fun LavenderDialog(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = onDismiss, enabled = dismissEnabled) {
                         Text(dismissText, style = dialogTheme.button.copy(color = dialogTheme.dismissTextColor))
                     }
                     if (confirmText != null) {
