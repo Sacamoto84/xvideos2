@@ -6,6 +6,10 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -30,12 +34,16 @@ import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrRestoreMode
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsPreview
+import com.client.xvideos.screenSettings.components.SettingsRowTextSecondary
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
+import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.screenSettings.components.SettingsDivider2
@@ -214,117 +222,118 @@ internal fun BackupSettingsSection(
         }
     }
 
-    SettingsGroup(modifier = modifier) {
-        SettingsValueRow(
-            icon = R.drawable.hard_drive_2_24,
-            text = "Backup X/L/R/XLive",
-            value = backupHeaderValue
-        )
+    // Каждый шаг — своя карточка: раньше всё шло одной, и страница читалась как куча.
+    Column(modifier = modifier) {
         BackupModeSelector(
             selected = screen,
             enabled = !isWorking,
             onSelected = onSelectScreen
         )
-        SettingsDivider()
+        Text(
+            text = backupHeaderValue,
+            style = Theme.L.Type.rowSubtitle.copy(color = SettingsRowTextSecondary),
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
+        )
 
         when (screen) {
             BackupFlowScreen.CREATE -> {
-                SettingsDivider2()
-                SettingsValueRow(
-                    icon = R.drawable.hard_drive_2_24,
-                    text = "Выбрано для архива",
-                    value = backupValueText
-                )
-                SettingsDivider2()
+                SettingsSectionTitle("Состав")
+                SettingsGroup {
+                    BackupContentModeSelector(
+                        title = "L backup",
+                        value = backup.lMode,
+                        enabled = !isWorking,
+                        description = "Мини: Likes/Collection без медиа, только metadata",
+                        onValueChange = onLBackupModeChange
+                    )
+                    SettingsDivider2()
+                    BackupContentModeSelector(
+                        title = "R backup",
+                        value = backup.rMode,
+                        enabled = !isWorking,
+                        description = "Мини: Download без mp4/jpg, только .info",
+                        onValueChange = onRBackupModeChange
+                    )
+                }
 
-                BackupContentModeSelector(
-                    title = "L backup",
-                    value = backup.lMode,
-                    enabled = !isWorking,
-                    description = "Мини: Likes/Collection без медиа, только metadata",
-                    onValueChange = onLBackupModeChange
-                )
+                SettingsSectionTitle("Папки")
+                SettingsGroup {
+                    BackupSelectionActions(
+                        enabled = !isWorking,
+                        onSelectAll = onSelectAllBackup,
+                        onSelectNone = onSelectNoneBackup
+                    )
+                    BackupFolderList(
+                        items = backupItems,
+                        selectedPaths = selectedBackupPaths,
+                        enabled = !isWorking,
+                        onToggle = onToggleBackupPath
+                    )
+                }
 
-                SettingsDivider2()
-
-                BackupContentModeSelector(
-                    title = "R backup",
-                    value = backup.rMode,
-                    enabled = !isWorking,
-                    description = "Мини: Download без mp4/jpg, только .info",
-                    onValueChange = onRBackupModeChange
-                )
-
-                SettingsDivider2()
-
-                BackupSelectionActions(
-                    enabled = !isWorking,
-                    onSelectAll = onSelectAllBackup,
-                    onSelectNone = onSelectNoneBackup
-                )
-                BackupFolderList(
-                    items = backupItems,
-                    selectedPaths = selectedBackupPaths,
-                    enabled = !isWorking,
-                    onToggle = onToggleBackupPath
-                )
-                SettingsDivider()
+                Spacer(Modifier.height(16.dp))
                 SettingsListItem(
                     icon = R.drawable.hard_drive_2_24,
                     text = "Создать бэкап",
-                    subtitle = backupSummaryText,
+                    subtitle = backupValueText,
                     trailing = createButtonTrailing
                 )
             }
 
             BackupFlowScreen.RESTORE -> {
-                SettingsListItem(
-                    icon = R.drawable.hard_drive_2_24,
-                    text = "Открыть архив",
-                    subtitle = restoreSubtitle,
-                    trailing = restoreButtonTrailing
-                )
+                SettingsSectionTitle("Архив")
+                SettingsGroup {
+                    SettingsListItem(
+                        icon = R.drawable.hard_drive_2_24,
+                        text = "Открыть архив",
+                        subtitle = restoreSubtitle,
+                        trailing = restoreButtonTrailing
+                    )
+                    if (restoreItems.isEmpty()) {
+                        SettingsDivider()
+                        SettingsValueRow(
+                            icon = R.drawable.hard_drive_2_24,
+                            text = "Что восстановить",
+                            value = "Выберите файл бэкапа (.xlr или .zip), после этого появятся папки X, L и R из архива."
+                        )
+                    }
+                }
 
-                if (restoreItems.isEmpty()) {
-                    SettingsDivider()
-                    SettingsValueRow(
-                        icon = R.drawable.hard_drive_2_24,
-                        text = "Что восстановить",
-                        value = "Выберите файл бэкапа (.xlr или .zip), после этого появятся папки X, L и R из архива."
-                    )
-                } else {
-                    SettingsDivider()
-                    SettingsValueRow(
-                        icon = R.drawable.hard_drive_2_24,
-                        text = "Выбрано для восстановления",
-                        value = restoreValueText
-                    )
-                    BackupSelectionActions(
-                        enabled = !isWorking,
-                        onSelectAll = onSelectAllRestore,
-                        onSelectNone = onSelectNoneRestore
-                    )
-                    BackupFolderList(
-                        items = restoreItems,
-                        selectedPaths = selectedRestorePaths,
-                        enabled = !isWorking,
-                        onToggle = onToggleRestorePath
-                    )
-                    SettingsDivider()
+                if (restoreItems.isNotEmpty()) {
+                    SettingsSectionTitle("Папки")
+                    SettingsGroup {
+                        BackupSelectionActions(
+                            enabled = !isWorking,
+                            onSelectAll = onSelectAllRestore,
+                            onSelectNone = onSelectNoneRestore
+                        )
+                        BackupFolderList(
+                            items = restoreItems,
+                            selectedPaths = selectedRestorePaths,
+                            enabled = !isWorking,
+                            onToggle = onToggleRestorePath
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
                     SettingsButtonRow(
                         icon = R.drawable.hard_drive_2_24,
                         text = "Восстановить выбранное",
+                        subtitle = restoreValueText,
                         value = if (isIdle) "Восстановить" else "Идет...",
                         onClick = onAskRestoreMode
                     )
                 }
             }
         }
-        SettingsDivider()
-        BackupConsole(
-            lines = backup.console,
-            onClear = onClearConsole
-        )
+
+        Spacer(Modifier.height(16.dp))
+        SettingsGroup {
+            BackupConsole(
+                lines = backup.console,
+                onClear = onClearConsole
+            )
+        }
     }
 
     if (showCreatePasswordDialog) {

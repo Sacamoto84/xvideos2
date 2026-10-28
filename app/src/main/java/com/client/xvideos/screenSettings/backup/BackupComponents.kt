@@ -142,7 +142,8 @@ internal fun BackupContentModeSelector(
         value = "${backupContentModeTitle(value)} • $description"
     )
     SingleChoiceSegmentedButtonRow(
-        modifier = modifier.then(BACKUP_SELECTOR_BASE_MODIFIER)
+        // Ряд кончает карточку «Состав»: снизу добивается до 16dp, как по бокам.
+        modifier = modifier.padding(bottom = 10.dp).then(BACKUP_SELECTOR_BASE_MODIFIER)
     ) {
         XlrBackupContentMode.entries.forEachIndexed { index, mode ->
             SegmentedButton(
@@ -204,7 +205,7 @@ internal fun BackupConsole(
 
     SettingsListItem(
         icon = R.drawable.hard_drive_2_24,
-        text = "Консоль backup",
+        text = "Консоль",
         subtitle = if (lines.isEmpty()) "Здесь будет процесс восстановления файлов из сети" else "${visibleLines.size} строк",
         trailing = {
             TextButton(
@@ -221,7 +222,8 @@ internal fun BackupConsole(
         modifier = modifier
             .fillMaxWidth()
             .height(260.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            // Снизу столько же, сколько по бокам; скругление 8 = 24 карточки − 16 отступа.
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             .background(SettingsTopBarColor, RoundedCornerShape(8.dp))
             .padding(10.dp)
     ) {
