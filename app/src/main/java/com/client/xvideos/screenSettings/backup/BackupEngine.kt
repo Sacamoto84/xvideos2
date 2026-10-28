@@ -37,8 +37,18 @@ import javax.inject.Inject
 interface BackupEngine {
     suspend fun currentItems(options: XlrBackupOptions): List<XlrBackupItem>
 
-    /** Пишет зашифрованный архив. Варианта без пароля здесь нет намеренно. */
-    suspend fun create(uri: String, paths: Set<String>, options: XlrBackupOptions, password: CharArray): Result<XlrBackupReport>
+    /**
+     * Пишет зашифрованный архив. Варианта без пароля здесь нет намеренно.
+     *
+     * @param onProgress Записано на сейчас; по ходу копирования, с потока записи.
+     */
+    suspend fun create(
+        uri: String,
+        paths: Set<String>,
+        options: XlrBackupOptions,
+        password: CharArray,
+        onProgress: (XlrBackupReport) -> Unit,
+    ): Result<XlrBackupReport>
 
     suspend fun detectType(uri: String): XlrBackupType
 
@@ -79,8 +89,9 @@ class XlrBackupEngine @Inject constructor(
         paths: Set<String>,
         options: XlrBackupOptions,
         password: CharArray,
+        onProgress: (XlrBackupReport) -> Unit,
     ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
-        XlrBackupManager.createBackup(context, Uri.parse(uri), paths, options, password)
+        XlrBackupManager.createBackup(context, Uri.parse(uri), paths, options, password, onProgress)
     }
 
     override suspend fun detectType(uri: String): XlrBackupType = withContext(Dispatchers.IO) {

@@ -10,6 +10,7 @@ import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
 import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
+import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrInvalidPasswordException
 import com.client.xvideos.common.backup.XlrRestoreMode
@@ -118,6 +119,15 @@ class BackupController(
         scope.launch(mainDispatcher) { log(message) }
     }
 
+    /** Строка прогресса одна: следующая заменяет её, а не добавляется. */
+    private fun logProgress(message: String) {
+        if (console.lastOrNull()?.startsWith(PROGRESS_PREFIX) == true) {
+            console[console.lastIndex] = message
+        } else {
+            log(message)
+        }
+    }
+
     fun clearConsole() = console.clear()
 
     // --- Выбор папок для архива ---
@@ -192,8 +202,22 @@ class BackupController(
         scope.launch(mainDispatcher) {
             try {
                 log("Создание зашифрованного backup: L=${backupContentModeTitle(options.lMode)}, R=${backupContentModeTitle(options.rMode)}")
-                engine.create(uri, paths, options, password)
+                val total = XlrBackupManager.reportForSelection(backupItems, paths)
+                fun progressText(done: XlrBackupReport) =
+                    "$PROGRESS_PREFIX ${progressPercent(done, total)}%: ${done.files} / ${total.files} файлов, " +
+                        "${formatBytes(done.bytes)} / ${formatBytes(total.bytes)}"
+                var shownPercent = -1
+                engine.create(uri, paths, options, password) { done ->
+                    // Поток записи: в главный — только смена процента, тысячи мелких файлов не заваливают его.
+                    val percent = progressPercent(done, total)
+                    if (percent != shownPercent) {
+                        shownPercent = percent
+                        scope.launch(mainDispatcher) { logProgress(progressText(done)) }
+                    }
+                }
                     .onSuccess { report ->
+                        // 100% по байтам наступают до закрытия последнего файла: итог — из отчёта.
+                        logProgress(progressText(report))
                         log("Backup создан и зашифрован: ${report.files} файлов, ${formatBytes(report.bytes)}")
                         SnackBar.success("Backup создан: ${report.files} файлов, ${formatBytes(report.bytes)}")
                         loadBackupItems()
@@ -388,7 +412,15 @@ class BackupController(
     private companion object {
         const val CONSOLE_MAX_LINES = 2000
         const val WIPED = '\u0000'
+        const val PROGRESS_PREFIX = "Записано"
     }
 }
 
 internal const val MSG_SELECT_AT_LEAST_ONE_FOLDER = "Выберите хотя бы одну папку"
+
+/** Доля записанного в процентах: по байтам, у пустых файлов — по их числу. */
+internal fun progressPercent(done: XlrBackupReport, total: XlrBackupReport): Int = when {
+    total.bytes > 0 -> (done.bytes * 100 / total.bytes).toInt()
+    total.files > 0 -> done.files * 100 / total.files
+    else -> 100
+}.coerceIn(0, 100)

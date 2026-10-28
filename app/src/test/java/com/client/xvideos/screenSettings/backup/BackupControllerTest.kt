@@ -37,6 +37,7 @@ class BackupControllerTest {
         var archiveType = XlrBackupType.ENCRYPTED_XLR
         var inspectError: Throwable? = null
         var createGate: CompletableDeferred<Unit>? = null
+        var createProgress = emptyList<XlrBackupReport>()
         var afterRestoreGate: CompletableDeferred<Unit>? = null
 
         val createdWith = mutableListOf<CharArray>()
@@ -51,8 +52,10 @@ class BackupControllerTest {
             paths: Set<String>,
             options: XlrBackupOptions,
             password: CharArray,
+            onProgress: (XlrBackupReport) -> Unit,
         ): Result<XlrBackupReport> {
             createdWith += password.copyOf()
+            createProgress.forEach(onProgress)
             createGate?.await()
             return Result.success(XlrBackupReport(files = 3, bytes = 30))
         }
@@ -146,6 +149,33 @@ class BackupControllerTest {
         engine.createGate?.complete(Unit)
         advanceUntilIdle()
         assertFalse("признак операции остался поднятым", backup.isWorking)
+    }
+
+    @Test
+    fun `прогресс записи — одна строка консоли, она обновляется на месте`() = runTest(dispatcher) {
+        engine.createGate = CompletableDeferred()
+        // Выбраны X и L: 3 файла, 30 байт. Второй отчёт — тот же процент, строку не трогает.
+        engine.createProgress = listOf(
+            XlrBackupReport(files = 1, bytes = 10),
+            XlrBackupReport(files = 1, bytes = 10),
+            XlrBackupReport(files = 2, bytes = 20),
+        )
+        val backup = controller()
+        advanceUntilIdle()
+        backup.setCreatePassword("secret".toCharArray())
+
+        backup.createBackup("content://backup.xlr")
+        advanceUntilIdle()
+
+        assertEquals(1, backup.console.count { it.startsWith("Записано") })
+        assertTrue(backup.console.last(), backup.console.last().startsWith("Записано 66%: 2 / 3 файлов"))
+
+        engine.createGate?.complete(Unit)
+        advanceUntilIdle()
+        // Итог записи — в той же строке прогресса, а под ней сообщение об успехе.
+        assertEquals(1, backup.console.count { it.startsWith("Записано") })
+        assertTrue(backup.console.dropLast(1).last().startsWith("Записано 100%: 3 / 3 файлов"))
+        assertTrue(backup.console.last(), backup.console.last().contains("создан"))
     }
 
     @Test

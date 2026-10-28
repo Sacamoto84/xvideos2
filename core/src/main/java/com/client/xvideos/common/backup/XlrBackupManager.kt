@@ -199,6 +199,7 @@ object XlrBackupManager {
      * @param selectedPaths Набор путей, подлежащих архивации.
      * @param options Опции фильтрации медиа (FULL/MINI).
      * @param password Пароль для шифрования (null или пустой — архив сохраняется как обычный ZIP).
+     * @param onProgress Записано на сейчас; зовётся по ходу копирования каждого файла, с потока записи.
      * @return [Result] с отчетом о записанных файлах и байтах.
      */
     suspend fun createBackup(
@@ -206,7 +207,8 @@ object XlrBackupManager {
         uri: Uri,
         selectedPaths: Set<String>,
         options: XlrBackupOptions = XlrBackupOptions(),
-        password: CharArray? = null
+        password: CharArray? = null,
+        onProgress: (XlrBackupReport) -> Unit = {},
     ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
         // После открытия файл по [uri] усечён и дописывается: при сбое в нём мусор.
         var outputOpened = false
@@ -214,8 +216,7 @@ object XlrBackupManager {
             val safePaths = normalizeSelectedPaths(selectedPaths)
             if (safePaths.isEmpty()) error("Select at least one folder")
 
-            var files = 0
-            var bytes = 0L
+            val progress = BackupProgress(onProgress)
             val rawOutput = context.contentResolver.openOutputStream(uri, "wt")
                 ?: error("Cannot open backup file")
             outputOpened = true
@@ -232,9 +233,7 @@ object XlrBackupManager {
                     safePaths.forEach { path ->
                         val source = File(AppPath.main, path)
                         if (source.exists()) {
-                            val report = writePath(zip, source, path, options)
-                            files += report.files
-                            bytes += report.bytes
+                            writePath(zip, source, path, options, progress)
                         } else if (shouldIncludeBackupEntry(path, options)) {
                             zip.putNextEntry(ZipEntry("$path/"))
                             zip.closeEntry()
@@ -243,7 +242,7 @@ object XlrBackupManager {
                 }
             }
 
-            XlrBackupReport(files = files, bytes = bytes)
+            progress.report
         }.onFailure { error ->
             if (outputOpened) {
                 Timber.e(error, "XlrBackupManager: бэкап не создан, удаляем недописанный файл")
@@ -537,32 +536,46 @@ object XlrBackupManager {
         zip.closeEntry()
     }
 
+    /**
+     * Записано на сейчас. Байты растут по ходу копирования, а не по концу
+     * файла: запись XLive в гигабайт иначе стоит на одном проценте минуту.
+     */
+    private class BackupProgress(private val onProgress: (XlrBackupReport) -> Unit) {
+        var report = XlrBackupReport(files = 0, bytes = 0L)
+            private set
+
+        fun addBytes(count: Int) = publish(report.copy(bytes = report.bytes + count))
+
+        fun fileDone() = publish(report.copy(files = report.files + 1))
+
+        private fun publish(next: XlrBackupReport) {
+            report = next
+            onProgress(next)
+        }
+    }
+
     private fun writePath(
         zip: ZipOutputStream,
         source: File,
         entryRoot: String,
-        options: XlrBackupOptions
-    ): XlrBackupReport {
-        if (!shouldIncludeBackupEntry(entryRoot, options)) {
-            return XlrBackupReport(files = 0, bytes = 0L)
-        }
+        options: XlrBackupOptions,
+        progress: BackupProgress,
+    ) {
+        if (!shouldIncludeBackupEntry(entryRoot, options)) return
         if (source.isFile) {
-            return writeFile(zip, source, entryRoot)
+            writeFile(zip, source, entryRoot, progress)
+        } else {
+            writeDirectory(zip, source, entryRoot, options, progress)
         }
-        return writeDirectory(zip, source, entryRoot, options)
     }
 
     private fun writeDirectory(
         zip: ZipOutputStream,
         source: File,
         entryRoot: String,
-        options: XlrBackupOptions
-    ): XlrBackupReport {
-        if (!shouldIncludeBackupEntry(entryRoot, options)) {
-            return XlrBackupReport(files = 0, bytes = 0L)
-        }
-        var files = 0
-        var bytes = 0L
+        options: XlrBackupOptions,
+        progress: BackupProgress,
+    ) {
         zip.putNextEntry(ZipEntry("$entryRoot/"))
         zip.closeEntry()
 
@@ -581,30 +594,25 @@ object XlrBackupManager {
                 return@forEach
             }
 
-            val entry = ZipEntry(entryName).apply {
-                time = file.lastModified().takeIf { it > 0L } ?: System.currentTimeMillis()
-            }
-            zip.putNextEntry(entry)
-            BufferedInputStream(file.inputStream()).use { input ->
-                input.copyTo(zip)
-            }
-            zip.closeEntry()
-            files++
-            bytes += file.length()
+            writeFile(zip, file, entryName, progress)
         }
-
-        return XlrBackupReport(files = files, bytes = bytes)
     }
 
-    private fun writeFile(zip: ZipOutputStream, source: File, entryName: String): XlrBackupReport {
+    private fun writeFile(zip: ZipOutputStream, source: File, entryName: String, progress: BackupProgress) {
         zip.putNextEntry(ZipEntry(entryName).apply {
             time = source.lastModified().takeIf { it > 0L } ?: System.currentTimeMillis()
         })
-        BufferedInputStream(source.inputStream()).use { input ->
-            input.copyTo(zip)
+        source.inputStream().use { input ->
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            var read = input.read(buffer)
+            while (read >= 0) {
+                zip.write(buffer, 0, read)
+                progress.addBytes(read)
+                read = input.read(buffer)
+            }
         }
         zip.closeEntry()
-        return XlrBackupReport(files = 1, bytes = source.length())
+        progress.fileDone()
     }
 
     /**

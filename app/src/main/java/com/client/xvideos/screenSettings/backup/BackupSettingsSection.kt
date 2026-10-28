@@ -364,6 +364,7 @@ private object PreviewBackupEngine : BackupEngine {
         paths: Set<String>,
         options: XlrBackupOptions,
         password: CharArray,
+        onProgress: (XlrBackupReport) -> Unit,
     ): Result<XlrBackupReport> = Result.success(XlrBackupReport.EMPTY)
 
     override suspend fun detectType(uri: String): XlrBackupType = XlrBackupType.UNSUPPORTED

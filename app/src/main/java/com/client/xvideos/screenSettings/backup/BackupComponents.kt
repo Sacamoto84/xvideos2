@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SegmentedButton
@@ -59,7 +60,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
-import com.client.xvideos.screenSettings.atom.SettingsOutlinedButton
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsCardColor
 import com.client.xvideos.screenSettings.components.SettingsDestructiveColor
@@ -207,12 +207,13 @@ internal fun BackupConsole(
         text = "Консоль backup",
         subtitle = if (lines.isEmpty()) "Здесь будет процесс восстановления файлов из сети" else "${visibleLines.size} строк",
         trailing = {
-            SettingsOutlinedButton(
-                text = "Очистить",
+            TextButton(
+                enabled = lines.isNotEmpty(),
                 onClick = onClear,
-                color = SettingsDestructiveColor,
-                enabled = lines.isNotEmpty()
-            )
+                colors = ButtonDefaults.textButtonColors(contentColor = SettingsDestructiveColor)
+            ) {
+                Text("Очистить")
+            }
         }
     )
     LazyColumn(
@@ -299,11 +300,13 @@ internal fun BackupSelectionActions(
             Text("Все разделы")
         }
         Spacer(Modifier.width(8.dp))
-        SettingsOutlinedButton(
-            text = "Снять",
+        TextButton(
+            enabled = enabled,
             onClick = onSelectNone,
-            enabled = enabled
-        )
+            colors = ButtonDefaults.textButtonColors(contentColor = SettingsAccentColor)
+        ) {
+            Text("Снять")
+        }
     }
 }
 
