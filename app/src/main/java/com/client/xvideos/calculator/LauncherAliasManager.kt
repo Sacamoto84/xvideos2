@@ -5,6 +5,7 @@ import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import com.client.xvideos.R
 import timber.log.Timber
@@ -86,6 +87,11 @@ object LauncherAliasManager {
                 ActivityManager.TaskDescription.Builder()
                     .setLabel(label)
                     .setIcon(icon)
+                    // Этим цветом система заливает задачу, когда снимка нет
+                    // (снимок запрещён или окно под FLAG_SECURE), в том числе при
+                    // возврате до первого кадра. Без него брался светлый фон темы,
+                    // и перед экраном замка вспыхивал белый экран.
+                    .setBackgroundColor(Color.BLACK)
                     .build()
             } else {
                 @Suppress("DEPRECATION")

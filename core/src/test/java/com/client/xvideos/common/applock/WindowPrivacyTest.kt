@@ -83,4 +83,23 @@ class WindowPrivacyTest {
             )
         )
     }
+
+    // Снимок задачи система делает до onPause, где ставится FLAG_SECURE, и при
+    // возврате показывала его поверх ещё не нарисованного окна: экран, с
+    // которого свернули, мелькал перед замком.
+
+    @Test
+    fun `включённый замок запрещает снимок задачи заранее`() {
+        assertFalse(WindowPrivacy.allowsRecentsScreenshot(blurRecentTasks = false, lockEnabled = true))
+    }
+
+    @Test
+    fun `защита в диспетчере задач запрещает снимок задачи и без замка`() {
+        assertFalse(WindowPrivacy.allowsRecentsScreenshot(blurRecentTasks = true, lockEnabled = false))
+    }
+
+    @Test
+    fun `без замка и без защиты снимок задачи разрешён`() {
+        assertTrue(WindowPrivacy.allowsRecentsScreenshot(blurRecentTasks = false, lockEnabled = false))
+    }
 }

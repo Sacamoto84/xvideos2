@@ -29,4 +29,18 @@ object WindowPrivacy {
 
         return isLockShown || (isMinimized && (blurRecentTasks || lockEnabled))
     }
+
+    /**
+     * Можно ли системе снимать задачу для «Недавних».
+     *
+     * `FLAG_SECURE` из `onPause` от снимка не спасает: при жесте «Домой» система
+     * снимает задачу раньше, чем приходит `onPause`, и снимок выходил с
+     * содержимым. Этим же снимком она закрывает окно при возврате, пока
+     * приложение рисует первый кадр, — экран, с которого свернули, мелькал
+     * перед замком. Запрет снимка действует заранее, поэтому решение то же, что
+     * и для свёрнутого окна в [needsSecureFlag], но применяется, пока
+     * приложение на экране.
+     */
+    fun allowsRecentsScreenshot(blurRecentTasks: Boolean, lockEnabled: Boolean): Boolean =
+        !(blurRecentTasks || lockEnabled)
 }

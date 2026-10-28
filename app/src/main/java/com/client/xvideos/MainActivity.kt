@@ -121,6 +121,18 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         window?.setStatusBarVisible(visible)
     }
 
+    /**
+     * Запрещает или разрешает системе снимок задачи — см.
+     * [WindowPrivacy.allowsRecentsScreenshot]. Зовётся, пока Activity на экране:
+     * снимок делается до `onPause`. До Android 13 публичного способа нет
+     * (прежний `setDisablePreviewScreenshots` из SDK убран), там остаётся
+     * `FLAG_SECURE` из `onPause`.
+     */
+    private fun applyRecentsScreenshotPolicy(blurRecentTasks: Boolean, lockEnabled: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        setRecentsScreenshotEnabled(WindowPrivacy.allowsRecentsScreenshot(blurRecentTasks, lockEnabled))
+    }
+
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
@@ -216,16 +228,19 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         isAppMinimized = false
         val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShown = AppLockRepository.shouldShowLock(this)
+        val blurRecentTasks = Settings.isInitialized && Settings.blur_recent_tasks.field.value
+        val lockEnabled = AppLockRepository.isEnabled(this)
         val needSecure = WindowPrivacy.needsSecureFlag(
             isLockShown = isLockShown,
             isMinimized = false,
-            blurRecentTasks = Settings.isInitialized && Settings.blur_recent_tasks.field.value,
-            lockEnabled = AppLockRepository.isEnabled(this),
+            blurRecentTasks = blurRecentTasks,
+            lockEnabled = lockEnabled,
             isCamouflage = isCamouflage,
         )
         if (!needSecure) {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
+        applyRecentsScreenshotPolicy(blurRecentTasks, lockEnabled)
         applyStatusBarVisibility(statusBarVisible)
         showLockScreenIfLocked()
     }
@@ -268,11 +283,14 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             // SECURITY: динамическая аппаратная защита превью в Recent Apps через FLAG_SECURE
             val appLockEnabled by Settings.app_lock_enabled.field.collectAsStateWithLifecycle()
             LaunchedEffect(isAppMinimized, blurRecentTasks, isAppLocked, appLockEnabled, isCamouflage) {
+                val lockEnabled = appLockEnabled && AppLockRepository.isEnabled(this@MainActivity)
+                // Настройки меняют на экране «Приватность» — до следующего снимка.
+                applyRecentsScreenshotPolicy(blurRecentTasks, lockEnabled)
                 val needSecure = WindowPrivacy.needsSecureFlag(
                     isLockShown = isAppLocked,
                     isMinimized = isAppMinimized,
                     blurRecentTasks = blurRecentTasks,
-                    lockEnabled = appLockEnabled && AppLockRepository.isEnabled(this@MainActivity),
+                    lockEnabled = lockEnabled,
                     isCamouflage = isCamouflage,
                 )
                 if (needSecure) {
@@ -384,16 +402,19 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
         val isCamouflageAtStart = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
         val isLockShownAtStart = AppLockRepository.shouldShowLock(this)
+        val blurRecentTasksAtStart = Settings.isInitialized && Settings.blur_recent_tasks.field.value
+        val lockEnabledAtStart = AppLockRepository.isEnabled(this)
         val needSecureAtStart = WindowPrivacy.needsSecureFlag(
             isLockShown = isLockShownAtStart,
             isMinimized = false,
-            blurRecentTasks = Settings.isInitialized && Settings.blur_recent_tasks.field.value,
-            lockEnabled = AppLockRepository.isEnabled(this),
+            blurRecentTasks = blurRecentTasksAtStart,
+            lockEnabled = lockEnabledAtStart,
             isCamouflage = isCamouflageAtStart,
         )
         if (needSecureAtStart) {
             currentWindow.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
+        applyRecentsScreenshotPolicy(blurRecentTasksAtStart, lockEnabledAtStart)
     }
 
     private fun launchStartupCleanup() {
