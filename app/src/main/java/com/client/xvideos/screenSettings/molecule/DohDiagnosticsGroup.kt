@@ -82,7 +82,7 @@ internal fun DohDiagnosticsGroup(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun DohDiagnosticsGroupPreview() = SettingsPreview {
     DohDiagnosticsGroup()

@@ -307,7 +307,7 @@ internal fun AppSettingsScreenContent(
 
 @Preview(
     showBackground = true,
-    backgroundColor = 0xFF1B1B1F,
+    backgroundColor = 0xFF262626,
     device = "spec:width=1080px,height=23400px,dpi=440"
 )
 @Composable

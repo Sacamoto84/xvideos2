@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.R
+import com.client.xvideos.screenSettings.atom.SettingsChevron
 import com.client.xvideos.screenSettings.components.SettingsListItem
 
 /**
@@ -29,6 +30,7 @@ internal fun RotationLockRow(
         } else {
             "Нажмите и разрешите «Изменение системных настроек» — без него блокировку не вернуть"
         },
+        trailing = { SettingsChevron() },
         onClick = onOpenPermission,
         modifier = modifier,
     )

@@ -381,7 +381,7 @@ private object PreviewBackupEngine : BackupEngine {
     override suspend fun afterRestore(paths: Set<String>, log: (String) -> Unit) = Unit
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun BackupSettingsSectionPreview() = SettingsPreview {
     BackupSettingsSection(

@@ -68,7 +68,7 @@ internal fun NetworkParamsGroup(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun NetworkParamsGroupPreview() = SettingsPreview {
     NetworkParamsGroup(fallbackToSystem = true, ipv4Only = true)

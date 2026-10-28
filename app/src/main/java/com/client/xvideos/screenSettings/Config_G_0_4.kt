@@ -136,7 +136,7 @@ fun PreviewConfig_G_0_4() {
     Config_G_0_4("777", setting)
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun TabBarPointsPreview() {
     Row {

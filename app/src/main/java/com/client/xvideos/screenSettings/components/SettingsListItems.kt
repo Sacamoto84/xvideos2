@@ -46,15 +46,23 @@ import com.client.xvideos.screenSettings.DialogButton
 import com.client.xvideos.screenSettings.molecule.SettingsButtonRow
 import kotlin.math.roundToInt
 
-// Google Material 3 Dark Theme tokens (matching Chrome & Android 14+ Settings)
-internal val SettingsScreenBackground = Color(0xFF1B1B1F)
+// Поверхности и текст — нейтральные серые приложения (Theme), без синего и
+// сиреневого оттенка Material 3: настройки не должны выглядеть отдельным
+// приложением. Лавандовый остаётся только акцентом.
+internal val SettingsScreenBackground = Theme.background
 internal val SettingsTopBarColor = SettingsScreenBackground
-internal val SettingsCardColor = Color(0xFF3A373E)
+internal val SettingsCardColor = Theme.tabLevel2
 internal val SettingsAccentColor = Color(0xFFC4C0FD)
 internal val SettingsOnAccentColor = Color(0xFF2E2961)
-internal val SettingsRowTextPrimary = Color(0xFFE5E2E9)
-internal val SettingsRowTextSecondary = Color(0xFFA6A4AC)
-internal val SettingsDividerColor = Color(0x2E79747E)
+internal val SettingsRowTextPrimary = Theme.Text.primary
+internal val SettingsRowTextSecondary = Theme.Text.secondary
+internal val SettingsDividerColor = Color(0x2E7A7A7A)
+
+/** Невыбранные переключатели и радиокнопки. */
+internal val SettingsUncheckedColor = Theme.L.grey2
+
+/** Кнопки выхода и очистки. */
+internal val SettingsDestructiveColor = Color(0xFFFF7A7A)
 internal val WhatsAppGreen = SettingsAccentColor
 internal val settingsCardShape = RoundedCornerShape(24.dp)
 
@@ -108,7 +116,7 @@ fun SettingsSectionTitle(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsSectionTitlePreview() = SettingsPreview {
     SettingsSectionTitle("Защита")
@@ -164,19 +172,19 @@ fun SettingsGroup(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsDividerPreview() = SettingsPreview {
     SettingsDivider()
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsDivider2Preview() = SettingsPreview {
     SettingsDivider2()
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsGroupPreview() = SettingsPreview {
     SettingsGroup {
@@ -261,7 +269,7 @@ fun SettingsListItem(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsListItemPreview() = SettingsPreview {
     SettingsListItem(
@@ -286,7 +294,7 @@ fun SettingsIcon(@DrawableRes icon: Int) {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsIconPreview() = SettingsPreview {
     SettingsIcon(R.drawable.icon_red)
@@ -307,7 +315,7 @@ fun SettingsValueRow(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsValueRowPreview() = SettingsPreview {
     SettingsValueRow(
@@ -331,9 +339,9 @@ fun SettingsSwitchRow(
         checkedThumbColor = SettingsOnAccentColor,
         checkedTrackColor = SettingsAccentColor,
         checkedBorderColor = Color.Transparent,
-        uncheckedThumbColor = Color(0xFF938F99),
-        uncheckedTrackColor = Color(0xFF48464F),
-        uncheckedBorderColor = Color(0xFF79747E)
+        uncheckedThumbColor = SettingsUncheckedColor,
+        uncheckedTrackColor = Theme.tabLevel3,
+        uncheckedBorderColor = Theme.Text.muted
     )
 
     val trailingContent: @Composable () -> Unit = remember(value, enabled, onValueChange, switchColors) {
@@ -356,7 +364,7 @@ fun SettingsSwitchRow(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsSwitchRowPreview() = SettingsPreview {
     var checked by remember { mutableStateOf(true) }
@@ -369,6 +377,11 @@ private fun SettingsSwitchRowPreview() = SettingsPreview {
     )
 }
 
+/**
+ * [SettingsButtonRow], нажатие которой сначала спрашивает подтверждение.
+ *
+ * Кнопка красная: подтверждением закрыты выход из профиля и очистка.
+ */
 @Composable
 fun SettingsButtonRowWithDialog(
     @DrawableRes icon: Int = 0,
@@ -398,11 +411,12 @@ fun SettingsButtonRowWithDialog(
         text = text,
         value = value,
         subtitle = subtitle,
+        color = SettingsDestructiveColor,
         onClick = onOpen
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsButtonRowWithDialogPreview() = SettingsPreview {
     SettingsButtonRowWithDialog(
@@ -474,7 +488,7 @@ fun IntSliderSetting(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun IntSliderSettingPreview() = SettingsPreview {
     IntSliderSetting(

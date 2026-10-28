@@ -45,6 +45,7 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
+import com.client.xvideos.screenSettings.components.SettingsUncheckedColor
 import com.client.xvideos.screenSettings.molecule.RotationLockRow
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -141,7 +142,7 @@ private fun ScrollEffectItem(
     val onClick = remember(effect, onSelect) { { onSelect(effect) } }
     val radioColors = RadioButtonDefaults.colors(
         selectedColor = SettingsAccentColor,
-        unselectedColor = Color(0xFF938F99)
+        unselectedColor = SettingsUncheckedColor
     )
     val trailingContent: @Composable () -> Unit = remember(isSelected, radioColors) {
         {
@@ -244,7 +245,7 @@ private fun ScrollButtonPreviewCard(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun AppearanceSettingsSectionPreview() {
     SettingsPreview {

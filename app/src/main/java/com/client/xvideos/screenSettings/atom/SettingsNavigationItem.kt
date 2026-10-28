@@ -19,12 +19,13 @@ internal fun SettingsNavigationItem(
         icon = page.icon,
         text = page.title,
         subtitle = page.subtitle,
+        trailing = { SettingsChevron() },
         onClick = onClick,
         modifier = modifier
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsNavigationItemPreview() = SettingsPreview {
     SettingsNavigationItem(

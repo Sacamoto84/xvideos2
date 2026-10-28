@@ -201,7 +201,7 @@ private fun NichesTrailingButton(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun RSettingsSectionPreview() = SettingsPreview {
     RSettingsSection(

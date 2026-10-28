@@ -50,7 +50,7 @@ internal fun LProfileRow(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun LProfileRowPreview() = SettingsPreview {
     SettingsGroup {
@@ -58,7 +58,7 @@ private fun LProfileRowPreview() = SettingsPreview {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun LProfileRowWithAccountPreview() = SettingsPreview {
     SettingsGroup {

@@ -9,7 +9,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.R
 import com.client.xvideos.common.net.doh.DohProvider
@@ -19,6 +18,7 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
+import com.client.xvideos.screenSettings.components.SettingsUncheckedColor
 
 @Composable
 internal fun DohProviderSelectionGroup(
@@ -33,7 +33,7 @@ internal fun DohProviderSelectionGroup(
     }
     val radioColors = RadioButtonDefaults.colors(
         selectedColor = SettingsAccentColor,
-        unselectedColor = Color(0xFF938F99)
+        unselectedColor = SettingsUncheckedColor
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -74,7 +74,7 @@ internal fun DohProviderSelectionGroup(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun DohProviderSelectionGroupPreview() = SettingsPreview {
     DohProviderSelectionGroup(

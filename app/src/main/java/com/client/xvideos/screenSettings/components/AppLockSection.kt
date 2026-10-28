@@ -25,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +56,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.IncognitoKeyboard
+import com.client.xvideos.screenSettings.atom.SettingsOutlinedButton
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
@@ -169,9 +169,11 @@ fun AppLockSettingsSection(
 
     val disableTrailing: @Composable () -> Unit = remember(onDisableLock) {
         {
-            TextButton(onClick = onDisableLock) {
-                Text("Отключить", color = Color(0xFFFF7A7A))
-            }
+            SettingsOutlinedButton(
+                text = "Отключить",
+                onClick = onDisableLock,
+                color = SettingsDestructiveColor
+            )
         }
     }
 

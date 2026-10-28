@@ -68,7 +68,7 @@ internal fun P2PSettingsSection(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun P2PSettingsSectionPreview() = SettingsPreview {
     P2PSettingsSection(modifier = Modifier)

@@ -1,22 +1,23 @@
 package com.client.xvideos.screenSettings.molecule
 
 import androidx.annotation.DrawableRes
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.R
+import com.client.xvideos.screenSettings.atom.SettingsOutlinedButton
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
+import com.client.xvideos.screenSettings.components.SettingsDestructiveColor
 import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
- * Строка настроек с текстовой кнопкой справа.
+ * Строка настроек с кнопкой с обводкой справа.
  *
  * @param value текст кнопки.
  * @param subtitle строка под заголовком; `null` — заголовок один.
+ * @param color цвет кнопки: [SettingsDestructiveColor] для выхода и очистки.
  */
 @Composable
 fun SettingsButtonRow(
@@ -24,13 +25,12 @@ fun SettingsButtonRow(
     text: String,
     value: String,
     subtitle: String? = null,
+    color: Color = SettingsAccentColor,
     onClick: () -> Unit
 ) {
-    val trailingContent: @Composable () -> Unit = remember(onClick, value) {
+    val trailingContent: @Composable () -> Unit = remember(onClick, value, color) {
         {
-            TextButton(onClick = onClick) {
-                Text(value, color = SettingsAccentColor, fontWeight = FontWeight.Medium)
-            }
+            SettingsOutlinedButton(text = value, onClick = onClick, color = color)
         }
     }
 
@@ -42,7 +42,7 @@ fun SettingsButtonRow(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun SettingsButtonRowPreview() = SettingsPreview {
     SettingsButtonRow(

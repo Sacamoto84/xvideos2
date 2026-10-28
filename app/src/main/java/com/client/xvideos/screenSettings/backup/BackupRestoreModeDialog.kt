@@ -89,7 +89,7 @@ internal fun BackupRestoreModeDialog(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun BackupRestoreModeDialogPreview() = SettingsPreview {
     BackupRestoreModeDialog(summary = "214 файлов, 3.1 МБ", onDismiss = {}, onSelected = {})

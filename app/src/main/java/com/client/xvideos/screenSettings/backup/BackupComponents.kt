@@ -59,8 +59,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.backup.XlrBackupContentMode
 import com.client.xvideos.common.backup.XlrBackupItem
+import com.client.xvideos.screenSettings.atom.SettingsOutlinedButton
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsCardColor
+import com.client.xvideos.screenSettings.components.SettingsDestructiveColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsDividerColor
 import com.client.xvideos.screenSettings.components.SettingsListItem
@@ -205,12 +207,12 @@ internal fun BackupConsole(
         text = "Консоль backup",
         subtitle = if (lines.isEmpty()) "Здесь будет процесс восстановления файлов из сети" else "${visibleLines.size} строк",
         trailing = {
-            TextButton(
-                enabled = lines.isNotEmpty(),
-                onClick = onClear
-            ) {
-                Text("Очистить", color = SettingsAccentColor)
-            }
+            SettingsOutlinedButton(
+                text = "Очистить",
+                onClick = onClear,
+                color = SettingsDestructiveColor,
+                enabled = lines.isNotEmpty()
+            )
         }
     )
     LazyColumn(
@@ -297,12 +299,11 @@ internal fun BackupSelectionActions(
             Text("Все разделы")
         }
         Spacer(Modifier.width(8.dp))
-        TextButton(
-            enabled = enabled,
-            onClick = onSelectNone
-        ) {
-            Text("Снять", color = SettingsAccentColor)
-        }
+        SettingsOutlinedButton(
+            text = "Снять",
+            onClick = onSelectNone,
+            enabled = enabled
+        )
     }
 }
 
@@ -627,14 +628,14 @@ internal fun BackupRestorePasswordDialog(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun BackupModeSelectorPreview() = SettingsPreview {
     var mode by remember { mutableStateOf(BackupFlowScreen.CREATE) }
     BackupModeSelector(selected = mode, enabled = true, onSelected = { mode = it })
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun BackupContentModeSelectorPreview() = SettingsPreview {
     var mode by remember { mutableStateOf(XlrBackupContentMode.MINI) }
@@ -647,7 +648,7 @@ private fun BackupContentModeSelectorPreview() = SettingsPreview {
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun BackupConsolePreview() = SettingsPreview {
     BackupConsole(
@@ -663,13 +664,13 @@ private fun BackupConsolePreview() = SettingsPreview {
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun BackupSelectionActionsPreview() = SettingsPreview {
     BackupSelectionActions(enabled = true, onSelectAll = {}, onSelectNone = {})
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun BackupFolderListPreview() = SettingsPreview {
     val items = listOf(

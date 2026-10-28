@@ -56,7 +56,7 @@ internal fun XProfileRow(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun XProfileRowPreview() = SettingsPreview {
     SettingsGroup {
@@ -64,7 +64,7 @@ private fun XProfileRowPreview() = SettingsPreview {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun XProfileRowWithAccountPreview() = SettingsPreview {
     SettingsGroup {
@@ -72,7 +72,7 @@ private fun XProfileRowWithAccountPreview() = SettingsPreview {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF1B1B1F)
+@Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun XProfileRowRejectedPreview() = SettingsPreview {
     SettingsGroup {
