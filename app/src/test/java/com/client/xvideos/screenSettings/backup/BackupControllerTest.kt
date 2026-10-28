@@ -236,26 +236,31 @@ class BackupControllerTest {
     }
 
     @Test
-    fun `пока архив читается, диалог пароля не закрывается`() = runTest(dispatcher) {
+    fun `отмена посреди чтения архива прерывает чтение и архив не открывает`() = runTest(dispatcher) {
         engine.inspectGate = CompletableDeferred()
         val backup = controller()
         advanceUntilIdle()
         backup.openArchive("content://backup.xlr")
         advanceUntilIdle()
-        backup.decryptArchive("secret".toCharArray())
+        val password = "secret".toCharArray()
+        backup.decryptArchive(password)
         advanceUntilIdle()
         assertTrue(backup.isWorking)
 
         // Большой архив читается десятки секунд. Раньше «Отмена» закрывала
         // диалог, а архив всё равно открывался, когда чтение заканчивалось.
         backup.dismissRestorePassword()
-        assertTrue("диалог закрылся посреди чтения архива", backup.showRestorePasswordDialog)
-
-        engine.inspectGate?.complete(Unit)
         advanceUntilIdle()
         assertFalse(backup.showRestorePasswordDialog)
-        assertEquals("content://backup.xlr", backup.restoreUri)
-        assertEquals(listOf<String?>("secret"), engine.inspectedWith)
+        assertFalse("страница осталась запертой после отмены", backup.isWorking)
+        assertTrue("пароль не стёрт после отмены", password.all { it == '\u0000' })
+        assertTrue(backup.console.last(), backup.console.last().contains("отменено"))
+
+        // Чтение, которое не прервалось бы, закончилось бы сейчас.
+        engine.inspectGate?.complete(Unit)
+        advanceUntilIdle()
+        assertNull("архив открылся после отмены", backup.restoreUri)
+        assertTrue(backup.restoreItems.isEmpty())
     }
 
     @Test

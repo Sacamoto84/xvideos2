@@ -556,9 +556,10 @@ internal fun BackupCreatePasswordDialog(
 }
 
 /**
- * @param busy Пароль принят к проверке, архив читается: поле и кнопки
+ * @param busy Пароль принят к проверке, архив читается: поле и «Открыть»
  * выключены, вместо ошибки — строка чтения. Без неё диалог с пустым полем
- * выглядел так, будто пароль не принят, и его вводили снова.
+ * выглядел так, будто пароль не принят, и его вводили снова. «Отмена»
+ * работает и сейчас — она прерывает чтение.
  */
 @Composable
 internal fun BackupRestorePasswordDialog(
@@ -578,7 +579,6 @@ internal fun BackupRestorePasswordDialog(
             password = ""
             onDismiss()
         },
-        dismissEnabled = !busy,
         confirmText = "Открыть",
         confirmEnabled = isValid,
         onConfirm = {

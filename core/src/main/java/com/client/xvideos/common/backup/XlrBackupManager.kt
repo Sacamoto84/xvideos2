@@ -11,6 +11,7 @@ import com.client.xvideos.common.json.AppJson
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -161,7 +162,9 @@ object XlrBackupManager {
                     if (child != null) stats.getOrPut(child) { MutableReport() }
 
                     if (!entry.isDirectory && !name.endsWith("/")) {
-                        val size = readEntrySize(zip, buffer)
+                        // Чтение гигабайтного архива длится десятки секунд: отмена
+                        // из диалога пароля прерывает его, а не ждёт конца.
+                        val size = readEntrySize(zip, buffer) { ensureActive() }
                         stats.getValue(top).add(size)
                         if (child != null) stats.getValue(child).add(size)
                     }
@@ -731,9 +734,10 @@ object XlrBackupManager {
         }
     }
 
-    private fun readEntrySize(zip: ZipInputStream, buffer: ByteArray): Long {
+    private fun readEntrySize(zip: ZipInputStream, buffer: ByteArray, ensureActive: () -> Unit): Long {
         var size = 0L
         while (true) {
+            ensureActive()
             val read = zip.read(buffer)
             if (read < 0) break
             size += read

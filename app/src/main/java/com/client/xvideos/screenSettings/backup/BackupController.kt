@@ -19,7 +19,9 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -95,6 +97,7 @@ class BackupController(
     var restorePasswordError by mutableStateOf<String?>(null)
         private set
     private var pendingRestoreUri: String? = null
+    private var decryptJob: Job? = null
 
     /** Растёт с каждым успешным восстановлением: экран по нему пересчитывает статистику файлов. */
     var restoreCount by mutableIntStateOf(0)
@@ -276,7 +279,8 @@ class BackupController(
      * Верный пароль читает весь архив — на 1.5 ГБ это ~20 с, и всё это время
      * диалог открыт и показывает чтение ([isWorking]). Раньше он оставался
      * открытым с пустым полем, будто пароль не принят, а повторный ввод здесь
-     * молча отбрасывался: пароль вводили по нескольку раз.
+     * молча отбрасывался: пароль вводили по нескольку раз. Прервать чтение —
+     * [dismissRestorePassword].
      */
     fun decryptArchive(password: CharArray) {
         val uri = pendingRestoreUri
@@ -285,7 +289,10 @@ class BackupController(
             return
         }
         isWorking = true
-        scope.launch(mainDispatcher) {
+        // Без отложенного старта: отмена, пришедшая до первого шага, иначе
+        // не дошла бы до finally, и страница осталась бы запертой.
+        decryptJob = scope.launch(mainDispatcher, start = CoroutineStart.UNDISPATCHED) {
+            var passwordKept = false
             try {
                 engine.inspect(uri, password)
                     .onSuccess { items ->
@@ -293,10 +300,10 @@ class BackupController(
                         restorePasswordError = null
                         pendingRestoreUri = null
                         showArchive(uri, items, password)
+                        passwordKept = true
                         SnackBar.success("Архив успешно расшифрован: ${items.size} папок")
                     }
                     .onFailure { error ->
-                        password.fill(WIPED)
                         val wrongPassword = error is XlrInvalidPasswordException || error.cause is XlrInvalidPasswordException
                         val message = if (wrongPassword) {
                             "Неверный пароль для расшифровки бэкапа"
@@ -307,17 +314,24 @@ class BackupController(
                         SnackBar.error(message)
                     }
             } finally {
+                // Отмена чтения минует и успех, и ошибку: пароль стирается здесь.
+                if (!passwordKept) password.fill(WIPED)
                 isWorking = false
             }
         }
     }
 
     /**
-     * Закрывает диалог пароля. Пока архив читается — ничего не делает: чтение
-     * не прерывается, и раньше архив открывался уже после «Отмены».
+     * Закрывает диалог пароля и прерывает чтение архива, если оно идёт.
+     * Раньше «Отмена» посреди чтения закрывала диалог, а архив всё равно
+     * открывался, когда чтение заканчивалось.
      */
     fun dismissRestorePassword() {
-        if (isWorking) return
+        val job = decryptJob
+        if (job != null && job.isActive) {
+            job.cancel()
+            log("Чтение архива отменено")
+        }
         hideRestorePassword()
     }
 
