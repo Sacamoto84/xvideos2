@@ -35,10 +35,28 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.layout.MultiContentMeasurePolicy
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.R
@@ -64,7 +82,12 @@ internal val SettingsUncheckedColor = Theme.L.grey2
 /** Кнопки выхода и очистки. */
 internal val SettingsDestructiveColor = Color(0xFFFF7A7A)
 internal val WhatsAppGreen = SettingsAccentColor
-internal val settingsCardShape = RoundedCornerShape(24.dp)
+private val SettingsCardCorner = 24.dp
+internal val settingsCardShape = RoundedCornerShape(SettingsCardCorner)
+
+// Зазор и углы между блоками группы — как у сегментированных списков Material 3.
+private val SettingsGroupGapHeight = 2.dp
+private val SettingsGroupInnerCorner = 4.dp
 
 private val SETTINGS_ITEM_CORE_MODIFIER = Modifier
     .background(SettingsCardColor)
@@ -84,10 +107,16 @@ private val SETTINGS_ITEM_STANDALONE_BASE_MODIFIER = Modifier
 private val SETTINGS_GROUP_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .padding(horizontal = 16.dp)
-    .clip(settingsCardShape)
-    .background(SettingsCardColor)
 
 private val LocalSettingsInGroup = staticCompositionLocalOf { false }
+
+/** Метка разделителя, который в [SettingsGroup] становится зазором между блоками. */
+private object SettingsGroupGap
+
+/** Фон блоков группы: [SettingsGroup] обрезает его по форме всех блоков сразу. */
+private val SettingsGroupBackground: @Composable () -> Unit = {
+    Box(Modifier.background(SettingsCardColor))
+}
 
 @Composable
 fun SettingsSectionTitle(
@@ -122,11 +151,16 @@ private fun SettingsSectionTitlePreview() = SettingsPreview {
     SettingsSectionTitle("Защита")
 }
 
+/**
+ * Разделитель строк. Прямо в [SettingsGroup] он становится зазором между
+ * блоками; внутри вложенного блока (дерево папок бэкапа) остаётся линией.
+ */
 @Composable
 fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
     val inGroup = LocalSettingsInGroup.current
     val containerModifier = if (inGroup) {
         Modifier
+            .layoutId(SettingsGroupGap)
             .fillMaxWidth()
             .background(SettingsCardColor)
     } else {
@@ -147,28 +181,141 @@ fun SettingsDivider(startIndent: androidx.compose.ui.unit.Dp = 56.dp) {
     }
 }
 
+/** Разделитель полосой фона экрана; прямо в [SettingsGroup] — зазор между блоками. */
 @Composable
 fun SettingsDivider2() {
     Spacer(
         Modifier
+            .layoutId(SettingsGroupGap)
             .fillMaxWidth()
-            .height(2.dp)
+            .height(SettingsGroupGapHeight)
             .background(SettingsScreenBackground)
     )
 }
 
+/**
+ * Группа строк, как в настройках Android: строки, разделённые
+ * [SettingsDivider] или [SettingsDivider2], — отдельные блоки с зазором.
+ * Внешние углы группы большие, углы между блоками маленькие. Строки без
+ * разделителя между ними — один блок.
+ */
 @Composable
 fun SettingsGroup(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val groupModifier = modifier.then(SETTINGS_GROUP_BASE_MODIFIER)
-    Column(
-        modifier = groupModifier
-    ) {
-        CompositionLocalProvider(LocalSettingsInGroup provides true) {
-            content()
+    Layout(
+        contents = listOf(
+            SettingsGroupBackground,
+            { CompositionLocalProvider(LocalSettingsInGroup provides true) { content() } }
+        ),
+        modifier = modifier.then(SETTINGS_GROUP_BASE_MODIFIER),
+        measurePolicy = SettingsGroupMeasurePolicy
+    )
+}
+
+/** Строка группы и её форма: углы скруглены только на краях блока. */
+private class SettingsGroupRow(val placeable: Placeable, val y: Int, val shape: Shape)
+
+/** Блок группы по вертикали, в пикселях, с радиусами верхних и нижних углов. */
+private data class SettingsGroupBlock(
+    val top: Float,
+    val bottom: Float,
+    val topCorner: Float,
+    val bottomCorner: Float
+)
+
+/** Форма фона группы: все блоки сразу, зазоры между ними пустые. */
+private data class SettingsGroupBackgroundShape(val blocks: List<SettingsGroupBlock>) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val path = Path()
+        blocks.forEach { block ->
+            val top = CornerRadius(block.topCorner)
+            val bottom = CornerRadius(block.bottomCorner)
+            path.addRoundRect(
+                RoundRect(
+                    left = 0f,
+                    top = block.top,
+                    right = size.width,
+                    bottom = block.bottom,
+                    topLeftCornerRadius = top,
+                    topRightCornerRadius = top,
+                    bottomRightCornerRadius = bottom,
+                    bottomLeftCornerRadius = bottom
+                )
+            )
         }
+        return Outline.Generic(path)
+    }
+}
+
+private object SettingsGroupMeasurePolicy : MultiContentMeasurePolicy {
+    override fun MeasureScope.measure(
+        measurables: List<List<Measurable>>,
+        constraints: Constraints
+    ): MeasureResult {
+        val blocks = measureBlocks(measurables[1], constraints.copy(minWidth = 0, minHeight = 0))
+        val gap = SettingsGroupGapHeight.roundToPx()
+        val rows = ArrayList<SettingsGroupRow>()
+        val blockBounds = ArrayList<SettingsGroupBlock>(blocks.size)
+        var y = 0
+        blocks.forEachIndexed { blockIndex, block ->
+            if (blockIndex > 0) y += gap
+            val topCorner = if (blockIndex == 0) SettingsCardCorner else SettingsGroupInnerCorner
+            val bottomCorner = if (blockIndex == blocks.lastIndex) SettingsCardCorner else SettingsGroupInnerCorner
+            val blockTop = y
+            block.forEachIndexed { rowIndex, placeable ->
+                val rowTop = if (rowIndex == 0) topCorner else 0.dp
+                val rowBottom = if (rowIndex == block.lastIndex) bottomCorner else 0.dp
+                val shape = RoundedCornerShape(
+                    topStart = rowTop,
+                    topEnd = rowTop,
+                    bottomEnd = rowBottom,
+                    bottomStart = rowBottom
+                )
+                rows += SettingsGroupRow(placeable, y, shape)
+                y += placeable.height
+            }
+            blockBounds += SettingsGroupBlock(blockTop.toFloat(), y.toFloat(), topCorner.toPx(), bottomCorner.toPx())
+        }
+        val width = constraints.constrainWidth(rows.maxOfOrNull { it.placeable.width } ?: 0)
+        val height = constraints.constrainHeight(y)
+        val background = measurables[0].first().measure(Constraints.fixed(width, height))
+        val backgroundShape = SettingsGroupBackgroundShape(blockBounds)
+        return layout(width, height) {
+            background.placeWithLayer(0, 0) {
+                shape = backgroundShape
+                clip = true
+            }
+            // Каждая строка обрезана своей формой: иначе её фон и рябь нажатия
+            // закрыли бы скруглённые углы блока.
+            rows.forEach { row ->
+                row.placeable.placeWithLayer(0, row.y) {
+                    shape = row.shape
+                    clip = true
+                }
+            }
+        }
+    }
+
+    /** Строки по блокам: разделитель-метка закрывает блок и сам не рисуется. */
+    private fun measureBlocks(measurables: List<Measurable>, constraints: Constraints): List<List<Placeable>> {
+        val blocks = ArrayList<MutableList<Placeable>>()
+        var startNewBlock = true
+        measurables.forEach { measurable ->
+            if (measurable.layoutId == SettingsGroupGap) {
+                startNewBlock = true
+            } else {
+                val placeable = measurable.measure(constraints)
+                if (startNewBlock) {
+                    blocks += mutableListOf(placeable)
+                } else {
+                    blocks.last() += placeable
+                }
+                startNewBlock = false
+            }
+        }
+        return blocks
     }
 }
 

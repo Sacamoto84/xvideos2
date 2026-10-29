@@ -7,26 +7,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.screenSettings.SettingsDataHolders
 import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.atom.SettingsNavigationItem
+import com.client.xvideos.screenSettings.atom.SettingsTitleBar
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
 import com.client.xvideos.screenSettings.components.SettingsDivider2
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsRowTextPrimary
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 
@@ -35,29 +30,27 @@ private val BODY_COLUMN_BASE_MODIFIER = Modifier
     .fillMaxWidth()
     .padding(bottom = 24.dp)
 
+/**
+ * Тело экрана настроек. [onBack] — стрелка в заголовке: со страницы раздела
+ * ведёт на главную настроек, с главной — назад, в меню.
+ */
 @Composable
 internal fun AppSettingsScreenBody(
     params: SettingsDetailParams,
     modifier: Modifier = Modifier,
     topCutout: Dp = 0.dp,
-    onOpenPage: (SettingsPage) -> Unit = {}
+    onOpenPage: (SettingsPage) -> Unit = {},
+    onBack: () -> Unit = {}
 ) {
-    val titleStyle = remember(Theme.L.Type.screenTitle) {
-        Theme.L.Type.screenTitle.copy(
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = SettingsRowTextPrimary,
-            textAlign = TextAlign.Start
-        )
-    }
-
+    // Строка заголовка 56dp, как прежний текст с отступами 12dp: стрелка не
+    // сдвигает страницу вниз.
     val titleModifier = remember(topCutout) {
         Modifier
             .fillMaxWidth()
             .padding(
-                top = topCutout + 12.dp,
-                bottom = 12.dp,
-                start = 16.dp,
+                top = topCutout + 4.dp,
+                bottom = 4.dp,
+                start = 4.dp,
                 end = 16.dp
             )
     }
@@ -66,11 +59,10 @@ internal fun AppSettingsScreenBody(
     Column(
         modifier = bodyModifier
     ) {
-        Text(
-            text = params.currentPage.title,
-            modifier = titleModifier,
-            color = SettingsRowTextPrimary,
-            style = titleStyle
+        SettingsTitleBar(
+            title = params.currentPage.title,
+            onBack = onBack,
+            modifier = titleModifier
         )
 
         if (params.currentPage == SettingsPage.Main) {

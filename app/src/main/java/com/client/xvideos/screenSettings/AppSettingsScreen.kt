@@ -299,7 +299,8 @@ internal fun AppSettingsScreenContent(
                     .verticalScroll(scrollState)
                     .adaptiveContentWidth(),
                 topCutout = topCutout,
-                onOpenPage = onOpenPage
+                onOpenPage = onOpenPage,
+                onBack = if (currentPage == SettingsPage.Main) onBack else onMainBack
             )
         }
     }
