@@ -178,6 +178,17 @@ class SavedX_DownloadsStorageTest {
     }
 
     @Test
+    fun `карточка знает размер скачанного видео`() {
+        writeVideo(5L)
+        writeInfo(5L)
+
+        val downloads = SavedX_Downloads(scope, fakeRenderer)
+        downloads.awaitSaved(5L)
+
+        assertEquals(16L, downloads.localVideo(5L)?.sizeBytes)
+    }
+
+    @Test
     fun `сетка не считается обложкой`() {
         writeVideo(9L)
         writeInfo(9L)

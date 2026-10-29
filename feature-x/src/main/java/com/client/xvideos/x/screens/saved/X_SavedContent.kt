@@ -66,6 +66,9 @@ fun X_SavedContent(saved: SavedX, gridState: LazyGridState, modifier: Modifier =
         }
     }
 
+    // Скачанный файл копируется в общую галерею, снекбары — внутри.
+    val onSaveToGalleryItem: (ItemsX) -> Unit = remember(saved.downloads) { saved.downloads::saveToGallery }
+
     val onConfirmDelete = remember(saved.downloads) {
         { item: ItemsX ->
             saved.downloads.delete(item)
@@ -101,6 +104,7 @@ fun X_SavedContent(saved: SavedX, gridState: LazyGridState, modifier: Modifier =
         onPlayItem = onPlayItem,
         onDeleteItem = onDeleteItem,
         onShareP2pItem = onShareP2pItem,
+        onSaveToGalleryItem = onSaveToGalleryItem,
         // Превью и обложка — из скачанного файла.
         localVideoOf = rememberLocalVideoOf(saved.downloads),
         modifier = modifier

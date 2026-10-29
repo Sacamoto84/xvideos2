@@ -70,6 +70,9 @@ class SavedX_Downloads(
 
     private val _downloadedPosterIds = MutableStateFlow<Set<Long>>(emptySet())
 
+    /** Размер скачанных видео по id — для карточки. */
+    private val _videoSizes = MutableStateFlow<Map<Long, Long>>(emptyMap())
+
     // Объявлены до init: он сразу запускает refresh() на другом потоке, и скан
     // мог войти в synchronized раньше, чем замок получил значение.
     private var refreshJob: Job? = null
@@ -164,7 +167,11 @@ class SavedX_Downloads(
      * сохранён. Карточка по нему играет превью из файла и открывает скачанный.
      */
     fun localVideo(id: Long): SavedLocalVideo? =
-        if (contains(id)) SavedLocalVideo(localUrl(id), localPosterPath(id)) else null
+        if (contains(id)) {
+            SavedLocalVideo(localUrl(id), localPosterPath(id), sizeBytes = _videoSizes.value[id] ?: 0L)
+        } else {
+            null
+        }
 
     /**
      * Скачать оригинальное видео в наилучшем качестве (`videoUrlHigh`, прямой mp4)
@@ -408,19 +415,20 @@ class SavedX_Downloads(
             if (_list.value.isNotEmpty()) {
                 _downloadedVideoIds.value = emptySet()
                 _downloadedPosterIds.value = emptySet()
+                _videoSizes.value = emptyMap()
                 _list.value = emptyList()
             }
             return
         }
 
-        val videoIds = HashSet<Long>()
+        val videoSizes = HashMap<Long, Long>()
         val posterIds = HashSet<Long>()
         val infos = ArrayList<File>()
 
         for (file in allFiles) {
             if (!file.isFile || file.length() == 0L) continue
             when (file.extension) {
-                "mp4" -> file.nameWithoutExtension.toLongOrNull()?.let { videoIds.add(it) }
+                "mp4" -> file.nameWithoutExtension.toLongOrNull()?.let { videoSizes[it] = file.length() }
                 "jpg" -> file.nameWithoutExtension.toLongOrNull()?.let { posterIds.add(it) }
                 "info" -> infos.add(file)
             }
@@ -432,13 +440,16 @@ class SavedX_Downloads(
             val item = runCatching { AppJson.decodeFromString<ItemsX>(f.readText()) }
                 .onFailure { Timber.e(it, "X saved: битый .info ${f.absolutePath}") }
                 .getOrNull()
-            if (item != null && item.id in videoIds) {
+            if (item != null && item.id in videoSizes) {
                 result.add(item)
             }
         }
         // Сохранённым считается только ролик из списка: видео без `.info`
         // в список не попадает, и числиться сохранённым не должно — иначе его
         // не видно и нельзя ни удалить, ни скачать заново.
+        // Размеры публикуются раньше id: у ролика, который уже числится
+        // сохранённым, размер на карточке всегда есть.
+        _videoSizes.value = videoSizes
         _downloadedVideoIds.value = result.mapTo(HashSet(result.size)) { it.id }
         _downloadedPosterIds.value = posterIds
         _list.value = result

@@ -37,6 +37,7 @@ fun X_SavedList(
     onPlayItem: (ItemsX) -> Unit = {},
     onDeleteItem: (ItemsX) -> Unit = {},
     onShareP2pItem: (ItemsX) -> Unit = {},
+    onSaveToGalleryItem: (ItemsX) -> Unit = {},
     localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
     modifier: Modifier = Modifier
 ) {
@@ -73,6 +74,7 @@ fun X_SavedList(
                         onOpen = onPlayItem,
                         onDelete = onDeleteItem,
                         onShareP2p = onShareP2pItem,
+                        onSaveToGallery = onSaveToGalleryItem,
                         modifier = Modifier.padding(horizontal = 1.dp),
                     )
                 }
