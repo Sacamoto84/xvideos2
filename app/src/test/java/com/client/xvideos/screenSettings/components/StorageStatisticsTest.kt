@@ -32,4 +32,38 @@ class StorageStatisticsTest {
         assertEquals(2, stats.getValue("XLive").fileCount)
         assertEquals(3L, stats.getValue("X").sizeBytes)
     }
+
+    @Test
+    fun `папки раздела — первый уровень, большие первыми, файлы в корне последними`() {
+        val root = tmp.newFolder("store")
+        root.writeFile("R/Likes/a.json", 2)
+        root.writeFile("R/Download/creator/1.mp4", 10)
+        root.writeFile("R/Download/creator/1.info", 1)
+        root.writeFile("R/top.json", 20)
+        File(root, "R/Empty").mkdirs()
+
+        val r = loadStorageStats(root).single { it.key == "R" }
+
+        assertEquals(
+            listOf(
+                StorageFolderStat("Download", 11L, 2),
+                StorageFolderStat("Likes", 2L, 1),
+                StorageFolderStat("Empty", 0L, 0),
+                StorageFolderStat(null, 20L, 1)
+            ),
+            r.folders
+        )
+        assertEquals(33L, r.sizeBytes)
+        assertEquals(4, r.fileCount)
+    }
+
+    @Test
+    fun `нет папки раздела — нет и списка папок`() {
+        val root = tmp.newFolder("store")
+
+        val l = loadStorageStats(root).single { it.key == "L" }
+
+        assertEquals(emptyList<StorageFolderStat>(), l.folders)
+        assertEquals(0L, l.sizeBytes)
+    }
 }
