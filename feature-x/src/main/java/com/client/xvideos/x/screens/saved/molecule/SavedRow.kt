@@ -21,8 +21,8 @@ import com.client.xvideos.x.screens.saved.atom.SavedOverlayText
 /**
  * Карточка скачанного ролика — как в «Избранном»: только превью. Справа
  * сверху «⋮» (в галерею, P2P, удалить), снизу слева размер файла, справа
- * длительность — белым с тенью. Название ролика не показывается: у
- * скачанных в нём обычно мусор.
+ * длительность — белым с тенью; пока по тапу играет превью, их нет. Название
+ * ролика не показывается: у скачанных в нём обычно мусор.
  */
 @Composable
 fun SavedRow(
@@ -50,33 +50,34 @@ fun SavedRow(
             .background(Color.DarkGray)
     ) {
         // Тап — превью из скачанного файла, удержание и двойной тап — плеер.
+        // Подписи и «⋮» — в overlay: пока играет превью, их нет, как в ленте.
         UrlVideoImageAndLongClickX(
             item,
             onLongClick = handleOpen,
             onDoubleClick = handleOpen,
             localVideo = localVideo,
-        )
+        ) {
+            SavedOverlayText(
+                text = sizeLabel,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 8.dp, bottom = 4.dp)
+            )
 
-        SavedOverlayText(
-            text = sizeLabel,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 8.dp, bottom = 4.dp)
-        )
+            SavedOverlayText(
+                text = durationLabel,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 8.dp, bottom = 4.dp)
+            )
 
-        SavedOverlayText(
-            text = durationLabel,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 8.dp, bottom = 4.dp)
-        )
-
-        SavedActionsMenu(
-            onSaveToGallery = handleSaveToGallery,
-            onShareP2p = handleShareP2p,
-            onDelete = handleDelete,
-            modifier = Modifier.align(Alignment.TopEnd)
-        )
+            SavedActionsMenu(
+                onSaveToGallery = handleSaveToGallery,
+                onShareP2p = handleShareP2p,
+                onDelete = handleDelete,
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
+        }
     }
 }
 
