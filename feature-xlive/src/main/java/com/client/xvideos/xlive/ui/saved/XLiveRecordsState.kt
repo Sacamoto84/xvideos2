@@ -12,9 +12,12 @@ import kotlinx.collections.immutable.persistentMapOf
  *
  * @property records записи от новых к старым.
  * @property snapshots id записи → путь к снимку комнаты; файла может не быть.
+ * @property online ник → в эфире, как у «Моих»; ника, которого ещё не
+ *   проверили, здесь нет. Карточка показывает только «в эфире».
  */
 @Immutable
 data class XLiveRecordsState(
     val records: ImmutableList<XLiveRecord> = persistentListOf(),
     val snapshots: ImmutableMap<Long, String> = persistentMapOf(),
+    val online: ImmutableMap<String, Boolean> = persistentMapOf(),
 )

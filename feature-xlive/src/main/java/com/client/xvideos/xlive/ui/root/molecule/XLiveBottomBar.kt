@@ -12,11 +12,11 @@ import androidx.compose.material.icons.outlined.FiberNew
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.LiveTv
 import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material.icons.outlined.Tag
-import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.HorizontalDivider
@@ -86,7 +86,8 @@ private val savedTabIcons: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Bookmarks,
     Icons.Outlined.FavoriteBorder,
     Icons.Outlined.History,
-    Icons.Outlined.VideoLibrary,
+    // Дискета — как у загрузок в «Сохранённом» X: записи — тоже свои файлы.
+    Icons.Outlined.Save,
 )
 
 /** Подсказки подвкладок «Избранного» — в порядке [XLiveSavedTab]. */

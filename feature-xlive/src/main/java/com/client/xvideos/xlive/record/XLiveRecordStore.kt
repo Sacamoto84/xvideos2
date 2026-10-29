@@ -131,5 +131,11 @@ class XLiveRecordStore(
         const val MUX_TEMP = "video.mp4.part"
         const val STORYBOARD = ".storyboard.jpg"
         private const val TEMP_SUFFIX = ".tmp"
+
+        /** Имя записи [record] в общей галерее: `xlive_<ник>_<id>.mp4`, в нике — только безопасные знаки. */
+        fun galleryFileName(record: XLiveRecord): String {
+            val cleanUser = record.username.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            return "xlive_${cleanUser}_${record.id}.mp4"
+        }
     }
 }

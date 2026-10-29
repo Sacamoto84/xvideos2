@@ -75,6 +75,7 @@ class XLiveSMTest {
     private val account = TestAccount()
     private var followedLoads = 0
     private val followCalls = mutableListOf<Pair<String, Boolean>>()
+    private val galleryCalls = mutableListOf<Pair<File, String>>()
     private var tagPages: (TagRequest) -> XLiveTagPage = { XLiveTagPage(listOf(XLiveTag("t${it.page}", 1, 1)), 1000) }
 
     @Before
@@ -123,6 +124,7 @@ class XLiveSMTest {
             followCalls += name to follow
             follow
         },
+        saveToGallery = { file, name -> galleryCalls += file to name },
     )
 
     private fun XLiveSM.names() = feed.value.rooms.map { it.username }
@@ -616,14 +618,45 @@ class XLiveSMTest {
     }
 
     @Test
-    fun `вкладка Записи доклеивает оборванные записи и эфир не проверяет`() {
+    fun `вкладка Записи доклеивает оборванные записи и проверяет эфир авторов по разу`() {
+        records.put(record(1))
+        records.put(record(2).copy(username = "room_1"))
+        records.put(record(3))
+        onlineRooms = setOf("room_3")
         val sm = model()
         sm.selectTab(XLiveTab.SAVED)
-        val asked = onlineAsked.size
+        onlineAsked.clear()
 
         sm.selectSavedTab(XLiveSavedTab.RECORDS)
 
         assertEquals(1, pendingFinishes)
-        assertEquals(asked, onlineAsked.size)
+        assertEquals(listOf("room_1", "room_3"), onlineAsked.sorted())
+        assertEquals(mapOf("room_1" to false, "room_3" to true), sm.recordsState.value.online)
+    }
+
+    @Test
+    fun `свайп вниз в Записях — эфир авторов заново`() {
+        records.put(record(1))
+        val sm = model()
+        sm.selectTab(XLiveTab.SAVED)
+        sm.selectSavedTab(XLiveSavedTab.RECORDS)
+        onlineRooms = setOf("room_1")
+        onlineAsked.clear()
+
+        sm.refreshSaved()
+
+        assertEquals(listOf("room_1"), onlineAsked)
+        assertEquals(true, sm.recordsState.value.online["room_1"])
+    }
+
+    @Test
+    fun `в галерею — видео записи под тем же именем, что с экрана записи`() {
+        records.put(record(5).copy(username = "a b"))
+        val sm = model()
+
+        sm.saveRecordToGallery(5)
+        sm.saveRecordToGallery(404)
+
+        assertEquals(listOf(File(records.dirOf(5), XLiveRecordStore.VIDEO) to "xlive_a_b_5.mp4"), galleryCalls)
     }
 }

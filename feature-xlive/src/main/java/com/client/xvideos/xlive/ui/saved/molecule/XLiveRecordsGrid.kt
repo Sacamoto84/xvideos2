@@ -27,6 +27,7 @@ import com.client.xvideos.xlive.ui.feed.atom.XLivePlaceholder
 import com.client.xvideos.xlive.ui.saved.XLiveRecordsActions
 import com.client.xvideos.xlive.ui.saved.XLiveRecordsState
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import java.io.File
 
 /**
@@ -63,6 +64,13 @@ fun XLiveRecordsGrid(
                     snapshot = state.snapshots[record.id]?.let(::File),
                     onClick = { actions.onOpen(record.id) },
                     onLongClick = { pendingRemoval = record.id },
+                    online = state.online[record.username] == true,
+                    // В галерею — только готовая запись: у пишущейся и оборванной видео ещё нет.
+                    onSaveToGallery = if (record.status == XLiveRecordStatus.READY) {
+                        { actions.onSaveToGallery(record.id) }
+                    } else {
+                        null
+                    },
                 )
             }
         }
@@ -88,6 +96,7 @@ private fun XLiveRecordsGridPreview() {
                 XLiveRecord(id = 2L, username = "room_a", status = XLiveRecordStatus.READY, durationMs = 65_000L),
                 XLiveRecord(id = 1L, username = "room_b", status = XLiveRecordStatus.BROKEN),
             ),
+            online = persistentMapOf("room_a" to true),
         ),
         gridState = rememberLazyGridState(),
         actions = XLiveRecordsActions(),

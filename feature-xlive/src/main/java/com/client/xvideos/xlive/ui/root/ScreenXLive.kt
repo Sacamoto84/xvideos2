@@ -121,6 +121,7 @@ class ScreenXLive : Screen {
                 records = XLiveRecordsActions(
                     onOpen = { id -> navigator.push(ScreenXLiveRecord(id)) },
                     onRemove = vm::removeRecord,
+                    onSaveToGallery = vm::saveRecordToGallery,
                 ),
             )
         }

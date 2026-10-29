@@ -113,8 +113,6 @@ class XLiveRecordSM(
     ) {
         val rec = record.value ?: return
         val src = File(store.dirOf(id), XLiveRecordStore.VIDEO)
-        val cleanUser = rec.username.replace(Regex("[^a-zA-Z0-9_-]"), "_")
-        val fileName = "xlive_${cleanUser}_${rec.id}.mp4"
-        saver(context, src, fileName)
+        saver(context, src, XLiveRecordStore.galleryFileName(rec))
     }
 }

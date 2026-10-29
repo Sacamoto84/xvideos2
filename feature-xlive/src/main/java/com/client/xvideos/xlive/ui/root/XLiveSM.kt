@@ -2,6 +2,8 @@ package com.client.xvideos.xlive.ui.root
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.client.xvideos.common.AppContextHolder
+import com.client.xvideos.common.gallery.GallerySaver
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.xlive.auth.XLiveAccount
@@ -33,6 +35,7 @@ import com.client.xvideos.xlive.ui.search.XLiveSearchState
 import com.client.xvideos.xlive.ui.tags.XLiveTagsFeed
 import com.client.xvideos.xlive.ui.tags.XLiveTagsState
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +43,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -67,6 +69,7 @@ import java.io.File
  * @param account вход на сайт; подменяется в тестах.
  * @param loadFollowed подписки аккаунта; подменяются в тестах.
  * @param setFollowing подписка и отписка по нику; подменяются в тестах.
+ * @param saveToGallery копия видеофайла в общую галерею под именем; подменяется в тестах.
  */
 class XLiveSM(
     private val loadPage: suspend (XLiveGender, XLiveCollection, Int) -> XLiveRoomPage = { gender, collection, offset ->
@@ -86,6 +89,9 @@ class XLiveSM(
     private val account: XLiveAccount = XLiveSession,
     loadFollowed: suspend () -> XLiveFollowed = XLiveApi::followed,
     setFollowing: suspend (String, Boolean) -> Boolean = XLiveApi::setFollowing,
+    private val saveToGallery: (File, String) -> Unit = { file, name ->
+        GallerySaver.saveLocal(AppContextHolder.applicationContext, file, name)
+    },
 ) : ScreenModel {
 
     private val _tab = MutableStateFlow(XLiveTab.ROOMS)
@@ -135,10 +141,13 @@ class XLiveSM(
     val myPosition = LazyGridPosition()
     val recentPosition = LazyGridPosition()
 
-    /** «Записи»: от новых к старым. */
-    val recordsState: StateFlow<XLiveRecordsState> = records.records
-        .map(::recordsStateOf)
-        .stateIn(screenModelScope, SharingStarted.Eagerly, recordsStateOf(records.records.value))
+    /** «Записи»: от новых к старым; эфир авторов — из той же проверки, что у «Моих». */
+    val recordsState: StateFlow<XLiveRecordsState> = combine(records.records, onlineCheck.online, ::recordsStateOf)
+        .stateIn(
+            screenModelScope,
+            SharingStarted.Eagerly,
+            recordsStateOf(records.records.value, onlineCheck.online.value),
+        )
 
     val recordsPosition = LazyGridPosition()
 
@@ -221,6 +230,7 @@ class XLiveSM(
         }
         if (_savedTab.value == XLiveSavedTab.RECORDS) {
             records.refresh()
+            onlineCheck.check(records.records.value.map { it.username }, force = true)
             return
         }
         snapshotStamp.value = nowSeconds()
@@ -238,8 +248,12 @@ class XLiveSM(
         }
     }
 
-    private fun recordsStateOf(list: ImmutableList<XLiveRecord>) = XLiveRecordsState(
+    private fun recordsStateOf(
+        list: ImmutableList<XLiveRecord>,
+        online: ImmutableMap<String, Boolean>,
+    ) = XLiveRecordsState(
         records = list,
+        online = online,
         // Картинка карточки — кадр начала из видео; пока кадра нынешнего способа
         // нет — снимок сайта. Путь меняется, когда кадр готов, и карточка
         // загружает его заново: запрос картинки помнится по пути.
@@ -253,6 +267,12 @@ class XLiveSM(
     /** Удалить запись [id] вместе с её файлами. */
     fun removeRecord(id: Long) {
         records.remove(id)
+    }
+
+    /** Видео записи [id] — в общую галерею, под тем же именем, что с экрана записи. */
+    fun saveRecordToGallery(id: Long) {
+        val record = records.records.value.firstOrNull { it.id == id } ?: return
+        saveToGallery(File(records.dirOf(id), XLiveRecordStore.VIDEO), XLiveRecordStore.galleryFileName(record))
     }
 
     fun retryFollowing() = followingList.retry()
@@ -293,20 +313,20 @@ class XLiveSM(
     fun retryLoadMoreSearch() = searchFeed.retryLoadMore()
 
     private fun checkSaved(force: Boolean = false) {
-        val shown = when (_savedTab.value) {
-            XLiveSavedTab.MY -> saved.rooms.value
-            XLiveSavedTab.HISTORY -> history.rooms.value
+        val names = when (_savedTab.value) {
+            XLiveSavedTab.MY -> saved.rooms.value.map { it.username }
+            XLiveSavedTab.HISTORY -> history.rooms.value.map { it.username }
             XLiveSavedTab.FOLLOWING -> {
                 followingList.show()
                 return
             }
             XLiveSavedTab.RECORDS -> {
-                // Эфир у записей не проверяется; оборванные — доклеиваются.
+                // Оборванные записи доклеиваются; эфир авторов — для плашки на карточке.
                 finishPendingRecords()
-                return
+                records.records.value.map { it.username }
             }
         }
-        onlineCheck.check(shown.map { it.username }, force)
+        onlineCheck.check(names, force)
     }
 
     /**

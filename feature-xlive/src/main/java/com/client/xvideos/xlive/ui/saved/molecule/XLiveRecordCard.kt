@@ -5,11 +5,17 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SaveAlt
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -29,6 +35,7 @@ import com.client.xvideos.xlive.model.XLiveRecordStatus
 import com.client.xvideos.xlive.model.recordDateSizeLabel
 import com.client.xvideos.xlive.model.recordingElapsedLabel
 import com.client.xvideos.xlive.ui.XLiveColors
+import com.client.xvideos.xlive.ui.room.atom.XLiveLiveBadge
 import com.client.xvideos.xlive.ui.saved.atom.XLiveRecordStatusBadge
 import java.io.File
 
@@ -42,6 +49,9 @@ private val CardShape = RoundedCornerShape(8.dp)
  *
  * @param snapshot файл картинки; `null` — картинки нет, на её месте фон.
  * @param onLongClick долгое нажатие — удалить запись.
+ * @param online автор сейчас в эфире: красная плашка, как в «Моих». Не в эфире
+ *   и не проверено — без плашки и без затенения.
+ * @param onSaveToGallery кнопка «в галерею» рядом с ником; `null` — кнопки нет.
  */
 @Composable
 fun XLiveRecordCard(
@@ -50,6 +60,8 @@ fun XLiveRecordCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    online: Boolean = false,
+    onSaveToGallery: (() -> Unit)? = null,
 ) {
     val badge = when (record.status) {
         XLiveRecordStatus.READY -> recordingElapsedLabel(record.durationMs)
@@ -87,23 +99,47 @@ fun XLiveRecordCard(
                     .align(Alignment.BottomEnd)
                     .padding(5.dp)
             )
+            // Длительность — справа снизу, поэтому «в эфире» — слева сверху.
+            if (online) {
+                XLiveLiveBadge(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(5.dp)
+                )
+            }
         }
-        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
-            Text(
-                text = record.username,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = subtitle,
-                fontSize = 11.sp,
-                color = XLiveColors.Label,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = record.username,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = XLiveColors.Label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (onSaveToGallery != null) {
+                IconButton(onClick = onSaveToGallery) {
+                    Icon(
+                        imageVector = Icons.Filled.SaveAlt,
+                        contentDescription = "Сохранить в галерею",
+                        tint = XLiveColors.Label,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -122,5 +158,7 @@ private fun XLiveRecordCardPreview() {
         snapshot = null,
         onClick = {},
         onLongClick = {},
+        online = true,
+        onSaveToGallery = {},
     )
 }
