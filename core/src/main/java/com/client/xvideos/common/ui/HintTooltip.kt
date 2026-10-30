@@ -22,6 +22,10 @@ import androidx.compose.ui.tooling.preview.Preview
  * кнопки как раньше.
  *
  * Пустой [text] — подсказки нет, [content] рисуется как есть.
+ *
+ * [modifier] ложится на внешний Box, а не на сам TooltipBox: TooltipBox
+ * отдаёт его вложенному узлу, и `weight`/`align` родителя до ряда не доходят.
+ * Ширину, заданную снаружи, [content] заполняет сам (`fillMaxWidth`).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,13 +38,14 @@ fun HintTooltip(
         Box(modifier = modifier) { content() }
         return
     }
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-        tooltip = { PlainTooltip { Text(text = text) } },
-        state = rememberTooltipState(),
-        modifier = modifier,
-        content = content,
-    )
+    Box(modifier = modifier, propagateMinConstraints = true) {
+        TooltipBox(
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+            tooltip = { PlainTooltip { Text(text = text) } },
+            state = rememberTooltipState(),
+            content = content,
+        )
+    }
 }
 
 @Preview

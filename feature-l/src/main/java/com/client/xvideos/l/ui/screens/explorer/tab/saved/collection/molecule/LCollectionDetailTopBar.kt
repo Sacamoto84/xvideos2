@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getTopInsetDp
 
@@ -37,12 +38,14 @@ fun LCollectionDetailTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (onExitCollection != null) {
-            IconButton(onClick = onExitCollection) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Назад",
-                    tint = Theme.L.primaryColor
-                )
+            HintTooltip(text = "Назад") {
+                IconButton(onClick = onExitCollection) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = Theme.L.primaryColor
+                    )
+                }
             }
         }
         Text(

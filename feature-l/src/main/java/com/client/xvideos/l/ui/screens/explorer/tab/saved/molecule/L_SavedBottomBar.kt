@@ -26,6 +26,15 @@ private val SAVED_TAB_ICONS = persistentListOf(
     Icons.Outlined.FavoriteBorder,
 )
 
+// Подсказки — в порядке SAVED_TAB_ICONS; лишние при tabCount < 5 не читаются.
+private val SAVED_TAB_HINTS = persistentListOf(
+    "Лайки в приложении",
+    "Сохранённые альбомы",
+    "Коллекции",
+    "Подписки на альбомы",
+    "Лайки на сервере",
+)
+
 @Composable
 fun L_SavedBottomBar(
     currentPage: Int,
@@ -54,7 +63,8 @@ fun L_SavedBottomBar(
             containerColor = Theme.tabLevel1,
             titlesIcon = icons,
             onChangeState = onTabChange,
-            overlay = renderOverlay
+            overlay = renderOverlay,
+            tooltips = SAVED_TAB_HINTS,
         )
     }
 }

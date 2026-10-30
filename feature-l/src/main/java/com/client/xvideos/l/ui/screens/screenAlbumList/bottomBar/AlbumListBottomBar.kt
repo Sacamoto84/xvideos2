@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListPageSelector
 
@@ -75,15 +76,18 @@ private fun FilterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .size(48.dp)
-            .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
-            .background(Color(0xFF414141))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(Icons.Default.FilterList, contentDescription = "Фильтры", tint = Color.White)
+    val hint = "Фильтры"
+    HintTooltip(text = hint, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
+                .background(Color(0xFF414141))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.FilterList, contentDescription = hint, tint = Color.White)
+        }
     }
 }
 

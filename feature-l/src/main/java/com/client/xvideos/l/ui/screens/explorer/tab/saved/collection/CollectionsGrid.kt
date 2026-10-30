@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.atom.CollectionGridCell
 
@@ -84,21 +85,22 @@ fun CollectionsGrid(
 
             item(key = "add_button", contentType = "add_button") {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 8.dp, top = 4.dp)
-                            .size(72.dp)
-                            .clip(previewCornerShape)
-                            .background(style.addButtonBackground)
-                            .clickable(onClick = onCreateNewCollectionClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = null,
-                            tint = style.addButtonIconColor,
-                            modifier = Modifier.size(24.dp)
-                        )
+                    HintTooltip(text = "Новая коллекция", modifier = Modifier.padding(start = 8.dp, top = 4.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(previewCornerShape)
+                                .background(style.addButtonBackground)
+                                .clickable(onClick = onCreateNewCollectionClick),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Новая коллекция",
+                                tint = style.addButtonIconColor,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }

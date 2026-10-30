@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 
 /**
  * Кнопка «добавить/удалить альбом из избранного на сервере L» в шапке ScreenLAlbum.
@@ -55,38 +56,40 @@ fun AlbumInfoButtonServerFavorite(
             .border(1.dp, Theme.L.grey3, shape)
             .background(backgroundColor)
     }
-    val baseModifier = modifier.then(styledBase)
 
-    Box(
-        modifier = baseModifier.clickable(enabled = !isLoading, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = Color.White,
-                strokeWidth = 2.dp
-            )
-        } else {
-            // Отступ и одна строка — для узкой кнопки в ряду из трёх на широком окне.
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Icon(
-                    imageVector = iconVector,
-                    contentDescription = buttonText,
-                    tint = iconTint,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = buttonText,
+    // Подпись в ряду из трёх на широком окне обрезается — подсказка даёт её целиком.
+    HintTooltip(text = buttonText, modifier = modifier) {
+        Box(
+            modifier = styledBase.clickable(enabled = !isLoading, onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
                     color = Color.White,
-                    style = buttonTextStyle,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    strokeWidth = 2.dp
                 )
+            } else {
+                // Отступ и одна строка — для узкой кнопки в ряду из трёх на широком окне.
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = buttonText,
+                        tint = iconTint,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = buttonText,
+                        color = Color.White,
+                        style = buttonTextStyle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }

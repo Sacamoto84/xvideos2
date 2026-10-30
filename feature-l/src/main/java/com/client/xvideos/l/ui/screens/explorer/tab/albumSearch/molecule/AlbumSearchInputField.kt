@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import com.client.xvideos.common.ui.excludedFromAutofill
 
@@ -57,12 +58,16 @@ fun AlbumSearchInputField(
         textStyle = searchTextStyle,
         trailingIcon = {
             if (searchText.isNotEmpty()) {
-                IconButton(onClick = handleClear) {
-                    Icon(Icons.Default.Close, contentDescription = "Очистить поле поиска", tint = Theme.L.textColor)
+                HintTooltip(text = "Очистить поле поиска") {
+                    IconButton(onClick = handleClear) {
+                        Icon(Icons.Default.Close, contentDescription = "Очистить поле поиска", tint = Theme.L.textColor)
+                    }
                 }
             } else {
-                IconButton(onClick = handleSearch) {
-                    Icon(Icons.Default.Search, contentDescription = "Искать", tint = Theme.L.textColor)
+                HintTooltip(text = "Искать") {
+                    IconButton(onClick = handleSearch) {
+                        Icon(Icons.Default.Search, contentDescription = "Искать", tint = Theme.L.textColor)
+                    }
                 }
             }
         },

@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -48,26 +49,28 @@ fun LSortMenuButton(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .clickable(role = Role.Button, onClick = { expanded = true })
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.FilterList,
-                contentDescription = contentDescription,
-                tint = Theme.L.textColor
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                options.getOrElse(selectedIndex) { "" },
-                color = Theme.L.grey2,
-                fontSize = 16.sp,
-                fontFamily = Theme.L.fontFamilyDMsanss,
-                maxLines = 1
-            )
+        HintTooltip(text = contentDescription) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(role = Role.Button, onClick = { expanded = true })
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.FilterList,
+                    contentDescription = contentDescription,
+                    tint = Theme.L.textColor
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    options.getOrElse(selectedIndex) { "" },
+                    color = Theme.L.grey2,
+                    fontSize = 16.sp,
+                    fontFamily = Theme.L.fontFamilyDMsanss,
+                    maxLines = 1
+                )
+            }
         }
         DropdownMenu(
             expanded = expanded,

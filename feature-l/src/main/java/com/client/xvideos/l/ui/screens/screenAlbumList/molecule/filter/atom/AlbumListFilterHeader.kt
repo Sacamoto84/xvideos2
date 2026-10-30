@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
 
 @Composable
@@ -116,16 +117,18 @@ fun AlbumListFilterHeader(
             }
 
             // Close button (X)
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close filters",
-                    tint = palette.textSecondary,
-                    modifier = Modifier.size(24.dp)
-                )
+            HintTooltip(text = "Закрыть фильтры") {
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Закрыть фильтры",
+                        tint = palette.textSecondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }

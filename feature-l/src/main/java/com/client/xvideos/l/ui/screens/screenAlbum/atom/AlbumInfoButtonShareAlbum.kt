@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 
 /** Кнопка «поделиться альбомом по P2P» в шапке ScreenLAlbum. */
 @Composable
@@ -39,21 +40,22 @@ fun AlbumInfoButtonShareAlbum(
             .border(1.dp, Theme.L.grey3, shape)
             .background(Theme.L.grey6)
     }
-    val boxModifier = modifier.then(styledBase)
 
-    Box(
-        modifier = boxModifier
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Share Album (P2P)",
-            color = Color.White,
-            style = buttonTextStyle,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
+    HintTooltip(text = "Поделиться альбомом по P2P", modifier = modifier) {
+        Box(
+            modifier = styledBase
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Share Album (P2P)",
+                color = Color.White,
+                style = buttonTextStyle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
     }
 }
 

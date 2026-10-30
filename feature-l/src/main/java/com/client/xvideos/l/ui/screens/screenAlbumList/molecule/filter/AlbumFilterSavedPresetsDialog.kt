@@ -38,6 +38,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.l.featured.filter.AlbumFilterPresetManager
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
@@ -93,15 +94,17 @@ fun AlbumFilterSavedPresetsDialog(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = palette.textSecondary
-                        )
+                    HintTooltip(text = "Закрыть") {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Закрыть",
+                                tint = palette.textSecondary
+                            )
+                        }
                     }
                 }
 

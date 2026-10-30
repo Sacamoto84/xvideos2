@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.SavedAlbumFilter
 import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
@@ -77,16 +78,18 @@ fun SavedPresetCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete preset",
-                    tint = palette.excludedBorder,
-                    modifier = Modifier.size(20.dp)
-                )
+            HintTooltip(text = "Удалить пресет") {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Удалить пресет",
+                        tint = palette.excludedBorder,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 

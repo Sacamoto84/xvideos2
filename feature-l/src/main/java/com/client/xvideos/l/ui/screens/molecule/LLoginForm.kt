@@ -58,6 +58,7 @@ import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.ui.AllowWindowAutofill
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.IncognitoKeyboard
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.adaptive.capOutsideCompactDp
@@ -150,12 +151,15 @@ fun LLoginForm(
 
     val passwordTrailingIcon: @Composable () -> Unit = remember(passwordVisible) {
         {
-            IconButton(onClick = onTogglePasswordVisible) {
-                Icon(
-                    imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (passwordVisible) "Скрыть пароль" else "Показать пароль",
-                    tint = TEXT_COLOR_MUTED
-                )
+            val hint = if (passwordVisible) "Скрыть пароль" else "Показать пароль"
+            HintTooltip(text = hint) {
+                IconButton(onClick = onTogglePasswordVisible) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = hint,
+                        tint = TEXT_COLOR_MUTED
+                    )
+                }
             }
         }
     }

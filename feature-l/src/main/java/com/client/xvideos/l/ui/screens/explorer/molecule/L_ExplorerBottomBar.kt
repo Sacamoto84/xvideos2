@@ -23,6 +23,13 @@ private val EXPLORER_ICONS = persistentListOf(
     Icons.Outlined.Search,
 )
 
+private val EXPLORER_HINTS = persistentListOf(
+    "Альбомы",
+    "Сохранённое",
+    "Топ альбомов",
+    "Поиск альбомов",
+)
+
 private val EXPLORER_TAGS = persistentListOf(
     "",
     "",
@@ -50,7 +57,8 @@ fun L_ExplorerBottomBar(
             value = screenType,
             onChangeState = onTabChange,
             overlay = renderOverlay,
-            tags = EXPLORER_TAGS
+            tags = EXPLORER_TAGS,
+            tooltips = EXPLORER_HINTS,
         )
     }
 }

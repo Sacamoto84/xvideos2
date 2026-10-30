@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 
 @Composable
 fun AlbumInfoButtonSaveAlbum(
@@ -50,31 +51,33 @@ fun AlbumInfoButtonSaveAlbum(
             .border(1.dp, Theme.L.grey3, shape)
             .background(backgroundColor)
     }
-    val baseModifier = modifier.then(styledBase)
 
-    Box(
-        modifier = baseModifier.clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        // Отступ и одна строка — для узкой кнопки в ряду из трёх на широком окне.
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp)
+    // Подпись в ряду из трёх на широком окне обрезается — подсказка даёт её целиком.
+    HintTooltip(text = buttonText, modifier = modifier) {
+        Box(
+            modifier = styledBase.clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = iconVector,
-                contentDescription = buttonText,
-                tint = iconTint,
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = buttonText,
-                color = Color.White,
-                style = buttonTextStyle,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            // Отступ и одна строка — для узкой кнопки в ряду из трёх на широком окне.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Icon(
+                    imageVector = iconVector,
+                    contentDescription = buttonText,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = buttonText,
+                    color = Color.White,
+                    style = buttonTextStyle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

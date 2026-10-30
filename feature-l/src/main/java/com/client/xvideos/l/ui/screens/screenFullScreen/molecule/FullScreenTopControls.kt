@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.edge.avoidCamera
 
 @Composable
@@ -50,26 +51,34 @@ fun FullScreenTopControls(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row {
-                IconButton(onClick = onRotateToggle) {
-                    Icon(
-                        Icons.Default.ScreenRotation,
-                        contentDescription = "Повернуть изображение",
-                        tint = Color.White
-                    )
+                HintTooltip(text = "Повернуть изображение") {
+                    IconButton(onClick = onRotateToggle) {
+                        Icon(
+                            Icons.Default.ScreenRotation,
+                            contentDescription = "Повернуть изображение",
+                            tint = Color.White
+                        )
+                    }
                 }
-                IconButton(onClick = onVerticalPagerToggle) {
-                    Icon(
-                        if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz,
-                        contentDescription = if (verticalPager) "Листать по горизонтали" else "Листать по вертикали",
-                        tint = Color.White
-                    )
+                val pagerHint = if (verticalPager) "Листать по горизонтали" else "Листать по вертикали"
+                HintTooltip(text = pagerHint) {
+                    IconButton(onClick = onVerticalPagerToggle) {
+                        Icon(
+                            if (verticalPager) Icons.Default.SwapVert else Icons.Default.SwapHoriz,
+                            contentDescription = pagerHint,
+                            tint = Color.White
+                        )
+                    }
                 }
-                IconButton(onClick = onVideoMutedToggle) {
-                    Icon(
-                        if (videoMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = if (videoMuted) "Включить звук" else "Выключить звук",
-                        tint = Color.White
-                    )
+                val soundHint = if (videoMuted) "Включить звук" else "Выключить звук"
+                HintTooltip(text = soundHint) {
+                    IconButton(onClick = onVideoMutedToggle) {
+                        Icon(
+                            if (videoMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = soundHint,
+                            tint = Color.White
+                        )
+                    }
                 }
             }
 
@@ -79,12 +88,14 @@ fun FullScreenTopControls(
                 modifier = Modifier.avoidCamera(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onShowInfoDialog) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = "Информация о картинке",
-                        tint = Color.White
-                    )
+                HintTooltip(text = "Информация о картинке") {
+                    IconButton(onClick = onShowInfoDialog) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = "Информация о картинке",
+                            tint = Color.White
+                        )
+                    }
                 }
                 expandMenuContent()
             }
