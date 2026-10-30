@@ -254,7 +254,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
 
             val json = runCatching { LJson.parseToJsonElement(raw) as? JsonObject }.getOrNull()
                 ?: return Result.failure(IllegalStateException("Malformed album JSON"))
-            val pictureList = json.objectAt("data", "picture", "list")
+            val pictureList = json.objectAt("data", "picture", "list_in_album")
                 ?: return Result.failure(IllegalStateException("Missing picture list"))
 
             totalPages = pictureList.objectAt("info")?.get("total_pages").contentOrNull()?.toIntOrNull() ?: totalPages

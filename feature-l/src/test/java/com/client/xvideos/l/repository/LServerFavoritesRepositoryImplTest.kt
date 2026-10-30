@@ -53,7 +53,7 @@ class LServerFavoritesRepositoryImplTest {
             """{"data":{"media_categories":{"filter_settings":{"user_id":$userId}}}}"""
 
         private fun albumPageJson(totalPages: Int, items: String) =
-            """{"data":{"picture":{"list":{"info":{"total_pages":$totalPages},"items":[$items]}}}}"""
+            """{"data":{"picture":{"list_in_album":{"info":{"total_pages":$totalPages},"items":[$items]}}}}"""
 
         private fun picture(id: Int, fileName: String, extra: String = "") =
             """{"id":"$id","url_to_original":"https://example.com/$fileName"$extra}"""

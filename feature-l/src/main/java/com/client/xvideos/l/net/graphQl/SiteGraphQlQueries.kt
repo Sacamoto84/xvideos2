@@ -93,9 +93,9 @@ fragment AlbumStandard on Album {
 internal const val SITE_PICTURES_PER_PAGE = 50
 
 internal val SITE_PICTURE_LIST_INSIDE_ALBUM_QUERY = """
-query PictureListInsideAlbum(${'$'}input: PictureListInput!) {
+query PictureListInsideAlbum(${'$'}input: PictureInAlbumListInput!) {
   picture {
-    list(input: ${'$'}input) {
+    list_in_album(input: ${'$'}input) {
       info { ...FacetCollectionInfo }
       items {
         __typename id title description created like_status number_of_comments number_of_favorites

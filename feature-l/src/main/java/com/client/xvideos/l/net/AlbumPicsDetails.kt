@@ -215,9 +215,9 @@ class AlbumPicsDetails(
             ?.asJsonObjectOrNull()
             ?.get("picture")
             ?.asJsonObjectOrNull()
-            ?.get("list")
+            ?.get("list_in_album")
             ?.asJsonObjectOrNull()
-            ?: error("AlbumPicsDetails response missing data.picture.list")
+            ?: error("AlbumPicsDetails response missing data.picture.list_in_album")
 
         get["errors"]
             ?.takeIf { it !is JsonNull }
@@ -230,7 +230,7 @@ class AlbumPicsDetails(
         val pages = calculateAlbumPages(totalPagesFromInfo, totalItems, itemsPerPage)
 
         val itemsArray = get["items"]?.takeIf { it is JsonArray }?.jsonArray
-            ?: error("AlbumPicsDetails response missing data.picture.list.items")
+            ?: error("AlbumPicsDetails response missing data.picture.list_in_album.items")
 
         var skippedNoMediaCount = 0
         var parseErrorCount = 0

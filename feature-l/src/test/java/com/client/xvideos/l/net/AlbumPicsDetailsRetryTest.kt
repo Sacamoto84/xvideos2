@@ -52,7 +52,7 @@ class AlbumPicsDetailsRetryTest {
                 """{"id":"${page * 100 + n}","url_to_original":"https://example.com/$page-$n.jpg"}"""
             }
             val info = """{"total_pages":$totalPages,"total_items":${totalPages * PICS_PER_PAGE},"items_per_page":$PICS_PER_PAGE}"""
-            return """{"data":{"picture":{"list":{"info":$info,"items":[$items]}}}}"""
+            return """{"data":{"picture":{"list_in_album":{"info":$info,"items":[$items]}}}}"""
         }
     }
 

@@ -10,7 +10,7 @@ import kotlinx.serialization.json.putJsonObject
  * Генерирует GraphQL-запрос страницы картинок альбома — сайтовый
  * `PictureListInsideAlbum` ([SITE_PICTURE_LIST_INSIDE_ALBUM_QUERY]) с
  * переменными в порядке сайта и по [SITE_PICTURES_PER_PAGE] на страницу.
- * Путь ответа прежний: `data.picture.list`, нужные поля в нём есть.
+ * Путь ответа: `data.picture.list_in_album`.
  *
  * @param albumId Числовой ID альбома.
  * @param page Номер страницы (начиная с 1).

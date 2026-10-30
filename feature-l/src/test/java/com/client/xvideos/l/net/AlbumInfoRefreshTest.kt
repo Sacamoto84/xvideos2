@@ -57,7 +57,7 @@ class AlbumInfoRefreshTest {
                 """{"id":"$n","url_to_original":"https://example.com/fresh-$n.jpg"}"""
             }
             val info = """{"total_pages":1,"total_items":$FRESH_PICS,"items_per_page":30}"""
-            """{"data":{"picture":{"list":{"info":$info,"items":[$items]}}}}"""
+            """{"data":{"picture":{"list_in_album":{"info":$info,"items":[$items]}}}}"""
         }
     }
 
