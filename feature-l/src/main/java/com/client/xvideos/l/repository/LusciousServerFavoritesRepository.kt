@@ -2,11 +2,20 @@ package com.client.xvideos.l.repository
 
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * Контракт для работы с серверными подписками пользователя и лайками L.
  */
 interface LusciousServerFavoritesRepository {
+
+    /**
+     * id альбомов, которые сервер только что убрал из подписок. Список подписок
+     * слушает поток, чтобы альбом, удалённый с экрана альбома, пропал из него
+     * сразу, без обновления с сервера.
+     */
+    val removedAlbumIds: Flow<String> get() = emptyFlow()
 
     /**
      * Получить user_id текущей авторизованной сессии с сервера.

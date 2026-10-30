@@ -63,6 +63,11 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
 
     init {
         loadInitial()
+        // Альбом удалён с сервера на экране альбома: этот экран лежит под ним в
+        // стеке, и без потока альбом оставался в списке до ручного обновления.
+        screenModelScope.launch {
+            repository.removedAlbumIds.collect { id -> list.removeIf { it.id == id } }
+        }
     }
 
     /** Загружает начальную первую страницу подписанных альбомов. */

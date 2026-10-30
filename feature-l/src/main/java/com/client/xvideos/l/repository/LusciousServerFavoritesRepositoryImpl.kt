@@ -15,6 +15,9 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -296,7 +299,12 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             favoriteType = favoriteType
         )
         return parseFavoriteMutationResult(rawResult, "remove_favorite", "FavoriteRemove")
+            .onSuccess { if (anchorType == "album") _removedAlbumIds.tryEmit(cleanAnchorId) }
     }
+
+    private val _removedAlbumIds = MutableSharedFlow<String>(extraBufferCapacity = REMOVED_ALBUMS_BUFFER)
+
+    override val removedAlbumIds: SharedFlow<String> = _removedAlbumIds.asSharedFlow()
 
     /**
      * Разбирает результат мутации добавления/удаления избранного, проверяя ошибки GraphQL и структуры мутации.
@@ -386,6 +394,9 @@ private fun JsonElement?.errorMessagesOrNull(fallback: String): String? {
  * картинка с одиннадцатой уже не находилась.
  */
 internal const val PICTURE_LOOKUP_MAX_PAGES = 100
+
+/** Запас потока удалённых альбомов: без подписчика события просто теряются, список и так загрузится заново. */
+private const val REMOVED_ALBUMS_BUFFER = 16
 
 private val ULID_REGEX = Regex("""[0-9A-HJKMNP-TV-Z]{26}""")
 private val DIMENSIONS_EXT_REGEX = Regex("""\.\d+x\d+\.[a-zA-Z0-9]+$""")

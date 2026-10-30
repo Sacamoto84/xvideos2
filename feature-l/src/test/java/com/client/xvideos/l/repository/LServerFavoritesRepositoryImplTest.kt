@@ -9,8 +9,10 @@ import com.client.xvideos.l.net.graphQl.MediaCategories
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -198,6 +200,24 @@ class LServerFavoritesRepositoryImplTest {
         val result = favorites.addFavorite(anchorId = "5", anchorType = "picture", favoriteType = "like")
 
         assertTrue(result.exceptionOrNull()?.message, result.isSuccess)
+    }
+
+    @Test
+    fun `удалённый с сервера альбом попадает в поток удалённых, неудачное удаление — нет`() = runTest {
+        val removed = mutableListOf<String>()
+        backgroundScope.launch { favorites.removedAlbumIds.collect { removed += it } }
+        runCurrent()
+
+        base.respond = { Result.failure(IOException("нет сети")) }
+        favorites.unlikeAlbum("7")
+        base.respond = { Result.success("""{"data":{"favorite":{"remove_favorite":{"errors":["нет"]}}}}""") }
+        favorites.unlikeAlbum("8")
+        base.respond = { Result.success("""{"data":{"favorite":{"remove_favorite":{"errors":null}}}}""") }
+        favorites.unlikePicture("9")
+        favorites.unlikeAlbum("10")
+        runCurrent()
+
+        assertEquals(listOf("10"), removed)
     }
 
     // --- Пользователь сессии ---
