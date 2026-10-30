@@ -17,7 +17,7 @@ import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
-import com.client.xvideos.x.screens.favorites.atom.DurationOverlay
+import com.client.xvideos.x.screens.common.atom.ShadowedOverlayText
 
 @Composable
 fun FavoriteRow(
@@ -33,6 +33,7 @@ fun FavoriteRow(
     val onDeleteThis = remember(item, onDelete) { { onDelete(item) } }
     val onDownloadThis = remember(item, onDownload) { { onDownload(item) } }
     val onSaveToGalleryThis = remember(item, onSaveToGallery) { { onSaveToGallery(item) } }
+    val durationLabel = remember(item.duration) { item.duration.trim().removeSuffix(".") }
 
     Box(
         modifier = modifier
@@ -64,7 +65,12 @@ fun FavoriteRow(
             )
         }
 
-        Row(Modifier.align(Alignment.BottomEnd).padding(end = 8.dp)) { DurationOverlay(item.duration) }
+        ShadowedOverlayText(
+            text = durationLabel,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 8.dp, bottom = 4.dp)
+        )
     }
 }
 

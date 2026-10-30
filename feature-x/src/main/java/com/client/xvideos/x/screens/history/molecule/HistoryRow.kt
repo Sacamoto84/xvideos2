@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.model.XHistoryItem
-import com.client.xvideos.x.screens.history.atom.DurationOverlay
+import com.client.xvideos.x.screens.common.atom.ShadowedOverlayText
 import com.client.xvideos.x.screens.history.atom.HistoryWatchedBadge
 import com.client.xvideos.x.screens.history.atom.SelectionCheckBadge
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
@@ -53,6 +53,7 @@ fun HistoryRow(
             onToggleSelect = { onToggleSelect(item.id) },
         )
     }
+    val durationLabel = remember(item.duration) { item.duration.trim().removeSuffix(".") }
     val handleToggleFavorite = remember(item, actions.onToggleFavorite) { { actions.onToggleFavorite(item) } }
     val handleDelete = remember(item, actions.onDelete) { { actions.onDelete(item) } }
     val handleDownload = remember(item, actions.onDownload) { { actions.onDownload(item) } }
@@ -113,13 +114,12 @@ fun HistoryRow(
             HistoryWatchedBadge(Modifier.align(Alignment.BottomStart))
         }
 
-        Row(
+        ShadowedOverlayText(
+            text = durationLabel,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 8.dp, bottom = 4.dp)
-        ) {
-            DurationOverlay(item.duration)
-        }
+        )
 
         if (historyItem.lastPositionMs > 0L) {
             val progressFraction = historyItem.progressFraction

@@ -16,7 +16,7 @@ import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
-import com.client.xvideos.x.screens.saved.atom.SavedOverlayText
+import com.client.xvideos.x.screens.common.atom.ShadowedOverlayText
 
 /**
  * Карточка скачанного ролика — как в «Избранном»: только превью. Справа
@@ -57,14 +57,14 @@ fun SavedRow(
             onDoubleClick = handleOpen,
             localVideo = localVideo,
         ) {
-            SavedOverlayText(
+            ShadowedOverlayText(
                 text = sizeLabel,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = 8.dp, bottom = 4.dp)
             )
 
-            SavedOverlayText(
+            ShadowedOverlayText(
                 text = durationLabel,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
