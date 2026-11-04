@@ -13,6 +13,7 @@ import com.client.xvideos.l.model.lSavedFileName
 import com.client.xvideos.l.model.safeAspectRatio
 import com.client.xvideos.l.net.extractIdFromUrl
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.calculateGridScrollIndex
+import com.client.xvideos.l.ui.element.lazyRowPictureDetails.shouldDisplayPictureScrollbar
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.selectionKey
 import com.client.xvideos.l.ui.screens.screenAlbumList.AlbumListBackAction
 import com.client.xvideos.l.ui.screens.screenAlbumList.resolveAlbumListBackAction
@@ -240,6 +241,14 @@ class LPureFunctionsTest {
         assertNull(calculateGridScrollIndex(position = -1, itemCount = 10, showInitialLoading = false))
         assertNull(calculateGridScrollIndex(position = 10, itemCount = 10, showInitialLoading = false))
         assertNull(calculateGridScrollIndex(position = 0, itemCount = 0, showInitialLoading = false))
+    }
+
+    @Test
+    fun `shouldDisplayPictureScrollbar возвращает true только при наличии элементов в списке`() {
+        assertFalse(shouldDisplayPictureScrollbar(0))
+        assertFalse(shouldDisplayPictureScrollbar(-1))
+        assertTrue(shouldDisplayPictureScrollbar(1))
+        assertTrue(shouldDisplayPictureScrollbar(25))
     }
 
     @Test

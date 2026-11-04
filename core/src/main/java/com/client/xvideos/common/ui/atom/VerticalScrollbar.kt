@@ -10,6 +10,18 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 
+internal const val SCROLLBAR_FULL_HEIGHT_TOLERANCE = 0.001f
+
+internal fun shouldDrawScrollbar(
+    startFraction: Float,
+    endFraction: Float,
+    tolerance: Float = SCROLLBAR_FULL_HEIGHT_TOLERANCE
+): Boolean {
+    if (endFraction <= startFraction) return false
+    val span = endFraction - startFraction
+    return span < (1f - tolerance)
+}
+
 /**
  * Индикатор прокрутки: закрашивает ту долю дорожки, которая сейчас видна.
  */
@@ -26,6 +38,7 @@ fun VerticalScrollbar(scrollPercent: () -> Pair<Float, Float>) {
 
         val startFraction = range.first.coerceIn(0f, 1f)
         val endFraction = range.second.coerceIn(0f, 1f)
+        if (!shouldDrawScrollbar(startFraction, endFraction)) return@Canvas
 
         val indicatorOffsetY = trackHeight * startFraction
         val indicatorHeight = (trackHeight * (endFraction - startFraction))

@@ -187,7 +187,16 @@ fun L_LazyRowPictureDetails(
         ExpandMenuP2pHost(expandMenuViewModel)
 
         /** Вертикальный индикатор прокрутки */
-        Box( modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp) ) { VerticalScrollbar { scrollPercent.value } }
+        if (shouldDisplayPictureScrollbar(host.filteredPic.size)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .align(Alignment.CenterEnd)
+                    .width(2.dp)
+            ) {
+                VerticalScrollbar { scrollPercent.value }
+            }
+        }
 
         val onScrollToTop: () -> Unit = remember(haptic, scope, gridState) {
             {
@@ -264,6 +273,8 @@ private fun rememberActiveItemRange(
         }
     }
 }
+
+internal fun shouldDisplayPictureScrollbar(itemCount: Int): Boolean = itemCount > 0
 
 internal fun calculateGridScrollIndex(position: Int, itemCount: Int, showInitialLoading: Boolean): Int? {
     if (position !in 0 until itemCount) return null
