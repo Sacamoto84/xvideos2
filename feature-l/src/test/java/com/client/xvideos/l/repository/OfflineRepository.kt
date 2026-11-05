@@ -10,9 +10,10 @@ import io.ktor.http.HttpStatusCode
  * без повторов и пауз.
  *
  * Для тестов, которым Repository нужен лишь как зависимость (например, для
- * `Luscious`). Настоящий ходил на сайт из `Luscious.init`: пока сервер
+ * `Luscious`). Раньше настоящий ходил на сайт из `Luscious.init`: пока сервер
  * отвечал ошибкой, это было незаметно, а когда ответ пришёл из кэша,
  * фоновая корутина полезла в `Dispatchers.Main` и уронила соседний тест.
+ * Теперь категории запрашиваются лениво через `ensureMediaCategories()`.
  */
 fun offlineRepository(fileDb: AppFileDatabase): Repository =
     Repository(fileDb, engineFactory = { MockEngine { respond("", HttpStatusCode.NotFound) } })

@@ -5,6 +5,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.l.featured.saved.SavedL
+import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.ui.screens.LLoginFormState
 import dagger.Binds
 import dagger.Module
@@ -21,7 +22,8 @@ import javax.inject.Inject
 @Stable
 class L_ScreenExplorerSM @Inject constructor(
     val savedL: SavedL,
-    private val navigationState: LNavigationState
+    private val navigationState: LNavigationState,
+    luscious: Luscious,
 ) : ScreenModel {
     /** Текущая вкладка верхнего уровня L-раздела (раньше — статика в Companion). */
     var screenType: Int
@@ -32,6 +34,10 @@ class L_ScreenExplorerSM @Inject constructor(
 
     /** Форма входа, которую раздел показывает, пока профиль не задан. */
     val loginForm = LLoginFormState(Settings.l_profile.field.value)
+
+    init {
+        luscious.ensureMediaCategories()
+    }
 }
 
 @Module

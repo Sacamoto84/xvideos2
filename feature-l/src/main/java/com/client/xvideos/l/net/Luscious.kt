@@ -4,10 +4,12 @@ import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.Landing_page_albumType
 import com.client.xvideos.l.net.graphQl.LandingPageAlbumSearch
 import com.client.xvideos.l.net.graphQl.LandingPageAlbumTag
+import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 import com.client.xvideos.l.net.graphQl.refreshMediaCategories
 import com.client.xvideos.l.repository.Repository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -31,9 +33,21 @@ class Luscious(
     // Адреса переехали в repository.LusciousEndpoints: оттуда их читает и
     // Repository, из-за чего два пакета одного слоя ссылались друг на друга.
 
-    init {
-        scope.launch(Dispatchers.IO) {
-            refreshMediaCategories(repository)
+    private var mediaCategoriesJob: Job? = null
+
+    /**
+     * Подгружает справочник медиа-категорий (жанры, аудитории) в [mediaCategoriesFlow],
+     * если он ещё не загружен. Запрос выполняется лениво при входе в раздел L,
+     * а не при старте приложения.
+     */
+    fun ensureMediaCategories() {
+        if (mediaCategoriesFlow.value != null) return
+        synchronized(this) {
+            if (mediaCategoriesFlow.value != null) return
+            if (mediaCategoriesJob?.isActive == true) return
+            mediaCategoriesJob = scope.launch(Dispatchers.IO) {
+                refreshMediaCategories(repository)
+            }
         }
     }
 
@@ -121,4 +135,3 @@ fun extractAlbumIdOrNull(input: String?): String? =
  */
 fun isValidAlbumUrl(url: String?): Boolean =
     !extractAlbumIdOrNull(url).isNullOrBlank()
-

@@ -151,6 +151,7 @@ class ScreenLAlbumListSM @AssistedInject constructor(
     init {
         Timber.d("ScreenLAlbumListSM init")
         val filter = filter.value
+        luscious.ensureMediaCategories()
         launchForFilter { loadAggregations(filter) }
     }
 
@@ -176,6 +177,7 @@ class ScreenLAlbumListSM @AssistedInject constructor(
         filterPictureCountStateCount.value = emptyList()
         bigList.clear()
 
+        luscious.ensureMediaCategories()
         val filter = filter.value
         launchForFilter { loadPage(page = 0, filter = filter, notifyFailure = true) }
         launchForFilter { loadAggregations(filter) }
