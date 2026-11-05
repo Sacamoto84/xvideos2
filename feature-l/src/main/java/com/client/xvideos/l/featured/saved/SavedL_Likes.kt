@@ -8,6 +8,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.fileNameForLog
 import com.client.xvideos.common.util.replaceWith
 import com.client.xvideos.l.model.PicsDetails
+import com.client.xvideos.l.model.lDownloadUrl
 import com.client.xvideos.l.net.Luscious
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -111,11 +112,28 @@ class SavedL_Likes(
         url_to_original?.let { File(it).parentFile } == folder
 
     /**
+     * Удаляет сохраненный лайк по элементу [item].
+     *
+     * @param item Элемент медиа.
+     * @param showSnackBar Показывать ли информационный SnackBar об удалении.
+     */
+    fun remove(item: PicsDetails, showSnackBar: Boolean = true) {
+        val url = item.url_to_original
+            ?: item.url_to_video
+            ?: item.lDownloadUrl()
+            ?: item.thumbnails?.firstOrNull()?.url
+        if (!url.isNullOrBlank()) {
+            remove(url, showSnackBar)
+        }
+    }
+
+    /**
      * Удаляет сохраненный лайк по его локальному пути или сетевому URL [url].
      *
      * @param url Идентификатор пути к файлу или исходного URL.
+     * @param showSnackBar Показывать ли информационный SnackBar об удалении.
      */
-    fun remove(url: String) {
+    fun remove(url: String, showSnackBar: Boolean = true) {
         if (url.isBlank()) return
         Timber.i("SavedL_Likes removeLikes() file:${url.fileNameForLog()}")
 
@@ -133,10 +151,12 @@ class SavedL_Likes(
                 else -> false
             }
 
-            if (removed) {
-                SnackBar.info("Удалено из лайков")
-            } else {
-                SnackBar.error("Файл не найден: $url")
+            if (showSnackBar) {
+                if (removed) {
+                    SnackBar.info("Удалено из лайков")
+                } else {
+                    SnackBar.error("Файл не найден: $url")
+                }
             }
             if (removed && folder != null) {
                 withContext(Dispatchers.Main) { listUrl.removeAll { it.isStoredIn(folder) } }

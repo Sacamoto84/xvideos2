@@ -81,6 +81,10 @@ class SavedL_Collection(
     var collectionItemGifInfo by mutableStateOf<PicsDetails?>(null)
     /** Список элементов, ожидающих добавления в выбранную коллекцию. */
     val collectionItemsPendingAdd = mutableStateListOf<PicsDetails>()
+    /** Флаг режима перемещения (удаление из лайков после добавления в коллекцию). */
+    var isMovePending by mutableStateOf(false)
+    /** Коллбэк для удаления элемента из лайков при перемещении. */
+    var onRemoveLike: ((PicsDetails) -> Unit)? = null
     //-------------------
 
     init {
@@ -457,6 +461,18 @@ class SavedL_Collection(
         collectionItemsPendingAdd.clear()
         collectionItemsPendingAdd.add(item)
         collectionItemGifInfo = item
+        isMovePending = false
+        visibleDialog = true
+    }
+
+    /**
+     * Начинает процесс перемещения одиночного элемента [item] из лайков в коллекцию через диалог.
+     */
+    fun beginMoveToCollection(item: PicsDetails) {
+        collectionItemsPendingAdd.clear()
+        collectionItemsPendingAdd.add(item)
+        collectionItemGifInfo = item
+        isMovePending = true
         visibleDialog = true
     }
 
@@ -468,17 +484,20 @@ class SavedL_Collection(
         val unique = if (items.size == 1) items else items.distinctBy { lPicsDetailsIdentityKey(it) }
         collectionItemsPendingAdd.replaceWith(unique)
         collectionItemGifInfo = collectionItemsPendingAdd.firstOrNull()
+        isMovePending = false
         visibleDialog = collectionItemsPendingAdd.isNotEmpty()
     }
 
     /**
-     * Завершает диалог добавления, сохраняя ожидающие элементы в коллекцию [collectionName].
+     * Завершает диалог добавления/перемещения, сохраняя ожидающие элементы в коллекцию [collectionName].
      */
     fun addPendingToCollection(collectionName: String) {
         val items = collectionItemsPendingAdd.toList()
             .ifEmpty { listOfNotNull(collectionItemGifInfo) }
-        addAll(items, collectionName)
+        val isMove = isMovePending
+        addAll(items, collectionName, isMove = isMove)
         visibleDialog = false
+        isMovePending = false
         collectionItemsPendingAdd.clear()
         collectionItemGifInfo = null
     }
@@ -486,14 +505,14 @@ class SavedL_Collection(
     /**
      * Скачивает и сохраняет медиафайл [item] в указанную коллекцию [collectionName].
      */
-    fun add(item: PicsDetails, collectionName: String) {
-        addAll(listOf(item), collectionName)
+    fun add(item: PicsDetails, collectionName: String, isMove: Boolean = false) {
+        addAll(listOf(item), collectionName, isMove = isMove)
     }
 
     /**
      * Пакетно скачивает и сохраняет медиафайлы [items] в коллекцию [collectionName].
      */
-    fun addAll(items: List<PicsDetails>, collectionName: String) {
+    fun addAll(items: List<PicsDetails>, collectionName: String, isMove: Boolean = false) {
         if (items.isEmpty()) return
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: run {
             SnackBar.error("Недопустимое название коллекции")
@@ -502,7 +521,7 @@ class SavedL_Collection(
         val uniqueItems = if (items.size == 1) items else items.distinctBy { lPicsDetailsIdentityKey(it) }
         if (uniqueItems.isEmpty()) return
 
-        Timber.i("SavedL_Collection addAll() count:${uniqueItems.size} collection:$safeName")
+        Timber.i("SavedL_Collection addAll() count:${uniqueItems.size} collection:$safeName isMove:$isMove")
 
         launchMutation(safeName) {
             var successCount = 0
@@ -517,6 +536,9 @@ class SavedL_Collection(
                     progress = progress
                 ).onSuccess {
                     successCount++
+                    if (isMove) {
+                        onRemoveLike?.invoke(item)
+                    }
                 }.onFailure {
                     errorCount++
                     Timber.e("SavedL_Collection addAll() error: ${it.javaClass.simpleName}")
@@ -526,11 +548,25 @@ class SavedL_Collection(
             withContext(Dispatchers.Main) {
                 when {
                     successCount > 0 && errorCount == 0 ->
-                        SnackBar.success("Добавлено в коллекцию: $successCount")
+                        SnackBar.success(
+                            if (isMove) {
+                                if (successCount > 1) "Перемещено в коллекцию: $successCount" else "Перемещено в коллекцию"
+                            } else {
+                                "Добавлено в коллекцию: $successCount"
+                            }
+                        )
                     successCount > 0 ->
-                        SnackBar.info("Добавлено: $successCount, ошибок: $errorCount")
+                        SnackBar.info(
+                            if (isMove) {
+                                "Перемещено: $successCount, ошибок: $errorCount"
+                            } else {
+                                "Добавлено: $successCount, ошибок: $errorCount"
+                            }
+                        )
                     else ->
-                        SnackBar.error("Ошибка добавления в коллекцию")
+                        SnackBar.error(
+                            if (isMove) "Ошибка перемещения в коллекцию" else "Ошибка добавления в коллекцию"
+                        )
                 }
 
                 refreshCollectionList()

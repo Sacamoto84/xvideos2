@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -146,5 +147,57 @@ class SavedL_CollectionTest {
 
         assertNull(savedCollection.currentCollectionName)
         assertTrue(savedCollection.listUrl.isEmpty())
+    }
+
+    @Test
+    fun `beginMoveToCollection sets isMovePending to true and opens dialog`() = runTest {
+        val tempDir = Files.createTempDirectory("app_path_test_move_collection").toFile()
+        val context = object : ContextWrapper(null) {
+            override fun getFilesDir(): File = File(tempDir, "files").apply { mkdirs() }
+            override fun getCacheDir(): File = File(tempDir, "cache").apply { mkdirs() }
+        }
+        AppPath.init(context)
+
+        val fileDb = AppFileDatabase()
+        val repository = offlineRepository(fileDb)
+        val luscious = Luscious(CoroutineScope(Job()), repository)
+        val savedCollection = SavedL_Collection(this, luscious)
+
+        val item = PicsDetails(id = "item_1", url_to_original = "https://example.com/pic1.jpg")
+        savedCollection.beginMoveToCollection(item)
+
+        assertTrue(savedCollection.isMovePending)
+        assertTrue(savedCollection.visibleDialog)
+        assertEquals(listOf(item), savedCollection.collectionItemsPendingAdd)
+        assertEquals(item, savedCollection.collectionItemGifInfo)
+
+        savedCollection.beginAddToCollection(item)
+        assertFalse(savedCollection.isMovePending)
+        assertTrue(savedCollection.visibleDialog)
+    }
+
+    @Test
+    fun `addPendingToCollection with isMove resets isMovePending and clears pending state`() = runTest {
+        val tempDir = Files.createTempDirectory("app_path_test_add_pending_move").toFile()
+        val context = object : ContextWrapper(null) {
+            override fun getFilesDir(): File = File(tempDir, "files").apply { mkdirs() }
+            override fun getCacheDir(): File = File(tempDir, "cache").apply { mkdirs() }
+        }
+        AppPath.init(context)
+
+        val fileDb = AppFileDatabase()
+        val repository = offlineRepository(fileDb)
+        val luscious = Luscious(CoroutineScope(Job()), repository)
+        val savedCollection = SavedL_Collection(this, luscious)
+
+        val item = PicsDetails(id = "item_move_1", url_to_original = "https://example.com/pic1.jpg")
+        savedCollection.beginMoveToCollection(item)
+
+        savedCollection.addPendingToCollection("TargetCollection")
+
+        assertFalse(savedCollection.isMovePending)
+        assertFalse(savedCollection.visibleDialog)
+        assertTrue(savedCollection.collectionItemsPendingAdd.isEmpty())
+        assertNull(savedCollection.collectionItemGifInfo)
     }
 }

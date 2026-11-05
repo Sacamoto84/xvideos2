@@ -13,6 +13,7 @@ import com.client.xvideos.l.ui.screens.explorer.model.LCollectionDialogBackActio
 import com.client.xvideos.l.ui.screens.explorer.model.resolveLCollectionDialogBackAction
 
 private const val TEXT_ADD_TO_COLLECTION = "Добавить в коллекцию"
+private const val TEXT_MOVE_TO_COLLECTION = "Переместить в коллекцию"
 
 @Composable
 fun LCollectionDialogs(
@@ -26,8 +27,18 @@ fun LCollectionDialogs(
                 visibleDialogCreateNew = savedL.collection.visibleDialogCreateNew,
                 visibleDialog = savedL.collection.visibleDialog
             )) {
-                LCollectionDialogBackAction.DISMISS_NEW_COLLECTION -> savedL.collection.visibleDialogCreateNew = false
-                LCollectionDialogBackAction.DISMISS_COLLECTION_PICKER -> savedL.collection.visibleDialog = false
+                LCollectionDialogBackAction.DISMISS_NEW_COLLECTION -> {
+                    savedL.collection.visibleDialogCreateNew = false
+                    savedL.collection.isMovePending = false
+                    savedL.collection.collectionItemsPendingAdd.clear()
+                    savedL.collection.collectionItemGifInfo = null
+                }
+                LCollectionDialogBackAction.DISMISS_COLLECTION_PICKER -> {
+                    savedL.collection.visibleDialog = false
+                    savedL.collection.isMovePending = false
+                    savedL.collection.collectionItemsPendingAdd.clear()
+                    savedL.collection.collectionItemGifInfo = null
+                }
                 LCollectionDialogBackAction.NONE -> Unit
             }
         }
@@ -35,11 +46,23 @@ fun LCollectionDialogs(
     BackHandler(enabled = isAnyDialogOpen, onBack = onBack)
 
     if (savedL.collection.visibleDialogCreateNew) {
-        val onDismissNew = remember(savedL) { { savedL.collection.visibleDialogCreateNew = false } }
+        val onDismissNew = remember(savedL) {
+            {
+                savedL.collection.visibleDialogCreateNew = false
+                savedL.collection.isMovePending = false
+                savedL.collection.collectionItemsPendingAdd.clear()
+                savedL.collection.collectionItemGifInfo = null
+            }
+        }
         val onBlockConfirmed: (String) -> Unit = remember(savedL) {
             { collection ->
                 if (collection.isNotEmpty()) {
                     savedL.collection.createCollection(collection)
+                    if (savedL.collection.collectionItemsPendingAdd.isNotEmpty()) {
+                        savedL.collection.addPendingToCollection(collection)
+                    } else {
+                        savedL.collection.isMovePending = false
+                    }
                     savedL.collection.visibleDialogCreateNew = false
                 }
             }
@@ -53,19 +76,27 @@ fun LCollectionDialogs(
 
     if (savedL.collection.visibleDialog) {
         val haptic = LocalHapticFeedback.current
-        val onDismissDialog: () -> Unit = remember(savedL) { { savedL.collection.visibleDialog = false } }
+        val onDismissDialog: () -> Unit = remember(savedL) {
+            {
+                savedL.collection.visibleDialog = false
+                savedL.collection.isMovePending = false
+                savedL.collection.collectionItemsPendingAdd.clear()
+                savedL.collection.collectionItemGifInfo = null
+            }
+        }
         val onConfirmCreate: () -> Unit = remember(savedL) {
             {
                 savedL.collection.visibleDialog = false
                 savedL.collection.visibleDialogCreateNew = true
             }
         }
-        val title = remember(savedL.collection.collectionItemsPendingAdd.size) {
+        val title = remember(savedL.collection.collectionItemsPendingAdd.size, savedL.collection.isMovePending) {
             val pendingCount = savedL.collection.collectionItemsPendingAdd.size
+            val baseText = if (savedL.collection.isMovePending) TEXT_MOVE_TO_COLLECTION else TEXT_ADD_TO_COLLECTION
             if (pendingCount > 1) {
-                "$TEXT_ADD_TO_COLLECTION ($pendingCount)"
+                "$baseText ($pendingCount)"
             } else {
-                TEXT_ADD_TO_COLLECTION
+                baseText
             }
         }
 

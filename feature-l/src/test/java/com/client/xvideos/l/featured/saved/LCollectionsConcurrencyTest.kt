@@ -13,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -60,7 +61,9 @@ class LCollectionsConcurrencyTest {
     @After
     fun tearDown() {
         server.stop()
-        scope.cancel()
+        runBlocking {
+            scope.coroutineContext.job.cancelAndJoin()
+        }
         Dispatchers.resetMain()
     }
 

@@ -39,6 +39,12 @@ class SavedL @Inject constructor(
     /** Менеджер сохраненных лайков медиа L. */
     val likes = SavedL_Likes(luscious, scope)
 
+    init {
+        collection.onRemoveLike = { item ->
+            likes.remove(item, showSnackBar = false)
+        }
+    }
+
     /**
      * Перечитывает с диска всё сохранённое раздела L: лайки, список коллекций,
      * содержимое коллекций, открытых за сеанс, и альбомы. Нужен после

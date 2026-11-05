@@ -8,6 +8,7 @@ import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_AddCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Delete
+import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_MoveToCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveToGallery
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_ServerLike
@@ -56,6 +57,10 @@ fun SavedLikesItemExpandMenu(
         if (isCollection) {
             DropdownMenuItem_RemoveFromCollection(item, onRemoveFromCollection, savedL) { dismiss() }
             DropdownMenuItem_SetCover(item, savedL) { dismiss() }
+        }
+
+        if (!isCollection) {
+            DropdownMenuItem_MoveToCollection(item, savedL) { dismiss() }
         }
     }
 }

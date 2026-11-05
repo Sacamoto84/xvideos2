@@ -136,4 +136,17 @@ class LLikesConcurrencyTest {
         assertEquals(1, likes.listUrl.size)
         assertEquals(1, savedLikes().size)
     }
+
+    @Test
+    fun `remove по объекту PicsDetails удаляет лайк с диска и из списка`() {
+        val p = pic("to_remove.jpg")
+        likes.add(p)
+        assertTrue(awaitUntil { likes.listUrl.size == 1 })
+        assertEquals(1, savedLikes().size)
+
+        val itemInList = likes.listUrl.first()
+        likes.remove(itemInList, showSnackBar = false)
+        assertTrue(awaitUntil { likes.listUrl.isEmpty() })
+        assertEquals(0, savedLikes().size)
+    }
 }
