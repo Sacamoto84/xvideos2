@@ -9,17 +9,11 @@ import com.client.xvideos.calculator.LauncherAliasManager
 import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.duress.DuressTokenStore
-import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.r.common.block.BlockRed
-import com.client.xvideos.r.common.saved.SavedRed
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -36,13 +30,7 @@ import javax.inject.Inject
 class SplashActivity : ComponentActivity() {
 
     @Inject
-    lateinit var db: javax.inject.Provider<AppFileDatabase>
-
-    @Inject
-    lateinit var blockRed: javax.inject.Provider<BlockRed>
-
-    @Inject
-    lateinit var savedRed: javax.inject.Provider<SavedRed>
+    lateinit var appStartupInitializer: AppStartupInitializer
 
     private var isReady = false
 
@@ -53,15 +41,28 @@ class SplashActivity : ComponentActivity() {
      * остаётся видимой до завершения `initApp()`.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
-        // включаем API
-        val splashScreen = installSplashScreen()
-        super.onCreate(savedInstanceState)
+        val duressToken = intent.getStringExtra(DuressTokenStore.EXTRA_DURESS_TOKEN)
+        val duressUnlocked = DuressTokenStore.consumeTokenIfValid(this, duressToken)
         val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
+        val isCamouflageWithLock = isCamouflage && AppLockRepository.isEnabled(this) && !duressUnlocked
+
+        // В режиме камуфляжа калькулятора заставку со стандартной анимацией загрузки
+        // не ставим: калькулятор должен открываться сразу и без демаскировки.
+        val splashScreen = if (!isCamouflageWithLock) {
+            installSplashScreen()
+        } else {
+            setTheme(R.style.Theme_MyApp_Splash_Calculator)
+            null
+        }
+
+        super.onCreate(savedInstanceState)
         LauncherAliasManager.updateTaskDescription(this, isCamouflage)
         val blurRecentTasks = Settings.isInitialized && Settings.blur_recent_tasks.field.value
-        val isCamouflageWithLock = isCamouflage && AppLockRepository.isEnabled(this)
         if (blurRecentTasks && !isCamouflageWithLock) {
-            window?.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
+            window?.setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                android.view.WindowManager.LayoutParams.FLAG_SECURE
+            )
         }
 
         // Возврат в уже запущенное приложение по иконке лаунчера.
@@ -94,8 +95,20 @@ class SplashActivity : ComponentActivity() {
             return
         }
 
+        if (isCamouflageWithLock) {
+            AppLockSession.lock()
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            )
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
+            finish()
+            return
+        }
+
         // держим сплэш пока инициализация не завершена
-        splashScreen.setKeepOnScreenCondition { !isReady }
+        splashScreen?.setKeepOnScreenCondition { !isReady }
 
         // Запускаем инициализацию
         lifecycleScope.launch {
@@ -109,8 +122,6 @@ class SplashActivity : ComponentActivity() {
                 Timber.e(e, "SplashActivity: ошибка при фоновой инициализации приложения")
             }
             isReady = true
-            val duressToken = intent.getStringExtra(DuressTokenStore.EXTRA_DURESS_TOKEN)
-            val duressUnlocked = DuressTokenStore.consumeTokenIfValid(this@SplashActivity, duressToken)
             if (duressUnlocked) {
                 AppLockSession.unlock()
             } else if (AppLockRepository.isEnabled(this@SplashActivity)) {
@@ -139,29 +150,9 @@ class SplashActivity : ComponentActivity() {
 
     /**
      * Подготавливает данные, которые нужны сразу после старта.
-     *
-     * Проверки файловых разрешений больше нет: данные лежат во внутренней
-     * памяти приложения, доступ к ней не выдаётся отдельно. Все операции
-     * запускаются параллельно через `async`, после чего `awaitAll()` гарантирует,
-     * что главный экран откроется уже с обновлёнными saved/block/cache данными.
      */
-    suspend fun initApp() = coroutineScope {
-        val savedRedInstance = savedRed.get()
-        val blockRedInstance = blockRed.get()
-        val dbInstance = db.get()
-
-        dbInstance.clearVolatileCachesOnProcessStart()
-
-        val jobs = listOf(
-            async { blockRedInstance.refresh() },
-            async { savedRedInstance.likes.refresh() },
-            async { savedRedInstance.niches.refresh() },
-            async { savedRedInstance.creators.refresh() },
-            async { savedRedInstance.collections.refreshCollectionList() }
-        )
-
-        // ждём все задачи
-        jobs.awaitAll()
+    suspend fun initApp() {
+        appStartupInitializer.init()
     }
 
 }

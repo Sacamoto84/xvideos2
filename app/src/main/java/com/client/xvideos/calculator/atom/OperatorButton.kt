@@ -13,8 +13,8 @@ fun RowScope.OperatorButton(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val bg = if (isSelected) Color.White else CalculatorColors.OPERATOR_BG
-    val text = if (isSelected) CalculatorColors.OPERATOR_BG else CalculatorColors.OPERATOR_TEXT
+    val bg = if (isSelected) CalculatorColors.XIAOMI_ORANGE else CalculatorColors.XIAOMI_KEY_BG
+    val text = if (isSelected) Color.White else CalculatorColors.XIAOMI_ORANGE
     CalcButton(symbol, bg, text, onClick = onClick)
 }
 

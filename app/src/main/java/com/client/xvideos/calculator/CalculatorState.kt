@@ -10,17 +10,27 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.log
+import kotlin.math.log10
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
+import kotlin.math.tan
 
 /**
- * Состояние и математический движок калькулятора.
+ * Состояние и математический движок калькулятора в стиле Xiaomi (MIUI / HyperOS).
  *
  * Использует [BigDecimal] для высокой точности без артефактов вещественных чисел Double.
- * Поддерживает честный расчёт процентов, смену знака (+/-), повторение операции по «=»,
- * динамическое переключение «AC» / «C», секретный ввод пин-кода и подсветку активного оператора.
+ * Поддерживает базовые арифметические действия, честный расчёт процентов, смену знака (+/-),
+ * повторение операции по «=», динамическое переключение «AC» / «C», секретный ввод пин-кода,
+ * инженерный (научный) режим (sin, cos, tan, ln, log, sqrt, pow, factorial, pi, e).
  *
  * @param initialDisplay Начальное строковое значение на экране (по умолчанию "0").
  * @param initialHistory Начальная история вычисления.
@@ -36,7 +46,7 @@ class CalculatorState(
     var expressionHistory by mutableStateOf(initialHistory)
     /** Предыдущее введенное число для бинарных операций. */
     var previousValue by mutableStateOf<BigDecimal?>(null)
-    /** Текущий ожидающий выполнения математический оператор ("+", "-", "×", "÷"). */
+    /** Текущий ожидающий выполнения математический оператор ("+", "-", "×", "÷", "^"). */
     var pendingOperation by mutableStateOf<String?>(null)
     /** Последний операнд для повторения операции по повторному нажатию "=". */
     var lastOperand by mutableStateOf<BigDecimal?>(null)
@@ -47,6 +57,12 @@ class CalculatorState(
     /** Флаг выполнения асинхронной проверки пароля разблокировки. */
     var isVerifying by mutableStateOf(false)
         private set
+
+    /** Включён ли научный / инженерный режим калькулятора. */
+    var isScientific by mutableStateOf(false)
+
+    /** Режим измерения углов: false = Градусы (DEG), true = Радианы (RAD). */
+    var isRad by mutableStateOf(false)
 
     /**
      * Показывать ли «AC» (All Clear) вместо «C» (Clear).
@@ -63,6 +79,20 @@ class CalculatorState(
     private val enteredPinDigits = StringBuilder()
 
     /**
+     * Переключает отображение инженерной клавиатуры.
+     */
+    fun toggleScientific() {
+        isScientific = !isScientific
+    }
+
+    /**
+     * Переключает единицу измерения углов между Градусами (DEG) и Радианами (RAD).
+     */
+    fun toggleAngleUnit() {
+        isRad = !isRad
+    }
+
+    /**
      * Обрабатывает ввод цифры [digit] с тактильным откликом.
      *
      * @param digit Введенная цифра ("0".."9").
@@ -71,8 +101,6 @@ class CalculatorState(
     fun onDigit(digit: String, haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
 
-        // Предел кода, а не дисплея: дисплей вмещает 15 цифр, и код длиннее
-        // обрезался — приложение с таким кодом было не открыть.
         if (enteredPinDigits.length < MAX_CODE_DIGITS) {
             enteredPinDigits.append(digit)
         }
@@ -125,7 +153,7 @@ class CalculatorState(
     }
 
     /**
-     * Устанавливает или вычисляет промежуточный результат при нажатии бинарного оператора [op] (+, -, ×, ÷).
+     * Устанавливает или вычисляет промежуточный результат при нажатии бинарного оператора [op] (+, -, ×, ÷, ^).
      */
     fun onOperator(op: String, haptic: HapticFeedback) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -172,10 +200,8 @@ class CalculatorState(
 
         val result = if (prev != null && pending != null) {
             if (pending == "+" || pending == "-") {
-                // 200 + 10% = 200 + 20
                 prev.multiply(current).divide(ONE_HUNDRED, CALC_SCALE, RoundingMode.HALF_UP).stripTrailingZeros()
             } else {
-                // 200 × 10% = 200 × 0.1
                 current.divide(ONE_HUNDRED, CALC_SCALE, RoundingMode.HALF_UP).stripTrailingZeros()
             }
         } else {
@@ -186,15 +212,133 @@ class CalculatorState(
         isNewEntry = true
     }
 
+    /**
+     * Обрабатывает унарные научные функции: sin, cos, tan, ln, log, √, x², 1/x, x!.
+     */
+    fun onScientificUnary(op: String, haptic: HapticFeedback) {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        enteredPinDigits.clear()
+        if (displayValue == ERROR_TEXT) return
+
+        val current = parseDisplayValue() ?: return
+        val currentD = current.toDouble()
+
+        when (op) {
+            "sin", "cos", "tan" -> evalTrig(op, current, currentD)
+            "ln", "log" -> evalLog(op, current, currentD)
+            "√", "x²", "1/x" -> evalPowerRoot(op, current, currentD)
+            "x!" -> evalFactorial(current)
+        }
+        isNewEntry = true
+    }
+
+    private fun evalTrig(op: String, current: BigDecimal, currentD: Double) {
+        val rad = if (isRad) currentD else Math.toRadians(currentD)
+        val unit = if (isRad) "rad" else "°"
+        when (op) {
+            "sin" -> {
+                val res = sin(rad)
+                val normalized = if (kotlin.math.abs(res) < 1e-15) 0.0 else res
+                displayValue = formatDouble(normalized)
+                expressionHistory = "sin(${formatNumber(current)}$unit)"
+            }
+            "cos" -> {
+                val res = cos(rad)
+                val normalized = if (kotlin.math.abs(res) < 1e-15) 0.0 else res
+                displayValue = formatDouble(normalized)
+                expressionHistory = "cos(${formatNumber(current)}$unit)"
+            }
+            "tan" -> {
+                val cosVal = cos(rad)
+                if (kotlin.math.abs(cosVal) < 1e-15) {
+                    displayValue = ERROR_TEXT
+                } else {
+                    val res = tan(rad)
+                    val normalized = if (kotlin.math.abs(res) < 1e-15) 0.0 else res
+                    displayValue = formatDouble(normalized)
+                    expressionHistory = "tan(${formatNumber(current)}$unit)"
+                }
+            }
+        }
+    }
+
+    private fun evalLog(op: String, current: BigDecimal, currentD: Double) {
+        if (currentD <= 0.0) {
+            displayValue = ERROR_TEXT
+            return
+        }
+        if (op == "ln") {
+            displayValue = formatDouble(log(currentD, kotlin.math.E))
+            expressionHistory = "ln(${formatNumber(current)})"
+        } else {
+            displayValue = formatDouble(log10(currentD))
+            expressionHistory = "log(${formatNumber(current)})"
+        }
+    }
+
+    private fun evalPowerRoot(op: String, current: BigDecimal, currentD: Double) {
+        when (op) {
+            "√" -> {
+                if (currentD < 0.0) {
+                    displayValue = ERROR_TEXT
+                } else {
+                    displayValue = formatDouble(sqrt(currentD))
+                    expressionHistory = "√(${formatNumber(current)})"
+                }
+            }
+            "x²" -> {
+                val res = current.multiply(current)
+                displayValue = formatNumber(res)
+                expressionHistory = "(${formatNumber(current)})²"
+            }
+            "1/x" -> {
+                if (current.compareTo(BigDecimal.ZERO) == 0) {
+                    displayValue = ERROR_TEXT
+                } else {
+                    val res = BigDecimal.ONE.divide(current, CALC_SCALE, RoundingMode.HALF_UP).stripTrailingZeros()
+                    displayValue = formatNumber(res)
+                    expressionHistory = "1/(${formatNumber(current)})"
+                }
+            }
+        }
+    }
+
+    private fun evalFactorial(current: BigDecimal) {
+        val isInt = current.stripTrailingZeros().scale() <= 0
+        val longVal = current.toLong()
+        if (isInt && longVal in 0..100) {
+            var fact = BigInteger.ONE
+            for (i in 2..longVal) {
+                fact = fact.multiply(BigInteger.valueOf(i))
+            }
+            displayValue = if (fact.toString().length > 14) {
+                String.format(Locale.US, "%.6e", fact.toDouble())
+            } else {
+                fact.toString()
+            }
+            expressionHistory = "${formatNumber(current)}!"
+        } else {
+            displayValue = ERROR_TEXT
+        }
+    }
+
+    /**
+     * Вставляет математическую константу (π, e).
+     */
+    fun onConstant(constant: String, haptic: HapticFeedback) {
+        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        enteredPinDigits.clear()
+        when (constant) {
+            "π" -> displayValue = formatDouble(PI)
+            "e" -> displayValue = formatDouble(kotlin.math.E)
+        }
+        isNewEntry = true
+    }
+
     private fun isPinCandidate(s: String): Boolean = isEnterableCode(s)
 
     /**
      * Код, который «=» отправит на проверку, или `null`, если проверять нечего.
-     *
-     * Число на дисплее годится в коды, только пока его набирают. Результат
-     * вычисления кодом не считается: повтор операции по «=» (`1000 + 1000 = =`)
-     * уходил на проверку и копил ошибки до блокировки ввода, которую
-     * калькулятор не показывает.
      */
     private fun getCandidatePin(codeToTest: String): String? {
         if (previousValue != null || pendingOperation != null) return null
@@ -214,8 +358,6 @@ class CalculatorState(
     ): Boolean {
         val unlocked = onUnlock(candidatePin)
         if (!unlocked && candidatePin != codeToTest && isPinCandidate(codeToTest)) {
-            // Каждая проверка кода — отдельная попытка для backoff: иначе одно «=»
-            // давало бы две проверки за одну засчитанную ошибку.
             onUnlockFailed()
             return onUnlock(codeToTest)
         }
@@ -245,7 +387,6 @@ class CalculatorState(
             val op = lastOperator
             val operand = lastOperand
             if (op != null && operand != null) {
-                // Повторение последней операции при повторном нажатии «=»
                 val result = executeOperation(current, operand, op)
                 if (result == null) {
                     displayValue = ERROR_TEXT
@@ -306,7 +447,6 @@ class CalculatorState(
 
     /**
      * Полностью сбрасывает все состояние вычислений, дисплей и накопленные цифры кода доступа.
-     * Вызывается при успешной разблокировке или для безопасной очистки калькулятора.
      */
     fun resetState() {
         enteredPinDigits.clear()
@@ -374,7 +514,21 @@ class CalculatorState(
                 a.divide(b, CALC_SCALE, RoundingMode.HALF_UP).stripTrailingZeros()
             }
         }
+        "^" -> {
+            val powResult = a.toDouble().pow(b.toDouble())
+            if (powResult.isNaN() || powResult.isInfinite()) {
+                null
+            } else {
+                BigDecimal.valueOf(powResult).setScale(CALC_SCALE, RoundingMode.HALF_UP).stripTrailingZeros()
+            }
+        }
         else -> b
+    }
+
+    private fun formatDouble(d: Double): String {
+        if (d.isNaN() || d.isInfinite()) return ERROR_TEXT
+        val bd = BigDecimal.valueOf(d).setScale(10, RoundingMode.HALF_UP).stripTrailingZeros()
+        return formatNumber(bd)
     }
 
     internal fun formatNumber(number: BigDecimal): String {
@@ -404,26 +558,22 @@ class CalculatorState(
         const val MIN_CODE_DIGITS = 4
 
         /**
-         * Самый длинный код, который можно набрать на калькуляторе. Больше, чем
-         * вмещает дисплей: цифры сверх дисплея на нём не видны, но в код идут.
+         * Самый длинный код, который можно набрать на калькуляторе.
          */
         const val MAX_CODE_DIGITS = 64
 
         /**
-         * Можно ли набрать [code] на калькуляторе: только цифры 0–9 и длина в
-         * пределах буфера. Настройки проверяют этим код перед включением
-         * маскировки — иначе принятый код оказывался невводимым.
+         * Можно ли набрать [code] на калькуляторе: только цифры 0–9 и длина в пределах буфера.
          */
         fun isEnterableCode(code: String): Boolean =
             code.length in MIN_CODE_DIGITS..MAX_CODE_DIGITS && code.all { it in '0'..'9' }
+
         private const val CALC_SCALE = 12
         private val ONE_HUNDRED = BigDecimal("100")
 
         /** [Saver] для сохранения состояния калькулятора при смене конфигурации Android. */
         val Saver: Saver<CalculatorState, List<String?>> = Saver(
             save = {
-                // SECURITY: Если на дисплее набран потенциальный PIN-код без математических операций,
-                // заменяем его на "0", чтобы не сохранять секретный код в незашифрованный системный Bundle.
                 val rawDigits = it.displayValue.replace(" ", "")
                 val isSecretCandidate = it.previousValue == null &&
                     it.pendingOperation == null &&
@@ -437,7 +587,9 @@ class CalculatorState(
                     it.pendingOperation,
                     it.lastOperand?.toPlainString(),
                     it.lastOperator,
-                    it.isNewEntry.toString()
+                    it.isNewEntry.toString(),
+                    it.isScientific.toString(),
+                    it.isRad.toString(),
                 )
             },
             restore = {
@@ -450,6 +602,8 @@ class CalculatorState(
                     lastOperand = it.getOrNull(4)?.let { str -> runCatching { BigDecimal(str) }.getOrNull() }
                     lastOperator = it.getOrNull(5)
                     isNewEntry = it.getOrNull(6)?.toBooleanStrictOrNull() ?: true
+                    isScientific = it.getOrNull(7)?.toBooleanStrictOrNull() ?: false
+                    isRad = it.getOrNull(8)?.toBooleanStrictOrNull() ?: false
                 }
             }
         )

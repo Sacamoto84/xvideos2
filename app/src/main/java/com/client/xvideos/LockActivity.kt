@@ -65,10 +65,19 @@ class LockActivity : ComponentActivity() {
     private var countedInTask: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(0xFF212121.toInt()),
-        )
+        secretLost = AppLockRepository.isSecretLost(this)
+        val showCalculator = isCamouflage && !secretLost
+        if (showCalculator) {
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+            )
+        } else {
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.dark(0xFF212121.toInt()),
+            )
+        }
         super.onCreate(savedInstanceState)
         if (finishIfUnlocked()) {
             LockScreenPresence.onRequestDropped(taskId)
@@ -80,22 +89,20 @@ class LockActivity : ComponentActivity() {
         window.setStatusBarVisible(hasTopCutout())
         window.decorView.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
         hideForeignOverlays()
-        secretLost = AppLockRepository.isSecretLost(this)
         applyPrivacy()
 
-        val showCalculator = isCamouflage
         setContent {
-            XvideosTheme(darkTheme = true) {
+            XvideosTheme(darkTheme = !showCalculator) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF212121))
+                        .background(if (showCalculator) Color.White else Color(0xFF212121))
                 ) {
                     Surface(
                         modifier = Modifier
                             .fillMaxSize()
                             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
-                        color = Color.Black,
+                        color = if (showCalculator) Color.White else Color.Black,
                     ) {
                         AppLockGate(
                             isCamouflage = showCalculator,

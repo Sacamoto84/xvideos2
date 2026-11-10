@@ -98,6 +98,9 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     @Inject
     lateinit var storageCleanupGate: StorageCleanupGate
 
+    @Inject
+    lateinit var appStartupInitializer: AppStartupInitializer
+
     private var isAppMinimized by mutableStateOf(false)
 
     /**
@@ -420,6 +423,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
     private fun launchStartupCleanup() {
         lifecycleScope.launch(Dispatchers.IO) {
             storageCleanupGate.await()
+            appStartupInitializer.init()
             appFileDatabase.get().clearVolatileCachesOnProcessStart()
             appFileDatabase.get().deleteExpiredCaches()
             VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
