@@ -21,9 +21,12 @@
         <!-- Лого/иконка -->
     </style>
 
-    <style name="Theme.MyApp.Splash.Calculator" parent="Theme.MyApp.Splash">
-        <!-- Фон сплэша камуфляжа -->
-        <item name="android:windowBackground">@color/black</item>
+    <style name="Theme.MyApp.Splash.Calculator" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Полное отключение сплэш-скрина камуфляжа -->
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowBackground">#FFFFFF</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
     </style>
 
 </resources>

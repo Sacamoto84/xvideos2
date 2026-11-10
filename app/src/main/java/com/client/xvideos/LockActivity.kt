@@ -1,5 +1,6 @@
 package com.client.xvideos
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -140,6 +141,12 @@ class LockActivity : ComponentActivity() {
             is AppLockUnlockResult.AccessGranted -> {
                 AppLockRepository.resetFailedAttempts(this)
                 AppLockSession.unlock()
+                if (isTaskRoot) {
+                    startActivity(
+                        Intent(this, MainActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    )
+                }
                 finishWithoutAnimation()
                 true
             }
@@ -162,6 +169,12 @@ class LockActivity : ComponentActivity() {
     /** Сеанс уже открыт — показывать нечего. */
     private fun finishIfUnlocked(): Boolean {
         if (AppLockRepository.shouldShowLock(this)) return false
+        if (isTaskRoot) {
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            )
+        }
         finishWithoutAnimation()
         return true
     }

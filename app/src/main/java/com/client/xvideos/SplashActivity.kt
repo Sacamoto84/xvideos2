@@ -44,21 +44,20 @@ class SplashActivity : ComponentActivity() {
         val duressToken = intent.getStringExtra(DuressTokenStore.EXTRA_DURESS_TOKEN)
         val duressUnlocked = DuressTokenStore.consumeTokenIfValid(this, duressToken)
         val isCamouflage = Settings.isInitialized && Settings.camouflage_calculator_enabled.field.value
-        val isCamouflageWithLock = isCamouflage && AppLockRepository.isEnabled(this) && !duressUnlocked
+        val isCamouflageActive = isCamouflage && !duressUnlocked
 
         // В режиме камуфляжа калькулятора заставку со стандартной анимацией загрузки
-        // не ставим: калькулятор должен открываться сразу и без демаскировки.
-        val splashScreen = if (!isCamouflageWithLock) {
+        // не ставим ни при каких условиях: калькулятор должен открываться сразу и без демаскировки.
+        val splashScreen = if (!isCamouflageActive) {
             installSplashScreen()
         } else {
-            setTheme(R.style.Theme_MyApp_Splash_Calculator)
             null
         }
 
         super.onCreate(savedInstanceState)
         LauncherAliasManager.updateTaskDescription(this, isCamouflage)
         val blurRecentTasks = Settings.isInitialized && Settings.blur_recent_tasks.field.value
-        if (blurRecentTasks && !isCamouflageWithLock) {
+        if (blurRecentTasks && !isCamouflageActive) {
             window?.setFlags(
                 android.view.WindowManager.LayoutParams.FLAG_SECURE,
                 android.view.WindowManager.LayoutParams.FLAG_SECURE
@@ -66,39 +65,16 @@ class SplashActivity : ComponentActivity() {
         }
 
         // Возврат в уже запущенное приложение по иконке лаунчера.
-        //
-        // Эта Activity — корень задачи, но она себя finish()-ает, отдав
-        // управление MainActivity. Из-за этого система на MAIN/LAUNCHER
-        // поднимает её заново и кладёт поверх живой MainActivity вторую — со
-        // своей навигацией с нуля. Снаружи это выглядит как «свернул и вернулся
-        // — выкинуло на главный экран».
-        //
-        // Если задача уже существует, эта Activity оказывается не её корнем.
-        // Тогда уходим сразу: снизу поднимется прежняя MainActivity со всем
-        // своим стеком экранов.
-        //
-        // Вид intent при этом не проверяется. Раньше уходили только для
-        // MAIN/LAUNCHER, а Activity экспортирована: запуск с любым другим
-        // intent — из adb или чужого приложения — проходил полный старт и клал
-        // вторую MainActivity поверх первой. Заодно это отказ запускаться
-        // внутри чужой задачи: там эта Activity тоже не корень.
         if (!isTaskRoot) {
-            // Замок здесь взводится сразу, не дожидаясь срока автоблокировки, —
-            // так было всегда; MainActivity подхватывает это, когда выходит на
-            // экран. Сюда попадают не с каждого нажатия на значок: запуск тем же
-            // intent, которым задача начата, новой заставки не создаёт (проверено
-            // на эмуляторе с Android 12), задача поднимается как есть, и замок
-            // тогда закрывается по сроку. Новая заставка появляется, когда задачу
-            // начинали иначе — из уведомления, установщика, Android Studio.
             if (AppLockRepository.isEnabled(this)) AppLockSession.lock()
             finish()
             return
         }
 
-        if (isCamouflageWithLock) {
+        if (isCamouflageActive) {
             AppLockSession.lock()
             startActivity(
-                Intent(this, MainActivity::class.java)
+                Intent(this, LockActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             )
             @Suppress("DEPRECATION")
