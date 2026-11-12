@@ -37,6 +37,7 @@ rootProject.name = "xvideos"
 include ':app'
 include ':core'
 include ':feature-l'
+include ':feature-n'
 include ':feature-x'
 include ':feature-r'
 include ':feature-xlive'

@@ -244,6 +244,12 @@ object Settings {
     //Порядок сохранённых альбомов L: номер в LSavedAlbumsOrder (0 — сначала новые)
     val l_savedAlbums_order by lazy { SettingElementInt(pref, "l_savedAlbums_order", 0) }
 
+    //-- N (nHentai) ---
+    val n_fullscreen_vertical_pager by lazy { SettingElementBoolean(pref, "n_fullscreen_vertical_pager", false) }
+    val n_galleriesTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "n_galleriesTab_G_0_4", default = listOf(false, true, true, true, true)) }
+    val n_galleriesTab_column_current_count by lazy { SettingElementInt(pref, "n_galleriesTab_column_current_count", 2) }
+    val n_saved_column_current_count by lazy { SettingElementInt(pref, "n_saved_column_current_count", 2) }
+
 
 
 

@@ -132,6 +132,13 @@ class LayerBoundariesTest {
                 "featured" to "domain",
                 "ui" to "ui",
             ),
+            "n" to mapOf(
+                "model" to "model",
+                "net" to "data",
+                "repository" to "data",
+                "domain" to "domain",
+                "ui" to "ui",
+            ),
             "x" to mapOf(
                 "model" to "model",
                 "parcer" to "data",
@@ -163,6 +170,7 @@ class LayerBoundariesTest {
         /** Пакеты, к слоям не относящиеся: DI собирает граф из всех слоёв сразу. */
         val NEUTRAL = mapOf(
             "l" to setOf("di"),
+            "n" to setOf("di"),
             "x" to emptySet<String>(),
             "r" to emptySet<String>(),
             "xlive" to emptySet<String>(),

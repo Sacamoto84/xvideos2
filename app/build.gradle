@@ -150,6 +150,7 @@ dependencies {
     // явно: :app пользуется базовым слоем напрямую (тема, настройки, P2P).
     implementation project(':core')
     implementation project(':feature-l')
+    implementation project(':feature-n')
     implementation project(':feature-x')
     implementation project(':feature-r')
     implementation project(':feature-xlive')

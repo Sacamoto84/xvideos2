@@ -40,6 +40,11 @@ internal enum class SettingsPage(
         icon = R.drawable.icon_luscious,
         subtitle = "Профиль, миниатюры и колонки"
     ),
+    N(
+        title = "N",
+        icon = R.drawable.icon_nhentai,
+        subtitle = "Ридер, колонки и Cloudflare"
+    ),
     Red(
         title = "R",
         icon = R.drawable.icon_red,
@@ -76,7 +81,7 @@ internal enum class SettingsPage(
             Backup,
             P2P
         )
-        val contentPages: PersistentList<SettingsPage> = persistentListOf(X, L, Red)
+        val contentPages: PersistentList<SettingsPage> = persistentListOf(X, L, N, Red)
         val detailPages: List<SettingsPage>
             get() = primaryPages + contentPages
     }

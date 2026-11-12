@@ -1,0 +1,27 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.detekt)
+    id 'xvideos.android-library'
+}
+
+android {
+    namespace = 'com.client.xvideos.feature.n'
+}
+
+dependencies {
+    api project(':core')
+
+    coreLibraryDesugaring libs.desugar.jdk.libs
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.ktor.client.mock
+}

@@ -22,6 +22,7 @@ import com.client.xvideos.screenSettings.components.StorageStatisticsSection
 import com.client.xvideos.screenSettings.section.AppearanceSettingsSection
 import com.client.xvideos.screenSettings.section.CacheSettingsSection
 import com.client.xvideos.screenSettings.section.LSettingsSection
+import com.client.xvideos.screenSettings.section.NSettingsSection
 import com.client.xvideos.screenSettings.section.NetworkSettingsSection
 import com.client.xvideos.screenSettings.section.P2PSettingsSection
 import com.client.xvideos.screenSettings.section.RSettingsSection
@@ -71,6 +72,7 @@ internal fun SettingsDetailPage(
                 modifier = modifier
             )
         }
+        SettingsPage.N -> NSettingsSection(modifier = modifier)
         SettingsPage.X -> {
             // Как у L: профиль читается только на странице X.
             val xProfile by Settings.x_profile.field.collectAsStateWithLifecycle()

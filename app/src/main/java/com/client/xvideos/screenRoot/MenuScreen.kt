@@ -28,6 +28,7 @@ import com.client.xvideos.R
 import com.client.xvideos.common.p2p.ui.ScreenP2pReceive
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
+import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorer
 import com.client.xvideos.r.ui.root.R_Screen_Root
 import com.client.xvideos.screenRoot.atom.MenuButtonSelect
 import com.client.xvideos.screenRoot.molecule.MenuTopBar
@@ -55,6 +56,7 @@ object MenuScreen : Screen {
         val onOpenP2pReceive = remember(navigator) { { navigator.push(ScreenP2pReceive()) } }
         val onOpenX = remember(navigator) { { navigator.push(ScreenXDashBoards()) } }
         val onOpenL = remember(navigator) { { navigator.push(L_ScreenExplorer()) } }
+        val onOpenN = remember(navigator) { { navigator.push(N_ScreenExplorer()) } }
         val onOpenR = remember(navigator) { { navigator.push(R_Screen_Root()) } }
         val onOpenXLive = remember(navigator) { { navigator.push(ScreenXLive()) } }
 
@@ -64,6 +66,7 @@ object MenuScreen : Screen {
             onOpenP2pReceive = onOpenP2pReceive,
             onOpenX = onOpenX,
             onOpenL = onOpenL,
+            onOpenN = onOpenN,
             onOpenR = onOpenR,
             onOpenXLive = onOpenXLive
         )
@@ -77,6 +80,7 @@ fun MenuScreenContent(
     onOpenP2pReceive: () -> Unit,
     onOpenX: () -> Unit,
     onOpenL: () -> Unit,
+    onOpenN: () -> Unit,
     onOpenR: () -> Unit,
     onOpenXLive: () -> Unit,
     modifier: Modifier = Modifier
@@ -112,6 +116,7 @@ fun MenuScreenContent(
             ) {
                 MenuButtonSelect(R.drawable.icon_xvideos_white, onClick = onOpenX)
                 MenuButtonSelect(R.drawable.icon_luscious, tag = "buttonL", onClick = onOpenL)
+                MenuButtonSelect(R.drawable.icon_nhentai, tag = "buttonN", onClick = onOpenN)
                 MenuButtonSelect(R.drawable.icon_red, onClick = onOpenR)
                 // Картинка вытянутее надписи X: при высоте 80dp не влезла бы в плитку,
                 // а на 58dp она той же ширины, что надпись X.
@@ -133,6 +138,7 @@ private fun MenuPreview() {
         onOpenP2pReceive = {},
         onOpenX = {},
         onOpenL = {},
+        onOpenN = {},
         onOpenR = {},
         onOpenXLive = {}
     )

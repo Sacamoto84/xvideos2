@@ -64,7 +64,7 @@ class ModuleBoundariesTest {
             .map { it.name }
             .toSet()
 
-        val expected = setOf("common", "l", "r", "x", "xlive", "screenRoot", "screenSettings", "p2p", "ui")
+        val expected = setOf("common", "l", "n", "r", "x", "xlive", "screenRoot", "screenSettings", "p2p", "ui")
         val missing = expected - scanned
         assertTrue("Не просканированы пакеты $missing; найдено: $scanned", missing.isEmpty())
     }
@@ -94,11 +94,12 @@ class ModuleBoundariesTest {
 
         /** Кто кого не имеет права импортировать. */
         val FORBIDDEN = mapOf(
-            "common" to setOf("l", "r", "x", "xlive") + APP_LEVEL,
-            "l" to setOf("r", "x", "xlive") + APP_LEVEL,
-            "r" to setOf("l", "x", "xlive") + APP_LEVEL,
-            "x" to setOf("l", "r", "xlive") + APP_LEVEL,
-            "xlive" to setOf("l", "r", "x") + APP_LEVEL,
+            "common" to setOf("l", "n", "r", "x", "xlive") + APP_LEVEL,
+            "l" to setOf("n", "r", "x", "xlive") + APP_LEVEL,
+            "n" to setOf("l", "r", "x", "xlive") + APP_LEVEL,
+            "r" to setOf("l", "n", "x", "xlive") + APP_LEVEL,
+            "x" to setOf("l", "n", "r", "xlive") + APP_LEVEL,
+            "xlive" to setOf("l", "n", "r", "x") + APP_LEVEL,
         )
 
         /**
