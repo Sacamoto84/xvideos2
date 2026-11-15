@@ -164,3 +164,4 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 
 stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.15.0" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }

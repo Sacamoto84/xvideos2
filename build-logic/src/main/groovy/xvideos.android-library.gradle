@@ -28,6 +28,12 @@ plugins.withId('com.android.library') {
         buildFeatures {
             compose = true
         }
+
+        testOptions {
+            unitTests {
+                includeAndroidResources = true
+            }
+        }
     }
 }
 

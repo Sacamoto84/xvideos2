@@ -1,6 +1,54 @@
 // Отдельная сборка для convention-плагинов. Её репозитории свои: правило
 // FAIL_ON_PROJECT_REPOS из корневого settings.gradle на включённые сборки не
 // распространяется.
+
+class NoOpPlugin implements Plugin<Project> {
+    void apply(Project target) {}
+}
+
+def resolveToolingPluginClass() {
+    try {
+        File jarFile = null
+        File tempDir = new File(System.getProperty("java.io.tmpdir", "C:/Temp"))
+        File[] initScripts = tempDir.listFiles({ dir, name -> name.startsWith("sync.studio.tooling") && name.endsWith(".gradle") } as FilenameFilter)
+        if (initScripts != null && initScripts.length > 0) {
+            Arrays.sort(initScripts, { a, b -> Long.compare(b.lastModified(), a.lastModified()) })
+            def matcher = (initScripts[0].text =~ /mapPath\('([^']+android-gradle\.jar)'\)/)
+            if (matcher.find()) {
+                File f = new File(matcher.group(1))
+                if (f.exists()) jarFile = f
+            }
+        }
+        if (jarFile == null) {
+            File fallback = new File("D:/AndroidStudio/android-studio-panda4-rc1-windows/android-studio/plugins/android/lib/android-gradle.jar")
+            if (fallback.exists()) jarFile = fallback
+        }
+        if (jarFile != null) {
+            URLClassLoader ucl = new URLClassLoader([jarFile.toURI().toURL()] as URL[], Project.class.classLoader)
+            return ucl.loadClass("com.android.ide.gradle.model.builder.AndroidStudioToolingPlugin")
+        }
+    } catch (Throwable ignored) {}
+    return NoOpPlugin
+}
+
+def toolingPluginClass = resolveToolingPluginClass()
+
+gradle.beforeProject { p ->
+    p.extensions.extraProperties.set('com', [
+        android: [
+            ide: [
+                gradle: [
+                    model: [
+                        builder: [
+                            AndroidStudioToolingPlugin: toolingPluginClass
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ])
+}
+
 dependencyResolutionManagement {
     repositories {
         google()
