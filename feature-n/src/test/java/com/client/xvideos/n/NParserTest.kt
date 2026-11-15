@@ -39,6 +39,54 @@ class NParserTest {
         }
     """.trimIndent()
 
+    private val sampleJsonV2 = """
+        {
+          "id": 697415,
+          "media_id": "4330179",
+          "title": {
+            "english": "Test Doujinshi English",
+            "japanese": "テスト",
+            "pretty": "Test Doujinshi"
+          },
+          "cover": {
+            "path": "galleries/4330179/cover.jpg.webp",
+            "width": 350,
+            "height": 184
+          },
+          "thumbnail": {
+            "path": "galleries/4330179/thumb.jpg.webp",
+            "width": 250,
+            "height": 131
+          },
+          "upload_date": 1794773148,
+          "tags": [
+            { "id": 1, "type": "artist", "name": "cool_artist", "url": "/artist/cool_artist/", "count": 100 }
+          ],
+          "num_pages": 2,
+          "num_favorites": 42,
+          "pages": [
+            {
+              "number": 1,
+              "path": "galleries/4330179/1.jpg",
+              "width": 1200,
+              "height": 630,
+              "thumbnail": "galleries/4330179/1t.jpg.webp",
+              "thumbnail_width": 200,
+              "thumbnail_height": 105
+            },
+            {
+              "number": 2,
+              "path": "galleries/4330179/2.webp",
+              "width": 1100,
+              "height": 1550,
+              "thumbnail": "galleries/4330179/2t.webp.webp",
+              "thumbnail_width": 200,
+              "thumbnail_height": 282
+            }
+          ]
+        }
+    """.trimIndent()
+
     @Test
     fun `parseGalleryJson корректно извлекает метаданные и страницы`() {
         val gallery = NParser.parseGalleryJson(sampleJson)
@@ -62,6 +110,44 @@ class NParserTest {
         assertEquals(
             "https://i.nhentai.net/galleries/987654/2.png",
             gallery?.pages?.get(1)?.imageUrl(gallery.mediaId)
+        )
+    }
+
+    @Test
+    fun `parseGalleryJson корректно обрабатывает формат API v2 со строковым media_id и прямыми путями к webp`() {
+        val gallery = NParser.parseGalleryJson(sampleJsonV2)
+
+        assertNotNull(gallery)
+        assertEquals(697415L, gallery?.id)
+        assertEquals(4330179L, gallery?.mediaId)
+        assertEquals("Test Doujinshi", gallery?.title)
+        assertEquals(2, gallery?.numPages)
+        assertEquals(42, gallery?.numFavorites)
+
+        assertEquals(2, gallery?.pages?.size)
+        assertEquals("jpg", gallery?.pages?.get(0)?.ext)
+        assertEquals("webp", gallery?.pages?.get(1)?.ext)
+
+        assertEquals(
+            "https://i.nhentai.net/galleries/4330179/1.jpg",
+            gallery?.pages?.get(0)?.imageUrl(gallery.mediaId)
+        )
+        assertEquals(
+            "https://i.nhentai.net/galleries/4330179/2.webp",
+            gallery?.pages?.get(1)?.imageUrl(gallery.mediaId)
+        )
+
+        assertEquals(
+            "https://t.nhentai.net/galleries/4330179/1t.jpg.webp",
+            gallery?.pages?.get(0)?.thumbnailUrl(gallery.mediaId)
+        )
+        assertEquals(
+            "https://t.nhentai.net/galleries/4330179/cover.jpg.webp",
+            gallery?.coverUrl
+        )
+        assertEquals(
+            "https://t.nhentai.net/galleries/4330179/thumb.jpg.webp",
+            gallery?.thumbnailUrl
         )
     }
 

@@ -77,8 +77,8 @@ class NRepository @Inject constructor() {
     suspend fun getGalleryDetails(id: Long): Result<NGallery> {
         galleryCache[id]?.let { return Result.success(it) }
 
-        // Сначала пробуем прямой JSON API
-        when (val apiResult = NClient.get("/api/gallery/$id")) {
+        // Сначала пробуем прямой v2 JSON API
+        when (val apiResult = NClient.get("/api/v2/galleries/$id")) {
             is NNetworkResult.Success -> {
                 val gallery = NParser.parseGalleryJson(apiResult.body)
                 if (gallery != null) {

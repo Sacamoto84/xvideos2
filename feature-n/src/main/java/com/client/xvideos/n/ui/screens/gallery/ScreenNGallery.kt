@@ -4,26 +4,18 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,10 +26,12 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
+import com.client.xvideos.n.ui.atom.NGalleryTopBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryHeader
 import com.client.xvideos.n.ui.molecule.NGalleryPagesGrid
@@ -88,7 +82,6 @@ class ScreenNGallery(val galleryId: Long) : Screen {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenNGalleryContent(
     galleryId: Long,
@@ -101,33 +94,18 @@ fun ScreenNGalleryContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val topInset = getTopInsetDp()
+    val title = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId"
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Theme.tabLevel0
-                )
+            NGalleryTopBar(
+                title = title,
+                onBack = onBack,
+                topInset = topInset
             )
         },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.background,
         modifier = modifier
     ) { paddingValues ->

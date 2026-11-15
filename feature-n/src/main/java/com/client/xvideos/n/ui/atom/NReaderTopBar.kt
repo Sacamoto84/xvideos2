@@ -1,8 +1,11 @@
 package com.client.xvideos.n.ui.atom
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -31,47 +35,56 @@ fun NReaderTopBar(
     isVertical: Boolean,
     onBack: () -> Unit,
     onToggleOrientation: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    topInset: Dp = 0.dp
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .background(Color(0xCC000000))
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Назад",
-                tint = Color.White
-            )
+        if (topInset > 0.dp) {
+            Spacer(Modifier.height(topInset))
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Назад",
+                    tint = Color.White
+                )
+            }
 
-        Text(
-            text = title,
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-
-        Text(
-            text = "$currentPage / $totalPages",
-            color = Color(0xFFED2553),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-
-        IconButton(onClick = onToggleOrientation) {
-            Icon(
-                imageVector = Icons.Default.SwapVert,
-                contentDescription = if (isVertical) "Горизонтально" else "Вертикально",
-                tint = if (isVertical) Color(0xFFED2553) else Color.White
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
+
+            Text(
+                text = "$currentPage / $totalPages",
+                color = Color(0xFFED2553),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+
+            IconButton(onClick = onToggleOrientation) {
+                Icon(
+                    imageVector = Icons.Default.SwapVert,
+                    contentDescription = if (isVertical) "Горизонтально" else "Вертикально",
+                    tint = if (isVertical) Color(0xFFED2553) else Color.White
+                )
+            }
         }
     }
 }
@@ -85,6 +98,7 @@ private fun NReaderTopBarPreview() {
         totalPages = 24,
         isVertical = false,
         onBack = {},
-        onToggleOrientation = {}
+        onToggleOrientation = {},
+        topInset = 24.dp
     )
 }

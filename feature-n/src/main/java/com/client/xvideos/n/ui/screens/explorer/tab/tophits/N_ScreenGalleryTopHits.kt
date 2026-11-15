@@ -23,6 +23,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NSortType
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
@@ -78,6 +79,7 @@ fun N_ScreenGalleryTopHitsContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val topInset = getTopInsetDp()
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -85,7 +87,8 @@ fun N_ScreenGalleryTopHitsContent(
     ) {
         NSortFilterRow(
             selectedSort = selectedSort,
-            onSortSelected = onSortSelected
+            onSortSelected = onSortSelected,
+            topInset = topInset
         )
 
         Box(

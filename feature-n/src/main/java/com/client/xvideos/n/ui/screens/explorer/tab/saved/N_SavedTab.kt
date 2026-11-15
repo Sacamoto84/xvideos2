@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 
 /**
  * Вкладка сохранённой манги (офлайн-библиотека).
@@ -37,10 +38,12 @@ object N_SavedTab : Screen {
 fun N_SavedTabContent(
     modifier: Modifier = Modifier
 ) {
+    val topInset = getTopInsetDp()
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Theme.background),
+            .background(Theme.background)
+            .padding(top = topInset),
         contentAlignment = Alignment.Center
     ) {
         Column(

@@ -23,6 +23,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NSearchBar
@@ -79,6 +80,7 @@ fun N_ScreenGallerySearchContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val topInset = getTopInsetDp()
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -87,7 +89,8 @@ fun N_ScreenGallerySearchContent(
         NSearchBar(
             query = query,
             onQueryChange = onQueryChange,
-            onSearch = onSearch
+            onSearch = onSearch,
+            topInset = topInset
         )
 
         Box(

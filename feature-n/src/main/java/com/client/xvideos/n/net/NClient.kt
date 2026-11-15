@@ -45,8 +45,9 @@ object NClient {
 
             // Проверка на Cloudflare Challenge
             if (isCloudflareChallenge(code, body)) {
-                NCloudflareState.triggerChallenge(targetUrl)
-                return@withContext NNetworkResult.CloudflareRequired(targetUrl)
+                val challengeUrl = if (targetUrl.contains("/api/")) BASE_URL else targetUrl
+                NCloudflareState.triggerChallenge(challengeUrl)
+                return@withContext NNetworkResult.CloudflareRequired(challengeUrl)
             }
 
             if (response.isSuccessful) {
@@ -59,9 +60,19 @@ object NClient {
         }
     }
 
+    private val cfMarkers = listOf(
+        "challenges.cloudflare.com",
+        "Just a moment...",
+        "cf-turnstile",
+        "window._cf_chl_opt"
+    )
+
     private fun isCloudflareChallenge(code: Int, body: String): Boolean {
-        if (code == 403 || code == 503) return true
-        return body.contains("challenges.cloudflare.com") || body.contains("Just a moment...")
+        if (body.contains("Use new API", ignoreCase = true)) return false
+        if (cfMarkers.any { body.contains(it) }) return true
+        val isBlockCode = code == 403 || code == 503
+        if (!isBlockCode) return false
+        return body.contains("<html", ignoreCase = true) && body.contains("Cloudflare", ignoreCase = true)
     }
 }
 

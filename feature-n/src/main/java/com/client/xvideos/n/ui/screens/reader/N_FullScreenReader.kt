@@ -29,6 +29,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.ui.statusbar.HideStatusBarEffect
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.ui.atom.NReaderTopBar
@@ -110,6 +111,7 @@ fun N_FullScreenReaderContent(
     onPageSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val topInset = getTopInsetDp()
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -155,7 +157,8 @@ fun N_FullScreenReaderContent(
                 totalPages = gallery.pages.size,
                 isVertical = isVertical,
                 onBack = onBack,
-                onToggleOrientation = onToggleOrientation
+                onToggleOrientation = onToggleOrientation,
+                topInset = topInset
             )
         }
 

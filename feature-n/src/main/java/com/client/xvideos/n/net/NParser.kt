@@ -18,7 +18,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 /**
- * Парсер данных nhentai: JSON API и HTML страниц.
+ * Парсер данных nhentai: JSON API (v1 и v2) и HTML страниц.
  */
 object NParser {
 
@@ -28,13 +28,15 @@ object NParser {
     }
 
     /**
-     * Парсит детальную информацию о галерее из JSON (ответ API или тело скрипта).
+     * Парсит детальную информацию о галерее из JSON (ответ API v2/v1 или тело скрипта).
      */
     fun parseGalleryJson(jsonString: String): NGallery? = runCatching {
         val root = jsonConfig.parseToJsonElement(jsonString).jsonObject
 
         val id = root["id"]?.jsonPrimitive?.longOrNull ?: 0L
-        val mediaId = root["media_id"]?.jsonPrimitive?.longOrNull ?: 0L
+        val mediaId = root["media_id"]?.jsonPrimitive?.let {
+            it.longOrNull ?: it.contentOrNull?.toLongOrNull()
+        } ?: 0L
         if (id == 0L || mediaId == 0L) return null
 
         val titlesObj = root["title"]?.jsonObject
@@ -47,11 +49,15 @@ object NParser {
         val numPages = root["num_pages"]?.jsonPrimitive?.intOrNull ?: 0
         val numFavorites = root["num_favorites"]?.jsonPrimitive?.intOrNull ?: 0
 
+        // Поддержка v2 (поля напрямую в root) и v1 (вложенные в images)
         val imagesObj = root["images"]?.jsonObject
-        val cover = parsePage(imagesObj?.get("cover")?.jsonObject, 1)
-        val thumbnail = parsePage(imagesObj?.get("thumbnail")?.jsonObject, 1)
+        val coverObj = root["cover"]?.jsonObject ?: imagesObj?.get("cover")?.jsonObject
+        val thumbObj = root["thumbnail"]?.jsonObject ?: imagesObj?.get("thumbnail")?.jsonObject
+        val pagesArray = root["pages"]?.jsonArray ?: imagesObj?.get("pages")?.jsonArray ?: JsonArray(emptyList())
 
-        val pagesArray = imagesObj?.get("pages")?.jsonArray ?: JsonArray(emptyList())
+        val cover = parsePage(coverObj, 1)
+        val thumbnail = parsePage(thumbObj, 1)
+
         val pages = pagesArray.mapIndexed { index, pageElement ->
             parsePage(pageElement.jsonObject, index + 1)
         }
@@ -85,11 +91,27 @@ object NParser {
 
     private fun parsePage(pageObj: JsonObject?, index: Int): NPage {
         if (pageObj == null) return NPage(pageNumber = index)
-        val type = pageObj["t"]?.jsonPrimitive?.contentOrNull.orEmpty()
-        val ext = NPage.extFromApiType(type)
-        val width = pageObj["w"]?.jsonPrimitive?.intOrNull ?: 0
-        val height = pageObj["h"]?.jsonPrimitive?.intOrNull ?: 0
-        return NPage(pageNumber = index, ext = ext, width = width, height = height)
+        val path = pageObj["path"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val thumbPath = pageObj["thumbnail"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val ext = if (path.isNotEmpty()) {
+            path.substringAfterLast('.', "jpg")
+        } else {
+            val type = pageObj["t"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            NPage.extFromApiType(type)
+        }
+        val pageNum = pageObj["number"]?.jsonPrimitive?.intOrNull ?: index
+        val width = pageObj["width"]?.jsonPrimitive?.intOrNull
+            ?: pageObj["w"]?.jsonPrimitive?.intOrNull ?: 0
+        val height = pageObj["height"]?.jsonPrimitive?.intOrNull
+            ?: pageObj["h"]?.jsonPrimitive?.intOrNull ?: 0
+        return NPage(
+            pageNumber = pageNum,
+            ext = ext,
+            width = width,
+            height = height,
+            path = path,
+            thumbnailPath = thumbPath
+        )
     }
 
     /**
@@ -97,7 +119,7 @@ object NParser {
      */
     fun parseGalleryHtml(html: String): NGallery? {
         val doc: Document = Jsoup.parse(html)
-        // Поиск в тегах <script>: window._gallery = JSON.parse("...")
+        // 1. Поиск в тегах <script>: window._gallery = JSON.parse("...")
         for (script in doc.getElementsByTag("script")) {
             val scriptContent = script.html()
             val parseIndex = scriptContent.indexOf("JSON.parse(\"")
@@ -110,6 +132,17 @@ object NParser {
                     val gallery = parseGalleryJson(unescaped)
                     if (gallery != null) return gallery
                 }
+            }
+            // 2. В SvelteKit версии данные галереи лежат в JSON внутри data-скрипта
+            if (scriptContent.contains("\"media_id\":")) {
+                val galleryIndex = scriptContent.indexOf("\"gallery\":")
+                if (galleryIndex >= 0) {
+                    val candidate = scriptContent.substring(galleryIndex + "\"gallery\":".length)
+                    val gallery = parseGalleryJson(candidate)
+                    if (gallery != null) return gallery
+                }
+                val direct = parseGalleryJson(scriptContent)
+                if (direct != null) return direct
             }
         }
         return null

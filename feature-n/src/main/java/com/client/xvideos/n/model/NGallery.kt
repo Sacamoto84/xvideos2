@@ -37,13 +37,19 @@ data class NGallery(
      * Ссылка на обложку галереи.
      */
     val coverUrl: String
-        get() = "https://t.nhentai.net/galleries/$mediaId/cover.${cover.ext}"
+        get() = when {
+            cover.path.isNotEmpty() -> "https://t.nhentai.net/${cover.path}"
+            else -> "https://t.nhentai.net/galleries/$mediaId/cover.${cover.ext}"
+        }
 
     /**
      * Ссылка на миниатюру обложки галереи.
      */
     val thumbnailUrl: String
-        get() = "https://t.nhentai.net/galleries/$mediaId/thumb.${thumbnail.ext}"
+        get() = when {
+            thumbnail.path.isNotEmpty() -> "https://t.nhentai.net/${thumbnail.path}"
+            else -> "https://t.nhentai.net/galleries/$mediaId/thumb.${thumbnail.ext}"
+        }
 
     /**
      * Список художников (artist).

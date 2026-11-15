@@ -10,8 +10,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -30,6 +32,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.net.UserAgentProvider
+import com.client.xvideos.common.util.getTopInsetDp
 
 /**
  * Интерактивный диалог проверки Cloudflare Turnstile через встроенный WebView.
@@ -41,6 +44,8 @@ fun NCloudflareChallengeDialog(
     onSuccess: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val topInset = getTopInsetDp()
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -51,27 +56,35 @@ fun NCloudflareChallengeDialog(
                 .background(Color(0xFF1E1E1E))
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Верхняя панель управления
-                Row(
+                // Верхняя панель управления с учётом выреза / статус-бара
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFF2B2B2B))
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Подтверждение Cloudflare",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Закрыть",
-                            tint = Color.White
+                    if (topInset > 0.dp) {
+                        Spacer(Modifier.height(topInset))
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Подтверждение Cloudflare",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Закрыть",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
 

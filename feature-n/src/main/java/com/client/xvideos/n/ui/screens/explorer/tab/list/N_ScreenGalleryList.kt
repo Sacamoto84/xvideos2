@@ -3,6 +3,7 @@ package com.client.xvideos.n.ui.screens.explorer.tab.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,6 +24,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
@@ -70,6 +72,7 @@ fun N_ScreenGalleryListContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val topInset = getTopInsetDp()
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -86,6 +89,7 @@ fun N_ScreenGalleryListContent(
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
+                        .padding(top = topInset)
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -100,7 +104,9 @@ fun N_ScreenGalleryListContent(
             is NGalleryListUiState.CloudflareRequired -> {
                 NCloudflareBanner(
                     onVerifyClick = onRetry,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(top = topInset)
                 )
             }
             is NGalleryListUiState.Success -> {
@@ -108,6 +114,12 @@ fun N_ScreenGalleryListContent(
                     items = uiState.items,
                     columns = columns,
                     onItemClick = onGalleryClick,
+                    contentPadding = PaddingValues(
+                        start = 8.dp,
+                        end = 8.dp,
+                        bottom = 8.dp,
+                        top = topInset + 8.dp
+                    ),
                     modifier = Modifier.fillMaxSize()
                 )
             }
