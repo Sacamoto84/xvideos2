@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +35,7 @@ fun NGalleryTopBar(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onRandomClick: (() -> Unit)? = null,
+    onShareClick: (() -> Unit)? = null,
     topInset: Dp = 0.dp
 ) {
     Column(
@@ -69,6 +71,15 @@ fun NGalleryTopBar(
                     .weight(1f)
                     .padding(end = 8.dp)
             )
+            if (onShareClick != null) {
+                IconButton(onClick = onShareClick) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Поделиться ссылкой",
+                        tint = Color.White
+                    )
+                }
+            }
             if (onRandomClick != null) {
                 IconButton(onClick = onRandomClick) {
                     Icon(

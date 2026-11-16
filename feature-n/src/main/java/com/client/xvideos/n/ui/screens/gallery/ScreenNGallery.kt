@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +27,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.share.useCaseShareText
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGallery
@@ -87,6 +89,18 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             }
         }
 
+        val context = LocalContext.current
+        val onShareClick: () -> Unit = remember(galleryId, context) {
+            {
+                val currentTitle = (uiState as? NGalleryUiState.Success)?.gallery?.title
+                useCaseShareText(
+                    context = context,
+                    text = "https://nhentai.net/g/$galleryId/",
+                    subject = currentTitle
+                )
+            }
+        }
+
         ScreenNGalleryContent(
             galleryId = galleryId,
             uiState = uiState,
@@ -98,6 +112,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             onFavoriteClick = vm::toggleFavorite,
             onGalleryClick = onGalleryClick,
             onRandomClick = onRandomClick,
+            onShareClick = onShareClick,
             onTagClick = onTagClick,
             onRetry = vm::loadGallery
         )
@@ -118,7 +133,8 @@ fun ScreenNGalleryContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     isFavorite: Boolean = false,
-    onFavoriteClick: () -> Unit = {}
+    onFavoriteClick: () -> Unit = {},
+    onShareClick: (() -> Unit)? = null
 ) {
     val topInset = getTopInsetDp()
     val title = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId"
@@ -129,6 +145,7 @@ fun ScreenNGalleryContent(
                 title = title,
                 onBack = onBack,
                 onRandomClick = onRandomClick,
+                onShareClick = onShareClick,
                 topInset = topInset
             )
         },
