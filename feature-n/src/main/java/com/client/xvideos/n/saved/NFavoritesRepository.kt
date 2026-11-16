@@ -58,4 +58,13 @@ class NFavoritesRepository @Inject constructor() {
         db.delete(id.toString())
         db.refresh()
     }
+
+    /**
+     * Принудительно перечитывает закладки с диска (например, после восстановления бэкапа).
+     */
+    fun refresh() {
+        if (AppPath.isInitialized) {
+            db.refresh()
+        }
+    }
 }

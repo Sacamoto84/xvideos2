@@ -58,7 +58,7 @@ object XlrBackupManager {
     private const val RESTORE_JOURNAL_NAME = ".xlr_restore_journal"
     private const val RESTORE_TEMP_DIR_NAME = ".xlr_restore_tmp"
 
-    private val sections = listOf("X", "L", "R", XLiveLegacyFolder.CURRENT)
+    private val sections = listOf("X", "L", "R", XLiveLegacyFolder.CURRENT, "N")
 
     /**
      * Генерирует стандартное имя файла бэкапа с временной меткой: "xvideos-xlr-backup-YYYYMMDD-HHmmss.xlr".

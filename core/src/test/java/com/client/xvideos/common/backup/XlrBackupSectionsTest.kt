@@ -47,6 +47,29 @@ class XlrBackupSectionsTest {
     }
 
     @Test
+    fun `в дереве копии есть раздел N с его папками`() {
+        val main = tmp.newFolder("main_n")
+        main.writeFile("N/Favorites/item.json", "{}")
+
+        val items = runBlocking { XlrBackupManager.currentBackupItems(baseDir = main) }
+
+        val section = items.single { it.path == "N" }
+        assertEquals(null, section.parentPath)
+        assertEquals(
+            listOf("N/Favorites"),
+            items.filter { it.parentPath == "N" }.map { it.path },
+        )
+    }
+
+    @Test
+    fun `пути N проходят нормализацию, чужой раздел — нет`() {
+        assertEquals(
+            listOf("N/Favorites"),
+            XlrBackupManager.normalizeSelectedPaths(setOf("N/Favorites", "Unknown/Folder")),
+        )
+    }
+
+    @Test
     fun `недописанные файлы записи в копию не идут`() {
         val options = XlrBackupOptions.DEFAULT
         assertFalse(XlrBackupManager.shouldIncludeBackupEntry("XLive/Records/1/video.part", options))
