@@ -20,4 +20,16 @@ data class NGalleryPreview(
     val thumbnailUrl: String = "",
     val numPages: Int = 0,
     val language: String = ""
-) : java.io.Serializable
+) : java.io.Serializable {
+    companion object {
+        /**
+         * Формирует полный URL миниатюры из относительного пути API v2 или mediaId.
+         */
+        fun buildThumbnailUrl(thumbnailPath: String, mediaId: Long = 0L): String = when {
+            thumbnailPath.startsWith("http") -> thumbnailPath
+            thumbnailPath.isNotEmpty() -> "https://t.nhentai.net/${thumbnailPath.removePrefix("/")}"
+            mediaId > 0L -> "https://t.nhentai.net/galleries/$mediaId/thumb.jpg"
+            else -> ""
+        }
+    }
+}

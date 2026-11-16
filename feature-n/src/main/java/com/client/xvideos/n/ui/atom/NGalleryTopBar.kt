@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -25,13 +26,14 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 
 /**
- * Верхняя панель экрана манги с кнопкой «Назад» и заголовком.
+ * Верхняя панель экрана манги с кнопкой «Назад», заголовком и случайным выбором.
  */
 @Composable
 fun NGalleryTopBar(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onRandomClick: (() -> Unit)? = null,
     topInset: Dp = 0.dp
 ) {
     Column(
@@ -65,8 +67,17 @@ fun NGalleryTopBar(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 12.dp)
+                    .padding(end = 8.dp)
             )
+            if (onRandomClick != null) {
+                IconButton(onClick = onRandomClick) {
+                    Icon(
+                        imageVector = Icons.Outlined.Shuffle,
+                        contentDescription = "Случайная манга",
+                        tint = Color(0xFFED2553)
+                    )
+                }
+            }
         }
     }
 }

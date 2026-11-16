@@ -54,6 +54,22 @@ class N_ScreenGalleryListSM @Inject constructor(
             )
         }
     }
+
+    /**
+     * Запрашивает ID случайной манги и передает его в колбэк навигации.
+     */
+    fun openRandomGallery(onSuccess: (Long) -> Unit) {
+        screenModelScope.launch {
+            repository.getRandomGalleryId().fold(
+                onSuccess = { id -> onSuccess(id) },
+                onFailure = { error ->
+                    if (error is CloudflareBlockedException) {
+                        _uiState.value = NGalleryListUiState.CloudflareRequired(error.url)
+                    }
+                }
+            )
+        }
+    }
 }
 
 sealed interface NGalleryListUiState {

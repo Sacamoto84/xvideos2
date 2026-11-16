@@ -73,6 +73,12 @@ object NParser {
             NTag(id = tagId, type = type, name = name, count = count, url = url)
         }
 
+        val relatedArray = root["related"]?.jsonArray
+        val relatedGalleries = relatedArray?.mapNotNull { element ->
+            val elObj = element.jsonObject
+            parseGalleryListItem(elObj) ?: parseGalleryJson(element.toString())?.toPreview()
+        }.orEmpty()
+
         NGallery(
             id = id,
             mediaId = mediaId,
@@ -85,7 +91,8 @@ object NParser {
             cover = cover,
             thumbnail = thumbnail,
             tags = tags,
-            pages = pages
+            pages = pages,
+            relatedGalleries = relatedGalleries
         )
     }.getOrNull()
 
@@ -149,23 +156,130 @@ object NParser {
     }
 
     /**
-     * Парсит список превью галерей из ответа поискового JSON API.
+     * Преобразует NGallery в облегчённый NGalleryPreview.
      */
-    fun parseSearchJson(jsonString: String): List<NGalleryPreview> = runCatching {
-        val root = jsonConfig.parseToJsonElement(jsonString).jsonObject
-        val resultsArray = root["result"]?.jsonArray ?: return emptyList()
-        resultsArray.mapNotNull { element ->
-            val gallery = parseGalleryJson(element.toString()) ?: return@mapNotNull null
-            NGalleryPreview(
-                id = gallery.id,
-                mediaId = gallery.mediaId,
-                title = gallery.title,
-                thumbnailUrl = gallery.thumbnailUrl,
-                numPages = gallery.numPages,
-                language = gallery.languages.firstOrNull()?.name.orEmpty()
-            )
+    private fun NGallery.toPreview(): NGalleryPreview = NGalleryPreview(
+        id = id,
+        mediaId = mediaId,
+        title = title,
+        thumbnailUrl = thumbnailUrl,
+        numPages = numPages,
+        language = languages.firstOrNull()?.name.orEmpty()
+    )
+
+    private val knownLanguageTags = mapOf(
+        12227L to "English",
+        6343L to "Japanese",
+        29963L to "Chinese"
+    )
+
+    private fun detectLanguage(title: String, tagIds: List<Long>?): String {
+        tagIds?.forEach { tagId ->
+            knownLanguageTags[tagId]?.let { return it }
+        }
+        val lower = title.lowercase()
+        return when {
+            lower.contains("[english]") || lower.contains("(english)") -> "English"
+            lower.contains("[russian]") || lower.contains("(russian)") -> "Russian"
+            lower.contains("[chinese]") || lower.contains("(chinese)") -> "Chinese"
+            lower.contains("[japanese]") || lower.contains("(japanese)") -> "Japanese"
+            lower.contains("[spanish]") || lower.contains("(spanish)") -> "Spanish"
+            lower.contains("[korean]") || lower.contains("(korean)") -> "Korean"
+            else -> ""
+        }
+    }
+
+    /**
+     * Парсит отдельный элемент галереи API v2 (GalleryListItem).
+     */
+    fun parseGalleryListItem(obj: JsonObject): NGalleryPreview? = runCatching {
+        val id = obj["id"]?.jsonPrimitive?.longOrNull ?: return null
+        if (id <= 0L) return null
+
+        val mediaId = obj["media_id"]?.jsonPrimitive?.let {
+            it.longOrNull ?: it.contentOrNull?.toLongOrNull()
+        } ?: 0L
+
+        val englishTitle = obj["english_title"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val japaneseTitle = obj["japanese_title"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val title = englishTitle.ifEmpty { japaneseTitle }
+
+        val thumbnailPath = obj["thumbnail"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val thumbnailUrl = NGalleryPreview.buildThumbnailUrl(thumbnailPath, mediaId)
+
+        val numPages = obj["num_pages"]?.jsonPrimitive?.intOrNull ?: 0
+        val tagIds = obj["tag_ids"]?.jsonArray?.mapNotNull { it.jsonPrimitive.longOrNull }
+        val language = detectLanguage(title, tagIds)
+
+        NGalleryPreview(
+            id = id,
+            mediaId = mediaId,
+            title = title,
+            thumbnailUrl = thumbnailUrl,
+            numPages = numPages,
+            language = language
+        )
+    }.getOrNull()
+
+    /**
+     * Парсит список превью галерей из ответа API v2 (/galleries, /popular, /search).
+     */
+    fun parseGalleryListJson(jsonString: String): List<NGalleryPreview> = runCatching {
+        val parsed = jsonConfig.parseToJsonElement(jsonString)
+        val itemsArray: JsonArray = when (parsed) {
+            is JsonArray -> parsed
+            is JsonObject -> {
+                parsed["result"]?.jsonArray
+                    ?: parsed["related"]?.jsonArray
+                    ?: JsonArray(emptyList())
+            }
+            else -> JsonArray(emptyList())
+        }
+
+        itemsArray.mapNotNull { element ->
+            val obj = element.jsonObject
+            parseGalleryListItem(obj) ?: parseGalleryJson(element.toString())?.toPreview()
         }
     }.getOrDefault(emptyList())
+
+    /**
+     * Парсит список тегов из ответа API v2 (/tags/search, /tags/{type}).
+     */
+    fun parseTagsJson(jsonString: String): List<NTag> = runCatching {
+        val parsed = jsonConfig.parseToJsonElement(jsonString)
+        val tagsArray: JsonArray = when (parsed) {
+            is JsonArray -> parsed
+            is JsonObject -> {
+                parsed["tags"]?.jsonArray
+                    ?: parsed["result"]?.jsonArray
+                    ?: JsonArray(emptyList())
+            }
+            else -> JsonArray(emptyList())
+        }
+
+        tagsArray.mapNotNull { element ->
+            val obj = element.jsonObject
+            val id = obj["id"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
+            val type = obj["type"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            val name = obj["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            val count = obj["count"]?.jsonPrimitive?.intOrNull ?: 0
+            val url = obj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            NTag(id = id, type = type, name = name, count = count, url = url)
+        }
+    }.getOrDefault(emptyList())
+
+    /**
+     * Парсит ID случайной галереи из ответа API v2 (/galleries/random).
+     */
+    fun parseRandomGalleryId(jsonString: String): Long? = runCatching {
+        val obj = jsonConfig.parseToJsonElement(jsonString).jsonObject
+        obj["id"]?.jsonPrimitive?.longOrNull
+    }.getOrNull()
+
+    /**
+     * Парсит список превью галерей из ответа поискового JSON API.
+     */
+    fun parseSearchJson(jsonString: String): List<NGalleryPreview> = parseGalleryListJson(jsonString)
 
     /**
      * Парсит превью галерей из HTML-страницы со списком (поиск или главная).

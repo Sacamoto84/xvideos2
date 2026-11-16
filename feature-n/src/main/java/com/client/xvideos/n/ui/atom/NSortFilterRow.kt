@@ -36,6 +36,7 @@ fun NSortFilterRow(
 ) {
     val sortOptions = listOf(
         NSortType.POPULAR_ALL_TIME,
+        NSortType.POPULAR_MONTH,
         NSortType.POPULAR_WEEK,
         NSortType.POPULAR_TODAY
     )

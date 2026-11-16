@@ -3,6 +3,7 @@ package com.client.xvideos.n.repository
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NSortType
+import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.net.NClient
 import com.client.xvideos.n.net.NNetworkResult
 import com.client.xvideos.n.net.NParser
@@ -20,15 +21,61 @@ class NRepository @Inject constructor() {
     private val galleryCache = ConcurrentHashMap<Long, NGallery>()
 
     /**
-     * Загружает список галерей (лента или сортировки).
+     * Загружает список галерей (лента или сортировки) с приоритетом REST API v2.
      */
     suspend fun getGalleries(page: Int = 1, sort: NSortType = NSortType.RECENT): Result<List<NGalleryPreview>> {
-        val endpoint = if (sort.queryValue.isEmpty()) {
+        val apiEndpoint = when {
+            sort == NSortType.RECENT -> "/api/v2/galleries?page=$page&per_page=25"
+            sort == NSortType.POPULAR_TODAY && page == 1 -> "/api/v2/galleries/popular"
+            else -> "/api/v2/search?query=-nonexisttag&sort=${sort.queryValue}&page=$page"
+        }
+
+        when (val apiResult = NClient.get(apiEndpoint)) {
+            is NNetworkResult.Success -> {
+                val galleries = NParser.parseGalleryListJson(apiResult.body)
+                if (galleries.isNotEmpty()) return Result.success(galleries)
+            }
+            is NNetworkResult.CloudflareRequired -> {
+                return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+            }
+            else -> Unit
+        }
+
+        // Запасной вариант через HTML-парсинг
+        val htmlEndpoint = if (sort == NSortType.RECENT) {
             "/?page=$page"
         } else {
             "/search/?q=-nonexisttag&page=$page&sort=${sort.queryValue}"
         }
 
+        return fetchGalleriesFromHtml(htmlEndpoint)
+    }
+
+    /**
+     * Поиск галерей по текстовому запросу или тегу с приоритетом REST API v2.
+     */
+    suspend fun search(query: String, page: Int = 1, sort: NSortType = NSortType.RECENT): Result<List<NGalleryPreview>> {
+        val encodedQuery = URLEncoder.encode(query, "UTF-8")
+        val sortParam = if (sort.queryValue.isNotEmpty()) "&sort=${sort.queryValue}" else ""
+        val apiEndpoint = "/api/v2/search?query=$encodedQuery&page=$page$sortParam"
+
+        when (val apiResult = NClient.get(apiEndpoint)) {
+            is NNetworkResult.Success -> {
+                val galleries = NParser.parseGalleryListJson(apiResult.body)
+                if (galleries.isNotEmpty()) return Result.success(galleries)
+            }
+            is NNetworkResult.CloudflareRequired -> {
+                return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+            }
+            else -> Unit
+        }
+
+        // Запасной вариант через HTML-парсинг
+        val htmlEndpoint = "/search/?q=$encodedQuery&page=$page$sortParam"
+        return fetchGalleriesFromHtml(htmlEndpoint)
+    }
+
+    private suspend fun fetchGalleriesFromHtml(endpoint: String): Result<List<NGalleryPreview>> {
         return when (val result = NClient.get(endpoint)) {
             is NNetworkResult.Success -> {
                 val galleries = NParser.parseSearchHtml(result.body)
@@ -47,38 +94,13 @@ class NRepository @Inject constructor() {
     }
 
     /**
-     * Поиск галерей по текстовому запросу или тегу.
-     */
-    suspend fun search(query: String, page: Int = 1, sort: NSortType = NSortType.RECENT): Result<List<NGalleryPreview>> {
-        val encodedQuery = URLEncoder.encode(query, "UTF-8")
-        val sortParam = if (sort.queryValue.isNotEmpty()) "&sort=${sort.queryValue}" else ""
-        val endpoint = "/search/?q=$encodedQuery&page=$page$sortParam"
-
-        return when (val result = NClient.get(endpoint)) {
-            is NNetworkResult.Success -> {
-                val galleries = NParser.parseSearchHtml(result.body)
-                Result.success(galleries)
-            }
-            is NNetworkResult.CloudflareRequired -> {
-                Result.failure(CloudflareBlockedException(result.challengeUrl))
-            }
-            is NNetworkResult.Error -> {
-                Result.failure(RuntimeException("Ошибка поиска HTTP: ${result.code}"))
-            }
-            is NNetworkResult.Failure -> {
-                Result.failure(result.throwable)
-            }
-        }
-    }
-
-    /**
-     * Загружает подробную информацию о галерее (сначала из кэша, затем из сети).
+     * Загружает подробную информацию о галерее и похожие работы (API v2 ?include=related).
      */
     suspend fun getGalleryDetails(id: Long): Result<NGallery> {
         galleryCache[id]?.let { return Result.success(it) }
 
-        // Сначала пробуем прямой v2 JSON API
-        when (val apiResult = NClient.get("/api/v2/galleries/$id")) {
+        // Сначала пробуем прямой v2 JSON API с рекомендациями похожих работ
+        when (val apiResult = NClient.get("/api/v2/galleries/$id?include=related")) {
             is NNetworkResult.Success -> {
                 val gallery = NParser.parseGalleryJson(apiResult.body)
                 if (gallery != null) {
@@ -111,6 +133,58 @@ class NRepository @Inject constructor() {
             }
             is NNetworkResult.Failure -> {
                 Result.failure(htmlResult.throwable)
+            }
+        }
+    }
+
+    /**
+     * Поиск тегов и автодополнение через API v2.
+     */
+    suspend fun searchTags(query: String, limit: Int = 10): Result<List<NTag>> {
+        val cleanQuery = query.trim()
+        if (cleanQuery.isEmpty()) return Result.success(emptyList())
+
+        val escapedQuery = cleanQuery.replace("\"", "\\\"")
+        val jsonBody = """{"query":"$escapedQuery","limit":$limit}"""
+
+        return when (val result = NClient.postJson("/api/v2/tags/search", jsonBody)) {
+            is NNetworkResult.Success -> {
+                val tags = NParser.parseTagsJson(result.body)
+                Result.success(tags)
+            }
+            is NNetworkResult.CloudflareRequired -> {
+                Result.failure(CloudflareBlockedException(result.challengeUrl))
+            }
+            is NNetworkResult.Error -> {
+                Result.failure(RuntimeException("Ошибка поиска тегов: ${result.code}"))
+            }
+            is NNetworkResult.Failure -> {
+                Result.failure(result.throwable)
+            }
+        }
+    }
+
+    /**
+     * Получает ID случайной манги через API v2.
+     */
+    suspend fun getRandomGalleryId(): Result<Long> {
+        return when (val result = NClient.get("/api/v2/galleries/random")) {
+            is NNetworkResult.Success -> {
+                val id = NParser.parseRandomGalleryId(result.body)
+                if (id != null && id > 0L) {
+                    Result.success(id)
+                } else {
+                    Result.failure(RuntimeException("Не удалось получить ID случайной манги"))
+                }
+            }
+            is NNetworkResult.CloudflareRequired -> {
+                Result.failure(CloudflareBlockedException(result.challengeUrl))
+            }
+            is NNetworkResult.Error -> {
+                Result.failure(RuntimeException("Ошибка получения случайной манги: ${result.code}"))
+            }
+            is NNetworkResult.Failure -> {
+                Result.failure(result.throwable)
             }
         }
     }

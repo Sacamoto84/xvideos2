@@ -17,6 +17,7 @@ import kotlinx.serialization.Serializable
  * @property thumbnail Миниатюра галереи.
  * @property tags Список тегов по категориям.
  * @property pages Список страниц с метаданными размеров и расширений.
+ * @property relatedGalleries Список похожих галерей (рекомендации API v2).
  */
 @Serializable
 data class NGallery(
@@ -31,7 +32,8 @@ data class NGallery(
     val cover: NPage = NPage(),
     val thumbnail: NPage = NPage(),
     val tags: List<NTag> = emptyList(),
-    val pages: List<NPage> = emptyList()
+    val pages: List<NPage> = emptyList(),
+    val relatedGalleries: List<NGalleryPreview> = emptyList()
 ) : java.io.Serializable {
     /**
      * Ссылка на обложку галереи.

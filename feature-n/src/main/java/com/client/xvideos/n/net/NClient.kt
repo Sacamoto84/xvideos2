@@ -3,8 +3,10 @@ package com.client.xvideos.n.net
 import com.client.xvideos.common.net.UserAgentProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit
 object NClient {
 
     private const val BASE_URL = "https://nhentai.net"
+    private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -38,8 +41,34 @@ object NClient {
             requestBuilder.header("Cookie", "cf_clearance=$clearance")
         }
 
-        try {
-            val response = okHttpClient.newCall(requestBuilder.build()).execute()
+        executeRequest(requestBuilder.build(), targetUrl)
+    }
+
+    /**
+     * Выполняет POST-запрос с JSON телом к nhentai.net.
+     */
+    suspend fun postJson(url: String, jsonBody: String): NNetworkResult = withContext(Dispatchers.IO) {
+        val targetUrl = if (url.startsWith("http")) url else "$BASE_URL$url"
+        val requestBody = jsonBody.toRequestBody(JSON_MEDIA_TYPE)
+
+        val requestBuilder = Request.Builder()
+            .url(targetUrl)
+            .post(requestBody)
+            .header("User-Agent", UserAgentProvider.defaultUserAgent)
+            .header("Accept", "application/json, text/plain, */*")
+            .header("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
+            .header("Referer", BASE_URL)
+
+        NCloudflareState.cfClearanceCookie?.let { clearance ->
+            requestBuilder.header("Cookie", "cf_clearance=$clearance")
+        }
+
+        executeRequest(requestBuilder.build(), targetUrl)
+    }
+
+    private fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
+        return try {
+            val response = okHttpClient.newCall(request).execute()
             val code = response.code
             val body = response.body.string()
 
@@ -47,7 +76,7 @@ object NClient {
             if (isCloudflareChallenge(code, body)) {
                 val challengeUrl = if (targetUrl.contains("/api/")) BASE_URL else targetUrl
                 NCloudflareState.triggerChallenge(challengeUrl)
-                return@withContext NNetworkResult.CloudflareRequired(challengeUrl)
+                return NNetworkResult.CloudflareRequired(challengeUrl)
             }
 
             if (response.isSuccessful) {

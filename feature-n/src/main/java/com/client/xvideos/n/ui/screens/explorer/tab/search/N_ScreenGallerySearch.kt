@@ -24,16 +24,18 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NSearchBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
+import com.client.xvideos.n.ui.molecule.NTagSuggestionsRow
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 
 /**
- * Вкладка поиска манги раздела nhentai.
+ * Вкладка поиска манги раздела nhentai с автодополнением тегов.
  */
 object N_ScreenGallerySearch : Screen {
 
@@ -47,6 +49,7 @@ object N_ScreenGallerySearch : Screen {
         val vm = getScreenModel<N_ScreenGallerySearchSM>()
 
         val query by vm.query.collectAsStateWithLifecycle()
+        val tagSuggestions by vm.tagSuggestions.collectAsStateWithLifecycle()
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
@@ -57,11 +60,13 @@ object N_ScreenGallerySearch : Screen {
 
         N_ScreenGallerySearchContent(
             query = query,
+            tagSuggestions = tagSuggestions,
             uiState = uiState,
             columns = columns,
             challengeUrl = challengeUrl,
             onQueryChange = vm::setQuery,
             onSearch = vm::search,
+            onTagSuggestionClick = vm::selectTagSuggestion,
             onGalleryClick = onGalleryClick,
             onRetry = vm::search
         )
@@ -71,11 +76,13 @@ object N_ScreenGallerySearch : Screen {
 @Composable
 fun N_ScreenGallerySearchContent(
     query: String,
+    tagSuggestions: List<NTag>,
     uiState: NGalleryListUiState,
     columns: Int,
     challengeUrl: String?,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onTagSuggestionClick: (NTag) -> Unit,
     onGalleryClick: (Long) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
@@ -91,6 +98,11 @@ fun N_ScreenGallerySearchContent(
             onQueryChange = onQueryChange,
             onSearch = onSearch,
             topInset = topInset
+        )
+
+        NTagSuggestionsRow(
+            suggestions = tagSuggestions,
+            onTagClick = onTagSuggestionClick
         )
 
         Box(
@@ -165,11 +177,13 @@ fun N_ScreenGallerySearchContent(
 private fun N_ScreenGallerySearchContentPreview() {
     N_ScreenGallerySearchContent(
         query = "",
+        tagSuggestions = emptyList(),
         uiState = NGalleryListUiState.Success(emptyList()),
         columns = 2,
         challengeUrl = null,
         onQueryChange = {},
         onSearch = {},
+        onTagSuggestionClick = {},
         onGalleryClick = {},
         onRetry = {}
     )

@@ -198,4 +198,124 @@ class NParserTest {
         assertEquals(112233L, list[0].mediaId)
         assertEquals("Awesome Doujinshi Title", list[0].title)
     }
+
+    @Test
+    fun `parseGalleryListJson парсит ответ API v2 со структурой result`() {
+        val json = """
+            {
+              "result": [
+                {
+                  "id": 697545,
+                  "media_id": "4330814",
+                  "english_title": "Test Title [English]",
+                  "japanese_title": "テスト",
+                  "thumbnail": "galleries/4330814/thumb.webp",
+                  "thumbnail_width": 250,
+                  "thumbnail_height": 353,
+                  "num_pages": 318,
+                  "num_favorites": 1200,
+                  "tag_ids": [12227]
+                }
+              ],
+              "num_pages": 10,
+              "per_page": 25,
+              "total": 250
+            }
+        """.trimIndent()
+
+        val list = NParser.parseGalleryListJson(json)
+        assertEquals(1, list.size)
+        assertEquals(697545L, list[0].id)
+        assertEquals(4330814L, list[0].mediaId)
+        assertEquals("Test Title [English]", list[0].title)
+        assertEquals("https://t.nhentai.net/galleries/4330814/thumb.webp", list[0].thumbnailUrl)
+        assertEquals(318, list[0].numPages)
+        assertEquals("English", list[0].language)
+    }
+
+    @Test
+    fun `parseGalleryListJson парсит прямой массив API v2 popular`() {
+        val json = """
+            [
+              {
+                "id": 697416,
+                "media_id": "4330180",
+                "english_title": "Popular Doujin [Russian]",
+                "japanese_title": "テスト",
+                "thumbnail": "galleries/4330180/thumb.webp",
+                "num_pages": 52,
+                "num_favorites": 7418,
+                "tag_ids": []
+              }
+            ]
+        """.trimIndent()
+
+        val list = NParser.parseGalleryListJson(json)
+        assertEquals(1, list.size)
+        assertEquals(697416L, list[0].id)
+        assertEquals("Popular Doujin [Russian]", list[0].title)
+        assertEquals("https://t.nhentai.net/galleries/4330180/thumb.webp", list[0].thumbnailUrl)
+        assertEquals(52, list[0].numPages)
+        assertEquals("Russian", list[0].language)
+    }
+
+    @Test
+    fun `parseTagsJson парсит массив тегов из API v2 tags search`() {
+        val json = """
+            [
+              {
+                "id": 123503,
+                "type": "parody",
+                "name": "genshin impact",
+                "slug": "genshin-impact",
+                "url": "/parody/genshin-impact/",
+                "count": 4518
+              }
+            ]
+        """.trimIndent()
+
+        val tags = NParser.parseTagsJson(json)
+        assertEquals(1, tags.size)
+        assertEquals(123503L, tags[0].id)
+        assertEquals("parody", tags[0].type)
+        assertEquals("genshin impact", tags[0].name)
+        assertEquals(4518, tags[0].count)
+        assertEquals("/parody/genshin-impact/", tags[0].url)
+    }
+
+    @Test
+    fun `parseRandomGalleryId извлекает ID из ответа API v2 random`() {
+        val json = """{ "id": 341010 }"""
+        val id = NParser.parseRandomGalleryId(json)
+        assertEquals(341010L, id)
+    }
+
+    @Test
+    fun `parseGalleryJson парсит связанные галереи related`() {
+        val json = """
+            {
+              "id": 100,
+              "media_id": "200",
+              "title": { "english": "Main Title" },
+              "images": { "pages": [] },
+              "num_pages": 1,
+              "related": [
+                {
+                  "id": 101,
+                  "media_id": "201",
+                  "english_title": "Related Doujin",
+                  "thumbnail": "galleries/201/thumb.webp",
+                  "num_pages": 24
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val gallery = NParser.parseGalleryJson(json)
+        assertNotNull(gallery)
+        assertEquals(1, gallery?.relatedGalleries?.size)
+        assertEquals(101L, gallery?.relatedGalleries?.get(0)?.id)
+        assertEquals("Related Doujin", gallery?.relatedGalleries?.get(0)?.title)
+        assertEquals("https://t.nhentai.net/galleries/201/thumb.webp", gallery?.relatedGalleries?.get(0)?.thumbnailUrl)
+    }
 }

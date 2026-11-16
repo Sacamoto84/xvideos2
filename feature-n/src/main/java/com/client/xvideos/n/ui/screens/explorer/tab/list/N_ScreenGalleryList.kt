@@ -27,6 +27,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
+import com.client.xvideos.n.ui.atom.NFeedTopBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
@@ -53,11 +54,20 @@ object N_ScreenGalleryList : Screen {
             { id -> navigator.push(ScreenNGallery(id)) }
         }
 
+        val onRandomClick: () -> Unit = remember(navigator, vm) {
+            {
+                vm.openRandomGallery { randomId ->
+                    navigator.push(ScreenNGallery(randomId))
+                }
+            }
+        }
+
         N_ScreenGalleryListContent(
             uiState = uiState,
             columns = columns,
             challengeUrl = challengeUrl,
             onGalleryClick = onGalleryClick,
+            onRandomClick = onRandomClick,
             onRetry = vm::loadGalleries
         )
     }
@@ -69,72 +79,76 @@ fun N_ScreenGalleryListContent(
     columns: Int,
     challengeUrl: String?,
     onGalleryClick: (Long) -> Unit,
+    onRandomClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(Theme.background)
     ) {
-        when (uiState) {
-            is NGalleryListUiState.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFFED2553)
-                )
-            }
-            is NGalleryListUiState.Error -> {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(top = topInset)
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = uiState.message,
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                    NCloudflareBanner(onVerifyClick = onRetry)
-                }
-            }
-            is NGalleryListUiState.CloudflareRequired -> {
-                NCloudflareBanner(
-                    onVerifyClick = onRetry,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(top = topInset)
-                )
-            }
-            is NGalleryListUiState.Success -> {
-                NGalleryGrid(
-                    items = uiState.items,
-                    columns = columns,
-                    onItemClick = onGalleryClick,
-                    contentPadding = PaddingValues(
-                        start = 8.dp,
-                        end = 8.dp,
-                        bottom = 8.dp,
-                        top = topInset + 8.dp
-                    ),
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+        NFeedTopBar(
+            onRandomClick = onRandomClick,
+            topInset = topInset
+        )
 
-        // Модальный диалог проверки Cloudflare
-        challengeUrl?.let { url ->
-            NCloudflareChallengeDialog(
-                url = url,
-                onDismiss = { NCloudflareState.onChallengeDismissed() },
-                onSuccess = { cookies ->
-                    NCloudflareState.onChallengeCompleted(cookies)
-                    onRetry()
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+        ) {
+            when (uiState) {
+                is NGalleryListUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color(0xFFED2553)
+                    )
                 }
-            )
+                is NGalleryListUiState.Error -> {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = uiState.message,
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                        NCloudflareBanner(onVerifyClick = onRetry)
+                    }
+                }
+                is NGalleryListUiState.CloudflareRequired -> {
+                    NCloudflareBanner(
+                        onVerifyClick = onRetry,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is NGalleryListUiState.Success -> {
+                    NGalleryGrid(
+                        items = uiState.items,
+                        columns = columns,
+                        onItemClick = onGalleryClick,
+                        contentPadding = PaddingValues(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+
+            // Модальный диалог проверки Cloudflare
+            challengeUrl?.let { url ->
+                NCloudflareChallengeDialog(
+                    url = url,
+                    onDismiss = { NCloudflareState.onChallengeDismissed() },
+                    onSuccess = { cookies ->
+                        NCloudflareState.onChallengeCompleted(cookies)
+                        onRetry()
+                    }
+                )
+            }
         }
     }
 }
@@ -147,6 +161,7 @@ private fun N_ScreenGalleryListContentPreview() {
         columns = 2,
         challengeUrl = null,
         onGalleryClick = {},
+        onRandomClick = {},
         onRetry = {}
     )
 }

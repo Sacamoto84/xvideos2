@@ -35,6 +35,7 @@ import com.client.xvideos.n.ui.atom.NGalleryTopBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryHeader
 import com.client.xvideos.n.ui.molecule.NGalleryPagesGrid
+import com.client.xvideos.n.ui.molecule.NGalleryRelatedStrip
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
 
 /**
@@ -63,9 +64,23 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             }
         }
 
+        val onGalleryClick: (Long) -> Unit = remember(navigator) {
+            { nextGalleryId ->
+                navigator.push(ScreenNGallery(nextGalleryId))
+            }
+        }
+
+        val onRandomClick: () -> Unit = remember(navigator, vm) {
+            {
+                vm.openRandomGallery { randomId ->
+                    navigator.push(ScreenNGallery(randomId))
+                }
+            }
+        }
+
         val onTagClick: (NTag) -> Unit = remember(navigator) {
-            { tag ->
-                // Переход к поиску по тегу
+            { _ ->
+                // В будущем: переход к результатам по тегу
             }
         }
 
@@ -76,6 +91,8 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             challengeUrl = challengeUrl,
             onBack = onBack,
             onRead = onRead,
+            onGalleryClick = onGalleryClick,
+            onRandomClick = onRandomClick,
             onTagClick = onTagClick,
             onRetry = vm::loadGallery
         )
@@ -90,6 +107,8 @@ fun ScreenNGalleryContent(
     challengeUrl: String?,
     onBack: () -> Unit,
     onRead: (NGallery, Int) -> Unit,
+    onGalleryClick: (Long) -> Unit,
+    onRandomClick: () -> Unit,
     onTagClick: (NTag) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
@@ -102,6 +121,7 @@ fun ScreenNGalleryContent(
             NGalleryTopBar(
                 title = title,
                 onBack = onBack,
+                onRandomClick = onRandomClick,
                 topInset = topInset
             )
         },
@@ -150,6 +170,10 @@ fun ScreenNGalleryContent(
                             onReadClick = { onRead(gallery, 0) },
                             onTagClick = onTagClick
                         )
+                        NGalleryRelatedStrip(
+                            relatedGalleries = gallery.relatedGalleries,
+                            onGalleryClick = onGalleryClick
+                        )
                         NGalleryPagesGrid(
                             pages = gallery.pages,
                             mediaId = gallery.mediaId,
@@ -186,6 +210,8 @@ private fun ScreenNGalleryContentPreview() {
         challengeUrl = null,
         onBack = {},
         onRead = { _, _ -> },
+        onGalleryClick = {},
+        onRandomClick = {},
         onTagClick = {},
         onRetry = {}
     )
