@@ -10,9 +10,9 @@ import timber.log.Timber
 /**
  * Состояние авторизации пользователя в nhentai.
  *
- * Хранит логин пользователя и куку сессии `sessionid`.
- * При наличии сессии клиент nhentai прикрепляет её к запросам,
- * что снимает жесткие ограничения и увеличивает лимиты обращений к REST API v2.
+ * Хранит логин пользователя, куку сессии `sessionid` и API-ключ.
+ * При наличии сессии или API-ключа клиент nhentai прикрепляет их к запросам,
+ * что снимает жесткие ограничения и увеличивает лимиты обращений к REST API v2 (с 15 до 30+ req/min).
  */
 object NAuthState {
 
@@ -23,19 +23,26 @@ object NAuthState {
     val username: StateFlow<String> = _username.asStateFlow()
 
     private val _sessionCookie = MutableStateFlow("")
-
     val currentSessionCookie: String
         get() = _sessionCookie.value.ifEmpty {
             runCatching { Settings.n_session_cookie.field.value }.getOrDefault("")
         }
 
+    private val _apiKey = MutableStateFlow("")
+    val currentApiKey: String
+        get() = _apiKey.value.ifEmpty {
+            runCatching { Settings.n_api_key.field.value }.getOrDefault("")
+        }
+
     init {
         runCatching {
             val savedCookie = Settings.n_session_cookie.field.value
+            val savedKey = Settings.n_api_key.field.value
             val savedUser = Settings.n_profile.field.value.login
-            if (savedCookie.isNotBlank()) {
+            if (savedCookie.isNotBlank() || savedKey.isNotBlank()) {
                 _sessionCookie.value = savedCookie
-                _username.value = savedUser
+                _apiKey.value = savedKey
+                _username.value = savedUser.ifEmpty { if (savedKey.isNotBlank()) "API Key" else "User" }
                 _isLoggedIn.value = true
             }
         }
@@ -57,17 +64,50 @@ object NAuthState {
     }
 
     /**
+     * Сохранение сессионной куки или API-ключа, введённого вручную.
+     */
+    fun onManualAuth(tokenOrCookie: String, username: String = "") {
+        val trimmed = tokenOrCookie.trim()
+        val isCookie = trimmed.contains("sessionid=") || (trimmed.length == 32 && trimmed.all { it.isLetterOrDigit() })
+        val displayName = username.ifBlank { "Пользователь" }
+
+        _username.value = displayName
+        _isLoggedIn.value = true
+
+        if (isCookie) {
+            val cookieValue = if (trimmed.startsWith("sessionid=")) {
+                trimmed.substringAfter("sessionid=").substringBefore(";")
+            } else {
+                trimmed
+            }
+            _sessionCookie.value = cookieValue
+            runCatching {
+                Settings.n_profile.save(displayName, "")
+                Settings.n_session_cookie.setValue(cookieValue)
+            }
+        } else {
+            _apiKey.value = trimmed
+            runCatching {
+                Settings.n_profile.save(displayName, "")
+                Settings.n_api_key.setValue(trimmed)
+            }
+        }
+    }
+
+    /**
      * Выход из аккаунта nhentai.
      */
     fun logout() {
         Timber.i("NAuthState: выход из аккаунта")
         _username.value = ""
         _sessionCookie.value = ""
+        _apiKey.value = ""
         _isLoggedIn.value = false
 
         runCatching {
             Settings.n_profile.clear()
             Settings.n_session_cookie.setValue("")
+            Settings.n_api_key.setValue("")
         }
 
         runCatching {

@@ -1,6 +1,5 @@
 package com.client.xvideos.n.net
 
-import com.client.xvideos.common.net.UserAgentProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -32,10 +31,15 @@ object NClient {
 
         val requestBuilder = Request.Builder()
             .url(targetUrl)
-            .header("User-Agent", UserAgentProvider.defaultUserAgent)
+            .header("User-Agent", NUserAgent.current)
             .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8")
             .header("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
             .header("Referer", BASE_URL)
+
+        val apiKey = NAuthState.currentApiKey
+        if (apiKey.isNotBlank()) {
+            requestBuilder.header("Authorization", "Key $apiKey")
+        }
 
         buildCookieHeader()?.let { cookieHeader ->
             requestBuilder.header("Cookie", cookieHeader)
@@ -54,10 +58,15 @@ object NClient {
         val requestBuilder = Request.Builder()
             .url(targetUrl)
             .post(requestBody)
-            .header("User-Agent", UserAgentProvider.defaultUserAgent)
+            .header("User-Agent", NUserAgent.current)
             .header("Accept", "application/json, text/plain, */*")
             .header("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
             .header("Referer", BASE_URL)
+
+        val apiKey = NAuthState.currentApiKey
+        if (apiKey.isNotBlank()) {
+            requestBuilder.header("Authorization", "Key $apiKey")
+        }
 
         buildCookieHeader()?.let { cookieHeader ->
             requestBuilder.header("Cookie", cookieHeader)
@@ -66,25 +75,12 @@ object NClient {
         executeRequest(requestBuilder.build(), targetUrl)
     }
 
-    private fun buildCookieHeader(): String? {
-        val cookies = mutableListOf<String>()
-        NCloudflareState.cfClearanceCookie?.let { clearance ->
-            cookies.add("cf_clearance=$clearance")
-        }
-        val session = NAuthState.currentSessionCookie
-        if (session.isNotBlank()) {
-            cookies.add("sessionid=$session")
-        }
-        return if (cookies.isNotEmpty()) cookies.joinToString("; ") else null
-    }
-
     private fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
         return try {
             val response = okHttpClient.newCall(request).execute()
             val code = response.code
             val body = response.body.string()
 
-            // Проверка на Cloudflare Challenge
             if (isCloudflareChallenge(code, body)) {
                 val challengeUrl = if (targetUrl.contains("/api/")) BASE_URL else targetUrl
                 NCloudflareState.triggerChallenge(challengeUrl)
@@ -114,6 +110,18 @@ object NClient {
         val isBlockCode = code == 403 || code == 503
         if (!isBlockCode) return false
         return body.contains("<html", ignoreCase = true) && body.contains("Cloudflare", ignoreCase = true)
+    }
+
+    private fun buildCookieHeader(): String? {
+        val cookies = mutableListOf<String>()
+        NCloudflareState.cfClearanceCookie?.let { clearance ->
+            cookies.add("cf_clearance=$clearance")
+        }
+        val sessionCookie = NAuthState.currentSessionCookie
+        if (sessionCookie.isNotBlank()) {
+            cookies.add("sessionid=$sessionCookie")
+        }
+        return if (cookies.isNotEmpty()) cookies.joinToString("; ") else null
     }
 }
 

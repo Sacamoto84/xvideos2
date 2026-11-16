@@ -31,8 +31,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.client.xvideos.common.net.UserAgentProvider
+import android.view.View
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.n.net.NUserAgent
 
 /**
  * Интерактивный диалог проверки Cloudflare Turnstile через встроенный WebView.
@@ -116,13 +117,16 @@ private fun setupCloudflareWebView(
     cookieManager.setAcceptCookie(true)
     cookieManager.setAcceptThirdPartyCookies(webView, true)
 
+    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
     webView.settings.apply {
         javaScriptEnabled = true
         domStorageEnabled = true
+        databaseEnabled = true
+        javaScriptCanOpenWindowsAutomatically = true
         useWideViewPort = true
         loadWithOverviewMode = true
         cacheMode = WebSettings.LOAD_DEFAULT
-        userAgentString = UserAgentProvider.defaultUserAgent
+        userAgentString = NUserAgent.current
     }
 
     webView.webChromeClient = WebChromeClient()

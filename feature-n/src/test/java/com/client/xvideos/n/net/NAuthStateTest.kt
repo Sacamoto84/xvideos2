@@ -38,4 +38,22 @@ class NAuthStateTest {
         assertEquals("", NAuthState.username.value)
         assertEquals("", NAuthState.currentSessionCookie)
     }
+
+    @Test
+    fun `manual auth with cookie and api key`() {
+        NAuthState.onManualAuth("sessionid=manual_cookie_456;", "CustomUser")
+        assertTrue(NAuthState.isLoggedIn.value)
+        assertEquals("CustomUser", NAuthState.username.value)
+        assertEquals("manual_cookie_456", NAuthState.currentSessionCookie)
+
+        NAuthState.logout()
+
+        NAuthState.onManualAuth("test_api_key_789", "ApiKeyUser")
+        assertTrue(NAuthState.isLoggedIn.value)
+        assertEquals("ApiKeyUser", NAuthState.username.value)
+        assertEquals("test_api_key_789", NAuthState.currentApiKey)
+
+        NAuthState.logout()
+        assertFalse(NAuthState.isLoggedIn.value)
+    }
 }

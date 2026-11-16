@@ -273,8 +273,9 @@ object Settings {
     val x_subscriptions_channels_order by lazy { SettingElementInt(pref, "x_subscriptions_channels_order", 0) }
     val x_subscriptions_models_order by lazy { SettingElementInt(pref, "x_subscriptions_models_order", 0) }
 
-    // Профиль N (логин и пароль в зашифрованном хранилище и кука сессии для повышенных лимитов API)
+    // Профиль N (логин и пароль в зашифрованном хранилище, кука сессии и API-ключ для повышенных лимитов API)
     val n_profile by lazy { SettingElementSecureCredentials(securePref, "n_login", "n_pass") }
     val n_session_cookie by lazy { SettingElementString(pref, "n_session_cookie", "") }
+    val n_api_key by lazy { SettingElementString(pref, "n_api_key", "") }
 
 }

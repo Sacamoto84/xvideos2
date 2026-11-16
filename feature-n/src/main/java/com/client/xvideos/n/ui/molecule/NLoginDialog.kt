@@ -1,6 +1,7 @@
 package com.client.xvideos.n.ui.molecule
 
 import android.annotation.SuppressLint
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -20,7 +21,12 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,11 +37,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.client.xvideos.common.net.UserAgentProvider
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.n.net.NAuthState
+import com.client.xvideos.n.net.NUserAgent
+import com.client.xvideos.n.ui.atom.NLoginManualInput
 
 /**
- * Диалог авторизации в nhentai через встроенный WebView с поддержкой Cloudflare Turnstile.
+ * Диалог авторизации в nhentai через встроенный WebView с поддержкой Cloudflare Turnstile
+ * или ручной ввод API-ключа / sessionid.
  */
 @Composable
 fun NLoginDialog(
@@ -44,6 +53,9 @@ fun NLoginDialog(
     modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
+    var isManualMode by remember { mutableStateOf(false) }
+    var manualToken by remember { mutableStateOf("") }
+    var manualUsername by remember { mutableStateOf("") }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -67,16 +79,24 @@ fun NLoginDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Вход в nhentai (Лимиты API)",
+                            text = if (isManualMode) "Ввод ключа / Cookie" else "Вход в nhentai (Лимиты API)",
                             color = Color.White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
+                        TextButton(onClick = { isManualMode = !isManualMode }) {
+                            Text(
+                                text = if (isManualMode) "Веб-форма" else "Ключ / Cookie",
+                                color = Color(0xFFED2553),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 imageVector = Icons.Default.Close,
@@ -89,7 +109,11 @@ fun NLoginDialog(
 
                 // Информационная подсказка
                 Text(
-                    text = "Авторизация снимает ограничения частоты запросов к REST API",
+                    text = if (isManualMode) {
+                        "Введите API Key или sessionid для авторизации без прохождения капчи"
+                    } else {
+                        "Авторизация снимает ограничения частоты запросов к REST API"
+                    },
                     color = Color(0xFFAAAAAA),
                     fontSize = 12.sp,
                     modifier = Modifier
@@ -98,17 +122,32 @@ fun NLoginDialog(
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                 )
 
-                // WebView для входа на nhentai.net
-                AndroidView(
-                    factory = { context ->
-                        WebView(context).apply {
-                            setupNLoginWebView(this, onSuccess)
+                if (isManualMode) {
+                    NLoginManualInput(
+                        tokenText = manualToken,
+                        usernameText = manualUsername,
+                        onTokenChange = { manualToken = it },
+                        onUsernameChange = { manualUsername = it },
+                        onSubmit = {
+                            val cleanUser = manualUsername.trim().ifEmpty { "Пользователь" }
+                            NAuthState.onManualAuth(manualToken, cleanUser)
+                            onSuccess(cleanUser, manualToken.trim())
+                            onDismiss()
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
+                    )
+                } else {
+                    // WebView для входа на nhentai.net
+                    AndroidView(
+                        factory = { context ->
+                            WebView(context).apply {
+                                setupNLoginWebView(this, onSuccess)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                }
             }
         }
     }
@@ -123,13 +162,16 @@ private fun setupNLoginWebView(
     cookieManager.setAcceptCookie(true)
     cookieManager.setAcceptThirdPartyCookies(webView, true)
 
+    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
     webView.settings.apply {
         javaScriptEnabled = true
         domStorageEnabled = true
+        databaseEnabled = true
+        javaScriptCanOpenWindowsAutomatically = true
         useWideViewPort = true
         loadWithOverviewMode = true
         cacheMode = WebSettings.LOAD_DEFAULT
-        userAgentString = UserAgentProvider.defaultUserAgent
+        userAgentString = NUserAgent.current
     }
 
     webView.webChromeClient = WebChromeClient()
