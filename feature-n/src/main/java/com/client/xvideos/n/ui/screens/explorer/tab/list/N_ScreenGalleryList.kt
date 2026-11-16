@@ -47,6 +47,7 @@ object N_ScreenGalleryList : Screen {
         val vm = getScreenModel<N_ScreenGalleryListSM>()
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
+        val isLoadingMore by vm.isLoadingMore.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
 
@@ -66,8 +67,10 @@ object N_ScreenGalleryList : Screen {
             uiState = uiState,
             columns = columns,
             challengeUrl = challengeUrl,
+            isLoadingMore = isLoadingMore,
             onGalleryClick = onGalleryClick,
             onRandomClick = onRandomClick,
+            onLoadMore = vm::loadNextPage,
             onRetry = vm::loadGalleries
         )
     }
@@ -81,7 +84,9 @@ fun N_ScreenGalleryListContent(
     onGalleryClick: (Long) -> Unit,
     onRandomClick: () -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoadingMore: Boolean = false,
+    onLoadMore: (() -> Unit)? = null
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -133,6 +138,8 @@ fun N_ScreenGalleryListContent(
                         columns = columns,
                         onItemClick = onGalleryClick,
                         contentPadding = PaddingValues(8.dp),
+                        isLoadingMore = isLoadingMore,
+                        onLoadMore = onLoadMore,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

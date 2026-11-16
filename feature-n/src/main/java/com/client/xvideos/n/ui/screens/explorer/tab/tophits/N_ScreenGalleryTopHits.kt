@@ -48,6 +48,7 @@ object N_ScreenGalleryTopHits : Screen {
         val vm = getScreenModel<N_ScreenGalleryTopHitsSM>()
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
+        val isLoadingMore by vm.isLoadingMore.collectAsStateWithLifecycle()
         val sortType by vm.sortType.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
@@ -61,8 +62,10 @@ object N_ScreenGalleryTopHits : Screen {
             selectedSort = sortType,
             columns = columns,
             challengeUrl = challengeUrl,
+            isLoadingMore = isLoadingMore,
             onSortSelected = vm::setSortType,
             onGalleryClick = onGalleryClick,
+            onLoadMore = vm::loadNextPage,
             onRetry = vm::loadTopHits
         )
     }
@@ -77,7 +80,9 @@ fun N_ScreenGalleryTopHitsContent(
     onSortSelected: (NSortType) -> Unit,
     onGalleryClick: (Long) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoadingMore: Boolean = false,
+    onLoadMore: (() -> Unit)? = null
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -129,6 +134,8 @@ fun N_ScreenGalleryTopHitsContent(
                         items = uiState.items,
                         columns = columns,
                         onItemClick = onGalleryClick,
+                        isLoadingMore = isLoadingMore,
+                        onLoadMore = onLoadMore,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

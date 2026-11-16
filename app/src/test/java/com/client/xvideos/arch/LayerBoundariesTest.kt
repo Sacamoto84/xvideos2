@@ -136,6 +136,7 @@ class LayerBoundariesTest {
                 "model" to "model",
                 "net" to "data",
                 "repository" to "data",
+                "saved" to "data",
                 "domain" to "domain",
                 "ui" to "ui",
             ),

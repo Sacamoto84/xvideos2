@@ -37,6 +37,7 @@ import com.client.xvideos.n.ui.molecule.NGalleryHeader
 import com.client.xvideos.n.ui.molecule.NGalleryPagesGrid
 import com.client.xvideos.n.ui.molecule.NGalleryRelatedStrip
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
+import com.client.xvideos.n.ui.screens.tag.ScreenNTag
 
 /**
  * Экран информации о манге / галерее nhentai (аналог ScreenLAlbum).
@@ -56,6 +57,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
         BackHandler(onBack = onBack)
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
+        val isFavorite by vm.isFavorite.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
 
         val onRead: (NGallery, Int) -> Unit = remember(navigator) {
@@ -79,8 +81,8 @@ class ScreenNGallery(val galleryId: Long) : Screen {
         }
 
         val onTagClick: (NTag) -> Unit = remember(navigator) {
-            { _ ->
-                // В будущем: переход к результатам по тегу
+            { tag ->
+                navigator.push(ScreenNTag(tag))
             }
         }
 
@@ -89,8 +91,10 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             uiState = uiState,
             columns = vm.columns,
             challengeUrl = challengeUrl,
+            isFavorite = isFavorite,
             onBack = onBack,
             onRead = onRead,
+            onFavoriteClick = vm::toggleFavorite,
             onGalleryClick = onGalleryClick,
             onRandomClick = onRandomClick,
             onTagClick = onTagClick,
@@ -111,7 +115,9 @@ fun ScreenNGalleryContent(
     onRandomClick: () -> Unit,
     onTagClick: (NTag) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFavorite: Boolean = false,
+    onFavoriteClick: () -> Unit = {}
 ) {
     val topInset = getTopInsetDp()
     val title = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId"
@@ -167,7 +173,9 @@ fun ScreenNGalleryContent(
                     Column(modifier = Modifier.fillMaxSize()) {
                         NGalleryHeader(
                             gallery = gallery,
+                            isFavorite = isFavorite,
                             onReadClick = { onRead(gallery, 0) },
+                            onFavoriteClick = onFavoriteClick,
                             onTagClick = onTagClick
                         )
                         NGalleryRelatedStrip(

@@ -9,6 +9,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.repository.NRepository
+import com.client.xvideos.n.saved.NFavoritesRepository
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -28,7 +29,8 @@ import kotlinx.coroutines.launch
 @Stable
 class ScreenNGallerySM @AssistedInject constructor(
     @Assisted val galleryId: Long,
-    private val repository: NRepository
+    private val repository: NRepository,
+    private val favoritesRepository: NFavoritesRepository
 ) : ScreenModel {
 
     @AssistedFactory
@@ -39,10 +41,18 @@ class ScreenNGallerySM @AssistedInject constructor(
     private val _uiState = MutableStateFlow<NGalleryUiState>(NGalleryUiState.Loading)
     val uiState: StateFlow<NGalleryUiState> = _uiState.asStateFlow()
 
+    private val _isFavorite = MutableStateFlow(favoritesRepository.isFavorite(galleryId))
+    val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
+
     val columns = Settings.n_galleriesTab_column_current_count.field.value
 
     init {
         loadGallery()
+    }
+
+    fun toggleFavorite() {
+        val gallery = (_uiState.value as? NGalleryUiState.Success)?.gallery ?: return
+        _isFavorite.value = favoritesRepository.toggleFavorite(gallery)
     }
 
     fun loadGallery() {

@@ -31,6 +31,14 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
     private val _uiState = MutableStateFlow<NGalleryListUiState>(NGalleryListUiState.Loading)
     val uiState: StateFlow<NGalleryListUiState> = _uiState.asStateFlow()
 
+    private val _isLoadingMore = MutableStateFlow(false)
+    val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
+
+    var currentPage = 1
+        private set
+    var isEndReached = false
+        private set
+
     private val _sortType = MutableStateFlow(NSortType.POPULAR_ALL_TIME)
     val sortType: StateFlow<NSortType> = _sortType.asStateFlow()
 
@@ -46,6 +54,9 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
     }
 
     fun loadTopHits() {
+        currentPage = 1
+        isEndReached = false
+        _isLoadingMore.value = false
         screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
             repository.getGalleries(page = 1, sort = _sortType.value).fold(
@@ -58,6 +69,34 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
                     } else {
                         _uiState.value = NGalleryListUiState.Error(error.localizedMessage ?: "Ошибка загрузки топа")
                     }
+                }
+            )
+        }
+    }
+
+    /**
+     * Загружает следующую страницу популярной манги.
+     */
+    fun loadNextPage() {
+        val currentItems = (_uiState.value as? NGalleryListUiState.Success)?.items ?: return
+        if (_isLoadingMore.value || isEndReached) return
+
+        _isLoadingMore.value = true
+        val nextPage = currentPage + 1
+
+        screenModelScope.launch {
+            repository.getGalleries(page = nextPage, sort = _sortType.value).fold(
+                onSuccess = { newGalleries ->
+                    if (newGalleries.isEmpty()) {
+                        isEndReached = true
+                    } else {
+                        currentPage = nextPage
+                        _uiState.value = NGalleryListUiState.Success(currentItems + newGalleries)
+                    }
+                    _isLoadingMore.value = false
+                },
+                onFailure = {
+                    _isLoadingMore.value = false
                 }
             )
         }

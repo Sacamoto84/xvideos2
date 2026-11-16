@@ -50,6 +50,7 @@ object N_ScreenGallerySearch : Screen {
 
         val query by vm.query.collectAsStateWithLifecycle()
         val tagSuggestions by vm.tagSuggestions.collectAsStateWithLifecycle()
+        val isLoadingMore by vm.isLoadingMore.collectAsStateWithLifecycle()
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
@@ -64,10 +65,12 @@ object N_ScreenGallerySearch : Screen {
             uiState = uiState,
             columns = columns,
             challengeUrl = challengeUrl,
+            isLoadingMore = isLoadingMore,
             onQueryChange = vm::setQuery,
             onSearch = vm::search,
             onTagSuggestionClick = vm::selectTagSuggestion,
             onGalleryClick = onGalleryClick,
+            onLoadMore = vm::loadNextPage,
             onRetry = vm::search
         )
     }
@@ -85,7 +88,9 @@ fun N_ScreenGallerySearchContent(
     onTagSuggestionClick: (NTag) -> Unit,
     onGalleryClick: (Long) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoadingMore: Boolean = false,
+    onLoadMore: (() -> Unit)? = null
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -151,6 +156,8 @@ fun N_ScreenGallerySearchContent(
                             items = uiState.items,
                             columns = columns,
                             onItemClick = onGalleryClick,
+                            isLoadingMore = isLoadingMore,
+                            onLoadMore = onLoadMore,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
