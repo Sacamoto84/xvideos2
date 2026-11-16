@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,7 +30,7 @@ import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.n.model.NPage
 
 /**
- * Сетка миниатюр всех страниц манги.
+ * Сетка миниатюр всех страниц манги с поддержкой заголовка (header).
  */
 @Composable
 fun NGalleryPagesGrid(
@@ -37,7 +38,8 @@ fun NGalleryPagesGrid(
     mediaId: Long,
     columns: Int,
     onPageClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    header: (@Composable () -> Unit)? = null
 ) {
     val pageShape = RoundedCornerShape(6.dp)
 
@@ -48,6 +50,12 @@ fun NGalleryPagesGrid(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        if (header != null) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                header()
+            }
+        }
+
         itemsIndexed(pages, key = { _, page -> page.pageNumber }) { index, page ->
             Box(
                 modifier = Modifier

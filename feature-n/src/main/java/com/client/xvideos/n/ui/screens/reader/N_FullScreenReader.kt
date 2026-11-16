@@ -131,7 +131,12 @@ fun N_FullScreenReaderContent(
                     modifier = Modifier.fillMaxSize(),
                     key = { index -> gallery.pages[index].pageNumber }
                 ) { pageIndex ->
-                    ReaderImagePage(page = gallery.pages[pageIndex], mediaId = gallery.mediaId)
+                    ReaderImagePage(
+                        page = gallery.pages[pageIndex],
+                        mediaId = gallery.mediaId,
+                        isSettledPage = pagerState.settledPage == pageIndex,
+                        onTap = onToggleControls
+                    )
                 }
             } else {
                 HorizontalPager(
@@ -139,7 +144,12 @@ fun N_FullScreenReaderContent(
                     modifier = Modifier.fillMaxSize(),
                     key = { index -> gallery.pages[index].pageNumber }
                 ) { pageIndex ->
-                    ReaderImagePage(page = gallery.pages[pageIndex], mediaId = gallery.mediaId)
+                    ReaderImagePage(
+                        page = gallery.pages[pageIndex],
+                        mediaId = gallery.mediaId,
+                        isSettledPage = pagerState.settledPage == pageIndex,
+                        onTap = onToggleControls
+                    )
                 }
             }
         }

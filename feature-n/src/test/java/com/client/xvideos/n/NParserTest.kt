@@ -318,4 +318,22 @@ class NParserTest {
         assertEquals("Related Doujin", gallery?.relatedGalleries?.get(0)?.title)
         assertEquals("https://t.nhentai.net/galleries/201/thumb.webp", gallery?.relatedGalleries?.get(0)?.thumbnailUrl)
     }
+
+    @Test
+    fun `NGallery вспомогательные свойства фильтруют теги по категориям`() {
+        val gallery = NParser.parseGalleryJson(sampleJson)
+        assertNotNull(gallery)
+
+        assertEquals(1, gallery?.artists?.size)
+        assertEquals("cool_artist", gallery?.artists?.get(0)?.name)
+
+        assertEquals(1, gallery?.generalTags?.size)
+        assertEquals("full color", gallery?.generalTags?.get(0)?.name)
+
+        assertEquals(1, gallery?.languages?.size)
+        assertEquals("english", gallery?.languages?.get(0)?.name)
+
+        assertEquals(0, gallery?.parodies?.size)
+        assertEquals(0, gallery?.characters?.size)
+    }
 }

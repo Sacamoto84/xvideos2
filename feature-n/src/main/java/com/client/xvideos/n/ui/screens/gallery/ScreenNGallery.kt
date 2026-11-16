@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -170,26 +171,28 @@ fun ScreenNGalleryContent(
                 }
                 is NGalleryUiState.Success -> {
                     val gallery = uiState.gallery
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        NGalleryHeader(
-                            gallery = gallery,
-                            isFavorite = isFavorite,
-                            onReadClick = { onRead(gallery, 0) },
-                            onFavoriteClick = onFavoriteClick,
-                            onTagClick = onTagClick
-                        )
-                        NGalleryRelatedStrip(
-                            relatedGalleries = gallery.relatedGalleries,
-                            onGalleryClick = onGalleryClick
-                        )
-                        NGalleryPagesGrid(
-                            pages = gallery.pages,
-                            mediaId = gallery.mediaId,
-                            columns = columns,
-                            onPageClick = { pageIndex -> onRead(gallery, pageIndex) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    NGalleryPagesGrid(
+                        pages = gallery.pages,
+                        mediaId = gallery.mediaId,
+                        columns = columns,
+                        onPageClick = { pageIndex -> onRead(gallery, pageIndex) },
+                        header = {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                NGalleryHeader(
+                                    gallery = gallery,
+                                    isFavorite = isFavorite,
+                                    onReadClick = { onRead(gallery, 0) },
+                                    onFavoriteClick = onFavoriteClick,
+                                    onTagClick = onTagClick
+                                )
+                                NGalleryRelatedStrip(
+                                    relatedGalleries = gallery.relatedGalleries,
+                                    onGalleryClick = onGalleryClick
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
 

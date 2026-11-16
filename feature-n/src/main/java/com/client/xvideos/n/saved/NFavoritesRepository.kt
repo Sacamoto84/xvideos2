@@ -16,7 +16,7 @@ import javax.inject.Singleton
 class NFavoritesRepository @Inject constructor() {
 
     private val dbPath: String by lazy {
-        File(AppPath.main, "N/Favorites").apply { mkdirs() }.absolutePath
+        File(AppPath.n_favorites).apply { mkdirs() }.absolutePath
     }
 
     private val db: FileDB<NGalleryPreview> by lazy {

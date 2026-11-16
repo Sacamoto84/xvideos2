@@ -11,7 +11,8 @@ private enum class Folder(val value: String) {
     RED("R"),
     L("L"),
     X("X"),
-    XLIVE("XLive")
+    XLIVE("XLive"),
+    N("N")
 }
 
 /**
@@ -61,6 +62,9 @@ object AppPath {
     val xlive_saved: String get() = "$main/${Folder.XLIVE.value}/Saved"
     val xlive_history: String get() = "$main/${Folder.XLIVE.value}/History"
     val xlive_records: String get() = "$main/${Folder.XLIVE.value}/Records"
+
+    //--- N ---
+    val n_favorites: String get() = "$main/${Folder.N.value}/Favorites"
 
     //--- R ---
     /**
@@ -150,6 +154,8 @@ object AppPath {
         File(xlive_saved).mkdirs()
         File(xlive_history).mkdirs()
         File(xlive_records).mkdirs()
+
+        File(n_favorites).mkdirs()
 
         File(p2p_inbox).mkdirs()
         File(p2p_outbox).mkdirs()
