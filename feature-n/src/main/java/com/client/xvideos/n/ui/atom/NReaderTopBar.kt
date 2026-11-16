@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.outlined.CreateNewFolder
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -25,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Верхняя панель управления ридера манги.
+ * Верхняя панель управления ридера манги с поддержкой лайка страницы и добавления в коллекцию.
  */
 @Composable
 fun NReaderTopBar(
@@ -33,8 +36,11 @@ fun NReaderTopBar(
     currentPage: Int,
     totalPages: Int,
     isVertical: Boolean,
+    isLiked: Boolean,
     onBack: () -> Unit,
     onToggleOrientation: () -> Unit,
+    onToggleLike: () -> Unit,
+    onAddToCollection: () -> Unit,
     modifier: Modifier = Modifier,
     topInset: Dp = 0.dp
 ) {
@@ -49,7 +55,7 @@ fun NReaderTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 6.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
@@ -75,8 +81,24 @@ fun NReaderTopBar(
                 color = Color(0xFFED2553),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier.padding(horizontal = 4.dp)
             )
+
+            IconButton(onClick = onToggleLike) {
+                Icon(
+                    imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (isLiked) "Удалить из лайков" else "Поставить лайк",
+                    tint = if (isLiked) Color(0xFFED2553) else Color.White
+                )
+            }
+
+            IconButton(onClick = onAddToCollection) {
+                Icon(
+                    imageVector = Icons.Outlined.CreateNewFolder,
+                    contentDescription = "В коллекцию",
+                    tint = Color.White
+                )
+            }
 
             IconButton(onClick = onToggleOrientation) {
                 Icon(
@@ -97,8 +119,10 @@ private fun NReaderTopBarPreview() {
         currentPage = 3,
         totalPages = 24,
         isVertical = false,
+        isLiked = true,
         onBack = {},
         onToggleOrientation = {},
-        topInset = 24.dp
+        onToggleLike = {},
+        onAddToCollection = {}
     )
 }

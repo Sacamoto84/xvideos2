@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,18 +20,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.R
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.net.NCloudflareState
+import com.client.xvideos.n.ui.molecule.NLoginDialog
 import com.client.xvideos.screenSettings.Config_G_0_4
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
+import com.client.xvideos.screenSettings.molecule.NProfileRow
 
 @Composable
 internal fun NSettingsSection(
     modifier: Modifier = Modifier
 ) {
     val isVerticalReader by Settings.n_fullscreen_vertical_pager.field.collectAsStateWithLifecycle()
+    val isLoggedIn by NAuthState.isLoggedIn.collectAsStateWithLifecycle()
+    val username by NAuthState.username.collectAsStateWithLifecycle()
+    var loginDialogVisible by remember { mutableStateOf(false) }
 
     val onToggleReader = remember(isVerticalReader) {
         {
@@ -45,7 +53,22 @@ internal fun NSettingsSection(
         }
     }
 
+    val onLogout = remember {
+        {
+            NAuthState.logout()
+            SnackBar.success("Вы вышли из профиля nhentai")
+        }
+    }
+
     SettingsGroup(modifier = modifier) {
+        NProfileRow(
+            username = username,
+            hasAccount = isLoggedIn,
+            onLogin = { loginDialogVisible = true },
+            onLogout = onLogout
+        )
+        SettingsDivider()
+
         SettingsValueRow(
             icon = R.drawable.icon_nhentai,
             text = "Ориентация ридера",
@@ -82,6 +105,17 @@ internal fun NSettingsSection(
         SettingsDivider()
 
         Config_G_0_4("N Манга", Settings.n_galleriesTab_G_0_4)
+    }
+
+    if (loginDialogVisible) {
+        NLoginDialog(
+            onDismiss = { loginDialogVisible = false },
+            onSuccess = { name, sessionId ->
+                NAuthState.onLoginSuccess(name, sessionId)
+                loginDialogVisible = false
+                SnackBar.success("Вход выполнен: $name. Лимиты API повышены!")
+            }
+        )
     }
 }
 

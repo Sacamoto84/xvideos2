@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
+import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
@@ -34,11 +35,13 @@ import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.ui.atom.NReaderTopBar
 import com.client.xvideos.n.ui.atom.ReaderImagePage
+import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NReaderBottomStrip
 import kotlinx.coroutines.launch
 
 /**
- * Полноэкранный просмотрщик (ридер) манги с поддержкой горизонтальной и вертикальной ориентации.
+ * Полноэкранный просмотрщик (ридер) манги с поддержкой горизонтальной и вертикальной ориентации,
+ * лайков отдельных страниц и добавления в коллекции.
  */
 class N_FullScreenReader(
     val gallery: NGallery,
@@ -52,6 +55,8 @@ class N_FullScreenReader(
         HideStatusBarEffect()
 
         val navigator = LocalNavigator.currentOrThrow
+        val vm = getScreenModel<N_FullScreenReaderSM>()
+
         val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
         BackHandler(onBack = onBack)
 
@@ -86,15 +91,55 @@ class N_FullScreenReader(
             }
         }
 
+        val currentPageNumber = gallery.pages.getOrNull(pagerState.currentPage)?.pageNumber ?: (pagerState.currentPage + 1)
+        val isLiked = vm.isPageLiked(gallery.id, currentPageNumber)
+
+        val onToggleLike: () -> Unit = remember(vm, gallery, pagerState) {
+            {
+                vm.toggleLikePage(gallery, pagerState.currentPage)
+            }
+        }
+
+        val onAddToCollection: () -> Unit = remember(vm) {
+            {
+                vm.isSelectCollectionOpen = true
+            }
+        }
+
         N_FullScreenReaderContent(
             gallery = gallery,
             pagerState = pagerState,
             isVertical = isVertical,
+            isLiked = isLiked,
             showControls = showControls,
             onToggleControls = { showControls = !showControls },
             onBack = onBack,
             onToggleOrientation = onToggleOrientation,
+            onToggleLike = onToggleLike,
+            onAddToCollection = onAddToCollection,
             onPageSelected = onPageSelected
+        )
+
+        NCollectionDialogs(
+            isSelectOpen = vm.isSelectCollectionOpen,
+            isCreateOpen = vm.isCreateCollectionOpen,
+            collections = vm.saved.collection.collections,
+            onDismiss = {
+                vm.isSelectCollectionOpen = false
+                vm.isCreateCollectionOpen = false
+            },
+            onOpenCreate = {
+                vm.isSelectCollectionOpen = false
+                vm.isCreateCollectionOpen = true
+            },
+            onCreateCollection = { name ->
+                vm.createCollectionAndAdd(gallery, pagerState.currentPage, name)
+                vm.isCreateCollectionOpen = false
+            },
+            onSelectCollection = { name ->
+                vm.addToCollection(gallery, pagerState.currentPage, name)
+                vm.isSelectCollectionOpen = false
+            }
         )
     }
 }
@@ -104,10 +149,13 @@ fun N_FullScreenReaderContent(
     gallery: NGallery,
     pagerState: PagerState,
     isVertical: Boolean,
+    isLiked: Boolean,
     showControls: Boolean,
     onToggleControls: () -> Unit,
     onBack: () -> Unit,
     onToggleOrientation: () -> Unit,
+    onToggleLike: () -> Unit,
+    onAddToCollection: () -> Unit,
     onPageSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -166,8 +214,11 @@ fun N_FullScreenReaderContent(
                 currentPage = pagerState.currentPage + 1,
                 totalPages = gallery.pages.size,
                 isVertical = isVertical,
+                isLiked = isLiked,
                 onBack = onBack,
                 onToggleOrientation = onToggleOrientation,
+                onToggleLike = onToggleLike,
+                onAddToCollection = onAddToCollection,
                 topInset = topInset
             )
         }
@@ -207,10 +258,13 @@ private fun N_FullScreenReaderContentPreview() {
         gallery = dummyGallery,
         pagerState = pagerState,
         isVertical = false,
+        isLiked = true,
         showControls = true,
         onToggleControls = {},
         onBack = {},
         onToggleOrientation = {},
+        onToggleLike = {},
+        onAddToCollection = {},
         onPageSelected = {}
     )
 }

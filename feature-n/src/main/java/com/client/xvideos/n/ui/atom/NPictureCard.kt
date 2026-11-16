@@ -1,0 +1,129 @@
+package com.client.xvideos.n.ui.atom
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.n.model.NPicture
+
+/**
+ * Карточка сохранённой картинки / страницы манги для сеток лайков и коллекций.
+ */
+@Composable
+fun NPictureCard(
+    picture: NPicture,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onDelete: (() -> Unit)? = null
+) {
+    val cardShape = RoundedCornerShape(8.dp)
+    val ratio = remember(picture.width, picture.height) {
+        if (picture.width > 0 && picture.height > 0) {
+            picture.width.toFloat() / picture.height.toFloat()
+        } else {
+            137f / 200f
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, Theme.tabLevel3, cardShape)
+            .clip(cardShape)
+            .background(Theme.tabLevel1)
+            .clickable(onClick = onClick)
+    ) {
+        UrlImage(
+            picture.thumbnailUrl,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(ratio.coerceIn(0.5f, 1.8f)),
+            contentScale = ContentScale.Crop
+        )
+
+        // Нижняя плашка с названием манги и страницей
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Color(0xCC000000))
+                .padding(horizontal = 6.dp, vertical = 4.dp)
+        ) {
+            if (picture.galleryTitle.isNotEmpty()) {
+                Text(
+                    text = picture.galleryTitle,
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Text(
+                text = "Стр. ${picture.pageNumber}",
+                color = Color(0xFFED2553),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Кнопка удаления (если передана)
+        if (onDelete != null) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(2.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Удалить",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .background(Color(0x88000000), RoundedCornerShape(4.dp))
+                        .padding(4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun NPictureCardPreview() {
+    NPictureCard(
+        picture = NPicture(
+            id = "123_4",
+            galleryId = 123L,
+            mediaId = 456L,
+            pageNumber = 4,
+            galleryTitle = "Preview Manga Title"
+        ),
+        onClick = {},
+        onDelete = {}
+    )
+}

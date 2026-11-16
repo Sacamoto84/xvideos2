@@ -249,6 +249,10 @@ object Settings {
     val n_galleriesTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "n_galleriesTab_G_0_4", default = listOf(false, true, true, true, true)) }
     val n_galleriesTab_column_current_count by lazy { SettingElementInt(pref, "n_galleriesTab_column_current_count", 2) }
     val n_saved_column_current_count by lazy { SettingElementInt(pref, "n_saved_column_current_count", 2) }
+    val n_likesTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "n_likesTab_G_0_4", default = listOf(false, true, true, true, true)) }
+    val n_likesTab_column_current_count by lazy { SettingElementInt(pref, "n_likesTab_column_current_count", 2) }
+    val n_collectionTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "n_collectionTab_G_0_4", default = listOf(false, true, true, true, true)) }
+    val n_collectionTab_column_current_count by lazy { SettingElementInt(pref, "n_collectionTab_column_current_count", 2) }
 
 
 
@@ -268,5 +272,9 @@ object Settings {
     //Порядок списков подписок в Saved: номер в XSubscriptionsOrder (0 — сначала новые)
     val x_subscriptions_channels_order by lazy { SettingElementInt(pref, "x_subscriptions_channels_order", 0) }
     val x_subscriptions_models_order by lazy { SettingElementInt(pref, "x_subscriptions_models_order", 0) }
+
+    // Профиль N (логин и пароль в зашифрованном хранилище и кука сессии для повышенных лимитов API)
+    val n_profile by lazy { SettingElementSecureCredentials(securePref, "n_login", "n_pass") }
+    val n_session_cookie by lazy { SettingElementString(pref, "n_session_cookie", "") }
 
 }

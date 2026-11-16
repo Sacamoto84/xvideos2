@@ -37,8 +37,8 @@ object NClient {
             .header("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
             .header("Referer", BASE_URL)
 
-        NCloudflareState.cfClearanceCookie?.let { clearance ->
-            requestBuilder.header("Cookie", "cf_clearance=$clearance")
+        buildCookieHeader()?.let { cookieHeader ->
+            requestBuilder.header("Cookie", cookieHeader)
         }
 
         executeRequest(requestBuilder.build(), targetUrl)
@@ -59,11 +59,23 @@ object NClient {
             .header("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
             .header("Referer", BASE_URL)
 
-        NCloudflareState.cfClearanceCookie?.let { clearance ->
-            requestBuilder.header("Cookie", "cf_clearance=$clearance")
+        buildCookieHeader()?.let { cookieHeader ->
+            requestBuilder.header("Cookie", cookieHeader)
         }
 
         executeRequest(requestBuilder.build(), targetUrl)
+    }
+
+    private fun buildCookieHeader(): String? {
+        val cookies = mutableListOf<String>()
+        NCloudflareState.cfClearanceCookie?.let { clearance ->
+            cookies.add("cf_clearance=$clearance")
+        }
+        val session = NAuthState.currentSessionCookie
+        if (session.isNotBlank()) {
+            cookies.add("sessionid=$session")
+        }
+        return if (cookies.isNotEmpty()) cookies.joinToString("; ") else null
     }
 
     private fun executeRequest(request: Request, targetUrl: String): NNetworkResult {

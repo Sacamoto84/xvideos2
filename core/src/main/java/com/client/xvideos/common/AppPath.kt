@@ -65,6 +65,8 @@ object AppPath {
 
     //--- N ---
     val n_favorites: String get() = "$main/${Folder.N.value}/Favorites"
+    val n_likes: String get() = "$main/${Folder.N.value}/Likes"
+    val n_collection: String get() = "$main/${Folder.N.value}/Collection"
 
     //--- R ---
     /**
@@ -156,6 +158,8 @@ object AppPath {
         File(xlive_records).mkdirs()
 
         File(n_favorites).mkdirs()
+        File(n_likes).mkdirs()
+        File(n_collection).mkdirs()
 
         File(p2p_inbox).mkdirs()
         File(p2p_outbox).mkdirs()

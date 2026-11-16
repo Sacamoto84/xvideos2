@@ -9,7 +9,7 @@ import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrRestoreMode
 import com.client.xvideos.l.featured.saved.SavedL
-import com.client.xvideos.n.saved.NFavoritesRepository
+import com.client.xvideos.n.saved.NSaved
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.saved.SavedRed
@@ -80,7 +80,7 @@ class XlrBackupEngine @Inject constructor(
     // Lazy: раздел X создаёт свои хранилища при первом входе, и страница
     // бэкапа не должна поднимать их раньше, чем они понадобятся.
     private val savedX: Lazy<SavedX>,
-    private val savedN: Lazy<NFavoritesRepository>,
+    private val savedN: Lazy<NSaved>,
 ) : BackupEngine {
 
     override suspend fun currentItems(options: XlrBackupOptions): List<XlrBackupItem> =
@@ -128,7 +128,7 @@ class XlrBackupEngine @Inject constructor(
             // переносит в XLive само восстановление (XLiveLegacyFolder).
             XLiveSaved.refreshAll()
             XLiveRecordings.refresh()
-            savedN.get().refresh()
+            savedN.get().refreshAll()
         }
         coroutineScope {
             if (shouldAutoRecoverL(paths)) {
