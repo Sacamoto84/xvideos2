@@ -35,8 +35,6 @@ private val SORT_OPTION_TITLES = persistentListOf(
     NSortType.POPULAR_TODAY.title
 )
 
-private val N_ACCENT_COLOR = Color(0xFFED2553)
-
 /**
  * Строка переключения фильтра популярности (Все время, Месяц, Неделя, Сегодня).
  */
@@ -70,7 +68,7 @@ fun NSortFilterRow(
                     SORT_OPTIONS.getOrNull(index)?.let(onSortSelected)
                 },
                 style = ChoiceRowStyle.TABS,
-                accent = N_ACCENT_COLOR,
+                accent = Color(0xFFED2553),
                 modifier = Modifier.adaptiveContentWidth()
             )
         }

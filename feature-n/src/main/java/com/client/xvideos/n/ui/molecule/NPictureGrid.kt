@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.atom.NPictureCard
@@ -33,7 +34,7 @@ fun NPictureGrid(
         state = gridState,
         columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
         modifier = modifier,
-        contentPadding = contentPadding,
+        contentPadding = adaptiveListPadding(contentPadding),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {

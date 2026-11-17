@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.n.model.NGalleryPreview
 
 /**
@@ -58,7 +59,7 @@ fun NGalleryRelatedStrip(
         )
 
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = adaptiveListPadding(PaddingValues(horizontal = 16.dp)),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(relatedGalleries, key = { it.id }) { item ->

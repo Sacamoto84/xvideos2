@@ -51,6 +51,8 @@ class N_ScreenGallerySearchSM @Inject constructor(
     val columns = Settings.n_galleriesTab_column_current_count.field
 
     private var tagSearchJob: Job? = null
+    private var searchJob: Job? = null
+    private var pageJob: Job? = null
 
     fun setQuery(newQuery: String) {
         _query.value = newQuery
@@ -101,12 +103,14 @@ class N_ScreenGallerySearchSM @Inject constructor(
         if (q.isEmpty()) return
 
         tagSearchJob?.cancel()
+        searchJob?.cancel()
+        pageJob?.cancel()
         _tagSuggestions.value = emptyList()
         currentPage = 1
         isEndReached = false
         _isLoadingMore.value = false
 
-        screenModelScope.launch {
+        searchJob = screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
             repository.search(query = q, page = 1, sort = NSortType.RECENT).fold(
                 onSuccess = { galleries ->
@@ -134,7 +138,8 @@ class N_ScreenGallerySearchSM @Inject constructor(
         _isLoadingMore.value = true
         val nextPage = currentPage + 1
 
-        screenModelScope.launch {
+        pageJob?.cancel()
+        pageJob = screenModelScope.launch {
             repository.search(query = q, page = nextPage, sort = NSortType.RECENT).fold(
                 onSuccess = { newGalleries ->
                     if (newGalleries.isEmpty()) {

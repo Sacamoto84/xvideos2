@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.ui.atom.NGalleryCard
@@ -58,7 +59,7 @@ fun NGalleryGrid(
         state = gridState,
         columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
         modifier = modifier,
-        contentPadding = contentPadding,
+        contentPadding = adaptiveListPadding(contentPadding),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -70,7 +71,7 @@ fun NGalleryGrid(
         }
 
         if (isLoadingMore) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            item(key = "loading_more", span = { GridItemSpan(maxLineSpan) }) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
