@@ -65,6 +65,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val isFavorite by vm.isFavorite.collectAsStateWithLifecycle()
+        val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
 
         val onRead: (NGallery, Int) -> Unit = remember(navigator) {
@@ -123,7 +124,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
         ScreenNGalleryContent(
             galleryId = galleryId,
             uiState = uiState,
-            columns = vm.columns,
+            columns = columns,
             challengeUrl = challengeUrl,
             isFavorite = isFavorite,
             onBack = onBack,

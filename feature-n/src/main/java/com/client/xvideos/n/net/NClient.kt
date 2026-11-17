@@ -77,20 +77,21 @@ object NClient {
 
     private fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
         return try {
-            val response = okHttpClient.newCall(request).execute()
-            val code = response.code
-            val body = response.body.string()
+            okHttpClient.newCall(request).execute().use { response ->
+                val code = response.code
+                val body = response.body.string()
 
-            if (isCloudflareChallenge(code, body)) {
-                val challengeUrl = if (targetUrl.contains("/api/")) BASE_URL else targetUrl
-                NCloudflareState.triggerChallenge(challengeUrl)
-                return NNetworkResult.CloudflareRequired(challengeUrl)
-            }
+                if (isCloudflareChallenge(code, body)) {
+                    val challengeUrl = if (targetUrl.contains("/api/")) BASE_URL else targetUrl
+                    NCloudflareState.triggerChallenge(challengeUrl)
+                    return NNetworkResult.CloudflareRequired(challengeUrl)
+                }
 
-            if (response.isSuccessful) {
-                NNetworkResult.Success(body)
-            } else {
-                NNetworkResult.Error(code, "HTTP error $code")
+                if (response.isSuccessful) {
+                    NNetworkResult.Success(body)
+                } else {
+                    NNetworkResult.Error(code, "HTTP error $code")
+                }
             }
         } catch (e: IOException) {
             NNetworkResult.Failure(e)

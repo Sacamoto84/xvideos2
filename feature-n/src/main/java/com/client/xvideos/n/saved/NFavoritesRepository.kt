@@ -30,7 +30,7 @@ class NFavoritesRepository @Inject constructor() {
 
     fun isFavorite(id: Long): Boolean {
         if (!AppPath.isInitialized) return false
-        return db.contains(id.toString())
+        return favorites.any { it.id == id } || db.contains(id.toString())
     }
 
     fun toggleFavorite(gallery: NGallery): Boolean {

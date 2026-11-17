@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.n.model.NPage
 
@@ -47,12 +48,12 @@ fun NGalleryPagesGrid(
     LazyVerticalGrid(
         columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
         modifier = modifier,
-        contentPadding = PaddingValues(8.dp),
+        contentPadding = adaptiveListPadding(PaddingValues(8.dp)),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         if (header != null) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
                 header()
             }
         }

@@ -24,6 +24,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,11 +52,13 @@ class ScreenNGallerySM @AssistedInject constructor(
     private val _isFavorite = MutableStateFlow(favoritesRepository.isFavorite(galleryId))
     val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
 
-    val columns = Settings.n_galleriesTab_column_current_count.field.value
+    val columns = Settings.n_galleriesTab_column_current_count.field
 
     var isSelectCollectionOpen by mutableStateOf(false)
     var isCreateCollectionOpen by mutableStateOf(false)
     var targetPictureForCollection by mutableStateOf<NPicture?>(null)
+
+    private var loadJob: Job? = null
 
     fun openAddToCollection(picture: NPicture) {
         targetPictureForCollection = picture
@@ -93,7 +96,8 @@ class ScreenNGallerySM @AssistedInject constructor(
     }
 
     fun loadGallery() {
-        screenModelScope.launch {
+        loadJob?.cancel()
+        loadJob = screenModelScope.launch {
             _uiState.value = NGalleryUiState.Loading
             repository.getGalleryDetails(galleryId).fold(
                 onSuccess = { gallery ->

@@ -24,18 +24,12 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.common.settings.ColumnSelect_AddColumn
-import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTabSM
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
-
-fun N_ScreenSavedMangaTab_AddColumn() {
-    ColumnSelect_AddColumn(Settings.n_saved_column_current_count, Settings.n_galleriesTab_G_0_4)
-}
 
 /**
  * Вкладка сохранённой манги целиком (локальные закладки альбомов).

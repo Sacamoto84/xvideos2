@@ -55,6 +55,7 @@ class ScreenNTag(val tag: NTag) : Screen {
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val isLoadingMore by vm.isLoadingMore.collectAsStateWithLifecycle()
+        val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
 
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
@@ -64,7 +65,7 @@ class ScreenNTag(val tag: NTag) : Screen {
         ScreenNTagContent(
             tag = tag,
             uiState = uiState,
-            columns = vm.columns,
+            columns = columns,
             challengeUrl = challengeUrl,
             isLoadingMore = isLoadingMore,
             onBack = onBack,

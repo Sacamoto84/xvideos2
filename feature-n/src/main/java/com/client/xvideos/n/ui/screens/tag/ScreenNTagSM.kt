@@ -19,6 +19,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,7 +50,9 @@ class ScreenNTagSM @AssistedInject constructor(
     var isEndReached = false
         private set
 
-    val columns = Settings.n_galleriesTab_column_current_count.field.value
+    val columns = Settings.n_galleriesTab_column_current_count.field
+
+    private var loadJob: Job? = null
 
     val tagQuery: String = when {
         tag.type.isNotEmpty() && tag.type != "tag" -> "${tag.type}:\"${tag.name}\""
@@ -65,7 +68,8 @@ class ScreenNTagSM @AssistedInject constructor(
         isEndReached = false
         _isLoadingMore.value = false
 
-        screenModelScope.launch {
+        loadJob?.cancel()
+        loadJob = screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
             repository.search(query = tagQuery, page = 1, sort = NSortType.RECENT).fold(
                 onSuccess = { galleries ->

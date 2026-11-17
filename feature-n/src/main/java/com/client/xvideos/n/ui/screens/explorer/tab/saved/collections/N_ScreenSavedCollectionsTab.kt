@@ -30,8 +30,6 @@ import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 import com.client.xvideos.common.collectionDB.ui.CollectionsGrid
 import com.client.xvideos.common.collectionDB.ui.DialogNewCollection
-import com.client.xvideos.common.settings.ColumnSelect_AddColumn
-import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
@@ -41,10 +39,6 @@ import com.client.xvideos.n.ui.molecule.NPictureGrid
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
-
-fun N_ScreenSavedCollectionsTab_AddColumn() {
-    ColumnSelect_AddColumn(Settings.n_collectionTab_column_current_count, Settings.n_collectionTab_G_0_4)
-}
 
 /**
  * Вкладка пользовательских коллекций страниц манги.

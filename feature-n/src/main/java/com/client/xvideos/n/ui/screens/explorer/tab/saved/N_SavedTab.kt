@@ -20,16 +20,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
+import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.n.ui.molecule.N_SavedBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
-import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab_AddColumn
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
-import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab_AddColumn
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
-import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab_AddColumn
 import kotlinx.coroutines.launch
 
 private const val N_SAVED_PAGE_COUNT = 3
@@ -83,9 +81,9 @@ object N_SavedTab : Screen {
             { tab ->
                 if (tab == pagerState.currentPage) {
                     when (tab) {
-                        0 -> N_ScreenSavedLikesTab_AddColumn()
-                        1 -> N_ScreenSavedMangaTab_AddColumn()
-                        2 -> N_ScreenSavedCollectionsTab_AddColumn()
+                        0 -> ColumnSelect_AddColumn(Settings.n_likesTab_column_current_count, Settings.n_likesTab_G_0_4)
+                        1 -> ColumnSelect_AddColumn(Settings.n_saved_column_current_count, Settings.n_galleriesTab_G_0_4)
+                        2 -> ColumnSelect_AddColumn(Settings.n_collectionTab_column_current_count, Settings.n_collectionTab_G_0_4)
                     }
                 } else {
                     scope.launch { pagerState.scrollToPage(tab) }

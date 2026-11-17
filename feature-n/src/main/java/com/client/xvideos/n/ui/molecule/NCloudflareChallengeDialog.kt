@@ -131,7 +131,7 @@ private fun setupCloudflareWebView(
         javaScriptEnabled = true
         domStorageEnabled = true
         databaseEnabled = true
-        allowFileAccess = true
+        allowFileAccess = false
         allowContentAccess = true
         javaScriptCanOpenWindowsAutomatically = true
         useWideViewPort = true

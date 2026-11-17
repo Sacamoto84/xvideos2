@@ -14,6 +14,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,6 +45,8 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
 
     val columns = Settings.n_galleriesTab_column_current_count.field
 
+    private var loadJob: Job? = null
+
     init {
         loadTopHits()
     }
@@ -57,7 +60,8 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
         currentPage = 1
         isEndReached = false
         _isLoadingMore.value = false
-        screenModelScope.launch {
+        loadJob?.cancel()
+        loadJob = screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
             repository.getGalleries(page = 1, sort = _sortType.value).fold(
                 onSuccess = { galleries ->
