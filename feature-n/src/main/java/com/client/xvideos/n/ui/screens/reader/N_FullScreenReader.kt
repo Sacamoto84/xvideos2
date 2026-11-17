@@ -33,9 +33,11 @@ import com.client.xvideos.common.ui.statusbar.HideStatusBarEffect
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
+import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.atom.NReaderTopBar
 import com.client.xvideos.n.ui.atom.ReaderImagePage
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
+import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.molecule.NReaderBottomStrip
 import kotlinx.coroutines.launch
 
@@ -209,17 +211,29 @@ fun N_FullScreenReaderContent(
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.TopCenter)
         ) {
+            val currentPageObj = gallery.pages.getOrNull(pagerState.currentPage)
+            val currentPicture = remember(gallery, currentPageObj) {
+                currentPageObj?.let { NPicture.fromPage(gallery.id, gallery.mediaId, gallery.title, it) }
+            }
+
             NReaderTopBar(
                 title = gallery.title,
                 currentPage = pagerState.currentPage + 1,
                 totalPages = gallery.pages.size,
                 isVertical = isVertical,
-                isLiked = isLiked,
                 onBack = onBack,
                 onToggleOrientation = onToggleOrientation,
-                onToggleLike = onToggleLike,
-                onAddToCollection = onAddToCollection,
-                topInset = topInset
+                topInset = topInset,
+                menuContent = {
+                    if (currentPicture != null) {
+                        NPictureItemExpandMenu(
+                            picture = currentPicture,
+                            isLiked = isLiked,
+                            onToggleLike = onToggleLike,
+                            onAddToCollection = onAddToCollection
+                        )
+                    }
+                }
             )
         }
 
