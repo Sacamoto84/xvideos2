@@ -22,6 +22,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.net.NCloudflareState
+import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NLoginDialog
 import com.client.xvideos.screenSettings.Config_G_0_4
 import com.client.xvideos.screenSettings.components.SettingsDivider
@@ -37,6 +38,7 @@ internal fun NSettingsSection(
     val isVerticalReader by Settings.n_fullscreen_vertical_pager.field.collectAsStateWithLifecycle()
     val isLoggedIn by NAuthState.isLoggedIn.collectAsStateWithLifecycle()
     val username by NAuthState.username.collectAsStateWithLifecycle()
+    val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
     var loginDialogVisible by remember { mutableStateOf(false) }
 
     val onToggleReader = remember(isVerticalReader) {
@@ -105,6 +107,8 @@ internal fun NSettingsSection(
         SettingsDivider()
 
         Config_G_0_4("N Манга", Settings.n_galleriesTab_G_0_4)
+        Config_G_0_4("N Лайки", Settings.n_likesTab_G_0_4)
+        Config_G_0_4("N Коллекции", Settings.n_collectionTab_G_0_4)
     }
 
     if (loginDialogVisible) {
@@ -114,6 +118,17 @@ internal fun NSettingsSection(
                 NAuthState.onLoginSuccess(name, sessionId)
                 loginDialogVisible = false
                 SnackBar.success("Вход выполнен: $name. Лимиты API повышены!")
+            }
+        )
+    }
+
+    challengeUrl?.let { url ->
+        NCloudflareChallengeDialog(
+            url = url,
+            onDismiss = { NCloudflareState.onChallengeDismissed() },
+            onSuccess = { cookies ->
+                NCloudflareState.onChallengeCompleted(cookies)
+                SnackBar.success("Доступ Cloudflare успешно обновлён!")
             }
         )
     }
