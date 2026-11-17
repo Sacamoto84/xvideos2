@@ -6,6 +6,9 @@ import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorer
 import com.client.xvideos.n.ui.screens.explorer.tab.list.N_ScreenGalleryList
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
 import com.client.xvideos.n.ui.screens.explorer.tab.search.N_ScreenGallerySearch
 import com.client.xvideos.n.ui.screens.explorer.tab.tophits.N_ScreenGalleryTopHits
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
@@ -49,6 +52,13 @@ class NScreenSerializationTest {
         assertEquals("N_ScreenGalleryTopHits", assertJavaSerialization(N_ScreenGalleryTopHits).key)
         assertEquals("N_ScreenGallerySearch", assertJavaSerialization(N_ScreenGallerySearch).key)
         assertEquals("N_SavedTab", assertJavaSerialization(N_SavedTab).key)
+    }
+
+    @Test
+    fun `Вкладки сохраненного раздела nhentai успешно сериализуются`() {
+        assertEquals("N_ScreenSavedCollectionsTab", assertJavaSerialization(N_ScreenSavedCollectionsTab).key)
+        assertEquals("N_ScreenSavedLikesTab", assertJavaSerialization(N_ScreenSavedLikesTab).key)
+        assertEquals("N_ScreenSavedMangaTab", assertJavaSerialization(N_ScreenSavedMangaTab).key)
     }
 
     @Test

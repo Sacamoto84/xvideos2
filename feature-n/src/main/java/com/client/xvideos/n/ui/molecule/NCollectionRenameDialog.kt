@@ -5,6 +5,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +30,11 @@ fun NCollectionRenameDialog(
 ) {
     var renameValue by rememberSaveable(initialValue) { mutableStateOf(initialValue) }
     val onValueChange: (String) -> Unit = remember { { text -> renameValue = text } }
-    val onConfirmClick: () -> Unit = remember(onConfirm) { { onConfirm(renameValue.trim()) } }
+
+    val trimmedValue by remember { derivedStateOf { renameValue.trim() } }
+    val canConfirm by remember(initialValue) {
+        derivedStateOf { trimmedValue.isNotEmpty() && trimmedValue != initialValue.trim() }
+    }
 
     LavenderDialog(
         title = "Переименовать коллекцию",
@@ -55,7 +60,8 @@ fun NCollectionRenameDialog(
             )
         },
         confirmText = "Сохранить",
-        onConfirm = onConfirmClick
+        confirmEnabled = canConfirm,
+        onConfirm = { if (canConfirm) onConfirm(trimmedValue) }
     )
 }
 

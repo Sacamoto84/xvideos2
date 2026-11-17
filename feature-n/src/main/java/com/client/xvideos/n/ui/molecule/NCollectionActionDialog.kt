@@ -37,8 +37,7 @@ fun NCollectionActionDialog(
     coverUrl: String?,
     onDismiss: () -> Unit,
     onRename: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+    onDelete: () -> Unit
 ) {
     val iconShape = remember { RoundedCornerShape(8.dp) }
     LavenderDialog(
