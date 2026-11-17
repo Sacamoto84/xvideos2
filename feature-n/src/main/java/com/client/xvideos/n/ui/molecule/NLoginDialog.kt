@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.net.NAuthState
+import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.net.NUserAgent
 import com.client.xvideos.n.ui.atom.NLoginManualInput
 
@@ -56,6 +58,7 @@ fun NLoginDialog(
     var isManualMode by remember { mutableStateOf(false) }
     var manualToken by remember { mutableStateOf("") }
     var manualUsername by remember { mutableStateOf("") }
+    var webViewInstance by remember { mutableStateOf<WebView?>(null) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -89,6 +92,15 @@ fun NLoginDialog(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
+                        if (!isManualMode) {
+                            IconButton(onClick = { webViewInstance?.reload() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Обновить страницу",
+                                    tint = Color.White
+                                )
+                            }
+                        }
                         TextButton(onClick = { isManualMode = !isManualMode }) {
                             Text(
                                 text = if (isManualMode) "Веб-форма" else "Ключ / Cookie",
@@ -141,6 +153,13 @@ fun NLoginDialog(
                         factory = { context ->
                             WebView(context).apply {
                                 setupNLoginWebView(this, onSuccess)
+                                webViewInstance = this
+                            }
+                        },
+                        onRelease = { webView ->
+                            runCatching {
+                                webView.stopLoading()
+                                webView.destroy()
                             }
                         },
                         modifier = Modifier
@@ -163,10 +182,13 @@ private fun setupNLoginWebView(
     cookieManager.setAcceptThirdPartyCookies(webView, true)
 
     webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+    @Suppress("DEPRECATION")
     webView.settings.apply {
         javaScriptEnabled = true
         domStorageEnabled = true
         databaseEnabled = true
+        allowFileAccess = true
+        allowContentAccess = true
         javaScriptCanOpenWindowsAutomatically = true
         useWideViewPort = true
         loadWithOverviewMode = true
@@ -183,24 +205,30 @@ private fun setupNLoginWebView(
             if (handled) return
 
             val cookies = cookieManager.getCookie("https://nhentai.net")
-            if (!cookies.isNullOrBlank() && cookies.contains("sessionid=")) {
-                val sessionId = cookies.split(";")
-                    .map { it.trim() }
-                    .firstOrNull { it.startsWith("sessionid=") }
-                    ?.substringAfter("sessionid=")
-                    .orEmpty()
+            if (!cookies.isNullOrBlank()) {
+                if (cookies.contains("cf_clearance=")) {
+                    NCloudflareState.onChallengeCompleted(cookies)
+                }
+                if (cookies.contains("sessionid=")) {
+                    val sessionId = cookies.split(";")
+                        .map { it.trim() }
+                        .firstOrNull { it.startsWith("sessionid=") }
+                        ?.substringAfter("sessionid=")
+                        .orEmpty()
 
-                if (sessionId.isNotBlank()) {
-                    // Извлекаем имя пользователя из веб-страницы
-                    view?.evaluateJavascript(
-                        "(function() { " +
-                            "var el = document.querySelector('.username') || document.querySelector('a[href^=\"/users/\"]'); " +
-                            "return el ? el.innerText.trim() : ''; " +
-                            "})()"
-                    ) { result ->
-                        val cleanName = result?.trim('"', ' ', '\'').orEmpty().ifEmpty { "Пользователь" }
-                        handled = true
-                        onLoginDetected(cleanName, sessionId)
+                    if (sessionId.isNotBlank()) {
+                        // Извлекаем имя пользователя из веб-страницы
+                        view?.evaluateJavascript(
+                            "(function() { " +
+                                "var el = document.querySelector('.username') || document.querySelector('a[href^=\"/users/\"]'); " +
+                                "return el ? el.innerText.trim() : ''; " +
+                                "})()"
+                        ) { result ->
+                            val cleanName = result?.trim('"', ' ', '\'').orEmpty().ifEmpty { "Пользователь" }
+                            handled = true
+                            cookieManager.flush()
+                            onLoginDetected(cleanName, sessionId)
+                        }
                     }
                 }
             }

@@ -17,10 +17,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,6 +51,7 @@ fun NCloudflareChallengeDialog(
     modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
+    var webViewInstance by remember { mutableStateOf<WebView?>(null) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -79,6 +85,13 @@ fun NCloudflareChallengeDialog(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
+                        IconButton(onClick = { webViewInstance?.reload() }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Обновить страницу",
+                                tint = Color.White
+                            )
+                        }
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 imageVector = Icons.Default.Close,
@@ -96,6 +109,13 @@ fun NCloudflareChallengeDialog(
                             setupCloudflareWebView(this, url) { cookies ->
                                 onSuccess(cookies)
                             }
+                            webViewInstance = this
+                        }
+                    },
+                    onRelease = { webView ->
+                        runCatching {
+                            webView.stopLoading()
+                            webView.destroy()
                         }
                     },
                     modifier = Modifier
@@ -118,10 +138,13 @@ private fun setupCloudflareWebView(
     cookieManager.setAcceptThirdPartyCookies(webView, true)
 
     webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+    @Suppress("DEPRECATION")
     webView.settings.apply {
         javaScriptEnabled = true
         domStorageEnabled = true
         databaseEnabled = true
+        allowFileAccess = true
+        allowContentAccess = true
         javaScriptCanOpenWindowsAutomatically = true
         useWideViewPort = true
         loadWithOverviewMode = true
@@ -135,6 +158,7 @@ private fun setupCloudflareWebView(
             super.onPageFinished(view, finishedUrl)
             val cookies = cookieManager.getCookie("https://nhentai.net")
             if (!cookies.isNullOrBlank() && cookies.contains("cf_clearance")) {
+                cookieManager.flush()
                 onClearanceFound(cookies)
             }
         }

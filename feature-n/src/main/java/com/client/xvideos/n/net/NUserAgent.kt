@@ -7,14 +7,16 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Провайдер согласованного мобильного User-Agent для раздела N (сеть и WebView).
  *
- * Не подменяет платформу на Desktop Windows, предотвращая сбой проверки
- * Cloudflare Turnstile ("Сбой проверки"), возникающий из-за несовпадения
- * заголовка User-Agent с реальными свойствами navigator (Linux/Android, touch points).
+ * Возвращает подлинный системный User-Agent движка WebView Android без принудительного
+ * удаления маркеров WebView (таких как '; wv' или 'Version/4.0'). Это исключает
+ * рассинхронизацию HTTP-заголовка User-Agent с системными Client Hints (Sec-CH-UA),
+ * из-за которой Cloudflare Turnstile фиксирует подделку браузера и завершается
+ * ошибкой "Сбой проверки".
  */
 object NUserAgent {
 
     private const val FALLBACK_USER_AGENT =
-        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36"
+        "Mozilla/5.0 (Linux; Android 10; K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0.0.0 Mobile Safari/537.36"
 
     private val cachedUserAgent = AtomicReference<String?>(null)
 
@@ -25,15 +27,16 @@ object NUserAgent {
 
             val resolved = runCatching {
                 val context = AppContextHolder.getOrNull() ?: return@runCatching FALLBACK_USER_AGENT
-                val defaultUa = WebSettings.getDefaultUserAgent(context)
-                cleanUserAgent(defaultUa)
+                WebSettings.getDefaultUserAgent(context)
             }.getOrDefault(FALLBACK_USER_AGENT)
 
             cachedUserAgent.compareAndSet(null, resolved)
             return resolved
         }
 
-    fun cleanUserAgent(raw: String): String =
-        raw.replace("; wv", "")
-            .replace(Regex("Version/\\d+\\.\\d+\\s?"), "")
+    fun cleanUserAgent(raw: String): String = raw
+
+    fun resetCacheForTest() {
+        cachedUserAgent.set(null)
+    }
 }
