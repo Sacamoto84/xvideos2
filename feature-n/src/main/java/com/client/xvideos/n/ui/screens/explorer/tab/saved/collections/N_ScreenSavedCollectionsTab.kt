@@ -1,24 +1,18 @@
 package com.client.xvideos.n.ui.screens.explorer.tab.saved.collections
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -33,10 +27,12 @@ import com.client.xvideos.common.collectionDB.ui.DialogNewCollection
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
-import com.client.xvideos.n.ui.atom.NCollectionTopBar
+import com.client.xvideos.n.ui.molecule.NCollectionDetailContent
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
-import com.client.xvideos.n.ui.molecule.NPictureGrid
+import com.client.xvideos.n.ui.molecule.NCollectionDialogsHost
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.model.NCollectionActions
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.model.NCollectionDialogData
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 
@@ -59,47 +55,78 @@ object N_ScreenSavedCollectionsTab : Screen {
         val selectedCollection = vm.currentCollectionName
         val currentItems = vm.currentCollectionItems
 
-        BackHandler(
-            enabled = selectedCollection != null,
-            onBack = { vm.closeCollection() }
-        )
+        var itemPendingAction by rememberSaveable { mutableStateOf<String?>(null) }
+        var itemPendingRename by rememberSaveable { mutableStateOf<String?>(null) }
+        var itemPendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
+        var renameValue by rememberSaveable { mutableStateOf("") }
 
-        val onPictureClick: (NPicture) -> Unit = remember(navigator, currentItems) {
-            { picture ->
-                val index = currentItems.indexOfFirst { it.id == picture.id }.coerceAtLeast(0)
-                navigator.push(N_FullScreenPicture(pictures = currentItems.toList(), initialIndex = index))
+        val hasDialog = itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null
+        BackHandler(enabled = hasDialog) {
+            itemPendingAction = null
+            itemPendingRename = null
+            itemPendingDelete = null
+        }
+        BackHandler(enabled = selectedCollection != null && !hasDialog) {
+            vm.closeCollection()
+        }
+
+        val dialogData = remember(itemPendingAction, itemPendingRename, itemPendingDelete, renameValue) {
+            NCollectionDialogData(
+                itemPendingAction = itemPendingAction,
+                itemPendingRename = itemPendingRename,
+                itemPendingDelete = itemPendingDelete,
+                renameValue = renameValue
+            )
+        }
+
+        NCollectionDialogsHost(
+            dialogData = dialogData,
+            collections = collections,
+            onDismissAction = { itemPendingAction = null },
+            onDismissRename = { itemPendingRename = null },
+            onDismissDelete = { itemPendingDelete = null },
+            onRenameAction = { pending ->
+                renameValue = pending
+                itemPendingRename = pending
+                itemPendingAction = null
+            },
+            onDeleteAction = { pending ->
+                itemPendingDelete = pending
+                itemPendingAction = null
+            },
+            onConfirmRename = { pending, targetName ->
+                itemPendingRename = null
+                vm.renameCollection(pending, targetName)
+            },
+            onConfirmDelete = { pending ->
+                itemPendingDelete = null
+                vm.deleteCollection(pending)
             }
-        }
-
-        val onOpenGallery: (NPicture) -> Unit = remember(navigator) {
-            { picture -> navigator.push(ScreenNGallery(picture.galleryId)) }
-        }
-
-        val onAddToCollection: (NPicture) -> Unit = remember(vm) {
-            { picture -> vm.openAddToCollection(picture) }
-        }
-
-        val onToggleLike: (NPicture) -> Unit = remember(vm) {
-            { picture -> vm.toggleLike(picture) }
-        }
-
-        val onPictureDelete: (NPicture) -> Unit = remember(vm) {
-            { picture -> vm.removeItem(picture) }
-        }
-
-        val onSetCover: (NPicture) -> Unit = remember(vm) {
-            { picture -> vm.setCover(picture) }
-        }
+        )
 
         val pictureMenuContent: @Composable (NPicture) -> Unit = { picture ->
             NPictureItemExpandMenu(
                 picture = picture,
                 isLiked = vm.isLiked(picture),
-                onOpenGallery = { onOpenGallery(picture) },
-                onToggleLike = { onToggleLike(picture) },
-                onAddToCollection = { onAddToCollection(picture) },
-                onSetCover = { onSetCover(picture) },
-                onRemoveFromCollection = { onPictureDelete(picture) }
+                onOpenGallery = { navigator.push(ScreenNGallery(picture.galleryId)) },
+                onToggleLike = { vm.toggleLike(picture) },
+                onAddToCollection = { vm.openAddToCollection(picture) },
+                onSetCover = { vm.setCover(picture) },
+                onRemoveFromCollection = { vm.removeItem(picture) }
+            )
+        }
+
+        val actions = remember(vm) {
+            NCollectionActions(
+                onCollectionClick = { vm.openCollection(it) },
+                onCollectionLongClick = { name -> itemPendingAction = name },
+                onRenameCollection = { name ->
+                    renameValue = name
+                    itemPendingRename = name
+                },
+                onDeleteCollection = { name -> itemPendingDelete = name },
+                onCreateClick = { vm.isCreateDialogOpen = true },
+                onBackFromCollection = { vm.closeCollection() }
             )
         }
 
@@ -108,11 +135,11 @@ object N_ScreenSavedCollectionsTab : Screen {
             selectedCollection = selectedCollection,
             currentItems = currentItems,
             columns = columns,
-            onCollectionClick = { vm.openCollection(it) },
-            onCollectionDelete = { vm.deleteCollection(it) },
-            onCreateClick = { vm.isCreateDialogOpen = true },
-            onBackFromCollection = { vm.closeCollection() },
-            onPictureClick = onPictureClick,
+            actions = actions,
+            onPictureClick = { picture ->
+                val index = currentItems.indexOfFirst { it.id == picture.id }.coerceAtLeast(0)
+                navigator.push(N_FullScreenPicture(pictures = currentItems.toList(), initialIndex = index))
+            },
             pictureMenuContent = pictureMenuContent
         )
 
@@ -149,10 +176,7 @@ fun N_ScreenSavedCollectionsTabContent(
     selectedCollection: String?,
     currentItems: List<NPicture>,
     columns: Int,
-    onCollectionClick: (String) -> Unit,
-    onCollectionDelete: (String) -> Unit,
-    onCreateClick: () -> Unit,
-    onBackFromCollection: () -> Unit,
+    actions: NCollectionActions,
     onPictureClick: (NPicture) -> Unit,
     pictureMenuContent: @Composable (NPicture) -> Unit,
     modifier: Modifier = Modifier
@@ -189,47 +213,23 @@ fun N_ScreenSavedCollectionsTabContent(
         collections = gridItems,
         gridState = gridState,
         style = gridStyle,
-        onCollectionClick = onCollectionClick,
-        onCollectionLongClick = onCollectionDelete,
-        onCreateNewCollectionClick = onCreateClick,
+        onCollectionClick = actions.onCollectionClick,
+        onCollectionLongClick = actions.onCollectionLongClick,
+        onCreateNewCollectionClick = actions.onCreateClick,
         navigationContent = {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Theme.background)
-            ) {
-                if (selectedCollection != null) {
-                    NCollectionTopBar(
-                        collectionName = selectedCollection,
-                        itemsCount = currentItems.size,
-                        onBack = onBackFromCollection,
-                        onDeleteCollection = { onCollectionDelete(selectedCollection) },
-                        topInset = topInset
-                    )
-                }
-
-                if (currentItems.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "В этой коллекции пока нет картинок",
-                            color = Color(0xFFAAAAAA),
-                            fontSize = 15.sp
-                        )
-                    }
-                } else {
-                    NPictureGrid(
-                        items = currentItems,
-                        columns = columns,
-                        onItemClick = onPictureClick,
-                        menuContent = pictureMenuContent,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+            if (selectedCollection != null) {
+                NCollectionDetailContent(
+                    collectionName = selectedCollection,
+                    items = currentItems,
+                    columns = columns,
+                    topInset = topInset,
+                    onBack = actions.onBackFromCollection,
+                    onRenameCollection = { actions.onRenameCollection(selectedCollection) },
+                    onDeleteCollection = { actions.onDeleteCollection(selectedCollection) },
+                    onPictureClick = onPictureClick,
+                    pictureMenuContent = pictureMenuContent,
+                    modifier = modifier
+                )
             }
         }
     )
@@ -243,10 +243,14 @@ private fun N_ScreenSavedCollectionsTabContentPreview() {
         selectedCollection = null,
         currentItems = emptyList(),
         columns = 2,
-        onCollectionClick = {},
-        onCollectionDelete = {},
-        onCreateClick = {},
-        onBackFromCollection = {},
+        actions = NCollectionActions(
+            onCollectionClick = {},
+            onCollectionLongClick = {},
+            onRenameCollection = {},
+            onDeleteCollection = {},
+            onCreateClick = {},
+            onBackFromCollection = {}
+        ),
         onPictureClick = {},
         pictureMenuContent = {}
     )

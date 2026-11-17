@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -33,8 +34,9 @@ fun NCollectionTopBar(
     collectionName: String,
     itemsCount: Int,
     onBack: () -> Unit,
-    onDeleteCollection: () -> Unit,
     modifier: Modifier = Modifier,
+    onRenameCollection: (() -> Unit)? = null,
+    onDeleteCollection: (() -> Unit)? = null,
     topInset: Dp = 0.dp
 ) {
     Column(
@@ -75,12 +77,24 @@ fun NCollectionTopBar(
                 )
             }
 
-            IconButton(onClick = onDeleteCollection) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Удалить коллекцию",
-                    tint = Color(0xFFED2553)
-                )
+            if (onRenameCollection != null) {
+                IconButton(onClick = onRenameCollection) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Переименовать коллекцию",
+                        tint = Color.White
+                    )
+                }
+            }
+
+            if (onDeleteCollection != null) {
+                IconButton(onClick = onDeleteCollection) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Удалить коллекцию",
+                        tint = Color(0xFFED2553)
+                    )
+                }
             }
         }
     }
@@ -93,6 +107,7 @@ private fun NCollectionTopBarPreview() {
         collectionName = "Моя коллекция",
         itemsCount = 12,
         onBack = {},
+        onRenameCollection = {},
         onDeleteCollection = {}
     )
 }

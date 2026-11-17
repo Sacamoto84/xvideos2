@@ -81,6 +81,9 @@ class ScreenSavedNCollectionsSM @Inject constructor(
         saved.collection.createCollection(name)
     }
 
+    fun renameCollection(oldName: String, newName: String): Boolean =
+        saved.collection.renameCollection(oldName, newName)
+
     fun deleteCollection(name: String) {
         saved.collection.deleteCollection(name)
     }
