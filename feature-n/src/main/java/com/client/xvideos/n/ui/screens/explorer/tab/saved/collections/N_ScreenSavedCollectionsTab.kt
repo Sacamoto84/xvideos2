@@ -204,7 +204,7 @@ fun N_ScreenSavedCollectionsTabContent(
             itemNameColor = Color.White,
             itemSecondaryColor = Color.LightGray,
             itemFontFamily = FontFamily.Default,
-            addButtonBackground = Color(0xFFED2553)
+            addButtonBackground = Theme.L.primaryColor
         )
     }
 

@@ -77,8 +77,10 @@ class NCollectionRepository @Inject constructor() {
         val result = db.create(name)
         if (result.isSuccess) {
             refresh()
+            SnackBar.success("Коллекция $name создана")
             return true
         }
+        SnackBar.error("Ошибка создания коллекции")
         return false
     }
 
@@ -89,8 +91,10 @@ class NCollectionRepository @Inject constructor() {
                 closeCollection()
             }
             refresh()
+            SnackBar.success("Коллекция $name удалена")
             return true
         }
+        SnackBar.error("Ошибка удаления коллекции")
         return false
     }
 
@@ -101,8 +105,10 @@ class NCollectionRepository @Inject constructor() {
                 currentCollectionName = newName
             }
             refresh()
+            SnackBar.success("Коллекция переименована")
             return true
         }
+        SnackBar.error("Ошибка переименования коллекции")
         return false
     }
 
@@ -110,8 +116,10 @@ class NCollectionRepository @Inject constructor() {
         val result = db.insert(picture.id, collectionName, picture)
         if (result.isSuccess) {
             refresh()
+            SnackBar.success("Добавлено в коллекцию")
             return true
         }
+        SnackBar.error("Ошибка добавления в коллекцию")
         return false
     }
 
@@ -119,8 +127,10 @@ class NCollectionRepository @Inject constructor() {
         val result = db.deleteItem(pictureId, collectionName)
         if (result.isSuccess) {
             refresh()
+            SnackBar.success("Удалено из коллекции")
             return true
         }
+        SnackBar.error("Ошибка удаления из коллекции")
         return false
     }
 
