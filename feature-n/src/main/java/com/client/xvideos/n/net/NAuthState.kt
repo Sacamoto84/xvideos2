@@ -112,14 +112,14 @@ object NAuthState {
 
         runCatching {
             val cookieManager = CookieManager.getInstance()
-            val cookies = cookieManager.getCookie("https://nhentai.net")
-            if (!cookies.isNullOrBlank()) {
+            val cookies = NCookieHelper.getAllCookies(cookieManager)
+            if (cookies.isNotBlank()) {
                 cookies.split(";").forEach { part ->
                     val cookieName = part.substringBefore("=").trim()
                     if (cookieName.equals("sessionid", ignoreCase = true) ||
                         cookieName.equals("csrftoken", ignoreCase = true)
                     ) {
-                        cookieManager.setCookie("https://nhentai.net", "$cookieName=; Max-Age=0")
+                        cookieManager.setCookie("https://nhentai.net/", "$cookieName=; Max-Age=0")
                     }
                 }
                 cookieManager.flush()

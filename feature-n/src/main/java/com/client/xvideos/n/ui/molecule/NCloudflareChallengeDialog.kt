@@ -1,6 +1,8 @@
 package com.client.xvideos.n.ui.molecule
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,8 +39,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import android.view.View
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.n.net.NCookieHelper
 import com.client.xvideos.n.net.NUserAgent
 
 /**
@@ -52,6 +55,18 @@ fun NCloudflareChallengeDialog(
 ) {
     val topInset = getTopInsetDp()
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
+
+    fun checkAndCompleteManual() {
+        val wv = webViewInstance ?: return
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.flush()
+        val cookies = NCookieHelper.getAllCookies(cookieManager, wv.url)
+        val cf = NCookieHelper.extractCookieValue(cookies, "cf_clearance")
+        if (cf.isNotEmpty()) {
+            onSuccess(cookies)
+            onDismiss()
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -85,6 +100,14 @@ fun NCloudflareChallengeDialog(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
+                        TextButton(onClick = { checkAndCompleteManual() }) {
+                            Text(
+                                text = "Готово",
+                                color = Color(0xFF4CAF50),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         IconButton(onClick = { webViewInstance?.reload() }) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
@@ -154,13 +177,32 @@ private fun setupCloudflareWebView(
 
     webView.webChromeClient = WebChromeClient()
     webView.webViewClient = object : WebViewClient() {
-        override fun onPageFinished(view: WebView?, finishedUrl: String?) {
-            super.onPageFinished(view, finishedUrl)
-            val cookies = cookieManager.getCookie("https://nhentai.net")
-            if (!cookies.isNullOrBlank() && cookies.contains("cf_clearance")) {
+        private var handled = false
+
+        private fun checkClearance(view: WebView?, finishedUrl: String?) {
+            if (handled) return
+            val cookies = NCookieHelper.getAllCookies(cookieManager, finishedUrl ?: view?.url)
+            val cf = NCookieHelper.extractCookieValue(cookies, "cf_clearance")
+            if (cf.isNotEmpty()) {
+                handled = true
                 cookieManager.flush()
                 onClearanceFound(cookies)
             }
+        }
+
+        override fun onPageFinished(view: WebView?, finishedUrl: String?) {
+            super.onPageFinished(view, finishedUrl)
+            checkClearance(view, finishedUrl)
+        }
+
+        override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+            super.doUpdateVisitedHistory(view, url, isReload)
+            checkClearance(view, url)
+        }
+
+        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+            super.onPageStarted(view, url, favicon)
+            checkClearance(view, url)
         }
     }
 
