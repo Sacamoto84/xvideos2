@@ -37,7 +37,7 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.atom.NCollectionTopBar
 import com.client.xvideos.n.ui.molecule.NPictureGrid
-import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
+import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 
 fun N_ScreenSavedCollectionsTab_AddColumn() {
     ColumnSelect_AddColumn(Settings.n_collectionTab_column_current_count, Settings.n_collectionTab_G_0_4)
@@ -67,8 +67,11 @@ object N_ScreenSavedCollectionsTab : Screen {
             onBack = { vm.closeCollection() }
         )
 
-        val onPictureClick: (NPicture) -> Unit = remember(navigator) {
-            { picture -> navigator.push(ScreenNGallery(picture.galleryId)) }
+        val onPictureClick: (NPicture) -> Unit = remember(navigator, currentItems) {
+            { picture ->
+                val index = currentItems.indexOfFirst { it.id == picture.id }.coerceAtLeast(0)
+                navigator.push(N_FullScreenPicture(pictures = currentItems.toList(), initialIndex = index))
+            }
         }
 
         val onPictureDelete: (NPicture) -> Unit = remember(vm) {

@@ -1,0 +1,138 @@
+package com.client.xvideos.n.ui.atom
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.outlined.CreateNewFolder
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+/**
+ * Верхняя панель управления полноэкранного просмотрщика сохранённых картинок.
+ */
+@Composable
+fun NPictureViewerTopBar(
+    title: String,
+    currentIndex: Int,
+    totalCount: Int,
+    isVertical: Boolean,
+    isLiked: Boolean,
+    onBack: () -> Unit,
+    onOpenGallery: () -> Unit,
+    onToggleLike: () -> Unit,
+    onAddToCollection: () -> Unit,
+    onToggleOrientation: () -> Unit,
+    modifier: Modifier = Modifier,
+    topInset: Dp = 0.dp
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color(0xCC000000))
+    ) {
+        if (topInset > 0.dp) {
+            Spacer(Modifier.height(topInset))
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Назад",
+                    tint = Color.White
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title.ifBlank { "Картинка" },
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "$currentIndex / $totalCount",
+                    color = Color(0xFFED2553),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            IconButton(onClick = onOpenGallery) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                    contentDescription = "Открыть альбом манги",
+                    tint = Color.White
+                )
+            }
+
+            IconButton(onClick = onToggleLike) {
+                Icon(
+                    imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (isLiked) "Удалить из лайков" else "Поставить лайк",
+                    tint = if (isLiked) Color(0xFFED2553) else Color.White
+                )
+            }
+
+            IconButton(onClick = onAddToCollection) {
+                Icon(
+                    imageVector = Icons.Outlined.CreateNewFolder,
+                    contentDescription = "В коллекцию",
+                    tint = Color.White
+                )
+            }
+
+            IconButton(onClick = onToggleOrientation) {
+                Icon(
+                    imageVector = Icons.Default.SwapVert,
+                    contentDescription = if (isVertical) "Горизонтально" else "Вертикально",
+                    tint = if (isVertical) Color(0xFFED2553) else Color.White
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun NPictureViewerTopBarPreview() {
+    NPictureViewerTopBar(
+        title = "Preview Manga Title • Стр. 5",
+        currentIndex = 1,
+        totalCount = 10,
+        isVertical = false,
+        isLiked = true,
+        onBack = {},
+        onOpenGallery = {},
+        onToggleLike = {},
+        onAddToCollection = {},
+        onToggleOrientation = {}
+    )
+}

@@ -30,7 +30,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.molecule.NPictureGrid
-import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
+import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 
 fun N_ScreenSavedLikesTab_AddColumn() {
     ColumnSelect_AddColumn(Settings.n_likesTab_column_current_count, Settings.n_likesTab_G_0_4)
@@ -53,8 +53,11 @@ object N_ScreenSavedLikesTab : Screen {
         val columns by vm.columns.collectAsStateWithLifecycle()
         val likes = vm.likes
 
-        val onPictureClick: (NPicture) -> Unit = remember(navigator) {
-            { picture -> navigator.push(ScreenNGallery(picture.galleryId)) }
+        val onPictureClick: (NPicture) -> Unit = remember(navigator, likes) {
+            { picture ->
+                val index = likes.indexOfFirst { it.id == picture.id }.coerceAtLeast(0)
+                navigator.push(N_FullScreenPicture(pictures = likes.toList(), initialIndex = index))
+            }
         }
 
         val onPictureDelete: (NPicture) -> Unit = remember(vm) {

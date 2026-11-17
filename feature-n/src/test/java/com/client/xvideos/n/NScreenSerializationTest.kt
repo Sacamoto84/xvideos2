@@ -1,6 +1,7 @@
 package com.client.xvideos.n
 
 import com.client.xvideos.n.model.NGallery
+import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorer
 import com.client.xvideos.n.ui.screens.explorer.tab.list.N_ScreenGalleryList
@@ -8,6 +9,7 @@ import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTab
 import com.client.xvideos.n.ui.screens.explorer.tab.search.N_ScreenGallerySearch
 import com.client.xvideos.n.ui.screens.explorer.tab.tophits.N_ScreenGalleryTopHits
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
+import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
 import com.client.xvideos.n.ui.screens.tag.ScreenNTag
 import org.junit.Assert.assertEquals
@@ -74,5 +76,15 @@ class NScreenSerializationTest {
         val restored = assertJavaSerialization(screen)
         assertEquals("NReader:100:2", restored.key)
         assertEquals(2, restored.initialPage)
+    }
+
+    @Test
+    fun `N_FullScreenPicture успешно сериализуется`() {
+        val picture = NPicture(id = "100_2", galleryId = 100L, mediaId = 200L, pageNumber = 2)
+        val screen = N_FullScreenPicture(pictures = arrayListOf(picture), initialIndex = 0)
+        val restored = assertJavaSerialization(screen)
+        assertEquals("NPicture:100_2:0", restored.key)
+        assertEquals(1, restored.pictures.size)
+        assertEquals("100_2", restored.pictures.first().id)
     }
 }
