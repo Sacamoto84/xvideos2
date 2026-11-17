@@ -99,7 +99,7 @@ class NSavedTest {
     }
 
     @Test
-    fun `collection repository sets collection cover`() {
+    fun `collection repository sets collection cover without changing items order`() {
         val pic1 = NPicture(id = "1_1", galleryId = 1L, mediaId = 1L, pageNumber = 1)
         val pic2 = NPicture(id = "1_2", galleryId = 1L, mediaId = 1L, pageNumber = 2)
 
@@ -111,7 +111,10 @@ class NSavedTest {
         assertTrue(updated)
 
         collectionRepo.openCollection("CoversTest")
-        assertEquals(pic2.id, collectionRepo.currentCollectionItems.first().id)
+        assertEquals(2, collectionRepo.currentCollectionItems.size)
+        assertEquals("1_2", collectionRepo.getCollectionConfig("CoversTest").coverPictureId)
+        val coverUrl = collectionRepo.getCollectionCoverUrl("CoversTest", collectionRepo.currentCollectionItems)
+        assertEquals(pic2.thumbnailUrl, coverUrl)
     }
 
     @Test

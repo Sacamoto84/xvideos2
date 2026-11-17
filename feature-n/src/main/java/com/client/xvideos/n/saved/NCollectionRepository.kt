@@ -6,9 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.CollectionDB
+import com.client.xvideos.common.collectionDB.CollectionName
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
+import com.client.xvideos.common.io.writeTextAtomically
+import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.n.model.NPicture
+import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -126,6 +130,10 @@ class NCollectionRepository @Inject constructor() {
     fun removeFromCollection(collectionName: String, pictureId: String): Boolean {
         val result = db.deleteItem(pictureId, collectionName)
         if (result.isSuccess) {
+            val config = getCollectionConfig(collectionName)
+            if (config.coverPictureId == pictureId) {
+                saveCollectionConfig(collectionName, config.copy(coverPictureId = null))
+            }
             refresh()
             SnackBar.success("Удалено из коллекции")
             return true
@@ -134,13 +142,74 @@ class NCollectionRepository @Inject constructor() {
         return false
     }
 
+    /**
+     * Читает конфигурацию коллекции [collectionName] из директории коллекции.
+     */
+    fun getCollectionConfig(collectionName: String): NCollectionConfig {
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: return NCollectionConfig()
+        val file = File(File(AppPath.n_collection, safeName), CONFIG_FILE_NAME)
+        if (!file.exists() || file.length() == 0L) return NCollectionConfig()
+        return try {
+            val text = file.readText(Charsets.UTF_8)
+            AppJson.decodeFromString(NCollectionConfig.serializer(), text)
+        } catch (e: Exception) {
+            Timber.w(e, "Не удалось прочитать конфигурацию коллекции $safeName")
+            NCollectionConfig()
+        }
+    }
+
+    /**
+     * Сохраняет конфигурацию коллекции [collectionName] в её директории.
+     */
+    private fun saveCollectionConfig(collectionName: String, config: NCollectionConfig): Boolean {
+        val safeName = CollectionName.normalizeOrNull(collectionName) ?: return false
+        val dir = File(AppPath.n_collection, safeName)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        val file = File(dir, CONFIG_FILE_NAME)
+        return try {
+            val jsonText = AppJson.encodeToString(NCollectionConfig.serializer(), config)
+            file.writeTextAtomically(jsonText)
+            true
+        } catch (e: Exception) {
+            Timber.e(e, "Не удалось сохранить конфигурацию коллекции $safeName")
+            false
+        }
+    }
+
+    /**
+     * Возвращает URL обложки коллекции: вручную назначенную обложку или первый доступный элемент.
+     */
+    fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? {
+        val config = getCollectionConfig(collectionName)
+        if (!config.coverPictureId.isNullOrEmpty()) {
+            val found = items.firstOrNull { it.id == config.coverPictureId }
+            if (found != null) {
+                return found.thumbnailUrl
+            }
+        }
+        return items.firstOrNull()?.thumbnailUrl
+    }
+
+    /**
+     * Назначает выбранную картинку [picture] обложкой коллекции [collectionName],
+     * сохраняя её ID в файле конфигурации коллекции без изменения порядка элементов.
+     */
     fun setCollectionCover(collectionName: String, picture: NPicture): Boolean {
-        val result = db.insert(picture.id, collectionName, picture)
-        if (result.isSuccess) {
+        val currentConfig = getCollectionConfig(collectionName)
+        val newConfig = currentConfig.copy(coverPictureId = picture.id)
+        val saved = saveCollectionConfig(collectionName, newConfig)
+        if (saved) {
             refresh()
             SnackBar.success("Обложка коллекции обновлена")
             return true
         }
+        SnackBar.error("Ошибка обновления обложки")
         return false
+    }
+
+    companion object {
+        private const val CONFIG_FILE_NAME = "collection_config.json"
     }
 }

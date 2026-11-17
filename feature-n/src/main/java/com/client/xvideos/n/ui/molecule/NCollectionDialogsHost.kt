@@ -20,12 +20,12 @@ fun NCollectionDialogsHost(
     onRenameAction: (String) -> Unit,
     onDeleteAction: (String) -> Unit,
     onConfirmRename: (String, String) -> Unit,
-    onConfirmDelete: (String) -> Unit
+    onConfirmDelete: (String) -> Unit,
+    coverUrlProvider: (String, List<NPicture>) -> String? = { _, items -> items.firstOrNull()?.thumbnailUrl }
 ) {
     dialogData.itemPendingAction?.let { pending ->
-        val cover = collections
-            .firstOrNull { it.collection.equals(pending, ignoreCase = true) }
-            ?.items?.firstOrNull()?.thumbnailUrl
+        val entity = collections.firstOrNull { it.collection.equals(pending, ignoreCase = true) }
+        val cover = entity?.let { coverUrlProvider(it.collection, it.items) }
         val handleRename = remember(pending, onRenameAction) { { onRenameAction(pending) } }
         val handleDelete = remember(pending, onDeleteAction) { { onDeleteAction(pending) } }
 

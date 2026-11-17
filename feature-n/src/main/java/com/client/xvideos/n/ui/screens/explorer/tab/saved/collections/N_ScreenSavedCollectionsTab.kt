@@ -101,7 +101,8 @@ object N_ScreenSavedCollectionsTab : Screen {
             onConfirmDelete = { pending ->
                 itemPendingDelete = null
                 vm.deleteCollection(pending)
-            }
+            },
+            coverUrlProvider = vm::getCollectionCoverUrl
         )
 
         val pictureMenuContent: @Composable (NPicture) -> Unit = { picture ->
@@ -140,7 +141,8 @@ object N_ScreenSavedCollectionsTab : Screen {
                 val index = currentItems.indexOfFirst { it.id == picture.id }.coerceAtLeast(0)
                 navigator.push(N_FullScreenPicture(pictures = currentItems.toList(), initialIndex = index))
             },
-            pictureMenuContent = pictureMenuContent
+            pictureMenuContent = pictureMenuContent,
+            coverUrlProvider = vm::getCollectionCoverUrl
         )
 
         DialogNewCollection(
@@ -179,17 +181,18 @@ fun N_ScreenSavedCollectionsTabContent(
     actions: NCollectionActions,
     onPictureClick: (NPicture) -> Unit,
     pictureMenuContent: @Composable (NPicture) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    coverUrlProvider: (String, List<NPicture>) -> String? = { _, items -> items.firstOrNull()?.thumbnailUrl }
 ) {
     val gridState = rememberLazyGridState()
     val topInset = getTopInsetDp()
 
-    val gridItems by remember(collections) {
+    val gridItems by remember(collections, coverUrlProvider) {
         derivedStateOf {
             collections.map {
                 CollectionGridItem(
                     name = it.collection,
-                    previewUrl = it.items.firstOrNull()?.thumbnailUrl,
+                    previewUrl = coverUrlProvider(it.collection, it.items),
                     itemsCount = it.items.size
                 )
             }

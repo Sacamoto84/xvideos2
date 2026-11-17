@@ -69,6 +69,9 @@ class ScreenSavedNCollectionsSM @Inject constructor(
         return saved.collection.setCollectionCover(current, picture)
     }
 
+    fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
+        saved.collection.getCollectionCoverUrl(collectionName, items)
+
     fun openCollection(name: String) {
         saved.collection.openCollection(name)
     }
