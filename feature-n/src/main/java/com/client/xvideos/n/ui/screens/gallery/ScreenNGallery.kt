@@ -31,14 +31,18 @@ import com.client.xvideos.common.share.useCaseShareText
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGallery
+import com.client.xvideos.n.model.NPage
+import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NGalleryTopBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
+import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NGalleryHeader
 import com.client.xvideos.n.ui.molecule.NGalleryPagesGrid
 import com.client.xvideos.n.ui.molecule.NGalleryRelatedStrip
+import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
 import com.client.xvideos.n.ui.screens.tag.ScreenNTag
 
@@ -101,6 +105,21 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             }
         }
 
+        val pageMenuContent: @Composable (NPage, Int) -> Unit = { page, _ ->
+            val successGallery = (uiState as? NGalleryUiState.Success)?.gallery
+            if (successGallery != null) {
+                val picture = remember(successGallery, page) {
+                    NPicture.fromPage(successGallery.id, successGallery.mediaId, successGallery.title, page)
+                }
+                NPictureItemExpandMenu(
+                    picture = picture,
+                    isLiked = vm.isPageLiked(page.pageNumber),
+                    onToggleLike = { vm.toggleLikePage(successGallery, page) },
+                    onAddToCollection = { vm.openAddToCollection(picture) }
+                )
+            }
+        }
+
         ScreenNGalleryContent(
             galleryId = galleryId,
             uiState = uiState,
@@ -114,7 +133,24 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             onRandomClick = onRandomClick,
             onShareClick = onShareClick,
             onTagClick = onTagClick,
-            onRetry = vm::loadGallery
+            onRetry = vm::loadGallery,
+            pageMenuContent = pageMenuContent
+        )
+
+        NCollectionDialogs(
+            isSelectOpen = vm.isSelectCollectionOpen,
+            isCreateOpen = vm.isCreateCollectionOpen,
+            collections = vm.saved.collection.collections,
+            onDismiss = {
+                vm.isSelectCollectionOpen = false
+                vm.isCreateCollectionOpen = false
+            },
+            onOpenCreate = {
+                vm.isSelectCollectionOpen = false
+                vm.isCreateCollectionOpen = true
+            },
+            onCreateCollection = { name -> vm.createCollectionAndAdd(name) },
+            onSelectCollection = { name -> vm.addToCollection(name) }
         )
     }
 }
@@ -134,7 +170,8 @@ fun ScreenNGalleryContent(
     modifier: Modifier = Modifier,
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
-    onShareClick: (() -> Unit)? = null
+    onShareClick: (() -> Unit)? = null,
+    pageMenuContent: (@Composable (NPage, Int) -> Unit)? = null
 ) {
     val topInset = getTopInsetDp()
     val title = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId"
@@ -193,6 +230,7 @@ fun ScreenNGalleryContent(
                         mediaId = gallery.mediaId,
                         columns = columns,
                         onPageClick = { pageIndex -> onRead(gallery, pageIndex) },
+                        menuContent = pageMenuContent,
                         header = {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 NGalleryHeader(

@@ -29,7 +29,10 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
+import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureGrid
+import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
+import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 
 fun N_ScreenSavedLikesTab_AddColumn() {
@@ -60,15 +63,49 @@ object N_ScreenSavedLikesTab : Screen {
             }
         }
 
+        val onOpenGallery: (NPicture) -> Unit = remember(navigator) {
+            { picture -> navigator.push(ScreenNGallery(picture.galleryId)) }
+        }
+
+        val onAddToCollection: (NPicture) -> Unit = remember(vm) {
+            { picture -> vm.openAddToCollection(picture) }
+        }
+
         val onPictureDelete: (NPicture) -> Unit = remember(vm) {
             { picture -> vm.removeLike(picture) }
+        }
+
+        val pictureMenuContent: @Composable (NPicture) -> Unit = { picture ->
+            NPictureItemExpandMenu(
+                picture = picture,
+                isLiked = true,
+                onOpenGallery = { onOpenGallery(picture) },
+                onAddToCollection = { onAddToCollection(picture) },
+                onDelete = { onPictureDelete(picture) }
+            )
         }
 
         N_ScreenSavedLikesTabContent(
             likes = likes,
             columns = columns,
             onPictureClick = onPictureClick,
-            onPictureDelete = onPictureDelete
+            pictureMenuContent = pictureMenuContent
+        )
+
+        NCollectionDialogs(
+            isSelectOpen = vm.isSelectCollectionOpen,
+            isCreateOpen = vm.isCreateCollectionOpen,
+            collections = vm.collections,
+            onDismiss = {
+                vm.isSelectCollectionOpen = false
+                vm.isCreateCollectionOpen = false
+            },
+            onOpenCreate = {
+                vm.isSelectCollectionOpen = false
+                vm.isCreateCollectionOpen = true
+            },
+            onCreateCollection = { name -> vm.createCollectionAndAdd(name) },
+            onSelectCollection = { name -> vm.addToCollection(name) }
         )
     }
 }
@@ -78,7 +115,7 @@ fun N_ScreenSavedLikesTabContent(
     likes: List<NPicture>,
     columns: Int,
     onPictureClick: (NPicture) -> Unit,
-    onPictureDelete: (NPicture) -> Unit,
+    pictureMenuContent: @Composable (NPicture) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
@@ -121,7 +158,7 @@ fun N_ScreenSavedLikesTabContent(
                     items = likes,
                     columns = columns,
                     onItemClick = onPictureClick,
-                    onItemDelete = onPictureDelete,
+                    menuContent = pictureMenuContent,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -136,6 +173,6 @@ private fun N_ScreenSavedLikesTabContentPreview() {
         likes = emptyList(),
         columns = 2,
         onPictureClick = {},
-        onPictureDelete = {}
+        pictureMenuContent = {}
     )
 }

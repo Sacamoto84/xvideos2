@@ -35,6 +35,7 @@ import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.atom.NPictureViewerPage
 import com.client.xvideos.n.ui.atom.NPictureViewerTopBar
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
+import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.molecule.NPictureViewerBottomStrip
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import kotlinx.coroutines.launch
@@ -227,13 +228,20 @@ fun N_FullScreenPictureContent(
                 currentIndex = pagerState.currentPage + 1,
                 totalCount = pictures.size,
                 isVertical = isVertical,
-                isLiked = isLiked,
                 onBack = onBack,
-                onOpenGallery = onOpenGallery,
-                onToggleLike = onToggleLike,
-                onAddToCollection = onAddToCollection,
                 onToggleOrientation = onToggleOrientation,
-                topInset = topInset
+                topInset = topInset,
+                menuContent = {
+                    currentPicture?.let { pic ->
+                        NPictureItemExpandMenu(
+                            picture = pic,
+                            isLiked = isLiked,
+                            onOpenGallery = onOpenGallery,
+                            onToggleLike = onToggleLike,
+                            onAddToCollection = onAddToCollection
+                        )
+                    }
+                }
             )
         }
 

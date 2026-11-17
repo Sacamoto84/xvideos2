@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -38,7 +34,7 @@ fun NPictureCard(
     picture: NPicture,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onDelete: (() -> Unit)? = null
+    menuContent: (@Composable () -> Unit)? = null
 ) {
     val cardShape = RoundedCornerShape(8.dp)
     val ratio = remember(picture.width, picture.height) {
@@ -91,22 +87,12 @@ fun NPictureCard(
             )
         }
 
-        // Кнопка удаления (если передана)
-        if (onDelete != null) {
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(2.dp)
+        // Меню действий (кнопка «три точки») в верхнем правом углу
+        if (menuContent != null) {
+            Box(
+                modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Удалить",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .background(Color(0x88000000), RoundedCornerShape(4.dp))
-                        .padding(4.dp)
-                )
+                menuContent()
             }
         }
     }
@@ -124,6 +110,6 @@ private fun NPictureCardPreview() {
             galleryTitle = "Preview Manga Title"
         ),
         onClick = {},
-        onDelete = {}
+        menuContent = null
     )
 }

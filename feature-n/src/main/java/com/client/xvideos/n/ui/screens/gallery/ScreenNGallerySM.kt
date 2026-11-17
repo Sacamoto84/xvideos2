@@ -1,15 +1,21 @@
 package com.client.xvideos.n.ui.screens.gallery
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.n.model.NGallery
+import com.client.xvideos.n.model.NPage
+import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.repository.NRepository
 import com.client.xvideos.n.saved.NFavoritesRepository
+import com.client.xvideos.n.saved.NSaved
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -30,7 +36,8 @@ import kotlinx.coroutines.launch
 class ScreenNGallerySM @AssistedInject constructor(
     @Assisted val galleryId: Long,
     private val repository: NRepository,
-    private val favoritesRepository: NFavoritesRepository
+    private val favoritesRepository: NFavoritesRepository,
+    val saved: NSaved
 ) : ScreenModel {
 
     @AssistedFactory
@@ -45,6 +52,36 @@ class ScreenNGallerySM @AssistedInject constructor(
     val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
 
     val columns = Settings.n_galleriesTab_column_current_count.field.value
+
+    var isSelectCollectionOpen by mutableStateOf(false)
+    var isCreateCollectionOpen by mutableStateOf(false)
+    var targetPictureForCollection by mutableStateOf<NPicture?>(null)
+
+    fun openAddToCollection(picture: NPicture) {
+        targetPictureForCollection = picture
+        isSelectCollectionOpen = true
+    }
+
+    fun addToCollection(collectionName: String) {
+        val picture = targetPictureForCollection ?: return
+        saved.collection.addToCollection(collectionName, picture)
+        isSelectCollectionOpen = false
+        targetPictureForCollection = null
+    }
+
+    fun createCollectionAndAdd(collectionName: String) {
+        saved.collection.createCollection(collectionName)
+        addToCollection(collectionName)
+        isCreateCollectionOpen = false
+    }
+
+    fun isPageLiked(pageNumber: Int): Boolean =
+        saved.likes.isLiked(galleryId, pageNumber)
+
+    fun toggleLikePage(gallery: NGallery, page: NPage): Boolean {
+        val picture = NPicture.fromPage(gallery.id, gallery.mediaId, gallery.title, page)
+        return saved.likes.toggleLike(picture)
+    }
 
     init {
         loadGallery()

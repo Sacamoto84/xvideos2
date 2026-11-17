@@ -36,6 +36,33 @@ class ScreenSavedNCollectionsSM @Inject constructor(
     val columns = Settings.n_collectionTab_column_current_count.field
 
     var isCreateDialogOpen by mutableStateOf(false)
+    var isSelectOtherCollectionOpen by mutableStateOf(false)
+    var isCreateOtherCollectionOpen by mutableStateOf(false)
+    var targetPictureForOtherCollection by mutableStateOf<NPicture?>(null)
+
+    fun openAddToCollection(picture: NPicture) {
+        targetPictureForOtherCollection = picture
+        isSelectOtherCollectionOpen = true
+    }
+
+    fun addTargetToCollection(collectionName: String) {
+        val picture = targetPictureForOtherCollection ?: return
+        saved.collection.addToCollection(collectionName, picture)
+        isSelectOtherCollectionOpen = false
+        targetPictureForOtherCollection = null
+    }
+
+    fun createCollectionAndAddTarget(collectionName: String) {
+        saved.collection.createCollection(collectionName)
+        addTargetToCollection(collectionName)
+        isCreateOtherCollectionOpen = false
+    }
+
+    fun isLiked(picture: NPicture): Boolean =
+        saved.likes.isLiked(picture.id)
+
+    fun toggleLike(picture: NPicture): Boolean =
+        saved.likes.toggleLike(picture)
 
     fun openCollection(name: String) {
         saved.collection.openCollection(name)

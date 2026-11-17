@@ -25,7 +25,7 @@ fun NPictureGrid(
     onItemClick: (NPicture) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(8.dp),
-    onItemDelete: ((NPicture) -> Unit)? = null
+    menuContent: (@Composable (NPicture) -> Unit)? = null
 ) {
     val gridState = rememberLazyGridState()
 
@@ -44,15 +44,12 @@ fun NPictureGrid(
             val handleClick = remember(picture, onItemClick) {
                 { onItemClick(picture) }
             }
-            val handleDelete = remember(picture, onItemDelete) {
-                if (onItemDelete != null) {
-                    { onItemDelete(picture) }
-                } else null
-            }
             NPictureCard(
                 picture = picture,
                 onClick = handleClick,
-                onDelete = handleDelete
+                menuContent = menuContent?.let { content ->
+                    { content(picture) }
+                }
             )
         }
     }

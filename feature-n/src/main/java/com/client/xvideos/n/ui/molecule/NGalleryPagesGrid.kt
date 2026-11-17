@@ -39,7 +39,8 @@ fun NGalleryPagesGrid(
     columns: Int,
     onPageClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    header: (@Composable () -> Unit)? = null
+    header: (@Composable () -> Unit)? = null,
+    menuContent: (@Composable (page: NPage, index: Int) -> Unit)? = null
 ) {
     val pageShape = RoundedCornerShape(6.dp)
 
@@ -82,6 +83,13 @@ fun NGalleryPagesGrid(
                         .background(Color(0x99000000), RoundedCornerShape(topStart = 4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 )
+
+                // Меню действий (кнопка «три точки») в верхнем правом углу
+                if (menuContent != null) {
+                    Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                        menuContent(page, index)
+                    }
+                }
             }
         }
     }

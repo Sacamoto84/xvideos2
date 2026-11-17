@@ -36,7 +36,10 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.atom.NCollectionTopBar
+import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureGrid
+import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
+import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 
 fun N_ScreenSavedCollectionsTab_AddColumn() {
@@ -74,8 +77,31 @@ object N_ScreenSavedCollectionsTab : Screen {
             }
         }
 
+        val onOpenGallery: (NPicture) -> Unit = remember(navigator) {
+            { picture -> navigator.push(ScreenNGallery(picture.galleryId)) }
+        }
+
+        val onAddToCollection: (NPicture) -> Unit = remember(vm) {
+            { picture -> vm.openAddToCollection(picture) }
+        }
+
+        val onToggleLike: (NPicture) -> Unit = remember(vm) {
+            { picture -> vm.toggleLike(picture) }
+        }
+
         val onPictureDelete: (NPicture) -> Unit = remember(vm) {
             { picture -> vm.removeItem(picture) }
+        }
+
+        val pictureMenuContent: @Composable (NPicture) -> Unit = { picture ->
+            NPictureItemExpandMenu(
+                picture = picture,
+                isLiked = vm.isLiked(picture),
+                onOpenGallery = { onOpenGallery(picture) },
+                onToggleLike = { onToggleLike(picture) },
+                onAddToCollection = { onAddToCollection(picture) },
+                onRemoveFromCollection = { onPictureDelete(picture) }
+            )
         }
 
         N_ScreenSavedCollectionsTabContent(
@@ -88,7 +114,7 @@ object N_ScreenSavedCollectionsTab : Screen {
             onCreateClick = { vm.isCreateDialogOpen = true },
             onBackFromCollection = { vm.closeCollection() },
             onPictureClick = onPictureClick,
-            onPictureDelete = onPictureDelete
+            pictureMenuContent = pictureMenuContent
         )
 
         DialogNewCollection(
@@ -98,6 +124,22 @@ object N_ScreenSavedCollectionsTab : Screen {
                 vm.createCollection(name)
                 vm.isCreateDialogOpen = false
             }
+        )
+
+        NCollectionDialogs(
+            isSelectOpen = vm.isSelectOtherCollectionOpen,
+            isCreateOpen = vm.isCreateOtherCollectionOpen,
+            collections = collections,
+            onDismiss = {
+                vm.isSelectOtherCollectionOpen = false
+                vm.isCreateOtherCollectionOpen = false
+            },
+            onOpenCreate = {
+                vm.isSelectOtherCollectionOpen = false
+                vm.isCreateOtherCollectionOpen = true
+            },
+            onCreateCollection = { name -> vm.createCollectionAndAddTarget(name) },
+            onSelectCollection = { name -> vm.addTargetToCollection(name) }
         )
     }
 }
@@ -113,7 +155,7 @@ fun N_ScreenSavedCollectionsTabContent(
     onCreateClick: () -> Unit,
     onBackFromCollection: () -> Unit,
     onPictureClick: (NPicture) -> Unit,
-    onPictureDelete: (NPicture) -> Unit,
+    pictureMenuContent: @Composable (NPicture) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val gridState = rememberLazyGridState()
@@ -185,7 +227,7 @@ fun N_ScreenSavedCollectionsTabContent(
                         items = currentItems,
                         columns = columns,
                         onItemClick = onPictureClick,
-                        onItemDelete = onPictureDelete,
+                        menuContent = pictureMenuContent,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -207,6 +249,6 @@ private fun N_ScreenSavedCollectionsTabContentPreview() {
         onCreateClick = {},
         onBackFromCollection = {},
         onPictureClick = {},
-        onPictureDelete = {}
+        pictureMenuContent = {}
     )
 }
