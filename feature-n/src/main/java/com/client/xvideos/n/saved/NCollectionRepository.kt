@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.CollectionDB
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.n.model.NPicture
 import java.io.File
 import javax.inject.Inject
@@ -118,6 +119,16 @@ class NCollectionRepository @Inject constructor() {
         val result = db.deleteItem(pictureId, collectionName)
         if (result.isSuccess) {
             refresh()
+            return true
+        }
+        return false
+    }
+
+    fun setCollectionCover(collectionName: String, picture: NPicture): Boolean {
+        val result = db.insert(picture.id, collectionName, picture)
+        if (result.isSuccess) {
+            refresh()
+            SnackBar.success("Обложка коллекции обновлена")
             return true
         }
         return false

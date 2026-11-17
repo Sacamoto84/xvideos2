@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.CreateNewFolder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
@@ -14,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.expandmenu.LazyExpandMenuAnchor
+import com.client.xvideos.common.gallery.GallerySaver
+import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.share.useCaseShareText
 import com.client.xvideos.n.model.NPicture
 
@@ -29,9 +33,11 @@ fun NPictureItemExpandMenu(
     onOpenGallery: (() -> Unit)? = null,
     onToggleLike: (() -> Unit)? = null,
     onAddToCollection: (() -> Unit)? = null,
+    onSetCover: (() -> Unit)? = null,
+    onSaveToGallery: (() -> Unit)? = null,
+    onShare: (() -> Unit)? = null,
     onRemoveFromCollection: (() -> Unit)? = null,
-    onDelete: (() -> Unit)? = null,
-    onShare: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -66,6 +72,34 @@ fun NPictureItemExpandMenu(
                 dismiss()
                 onAddToCollection()
             }
+        }
+
+        if (onSetCover != null) {
+            ExpandMenuActionItem(
+                icon = Icons.Default.Wallpaper,
+                text = "Сделать обложкой"
+            ) {
+                dismiss()
+                onSetCover()
+            }
+        }
+
+        val saveToGalleryAction = onSaveToGallery ?: {
+            val fileName = "n_${picture.galleryId}_${picture.pageNumber}.${picture.ext}"
+            GallerySaver.saveFromUrl(
+                context = context,
+                kDownloader = KDownloader.create(context),
+                url = picture.imageUrl,
+                fileName = fileName
+            )
+        }
+
+        ExpandMenuActionItem(
+            icon = Icons.Default.Download,
+            text = "Сохранить в галерею"
+        ) {
+            dismiss()
+            saveToGalleryAction()
         }
 
         val shareAction = onShare ?: {
@@ -122,6 +156,7 @@ private fun NPictureItemExpandMenuPreview() {
         onOpenGallery = {},
         onToggleLike = {},
         onAddToCollection = {},
+        onSetCover = {},
         onDelete = {}
     )
 }

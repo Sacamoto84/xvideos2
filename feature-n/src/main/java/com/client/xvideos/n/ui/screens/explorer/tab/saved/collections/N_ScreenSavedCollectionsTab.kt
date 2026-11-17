@@ -93,6 +93,10 @@ object N_ScreenSavedCollectionsTab : Screen {
             { picture -> vm.removeItem(picture) }
         }
 
+        val onSetCover: (NPicture) -> Unit = remember(vm) {
+            { picture -> vm.setCover(picture) }
+        }
+
         val pictureMenuContent: @Composable (NPicture) -> Unit = { picture ->
             NPictureItemExpandMenu(
                 picture = picture,
@@ -100,6 +104,7 @@ object N_ScreenSavedCollectionsTab : Screen {
                 onOpenGallery = { onOpenGallery(picture) },
                 onToggleLike = { onToggleLike(picture) },
                 onAddToCollection = { onAddToCollection(picture) },
+                onSetCover = { onSetCover(picture) },
                 onRemoveFromCollection = { onPictureDelete(picture) }
             )
         }

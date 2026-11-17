@@ -64,6 +64,11 @@ class ScreenSavedNCollectionsSM @Inject constructor(
     fun toggleLike(picture: NPicture): Boolean =
         saved.likes.toggleLike(picture)
 
+    fun setCover(picture: NPicture): Boolean {
+        val current = currentCollectionName ?: return false
+        return saved.collection.setCollectionCover(current, picture)
+    }
+
     fun openCollection(name: String) {
         saved.collection.openCollection(name)
     }

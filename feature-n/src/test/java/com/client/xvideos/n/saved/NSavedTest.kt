@@ -99,6 +99,22 @@ class NSavedTest {
     }
 
     @Test
+    fun `collection repository sets collection cover`() {
+        val pic1 = NPicture(id = "1_1", galleryId = 1L, mediaId = 1L, pageNumber = 1)
+        val pic2 = NPicture(id = "1_2", galleryId = 1L, mediaId = 1L, pageNumber = 2)
+
+        collectionRepo.createCollection("CoversTest")
+        collectionRepo.addToCollection("CoversTest", pic1)
+        collectionRepo.addToCollection("CoversTest", pic2)
+
+        val updated = collectionRepo.setCollectionCover("CoversTest", pic2)
+        assertTrue(updated)
+
+        collectionRepo.openCollection("CoversTest")
+        assertEquals(pic2.id, collectionRepo.currentCollectionItems.first().id)
+    }
+
+    @Test
     fun `NSaved refreshAll executes without errors`() {
         assertNotNull(saved.favorites)
         assertNotNull(saved.likes)
