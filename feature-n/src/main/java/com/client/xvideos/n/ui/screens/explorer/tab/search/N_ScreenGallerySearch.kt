@@ -9,7 +9,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +30,7 @@ import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NSearchBar
+import com.client.xvideos.n.ui.molecule.NAlbumFilterDialog
 import com.client.xvideos.n.ui.molecule.NAlbumListBottomBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
@@ -57,6 +60,9 @@ object N_ScreenGallerySearch : Screen {
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
+        val filter by vm.filter.collectAsStateWithLifecycle()
+
+        var isFilterDialogOpen by remember { mutableStateOf(false) }
 
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { id -> navigator.push(ScreenNGallery(id)) }
@@ -69,7 +75,8 @@ object N_ScreenGallerySearch : Screen {
                 onTagSuggestionClick = vm::selectTagSuggestion,
                 onGalleryClick = onGalleryClick,
                 onPageChange = vm::loadPage,
-                onRetry = vm::search
+                onRetry = vm::search,
+                onOpenFilter = { isFilterDialogOpen = true }
             )
         }
 
@@ -81,8 +88,20 @@ object N_ScreenGallerySearch : Screen {
             totalPages = totalPages,
             columns = columns,
             challengeUrl = challengeUrl,
-            actions = actions
+            actions = actions,
+            hasActiveFilter = filter.isFiltered
         )
+
+        if (isFilterDialogOpen) {
+            NAlbumFilterDialog(
+                initialFilter = filter,
+                onDismiss = { isFilterDialogOpen = false },
+                onApply = { newFilter ->
+                    vm.setFilter(newFilter)
+                    isFilterDialogOpen = false
+                }
+            )
+        }
     }
 }
 
@@ -96,7 +115,8 @@ fun N_ScreenGallerySearchContent(
     columns: Int,
     challengeUrl: String?,
     actions: NSearchActions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasActiveFilter: Boolean = false
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -152,7 +172,11 @@ fun N_ScreenGallerySearchContent(
                 is NGalleryListUiState.Success -> {
                     if (uiState.items.isEmpty()) {
                         Text(
-                            text = if (query.isEmpty()) "Введите запрос для поиска" else "Ничего не найдено",
+                            text = if (query.isEmpty() && !hasActiveFilter) {
+                                "Введите запрос для поиска"
+                            } else {
+                                "Ничего не найдено"
+                            },
                             color = Color(0xFF888888),
                             fontSize = 14.sp,
                             modifier = Modifier.align(Alignment.Center)
@@ -181,11 +205,14 @@ fun N_ScreenGallerySearchContent(
             }
         }
 
-        if (totalPages > 1 || currentPage > 1) {
+        val shouldShowBottomBar = hasActiveFilter || totalPages > 1 || currentPage > 1
+        if (shouldShowBottomBar) {
             NAlbumListBottomBar(
                 currentPage = currentPage,
                 totalPages = totalPages,
-                onPageChange = actions.onPageChange
+                onPageChange = actions.onPageChange,
+                onFilterClick = actions.onOpenFilter,
+                hasActiveFilter = hasActiveFilter
             )
         }
     }

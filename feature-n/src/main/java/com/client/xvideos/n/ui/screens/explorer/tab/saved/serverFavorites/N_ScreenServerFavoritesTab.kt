@@ -9,7 +9,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,12 +26,14 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.molecule.NAlbumListBottomBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.molecule.NServerFavoriteActionDialog
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.molecule.NServerFavoritesEmptyState
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.molecule.NServerFavoritesTopBar
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
@@ -55,9 +59,13 @@ object N_ScreenServerFavoritesTab : Screen {
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
 
+        var selectedItemForAction by remember { mutableStateOf<NGalleryPreview?>(null) }
+
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { id -> navigator.push(ScreenNGallery(id)) }
         }
+        val onItemLongClick = remember { { item: NGalleryPreview -> selectedItemForAction = item } }
+        val onDismissAction = remember { { selectedItemForAction = null } }
 
         N_ScreenServerFavoritesTabContent(
             uiState = uiState,
@@ -67,10 +75,23 @@ object N_ScreenServerFavoritesTab : Screen {
             isImporting = isImporting,
             challengeUrl = challengeUrl,
             onGalleryClick = onGalleryClick,
+            onItemLongClick = onItemLongClick,
             onPageChange = vm::loadPage,
             onImportAll = vm::importCurrentPage,
             onRetry = { vm.loadPage(currentPage) }
         )
+
+        selectedItemForAction?.let { item ->
+            val isLocallySaved = remember(item.id) { vm.isLocallySaved(item.id) }
+            NServerFavoriteActionDialog(
+                item = item,
+                isLocallySaved = isLocallySaved,
+                onDismiss = onDismissAction,
+                onOpen = onGalleryClick,
+                onImport = vm::importSingle,
+                onRemoveFromServer = vm::removeServerFavorite
+            )
+        }
     }
 }
 
@@ -83,6 +104,7 @@ fun N_ScreenServerFavoritesTabContent(
     isImporting: Boolean,
     challengeUrl: String?,
     onGalleryClick: (Long) -> Unit,
+    onItemLongClick: (NGalleryPreview) -> Unit,
     onPageChange: (Int) -> Unit,
     onImportAll: () -> Unit,
     onRetry: () -> Unit,
@@ -127,6 +149,7 @@ fun N_ScreenServerFavoritesTabContent(
                             items = uiState.items,
                             columns = columns,
                             onItemClick = onGalleryClick,
+                            onItemLongClick = onItemLongClick,
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
                             modifier = Modifier.fillMaxSize()
                         )
@@ -185,6 +208,7 @@ private fun N_ScreenServerFavoritesTabContentPreview() {
         isImporting = false,
         challengeUrl = null,
         onGalleryClick = {},
+        onItemLongClick = {},
         onPageChange = {},
         onImportAll = {},
         onRetry = {}

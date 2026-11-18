@@ -11,5 +11,6 @@ data class NSearchActions(
     val onTagSuggestionClick: (NTag) -> Unit,
     val onGalleryClick: (Long) -> Unit,
     val onPageChange: (Int) -> Unit,
-    val onRetry: () -> Unit
+    val onRetry: () -> Unit,
+    val onOpenFilter: () -> Unit = {}
 )

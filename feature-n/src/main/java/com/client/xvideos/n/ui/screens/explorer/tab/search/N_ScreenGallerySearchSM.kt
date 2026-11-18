@@ -5,7 +5,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.n.model.NSortType
+import com.client.xvideos.n.model.NAlbumFilter
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.repository.NRepository
@@ -45,6 +45,9 @@ class N_ScreenGallerySearchSM @Inject constructor(
 
     private val _uiState = MutableStateFlow<NGalleryListUiState>(NGalleryListUiState.Success(emptyList()))
     val uiState: StateFlow<NGalleryListUiState> = _uiState.asStateFlow()
+
+    private val _filter = MutableStateFlow(NAlbumFilter.DEFAULT)
+    val filter: StateFlow<NAlbumFilter> = _filter.asStateFlow()
 
     val columns = Settings.n_galleriesTab_column_current_count.field
 
@@ -99,9 +102,23 @@ class N_ScreenGallerySearchSM @Inject constructor(
         loadPage(1)
     }
 
+    fun setFilter(newFilter: NAlbumFilter) {
+        _filter.value = newFilter
+        loadPage(1)
+    }
+
     fun loadPage(page: Int) {
         val q = _query.value.trim()
-        if (q.isEmpty()) return
+        val currentFilter = _filter.value
+        val effectiveQuery = buildString {
+            if (q.isNotEmpty()) append(q)
+            if (currentFilter.language.isNotEmpty() && !q.contains("language:")) {
+                if (isNotEmpty()) append(" ")
+                append("language:${currentFilter.language}")
+            }
+        }.trim()
+
+        if (effectiveQuery.isEmpty()) return
 
         tagSearchJob?.cancel()
         searchJob?.cancel()
@@ -110,7 +127,7 @@ class N_ScreenGallerySearchSM @Inject constructor(
 
         searchJob = screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
-            repository.searchPage(query = q, page = page, sort = NSortType.RECENT).fold(
+            repository.searchPage(query = effectiveQuery, page = page, sort = currentFilter.sort).fold(
                 onSuccess = { result ->
                     _currentPage.value = result.page
                     _totalPages.value = result.totalPages.coerceAtLeast(1)

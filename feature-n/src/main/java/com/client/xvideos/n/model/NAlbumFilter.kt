@@ -10,6 +10,9 @@ data class NAlbumFilter(
     val isDefault: Boolean
         get() = language.isEmpty() && sort == NSortType.RECENT
 
+    val isFiltered: Boolean
+        get() = !isDefault
+
     val searchQuery: String
         get() = when {
             language.isNotEmpty() -> "language:$language"

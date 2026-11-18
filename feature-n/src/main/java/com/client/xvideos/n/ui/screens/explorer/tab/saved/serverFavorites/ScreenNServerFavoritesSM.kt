@@ -106,6 +106,28 @@ class ScreenNServerFavoritesSM @Inject constructor(
             SnackBar.info("Уже сохранено локально")
         }
     }
+
+    /**
+     * Проверяет, сохранена ли галерея локально.
+     */
+    fun isLocallySaved(galleryId: Long): Boolean = favoritesRepository.isFavorite(galleryId)
+
+    /**
+     * Удаляет галерею из серверного избранного и перезагружает текущую страницу.
+     */
+    fun removeServerFavorite(galleryId: Long) {
+        screenModelScope.launch {
+            repository.toggleServerFavorite(galleryId).fold(
+                onSuccess = {
+                    SnackBar.success("Удалено из избранного на сервере")
+                    loadPage(_currentPage.value)
+                },
+                onFailure = { error ->
+                    SnackBar.error("Не удалось удалить с сервера: ${error.localizedMessage ?: "ошибка"}")
+                }
+            )
+        }
+    }
 }
 
 @Module
