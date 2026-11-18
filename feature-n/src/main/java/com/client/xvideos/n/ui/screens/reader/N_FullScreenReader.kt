@@ -141,7 +141,8 @@ class N_FullScreenReader(
             onSelectCollection = { name ->
                 vm.addToCollection(gallery, pagerState.currentPage, name)
                 vm.isSelectCollectionOpen = false
-            }
+            },
+            coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
 }

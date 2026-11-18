@@ -19,7 +19,8 @@ fun NCollectionDialogs(
     onOpenCreate: () -> Unit,
     onCreateCollection: (String) -> Unit,
     onSelectCollection: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    coverUrlProvider: (String, List<NPicture>) -> String? = { _, items -> items.firstOrNull()?.thumbnailUrl }
 ) {
     if (isCreateOpen) {
         DialogNewCollection(
@@ -35,7 +36,8 @@ fun NCollectionDialogs(
             onDismiss = onDismiss,
             onConfirmCreate = onOpenCreate,
             onSelectCollection = onSelectCollection,
-            modifier = modifier
+            modifier = modifier,
+            coverUrlProvider = coverUrlProvider
         )
     }
 }
@@ -50,6 +52,7 @@ private fun NCollectionDialogsPreview() {
         onDismiss = {},
         onOpenCreate = {},
         onCreateCollection = {},
-        onSelectCollection = {}
+        onSelectCollection = {},
+        coverUrlProvider = { _, _ -> null }
     )
 }

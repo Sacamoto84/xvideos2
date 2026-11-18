@@ -47,6 +47,9 @@ class N_FullScreenReaderSM @Inject constructor(
         saved.collection.createCollection(collectionName)
         return addToCollection(gallery, pageIndex, collectionName)
     }
+
+    fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
+        saved.collection.getCollectionCoverUrl(collectionName, items)
 }
 
 @Module

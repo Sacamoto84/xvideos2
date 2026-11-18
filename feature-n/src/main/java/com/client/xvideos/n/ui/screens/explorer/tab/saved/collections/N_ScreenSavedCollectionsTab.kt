@@ -167,7 +167,8 @@ object N_ScreenSavedCollectionsTab : Screen {
                 vm.isCreateOtherCollectionOpen = true
             },
             onCreateCollection = { name -> vm.createCollectionAndAddTarget(name) },
-            onSelectCollection = { name -> vm.addTargetToCollection(name) }
+            onSelectCollection = { name -> vm.addTargetToCollection(name) },
+            coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
 }

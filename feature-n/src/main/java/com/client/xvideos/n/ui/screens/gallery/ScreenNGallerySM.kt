@@ -78,6 +78,9 @@ class ScreenNGallerySM @AssistedInject constructor(
         isCreateCollectionOpen = false
     }
 
+    fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
+        saved.collection.getCollectionCoverUrl(collectionName, items)
+
     fun isPageLiked(pageNumber: Int): Boolean =
         saved.likes.isLiked(galleryId, pageNumber)
 

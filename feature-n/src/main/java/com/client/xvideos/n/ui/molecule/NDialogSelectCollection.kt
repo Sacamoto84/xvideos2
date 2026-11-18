@@ -30,7 +30,8 @@ fun NDialogSelectCollection(
     onConfirmCreate: () -> Unit,
     onSelectCollection: (String) -> Unit,
     modifier: Modifier = Modifier,
-    title: String = "Добавить в коллекцию"
+    title: String = "Добавить в коллекцию",
+    coverUrlProvider: (String, List<NPicture>) -> String? = { _, items -> items.firstOrNull()?.thumbnailUrl }
 ) {
     LavenderDialog(
         title = title,
@@ -64,13 +65,13 @@ fun NDialogSelectCollection(
                         val handleSelect = remember(entity.collection, onSelectCollection) {
                             { onSelectCollection(entity.collection) }
                         }
-                        val firstThumb = remember(entity.items) {
-                            entity.items.firstOrNull()?.thumbnailUrl
+                        val thumb = remember(entity.collection, entity.items, coverUrlProvider) {
+                            coverUrlProvider(entity.collection, entity.items)
                         }
                         NCollectionRowItem(
                             name = entity.collection,
                             itemsCount = entity.items.size,
-                            previewUrl = firstThumb,
+                            previewUrl = thumb,
                             onClick = handleSelect
                         )
                     }
@@ -87,6 +88,7 @@ private fun NDialogSelectCollectionPreview() {
         collections = emptyList(),
         onDismiss = {},
         onConfirmCreate = {},
-        onSelectCollection = {}
+        onSelectCollection = {},
+        coverUrlProvider = { _, _ -> null }
     )
 }

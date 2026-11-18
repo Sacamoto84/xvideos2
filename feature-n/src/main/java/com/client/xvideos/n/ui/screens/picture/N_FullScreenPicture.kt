@@ -146,7 +146,8 @@ class N_FullScreenPicture(
             onSelectCollection = { name ->
                 currentPicture?.let { vm.addToCollection(it, name) }
                 vm.isSelectCollectionOpen = false
-            }
+            },
+            coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
 }

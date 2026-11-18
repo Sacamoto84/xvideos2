@@ -151,7 +151,8 @@ class ScreenNGallery(val galleryId: Long) : Screen {
                 vm.isCreateCollectionOpen = true
             },
             onCreateCollection = { name -> vm.createCollectionAndAdd(name) },
-            onSelectCollection = { name -> vm.addToCollection(name) }
+            onSelectCollection = { name -> vm.addToCollection(name) },
+            coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
 }

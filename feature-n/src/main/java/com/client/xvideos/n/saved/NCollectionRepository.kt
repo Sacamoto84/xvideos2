@@ -14,6 +14,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.n.model.NPicture
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,12 +42,16 @@ class NCollectionRepository @Inject constructor() {
     /** Элементы текущей открытой коллекции. */
     val currentCollectionItems = mutableStateListOf<NPicture>()
 
+    /** In-memory кэш конфигураций коллекций для исключения дискового I/O на главном потоке. */
+    private val configsCache = ConcurrentHashMap<String, NCollectionConfig>()
+
     init {
         refresh()
     }
 
     fun refresh() {
         if (!AppPath.isInitialized) return
+        configsCache.clear()
         val list = db.readAllCollections().getOrDefault(emptyList())
         collections.clear()
         collections.addAll(list)
@@ -91,6 +96,7 @@ class NCollectionRepository @Inject constructor() {
     fun deleteCollection(name: String): Boolean {
         val result = db.deleteCollection(name)
         if (result.isSuccess) {
+            CollectionName.normalizeOrNull(name)?.let { configsCache.remove(it) }
             if (currentCollectionName.equals(name, ignoreCase = true)) {
                 closeCollection()
             }
@@ -105,6 +111,11 @@ class NCollectionRepository @Inject constructor() {
     fun renameCollection(oldName: String, newName: String): Boolean {
         val result = db.renameCollection(oldName, newName)
         if (result.isSuccess) {
+            val safeOld = CollectionName.normalizeOrNull(oldName)
+            val safeNew = CollectionName.normalizeOrNull(newName)
+            if (safeOld != null && safeNew != null) {
+                configsCache.remove(safeOld)?.let { configsCache[safeNew] = it }
+            }
             if (currentCollectionName.equals(oldName, ignoreCase = true)) {
                 currentCollectionName = newName
             }
@@ -143,23 +154,25 @@ class NCollectionRepository @Inject constructor() {
     }
 
     /**
-     * Читает конфигурацию коллекции [collectionName] из директории коллекции.
+     * Читает конфигурацию коллекции [collectionName] из кэша или директории коллекции.
      */
     fun getCollectionConfig(collectionName: String): NCollectionConfig {
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: return NCollectionConfig()
-        val file = File(File(AppPath.n_collection, safeName), CONFIG_FILE_NAME)
-        if (!file.exists() || file.length() == 0L) return NCollectionConfig()
-        return try {
-            val text = file.readText(Charsets.UTF_8)
-            AppJson.decodeFromString(NCollectionConfig.serializer(), text)
-        } catch (e: Exception) {
-            Timber.w(e, "Не удалось прочитать конфигурацию коллекции $safeName")
-            NCollectionConfig()
+        return configsCache.computeIfAbsent(safeName) {
+            val file = File(File(AppPath.n_collection, safeName), CONFIG_FILE_NAME)
+            if (!file.exists() || file.length() == 0L) return@computeIfAbsent NCollectionConfig()
+            try {
+                val text = file.readText(Charsets.UTF_8)
+                AppJson.decodeFromString(NCollectionConfig.serializer(), text)
+            } catch (e: Exception) {
+                Timber.w(e, "Не удалось прочитать конфигурацию коллекции $safeName")
+                NCollectionConfig()
+            }
         }
     }
 
     /**
-     * Сохраняет конфигурацию коллекции [collectionName] в её директории.
+     * Сохраняет конфигурацию коллекции [collectionName] в её директории и обновляет кэш.
      */
     private fun saveCollectionConfig(collectionName: String, config: NCollectionConfig): Boolean {
         val safeName = CollectionName.normalizeOrNull(collectionName) ?: return false
@@ -171,6 +184,7 @@ class NCollectionRepository @Inject constructor() {
         return try {
             val jsonText = AppJson.encodeToString(NCollectionConfig.serializer(), config)
             file.writeTextAtomically(jsonText)
+            configsCache[safeName] = config
             true
         } catch (e: Exception) {
             Timber.e(e, "Не удалось сохранить конфигурацию коллекции $safeName")

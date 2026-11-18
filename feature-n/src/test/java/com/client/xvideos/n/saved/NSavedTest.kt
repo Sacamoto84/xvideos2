@@ -115,6 +115,13 @@ class NSavedTest {
         assertEquals("1_2", collectionRepo.getCollectionConfig("CoversTest").coverPictureId)
         val coverUrl = collectionRepo.getCollectionCoverUrl("CoversTest", collectionRepo.currentCollectionItems)
         assertEquals(pic2.thumbnailUrl, coverUrl)
+
+        val renamed = collectionRepo.renameCollection("CoversTest", "CoversRenamed")
+        assertTrue(renamed)
+        assertEquals("1_2", collectionRepo.getCollectionConfig("CoversRenamed").coverPictureId)
+
+        collectionRepo.removeFromCollection("CoversRenamed", pic2.id)
+        assertNull(collectionRepo.getCollectionConfig("CoversRenamed").coverPictureId)
     }
 
     @Test
