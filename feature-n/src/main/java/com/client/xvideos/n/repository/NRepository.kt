@@ -229,6 +229,29 @@ class NRepository @Inject constructor() {
     }
 
     /**
+     * Переключает состояние избранного для галереи на сервере (/g/{id}/favorite).
+     */
+    suspend fun toggleServerFavorite(galleryId: Long): Result<Boolean> {
+        val endpoint = "/g/$galleryId/favorite"
+        return when (val result = NClient.postForm(endpoint)) {
+            is NNetworkResult.Success -> {
+                val isFav = result.body.contains("\"favorited\": true") ||
+                    result.body.contains("\"favorited\":true")
+                Result.success(isFav)
+            }
+            is NNetworkResult.CloudflareRequired -> {
+                Result.failure(CloudflareBlockedException(result.challengeUrl))
+            }
+            is NNetworkResult.Error -> {
+                Result.failure(RuntimeException("Ошибка обновления избранного на сервере: ${result.code}"))
+            }
+            is NNetworkResult.Failure -> {
+                Result.failure(result.throwable)
+            }
+        }
+    }
+
+    /**
      * Получает ID случайной манги через API v2.
      */
     suspend fun getRandomGalleryId(): Result<Long> {

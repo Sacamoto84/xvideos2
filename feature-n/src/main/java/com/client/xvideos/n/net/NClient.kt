@@ -2,6 +2,7 @@ package com.client.xvideos.n.net
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.webkit.CookieManager
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -75,6 +76,39 @@ object NClient {
         executeRequest(requestBuilder.build(), targetUrl)
     }
 
+    /**
+     * Выполняет POST-запрос формы к nhentai.net с поддержкой CSRF-токена.
+     */
+    suspend fun postForm(url: String, headers: Map<String, String> = emptyMap()): NNetworkResult = withContext(Dispatchers.IO) {
+        val targetUrl = if (url.startsWith("http")) url else "$BASE_URL$url"
+        val emptyBody = "".toRequestBody(null)
+
+        val requestBuilder = Request.Builder()
+            .url(targetUrl)
+            .post(emptyBody)
+            .header("User-Agent", NUserAgent.current)
+            .header("Accept", "application/json, text/javascript, */*; q=0.01")
+            .header("X-Requested-With", "XMLHttpRequest")
+            .header("Referer", targetUrl)
+
+        headers.forEach { (k, v) -> requestBuilder.header(k, v) }
+
+        val apiKey = NAuthState.currentApiKey
+        if (apiKey.isNotBlank()) {
+            requestBuilder.header("Authorization", "Key $apiKey")
+        }
+
+        buildCookieHeader()?.let { cookieHeader ->
+            requestBuilder.header("Cookie", cookieHeader)
+            val csrf = NCookieHelper.extractCookieValue(cookieHeader, "csrftoken")
+            if (csrf.isNotEmpty()) {
+                requestBuilder.header("X-CSRFToken", csrf)
+            }
+        }
+
+        executeRequest(requestBuilder.build(), targetUrl)
+    }
+
     private fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
         return try {
             okHttpClient.newCall(request).execute().use { response ->
@@ -121,6 +155,13 @@ object NClient {
         val sessionCookie = NAuthState.currentSessionCookie
         if (sessionCookie.isNotBlank()) {
             cookies.add("sessionid=$sessionCookie")
+        }
+        runCatching {
+            val cmCookies = CookieManager.getInstance().getCookie(BASE_URL).orEmpty()
+            val csrf = NCookieHelper.extractCookieValue(cmCookies, "csrftoken")
+            if (csrf.isNotBlank() && cookies.none { it.startsWith("csrftoken=") }) {
+                cookies.add("csrftoken=$csrf")
+            }
         }
         return if (cookies.isNotEmpty()) cookies.joinToString("; ") else null
     }

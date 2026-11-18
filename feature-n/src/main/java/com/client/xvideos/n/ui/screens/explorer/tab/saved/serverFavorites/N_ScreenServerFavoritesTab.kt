@@ -99,6 +99,7 @@ fun N_ScreenServerFavoritesTabContent(
         NServerFavoritesTopBar(
             itemsCount = itemsCount,
             onImportAll = onImportAll,
+            onRefresh = onRetry,
             isImporting = isImporting,
             topInset = topInset
         )

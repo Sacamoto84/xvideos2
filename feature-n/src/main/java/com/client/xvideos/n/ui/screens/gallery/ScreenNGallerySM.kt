@@ -12,6 +12,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
+import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.repository.NRepository
 import com.client.xvideos.n.saved.NFavoritesRepository
@@ -95,7 +96,13 @@ class ScreenNGallerySM @AssistedInject constructor(
 
     fun toggleFavorite() {
         val gallery = (_uiState.value as? NGalleryUiState.Success)?.gallery ?: return
-        _isFavorite.value = favoritesRepository.toggleFavorite(gallery)
+        val newFav = favoritesRepository.toggleFavorite(gallery)
+        _isFavorite.value = newFav
+        if (NAuthState.isLoggedIn.value) {
+            screenModelScope.launch {
+                repository.toggleServerFavorite(gallery.id)
+            }
+        }
     }
 
     fun loadGallery() {

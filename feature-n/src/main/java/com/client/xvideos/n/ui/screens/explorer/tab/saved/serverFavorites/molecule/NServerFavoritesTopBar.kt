@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -33,6 +34,7 @@ fun NServerFavoritesTopBar(
     itemsCount: Int,
     onImportAll: () -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: (() -> Unit)? = null,
     isImporting: Boolean = false,
     topInset: Dp = 0.dp
 ) {
@@ -64,6 +66,18 @@ fun NServerFavoritesTopBar(
                     color = Color(0xFFAAAAAA),
                     fontSize = 12.sp
                 )
+            }
+
+            if (onRefresh != null) {
+                HintTooltip(text = "Обновить страницу") {
+                    IconButton(onClick = onRefresh) {
+                        Icon(
+                            imageVector = Icons.Outlined.Refresh,
+                            contentDescription = "Обновить",
+                            tint = Color.White
+                        )
+                    }
+                }
             }
 
             HintTooltip(text = "Импортировать страницу в сохранённое") {
