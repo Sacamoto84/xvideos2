@@ -5,6 +5,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.n.model.NAlbumFilter
 import com.client.xvideos.n.model.NSortType
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.repository.NRepository
@@ -37,6 +38,9 @@ class N_ScreenGalleryListSM @Inject constructor(
     private val _totalPages = MutableStateFlow(1)
     val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
 
+    private val _filter = MutableStateFlow(NAlbumFilter.DEFAULT)
+    val filter: StateFlow<NAlbumFilter> = _filter.asStateFlow()
+
     val columns = Settings.n_galleriesTab_column_current_count.field
 
     private var loadJob: Job? = null
@@ -45,12 +49,27 @@ class N_ScreenGalleryListSM @Inject constructor(
         loadPage(1)
     }
 
+    fun setFilter(newFilter: NAlbumFilter) {
+        _filter.value = newFilter
+        loadPage(1)
+    }
+
     fun loadPage(page: Int) {
         _currentPage.value = page
         loadJob?.cancel()
         loadJob = screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
-            repository.getGalleriesPage(page = page, sort = NSortType.RECENT).fold(
+            val currentFilter = _filter.value
+            val requestResult = if (currentFilter.isDefault) {
+                repository.getGalleriesPage(page = page, sort = NSortType.RECENT)
+            } else {
+                repository.searchPage(
+                    query = currentFilter.searchQuery,
+                    page = page,
+                    sort = currentFilter.sort
+                )
+            }
+            requestResult.fold(
                 onSuccess = { result ->
                     _currentPage.value = result.page
                     _totalPages.value = result.totalPages.coerceAtLeast(1)

@@ -10,7 +10,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,9 +27,11 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.n.model.NAlbumFilter
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NFeedTopBar
+import com.client.xvideos.n.ui.molecule.NAlbumFilterDialog
 import com.client.xvideos.n.ui.molecule.NAlbumListBottomBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
@@ -50,8 +54,11 @@ object N_ScreenGalleryList : Screen {
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val currentPage by vm.currentPage.collectAsStateWithLifecycle()
         val totalPages by vm.totalPages.collectAsStateWithLifecycle()
+        val filter by vm.filter.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
+
+        var showFilterDialog by remember { mutableStateOf(false) }
 
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { id -> navigator.push(ScreenNGallery(id)) }
@@ -65,6 +72,15 @@ object N_ScreenGalleryList : Screen {
             }
         }
 
+        val onFilterClick = remember { { showFilterDialog = true } }
+        val onFilterDismiss = remember { { showFilterDialog = false } }
+        val onFilterApply: (NAlbumFilter) -> Unit = remember(vm) {
+            { newFilter ->
+                showFilterDialog = false
+                vm.setFilter(newFilter)
+            }
+        }
+
         N_ScreenGalleryListContent(
             uiState = uiState,
             currentPage = currentPage,
@@ -74,8 +90,18 @@ object N_ScreenGalleryList : Screen {
             onGalleryClick = onGalleryClick,
             onRandomClick = onRandomClick,
             onPageChange = vm::loadPage,
-            onRetry = { vm.loadPage(currentPage) }
+            onRetry = { vm.loadPage(currentPage) },
+            onFilterClick = onFilterClick,
+            hasActiveFilter = !filter.isDefault
         )
+
+        if (showFilterDialog) {
+            NAlbumFilterDialog(
+                initialFilter = filter,
+                onDismiss = onFilterDismiss,
+                onApply = onFilterApply
+            )
+        }
     }
 }
 
@@ -90,7 +116,9 @@ fun N_ScreenGalleryListContent(
     onRandomClick: () -> Unit,
     onPageChange: (Int) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onFilterClick: (() -> Unit)? = null,
+    hasActiveFilter: Boolean = false
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -160,11 +188,13 @@ fun N_ScreenGalleryListContent(
             }
         }
 
-        if (totalPages > 1 || currentPage > 1) {
+        if (totalPages > 1 || currentPage > 1 || onFilterClick != null) {
             NAlbumListBottomBar(
                 currentPage = currentPage,
                 totalPages = totalPages,
-                onPageChange = onPageChange
+                onPageChange = onPageChange,
+                onFilterClick = onFilterClick,
+                hasActiveFilter = hasActiveFilter
             )
         }
     }
@@ -182,6 +212,8 @@ private fun N_ScreenGalleryListContentPreview() {
         onGalleryClick = {},
         onRandomClick = {},
         onPageChange = {},
-        onRetry = {}
+        onRetry = {},
+        onFilterClick = {},
+        hasActiveFilter = true
     )
 }

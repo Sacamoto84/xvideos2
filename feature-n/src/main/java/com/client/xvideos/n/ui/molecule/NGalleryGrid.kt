@@ -36,7 +36,8 @@ fun NGalleryGrid(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(8.dp),
     isLoadingMore: Boolean = false,
-    onLoadMore: (() -> Unit)? = null
+    onLoadMore: (() -> Unit)? = null,
+    onItemLongClick: ((NGalleryPreview) -> Unit)? = null
 ) {
     val gridState = rememberLazyGridState()
 
@@ -66,7 +67,8 @@ fun NGalleryGrid(
         items(items, key = { it.id }) { item ->
             NGalleryCard(
                 item = item,
-                onClick = { onItemClick(item.id) }
+                onClick = { onItemClick(item.id) },
+                onLongClick = onItemLongClick?.let { callback -> { callback(item) } }
             )
         }
 

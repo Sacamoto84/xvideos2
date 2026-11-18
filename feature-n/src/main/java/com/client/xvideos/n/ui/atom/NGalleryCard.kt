@@ -1,8 +1,10 @@
 package com.client.xvideos.n.ui.atom
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,14 +32,25 @@ import com.client.xvideos.n.model.NGalleryPreview
 /**
  * Карточка манги / галереи для сеток и списков.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NGalleryCard(
     item: NGalleryPreview,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null
 ) {
     val cardShape = RoundedCornerShape(8.dp)
     val cleanTitle = remember(item.title) { item.title.trim() }
+
+    val clickModifier = if (onLongClick != null) {
+        Modifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
+    } else {
+        Modifier.clickable(onClick = onClick)
+    }
 
     Box(
         modifier = modifier
@@ -45,7 +58,7 @@ fun NGalleryCard(
             .border(1.dp, Theme.tabLevel3, cardShape)
             .clip(cardShape)
             .background(Theme.tabLevel1)
-            .clickable(onClick = onClick)
+            .then(clickModifier)
     ) {
         UrlImage(
             item.thumbnailUrl,
