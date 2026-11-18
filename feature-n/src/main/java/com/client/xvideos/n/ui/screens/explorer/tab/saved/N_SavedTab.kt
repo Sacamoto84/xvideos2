@@ -24,20 +24,21 @@ import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
+import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.ui.molecule.N_SavedBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.N_ScreenServerFavoritesTab
 import kotlinx.coroutines.launch
-
-private const val N_SAVED_PAGE_COUNT = 3
 
 /**
  * Корневая вкладка сохранённого раздела N (манга).
- * Содержит три подвкладки:
+ * Содержит локальные и серверные подвкладки:
  * 0: Лайки отдельных страниц/картинок
- * 1: Сохранённые произведения (манга) целиком
+ * 1: Сохранённые произведения (манга) целиком локально
  * 2: Пользовательские коллекции страниц
+ * 3: Избранное на сервере (только при авторизации)
  */
 object N_SavedTab : Screen {
 
@@ -50,10 +51,20 @@ object N_SavedTab : Screen {
         val vm = getScreenModel<N_SavedTabSM>()
         val scope = rememberCoroutineScope()
 
+        val isLoggedIn by NAuthState.isLoggedIn.collectAsStateWithLifecycle()
+        val pageCount = nSavedTabPageCount(isLoggedIn)
+
         val pagerState = rememberPagerState(
-            initialPage = vm.screenType.coerceIn(0, N_SAVED_PAGE_COUNT - 1),
-            pageCount = { N_SAVED_PAGE_COUNT }
+            initialPage = nSavedTabPage(vm.screenType, pageCount),
+            pageCount = { pageCount }
         )
+
+        LaunchedEffect(pageCount) {
+            val visible = nSavedTabPage(pagerState.currentPage, pageCount)
+            if (visible != pagerState.currentPage) {
+                pagerState.scrollToPage(visible)
+            }
+        }
 
         LaunchedEffect(pagerState.currentPage) {
             vm.screenType = pagerState.currentPage
@@ -82,7 +93,7 @@ object N_SavedTab : Screen {
                 if (tab == pagerState.currentPage) {
                     when (tab) {
                         0 -> ColumnSelect_AddColumn(Settings.n_likesTab_column_current_count, Settings.n_likesTab_G_0_4)
-                        1 -> ColumnSelect_AddColumn(Settings.n_saved_column_current_count, Settings.n_galleriesTab_G_0_4)
+                        1, 3 -> ColumnSelect_AddColumn(Settings.n_saved_column_current_count, Settings.n_galleriesTab_G_0_4)
                         2 -> ColumnSelect_AddColumn(Settings.n_collectionTab_column_current_count, Settings.n_collectionTab_G_0_4)
                     }
                 } else {
@@ -93,6 +104,7 @@ object N_SavedTab : Screen {
 
         N_SavedTabContent(
             pagerState = pagerState,
+            pageCount = pageCount,
             columnLikes = columnLikes,
             columnManga = columnManga,
             columnCollection = columnCollection,
@@ -105,6 +117,7 @@ object N_SavedTab : Screen {
 @Composable
 fun N_SavedTabContent(
     pagerState: PagerState,
+    pageCount: Int,
     columnLikes: Int,
     columnManga: Int,
     columnCollection: Int,
@@ -116,7 +129,8 @@ fun N_SavedTabContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             N_SavedBottomBar(
-                currentPage = pagerState.currentPage,
+                currentPage = nSavedTabPage(pagerState.currentPage, pageCount),
+                tabCount = pageCount,
                 columnLikes = columnLikes,
                 columnManga = columnManga,
                 columnCollection = columnCollection,
@@ -139,6 +153,7 @@ fun N_SavedTabContent(
                         0 -> N_ScreenSavedLikesTab.Content()
                         1 -> N_ScreenSavedMangaTab.Content()
                         2 -> N_ScreenSavedCollectionsTab.Content()
+                        3 -> N_ScreenServerFavoritesTab.Content()
                     }
                 }
             }
@@ -149,9 +164,10 @@ fun N_SavedTabContent(
 @Preview
 @Composable
 private fun N_SavedTabContentPreview() {
-    val pagerState = rememberPagerState(initialPage = 0) { N_SAVED_PAGE_COUNT }
+    val pagerState = rememberPagerState(initialPage = 0) { 4 }
     N_SavedTabContent(
         pagerState = pagerState,
+        pageCount = 4,
         columnLikes = 2,
         columnManga = 2,
         columnCollection = 2,

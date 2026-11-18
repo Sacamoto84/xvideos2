@@ -1,6 +1,7 @@
 package com.client.xvideos.n.repository
 
 import com.client.xvideos.n.model.NGallery
+import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NSortType
 import com.client.xvideos.n.model.NTag
@@ -21,9 +22,9 @@ class NRepository @Inject constructor() {
     private val galleryCache = ConcurrentHashMap<Long, NGallery>()
 
     /**
-     * Загружает список галерей (лента или сортировки) с приоритетом REST API v2.
+     * Загружает страницу галерей с метаданными пагинации с приоритетом REST API v2.
      */
-    suspend fun getGalleries(page: Int = 1, sort: NSortType = NSortType.RECENT): Result<List<NGalleryPreview>> {
+    suspend fun getGalleriesPage(page: Int = 1, sort: NSortType = NSortType.RECENT): Result<NGalleryPageResult> {
         val apiEndpoint = when {
             sort == NSortType.RECENT -> "/api/v2/galleries?page=$page&per_page=25"
             sort == NSortType.POPULAR_TODAY && page == 1 -> "/api/v2/galleries/popular"
@@ -32,8 +33,8 @@ class NRepository @Inject constructor() {
 
         when (val apiResult = NClient.get(apiEndpoint)) {
             is NNetworkResult.Success -> {
-                val galleries = NParser.parseGalleryListJson(apiResult.body)
-                if (galleries.isNotEmpty()) return Result.success(galleries)
+                val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
+                if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
             }
             is NNetworkResult.CloudflareRequired -> {
                 return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
@@ -48,21 +49,27 @@ class NRepository @Inject constructor() {
             "/search/?q=-nonexisttag&page=$page&sort=${sort.queryValue}"
         }
 
-        return fetchGalleriesFromHtml(htmlEndpoint)
+        return fetchGalleriesPageFromHtml(htmlEndpoint, defaultPage = page)
     }
 
     /**
-     * Поиск галерей по текстовому запросу или тегу с приоритетом REST API v2.
+     * Загружает список галерей (лента или сортировки) с приоритетом REST API v2.
      */
-    suspend fun search(query: String, page: Int = 1, sort: NSortType = NSortType.RECENT): Result<List<NGalleryPreview>> {
+    suspend fun getGalleries(page: Int = 1, sort: NSortType = NSortType.RECENT): Result<List<NGalleryPreview>> =
+        getGalleriesPage(page, sort).map { it.items }
+
+    /**
+     * Поиск галерей по текстовому запросу или тегу со страницей пагинации.
+     */
+    suspend fun searchPage(query: String, page: Int = 1, sort: NSortType = NSortType.RECENT): Result<NGalleryPageResult> {
         val encodedQuery = URLEncoder.encode(query, "UTF-8")
         val sortParam = if (sort.queryValue.isNotEmpty()) "&sort=${sort.queryValue}" else ""
         val apiEndpoint = "/api/v2/search?query=$encodedQuery&page=$page$sortParam"
 
         when (val apiResult = NClient.get(apiEndpoint)) {
             is NNetworkResult.Success -> {
-                val galleries = NParser.parseGalleryListJson(apiResult.body)
-                if (galleries.isNotEmpty()) return Result.success(galleries)
+                val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
+                if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
             }
             is NNetworkResult.CloudflareRequired -> {
                 return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
@@ -72,14 +79,71 @@ class NRepository @Inject constructor() {
 
         // Запасной вариант через HTML-парсинг
         val htmlEndpoint = "/search/?q=$encodedQuery&page=$page$sortParam"
-        return fetchGalleriesFromHtml(htmlEndpoint)
+        return fetchGalleriesPageFromHtml(htmlEndpoint, defaultPage = page)
     }
 
-    private suspend fun fetchGalleriesFromHtml(endpoint: String): Result<List<NGalleryPreview>> {
+    /**
+     * Поиск галерей по текстовому запросу или тегу с приоритетом REST API v2.
+     */
+    suspend fun search(query: String, page: Int = 1, sort: NSortType = NSortType.RECENT): Result<List<NGalleryPreview>> =
+        searchPage(query, page, sort).map { it.items }
+
+    /**
+     * Загружает избранные галереи пользователя с сервера (/api/v2/favorites).
+     */
+    suspend fun getFavoritesPage(page: Int = 1): Result<NGalleryPageResult> {
+        val apiEndpoint = "/api/v2/favorites?page=$page"
+        when (val apiResult = NClient.get(apiEndpoint)) {
+            is NNetworkResult.Success -> {
+                val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
+                return Result.success(pageResult)
+            }
+            is NNetworkResult.CloudflareRequired -> {
+                return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+            }
+            else -> Unit
+        }
+
+        // Запасной вариант через HTML-парсинг
+        val htmlEndpoint = "/favorites/?page=$page"
+        return fetchGalleriesPageFromHtml(htmlEndpoint, defaultPage = page)
+    }
+
+    /**
+     * Загружает галереи по конкретному тегу с приоритетом эндпоинта /api/v2/galleries/tagged.
+     */
+    suspend fun getGalleriesByTagPage(
+        tag: NTag,
+        page: Int = 1,
+        sort: NSortType = NSortType.RECENT
+    ): Result<NGalleryPageResult> {
+        if (tag.id > 0L) {
+            val sortParam = if (sort.queryValue.isNotEmpty()) "&sort=${sort.queryValue}" else ""
+            val apiEndpoint = "/api/v2/galleries/tagged?tag_id=${tag.id}&page=$page$sortParam"
+            when (val apiResult = NClient.get(apiEndpoint)) {
+                is NNetworkResult.Success -> {
+                    val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
+                    if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
+                }
+                is NNetworkResult.CloudflareRequired -> {
+                    return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+                }
+                else -> Unit
+            }
+        }
+
+        val tagQuery = when {
+            tag.type.isNotEmpty() && tag.type != "tag" -> "${tag.type}:\"${tag.name}\""
+            else -> "\"${tag.name}\""
+        }
+        return searchPage(query = tagQuery, page = page, sort = sort)
+    }
+
+    private suspend fun fetchGalleriesPageFromHtml(endpoint: String, defaultPage: Int): Result<NGalleryPageResult> {
         return when (val result = NClient.get(endpoint)) {
             is NNetworkResult.Success -> {
-                val galleries = NParser.parseSearchHtml(result.body)
-                Result.success(galleries)
+                val pageResult = NParser.parseSearchHtmlPage(result.body, defaultPage = defaultPage)
+                Result.success(pageResult)
             }
             is NNetworkResult.CloudflareRequired -> {
                 Result.failure(CloudflareBlockedException(result.challengeUrl))

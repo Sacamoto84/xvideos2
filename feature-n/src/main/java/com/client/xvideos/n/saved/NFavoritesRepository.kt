@@ -60,6 +60,41 @@ class NFavoritesRepository @Inject constructor() {
     }
 
     /**
+     * Импортирует одну галерею в локальное избранное.
+     * Возвращает true, если элемент добавлен (ранее отсутствовал).
+     */
+    fun importFavorite(preview: NGalleryPreview): Boolean {
+        val idStr = preview.id.toString()
+        if (db.contains(idStr)) return false
+        val inserted = db.insert(idStr, preview)
+        if (inserted.isSuccess) {
+            db.refresh()
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Пакетно импортирует список галерей в локальное избранное.
+     * Возвращает количество успешно добавленных новых элементов.
+     */
+    fun importFavorites(galleries: List<NGalleryPreview>): Int {
+        var addedCount = 0
+        galleries.forEach { preview ->
+            val idStr = preview.id.toString()
+            if (!db.contains(idStr)) {
+                if (db.insert(idStr, preview).isSuccess) {
+                    addedCount++
+                }
+            }
+        }
+        if (addedCount > 0) {
+            db.refresh()
+        }
+        return addedCount
+    }
+
+    /**
      * Принудительно перечитывает закладки с диска (например, после восстановления бэкапа).
      */
     fun refresh() {

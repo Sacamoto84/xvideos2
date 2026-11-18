@@ -28,10 +28,12 @@ import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NSearchBar
+import com.client.xvideos.n.ui.molecule.NAlbumListBottomBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.molecule.NTagSuggestionsRow
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
+import com.client.xvideos.n.ui.screens.explorer.tab.search.model.NSearchActions
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 
 /**
@@ -50,7 +52,8 @@ object N_ScreenGallerySearch : Screen {
 
         val query by vm.query.collectAsStateWithLifecycle()
         val tagSuggestions by vm.tagSuggestions.collectAsStateWithLifecycle()
-        val isLoadingMore by vm.isLoadingMore.collectAsStateWithLifecycle()
+        val currentPage by vm.currentPage.collectAsStateWithLifecycle()
+        val totalPages by vm.totalPages.collectAsStateWithLifecycle()
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
@@ -59,19 +62,26 @@ object N_ScreenGallerySearch : Screen {
             { id -> navigator.push(ScreenNGallery(id)) }
         }
 
+        val actions = remember(vm, onGalleryClick) {
+            NSearchActions(
+                onQueryChange = vm::setQuery,
+                onSearch = vm::search,
+                onTagSuggestionClick = vm::selectTagSuggestion,
+                onGalleryClick = onGalleryClick,
+                onPageChange = vm::loadPage,
+                onRetry = vm::search
+            )
+        }
+
         N_ScreenGallerySearchContent(
             query = query,
             tagSuggestions = tagSuggestions,
             uiState = uiState,
+            currentPage = currentPage,
+            totalPages = totalPages,
             columns = columns,
             challengeUrl = challengeUrl,
-            isLoadingMore = isLoadingMore,
-            onQueryChange = vm::setQuery,
-            onSearch = vm::search,
-            onTagSuggestionClick = vm::selectTagSuggestion,
-            onGalleryClick = onGalleryClick,
-            onLoadMore = vm::loadNextPage,
-            onRetry = vm::search
+            actions = actions
         )
     }
 }
@@ -81,16 +91,12 @@ fun N_ScreenGallerySearchContent(
     query: String,
     tagSuggestions: List<NTag>,
     uiState: NGalleryListUiState,
+    currentPage: Int,
+    totalPages: Int,
     columns: Int,
     challengeUrl: String?,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onTagSuggestionClick: (NTag) -> Unit,
-    onGalleryClick: (Long) -> Unit,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-    isLoadingMore: Boolean = false,
-    onLoadMore: (() -> Unit)? = null
+    actions: NSearchActions,
+    modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -100,14 +106,14 @@ fun N_ScreenGallerySearchContent(
     ) {
         NSearchBar(
             query = query,
-            onQueryChange = onQueryChange,
-            onSearch = onSearch,
+            onQueryChange = actions.onQueryChange,
+            onSearch = actions.onSearch,
             topInset = topInset
         )
 
         NTagSuggestionsRow(
             suggestions = tagSuggestions,
-            onTagClick = onTagSuggestionClick
+            onTagClick = actions.onTagSuggestionClick
         )
 
         Box(
@@ -134,12 +140,12 @@ fun N_ScreenGallerySearchContent(
                             color = Color.White,
                             fontSize = 14.sp
                         )
-                        NCloudflareBanner(onVerifyClick = onRetry)
+                        NCloudflareBanner(onVerifyClick = actions.onRetry)
                     }
                 }
                 is NGalleryListUiState.CloudflareRequired -> {
                     NCloudflareBanner(
-                        onVerifyClick = onRetry,
+                        onVerifyClick = actions.onRetry,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -155,9 +161,7 @@ fun N_ScreenGallerySearchContent(
                         NGalleryGrid(
                             items = uiState.items,
                             columns = columns,
-                            onItemClick = onGalleryClick,
-                            isLoadingMore = isLoadingMore,
-                            onLoadMore = onLoadMore,
+                            onItemClick = actions.onGalleryClick,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -171,10 +175,18 @@ fun N_ScreenGallerySearchContent(
                     onDismiss = { NCloudflareState.onChallengeDismissed() },
                     onSuccess = { cookies ->
                         NCloudflareState.onChallengeCompleted(cookies)
-                        onRetry()
+                        actions.onRetry()
                     }
                 )
             }
+        }
+
+        if (totalPages > 1 || currentPage > 1) {
+            NAlbumListBottomBar(
+                currentPage = currentPage,
+                totalPages = totalPages,
+                onPageChange = actions.onPageChange
+            )
         }
     }
 }
@@ -183,15 +195,20 @@ fun N_ScreenGallerySearchContent(
 @Composable
 private fun N_ScreenGallerySearchContentPreview() {
     N_ScreenGallerySearchContent(
-        query = "",
+        query = "manga",
         tagSuggestions = emptyList(),
         uiState = NGalleryListUiState.Success(emptyList()),
+        currentPage = 1,
+        totalPages = 10,
         columns = 2,
         challengeUrl = null,
-        onQueryChange = {},
-        onSearch = {},
-        onTagSuggestionClick = {},
-        onGalleryClick = {},
-        onRetry = {}
+        actions = NSearchActions(
+            onQueryChange = {},
+            onSearch = {},
+            onTagSuggestionClick = {},
+            onGalleryClick = {},
+            onPageChange = {},
+            onRetry = {}
+        )
     )
 }

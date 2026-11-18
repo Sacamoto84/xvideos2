@@ -2,8 +2,11 @@ package com.client.xvideos.n.saved
 
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.nSavedTabPage
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.nSavedTabPageCount
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -130,5 +133,34 @@ class NSavedTest {
         assertNotNull(saved.likes)
         assertNotNull(saved.collection)
         saved.refreshAll()
+    }
+
+    @Test
+    fun `favorites repository imports items from server batch`() {
+        val gallery1 = NGalleryPreview(id = 101L, mediaId = 201L, title = "Manga 1", thumbnailUrl = "thumb1", numPages = 20)
+        val gallery2 = NGalleryPreview(id = 102L, mediaId = 202L, title = "Manga 2", thumbnailUrl = "thumb2", numPages = 25)
+
+        assertFalse(favoritesRepo.isFavorite(101L))
+        assertFalse(favoritesRepo.isFavorite(102L))
+
+        val importedCount = favoritesRepo.importFavorites(listOf(gallery1, gallery2))
+        assertEquals(2, importedCount)
+        assertTrue(favoritesRepo.isFavorite(101L))
+        assertTrue(favoritesRepo.isFavorite(102L))
+
+        // Повторный импорт не дублирует
+        val secondImport = favoritesRepo.importFavorites(listOf(gallery1))
+        assertEquals(0, secondImport)
+    }
+
+    @Test
+    fun `nSavedTabPageCount and nSavedTabPage behave correctly`() {
+        assertEquals(3, nSavedTabPageCount(isLoggedIn = false))
+        assertEquals(4, nSavedTabPageCount(isLoggedIn = true))
+
+        assertEquals(0, nSavedTabPage(0, 3))
+        assertEquals(2, nSavedTabPage(2, 3))
+        assertEquals(2, nSavedTabPage(3, 3)) // ограничение при выходе из аккаунта
+        assertEquals(3, nSavedTabPage(3, 4))
     }
 }

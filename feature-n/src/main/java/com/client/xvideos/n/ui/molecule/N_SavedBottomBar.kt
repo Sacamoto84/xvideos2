@@ -3,6 +3,7 @@ package com.client.xvideos.n.ui.molecule
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material3.HorizontalDivider
@@ -14,17 +15,20 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.TabRow
 import com.client.xvideos.common.ui.atom.TabBarPoints
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
-private val SAVED_TAB_ICONS = persistentListOf(
+private val ALL_SAVED_TAB_ICONS = persistentListOf(
     Icons.Outlined.FavoriteBorder,
     Icons.Outlined.Folder,
     Icons.Outlined.Apps,
+    Icons.Outlined.Bookmark,
 )
 
-private val SAVED_TAB_HINTS = persistentListOf(
+private val ALL_SAVED_TAB_HINTS = persistentListOf(
     "Лайки страниц",
     "Сохранённая манга",
     "Коллекции",
+    "Избранное на сервере",
 )
 
 /**
@@ -32,6 +36,7 @@ private val SAVED_TAB_HINTS = persistentListOf(
  * 0: Лайки страниц
  * 1: Сохранённая манга (альбомы)
  * 2: Пользовательские коллекции
+ * 3: Избранное на сервере (при авторизации)
  */
 @Composable
 fun N_SavedBottomBar(
@@ -41,26 +46,30 @@ fun N_SavedBottomBar(
     columnCollection: Int,
     onTabChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    tabCount: Int = 3
 ) {
     val renderOverlay: @Composable (Int) -> Unit = remember(columnLikes, columnManga, columnCollection, currentPage) {
         { index ->
             when (index) {
                 0 -> TabBarPoints(columnLikes, currentPage == index)
-                1 -> TabBarPoints(columnManga, currentPage == index)
+                1, 3 -> TabBarPoints(columnManga, currentPage == index)
                 2 -> TabBarPoints(columnCollection, currentPage == index)
             }
         }
     }
+
+    val visibleIcons = remember(tabCount) { ALL_SAVED_TAB_ICONS.take(tabCount).toPersistentList() }
+    val visibleHints = remember(tabCount) { ALL_SAVED_TAB_HINTS.take(tabCount).toPersistentList() }
 
     Column(modifier = modifier) {
         HorizontalDivider()
         TabRow(
             value = currentPage,
             containerColor = Theme.tabLevel1,
-            titlesIcon = SAVED_TAB_ICONS,
+            titlesIcon = visibleIcons,
             onChangeState = onTabChange,
             overlay = renderOverlay,
-            tooltips = SAVED_TAB_HINTS,
+            tooltips = visibleHints,
         )
     }
 }
@@ -73,6 +82,7 @@ private fun N_SavedBottomBarPreview() {
         columnLikes = 2,
         columnManga = 2,
         columnCollection = 2,
+        tabCount = 4,
         onTabChange = {}
     )
 }

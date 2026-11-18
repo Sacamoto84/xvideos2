@@ -28,6 +28,7 @@ import com.client.xvideos.n.model.NSortType
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NSortFilterRow
+import com.client.xvideos.n.ui.molecule.NAlbumListBottomBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
@@ -48,7 +49,8 @@ object N_ScreenGalleryTopHits : Screen {
         val vm = getScreenModel<N_ScreenGalleryTopHitsSM>()
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
-        val isLoadingMore by vm.isLoadingMore.collectAsStateWithLifecycle()
+        val currentPage by vm.currentPage.collectAsStateWithLifecycle()
+        val totalPages by vm.totalPages.collectAsStateWithLifecycle()
         val sortType by vm.sortType.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
@@ -60,13 +62,14 @@ object N_ScreenGalleryTopHits : Screen {
         N_ScreenGalleryTopHitsContent(
             uiState = uiState,
             selectedSort = sortType,
+            currentPage = currentPage,
+            totalPages = totalPages,
             columns = columns,
             challengeUrl = challengeUrl,
-            isLoadingMore = isLoadingMore,
             onSortSelected = vm::setSortType,
             onGalleryClick = onGalleryClick,
-            onLoadMore = vm::loadNextPage,
-            onRetry = vm::loadTopHits
+            onPageChange = vm::loadPage,
+            onRetry = { vm.loadPage(currentPage) }
         )
     }
 }
@@ -75,14 +78,15 @@ object N_ScreenGalleryTopHits : Screen {
 fun N_ScreenGalleryTopHitsContent(
     uiState: NGalleryListUiState,
     selectedSort: NSortType,
+    currentPage: Int,
+    totalPages: Int,
     columns: Int,
     challengeUrl: String?,
     onSortSelected: (NSortType) -> Unit,
     onGalleryClick: (Long) -> Unit,
+    onPageChange: (Int) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-    isLoadingMore: Boolean = false,
-    onLoadMore: (() -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -134,8 +138,6 @@ fun N_ScreenGalleryTopHitsContent(
                         items = uiState.items,
                         columns = columns,
                         onItemClick = onGalleryClick,
-                        isLoadingMore = isLoadingMore,
-                        onLoadMore = onLoadMore,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -153,6 +155,14 @@ fun N_ScreenGalleryTopHitsContent(
                 )
             }
         }
+
+        if (totalPages > 1 || currentPage > 1) {
+            NAlbumListBottomBar(
+                currentPage = currentPage,
+                totalPages = totalPages,
+                onPageChange = onPageChange
+            )
+        }
     }
 }
 
@@ -162,10 +172,13 @@ private fun N_ScreenGalleryTopHitsContentPreview() {
     N_ScreenGalleryTopHitsContent(
         uiState = NGalleryListUiState.Loading,
         selectedSort = NSortType.POPULAR_ALL_TIME,
+        currentPage = 1,
+        totalPages = 50,
         columns = 2,
         challengeUrl = null,
         onSortSelected = {},
         onGalleryClick = {},
+        onPageChange = {},
         onRetry = {}
     )
 }

@@ -9,6 +9,7 @@ import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.N_ScreenServerFavoritesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.search.N_ScreenGallerySearch
 import com.client.xvideos.n.ui.screens.explorer.tab.tophits.N_ScreenGalleryTopHits
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
@@ -59,6 +60,7 @@ class NScreenSerializationTest {
         assertEquals("N_ScreenSavedCollectionsTab", assertJavaSerialization(N_ScreenSavedCollectionsTab).key)
         assertEquals("N_ScreenSavedLikesTab", assertJavaSerialization(N_ScreenSavedLikesTab).key)
         assertEquals("N_ScreenSavedMangaTab", assertJavaSerialization(N_ScreenSavedMangaTab).key)
+        assertEquals("N_ScreenServerFavoritesTab", assertJavaSerialization(N_ScreenServerFavoritesTab).key)
     }
 
     @Test

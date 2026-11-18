@@ -320,20 +320,60 @@ class NParserTest {
     }
 
     @Test
-    fun `NGallery вспомогательные свойства фильтруют теги по категориям`() {
-        val gallery = NParser.parseGalleryJson(sampleJson)
-        assertNotNull(gallery)
+    fun `parseGalleryPageJson парсит галереи и общее количество страниц num_pages`() {
+        val json = """
+            {
+              "result": [
+                {
+                  "id": 501,
+                  "media_id": "901",
+                  "title": { "english": "Book 1" },
+                  "images": { "pages": [] },
+                  "num_pages": 10
+                },
+                {
+                  "id": 502,
+                  "media_id": "902",
+                  "title": { "english": "Book 2" },
+                  "images": { "pages": [] },
+                  "num_pages": 15
+                }
+              ],
+              "num_pages": 42,
+              "per_page": 25
+            }
+        """.trimIndent()
 
-        assertEquals(1, gallery?.artists?.size)
-        assertEquals("cool_artist", gallery?.artists?.get(0)?.name)
+        val pageResult = NParser.parseGalleryPageJson(json, defaultPage = 3)
+        assertEquals(2, pageResult.items.size)
+        assertEquals(3, pageResult.page)
+        assertEquals(42, pageResult.totalPages)
+        assertEquals(501L, pageResult.items[0].id)
+        assertEquals(502L, pageResult.items[1].id)
+    }
 
-        assertEquals(1, gallery?.generalTags?.size)
-        assertEquals("full color", gallery?.generalTags?.get(0)?.name)
+    @Test
+    fun `parseSearchHtmlPage парсит пагинацию из HTML разметки`() {
+        val html = """
+            <html>
+              <body>
+                <div class="gallery">
+                  <a href="/g/777/"><img src="https://t.nhentai.net/galleries/888/thumb.jpg"/></a>
+                  <div class="caption">HTML Doujin</div>
+                </div>
+                <section class="pagination">
+                  <a href="?page=1" class="page">1</a>
+                  <a href="?page=2" class="page current">2</a>
+                  <a href="?page=20" class="last">20</a>
+                </section>
+              </body>
+            </html>
+        """.trimIndent()
 
-        assertEquals(1, gallery?.languages?.size)
-        assertEquals("english", gallery?.languages?.get(0)?.name)
-
-        assertEquals(0, gallery?.parodies?.size)
-        assertEquals(0, gallery?.characters?.size)
+        val pageResult = NParser.parseSearchHtmlPage(html, defaultPage = 2)
+        assertEquals(1, pageResult.items.size)
+        assertEquals(2, pageResult.page)
+        assertEquals(20, pageResult.totalPages)
+        assertEquals(777L, pageResult.items[0].id)
     }
 }

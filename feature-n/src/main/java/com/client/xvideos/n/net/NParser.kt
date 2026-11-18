@@ -1,6 +1,7 @@
 package com.client.xvideos.n.net
 
 import com.client.xvideos.n.model.NGallery
+import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NTag
@@ -282,6 +283,26 @@ object NParser {
     fun parseSearchJson(jsonString: String): List<NGalleryPreview> = parseGalleryListJson(jsonString)
 
     /**
+     * Парсит страницу галерей с общим количеством доступных страниц из ответа JSON API v2.
+     */
+    fun parseGalleryPageJson(jsonString: String, defaultPage: Int = 1): NGalleryPageResult = runCatching {
+        val galleries = parseGalleryListJson(jsonString)
+        val root = jsonConfig.parseToJsonElement(jsonString)
+        val numPages = if (root is JsonObject) {
+            root["num_pages"]?.jsonPrimitive?.intOrNull
+                ?: root["total_pages"]?.jsonPrimitive?.intOrNull
+                ?: 1
+        } else {
+            1
+        }
+        NGalleryPageResult(
+            items = galleries,
+            page = defaultPage,
+            totalPages = numPages.coerceAtLeast(1)
+        )
+    }.getOrDefault(NGalleryPageResult(page = defaultPage, totalPages = 1))
+
+    /**
      * Парсит превью галерей из HTML-страницы со списком (поиск или главная).
      */
     fun parseSearchHtml(html: String): List<NGalleryPreview> {
@@ -289,6 +310,32 @@ object NParser {
         val galleriesElements = doc.getElementsByClass("gallery")
         return galleriesElements.mapNotNull { element -> parseGalleryElement(element) }
     }
+
+    /**
+     * Парсит превью галерей и общее количество страниц из HTML-страницы со списком.
+     */
+    fun parseSearchHtmlPage(html: String, defaultPage: Int = 1): NGalleryPageResult {
+        val galleries = parseSearchHtml(html)
+        val totalPages = parseHtmlTotalPages(html).coerceAtLeast(1)
+        return NGalleryPageResult(
+            items = galleries,
+            page = defaultPage,
+            totalPages = totalPages
+        )
+    }
+
+    private fun parseHtmlTotalPages(html: String): Int = runCatching {
+        val doc: Document = Jsoup.parse(html)
+        val lastLink = doc.select("section.pagination a.last").firstOrNull()
+        if (lastLink != null) {
+            val href = lastLink.attr("href")
+            val pageNum = href.substringAfter("page=").substringBefore('&').toIntOrNull()
+            if (pageNum != null && pageNum > 0) return@runCatching pageNum
+        }
+        val pageLinks = doc.select("section.pagination a.page")
+        val maxFromLinks = pageLinks.mapNotNull { it.text().trim().toIntOrNull() }.maxOrNull()
+        maxFromLinks ?: 1
+    }.getOrDefault(1)
 
     private fun parseGalleryElement(element: Element): NGalleryPreview? = runCatching {
         val aTag = element.getElementsByTag("a").firstOrNull() ?: return null

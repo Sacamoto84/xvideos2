@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ScreenModel вкладки поиска манги.
+ * ScreenModel вкладки поиска манги с постраничной пагинацией.
  */
 @Stable
 class N_ScreenGallerySearchSM @Inject constructor(
@@ -37,13 +37,11 @@ class N_ScreenGallerySearchSM @Inject constructor(
     private val _tagSuggestions = MutableStateFlow<List<NTag>>(emptyList())
     val tagSuggestions: StateFlow<List<NTag>> = _tagSuggestions.asStateFlow()
 
-    private val _isLoadingMore = MutableStateFlow(false)
-    val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
+    private val _currentPage = MutableStateFlow(1)
+    val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
 
-    var currentPage = 1
-        private set
-    var isEndReached = false
-        private set
+    private val _totalPages = MutableStateFlow(1)
+    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
 
     private val _uiState = MutableStateFlow<NGalleryListUiState>(NGalleryListUiState.Success(emptyList()))
     val uiState: StateFlow<NGalleryListUiState> = _uiState.asStateFlow()
@@ -52,7 +50,6 @@ class N_ScreenGallerySearchSM @Inject constructor(
 
     private var tagSearchJob: Job? = null
     private var searchJob: Job? = null
-    private var pageJob: Job? = null
 
     fun setQuery(newQuery: String) {
         _query.value = newQuery
@@ -99,22 +96,25 @@ class N_ScreenGallerySearchSM @Inject constructor(
     }
 
     fun search() {
+        loadPage(1)
+    }
+
+    fun loadPage(page: Int) {
         val q = _query.value.trim()
         if (q.isEmpty()) return
 
         tagSearchJob?.cancel()
         searchJob?.cancel()
-        pageJob?.cancel()
         _tagSuggestions.value = emptyList()
-        currentPage = 1
-        isEndReached = false
-        _isLoadingMore.value = false
+        _currentPage.value = page
 
         searchJob = screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
-            repository.search(query = q, page = 1, sort = NSortType.RECENT).fold(
-                onSuccess = { galleries ->
-                    _uiState.value = NGalleryListUiState.Success(galleries)
+            repository.searchPage(query = q, page = page, sort = NSortType.RECENT).fold(
+                onSuccess = { result ->
+                    _currentPage.value = result.page
+                    _totalPages.value = result.totalPages.coerceAtLeast(1)
+                    _uiState.value = NGalleryListUiState.Success(result.items)
                 },
                 onFailure = { error ->
                     if (error is CloudflareBlockedException) {
@@ -122,36 +122,6 @@ class N_ScreenGallerySearchSM @Inject constructor(
                     } else {
                         _uiState.value = NGalleryListUiState.Error(error.localizedMessage ?: "Ошибка поиска")
                     }
-                }
-            )
-        }
-    }
-
-    /**
-     * Загружает следующую страницу результатов поиска.
-     */
-    fun loadNextPage() {
-        val q = _query.value.trim()
-        val currentItems = (_uiState.value as? NGalleryListUiState.Success)?.items ?: return
-        if (q.isEmpty() || _isLoadingMore.value || isEndReached) return
-
-        _isLoadingMore.value = true
-        val nextPage = currentPage + 1
-
-        pageJob?.cancel()
-        pageJob = screenModelScope.launch {
-            repository.search(query = q, page = nextPage, sort = NSortType.RECENT).fold(
-                onSuccess = { newGalleries ->
-                    if (newGalleries.isEmpty()) {
-                        isEndReached = true
-                    } else {
-                        currentPage = nextPage
-                        _uiState.value = NGalleryListUiState.Success(currentItems + newGalleries)
-                    }
-                    _isLoadingMore.value = false
-                },
-                onFailure = {
-                    _isLoadingMore.value = false
                 }
             )
         }

@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ScreenModel вкладки популярной манги (Top Hits).
+ * ScreenModel вкладки популярной манги (Top Hits) с постраничной пагинацией.
  */
 @Stable
 class N_ScreenGalleryTopHitsSM @Inject constructor(
@@ -32,13 +32,11 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
     private val _uiState = MutableStateFlow<NGalleryListUiState>(NGalleryListUiState.Loading)
     val uiState: StateFlow<NGalleryListUiState> = _uiState.asStateFlow()
 
-    private val _isLoadingMore = MutableStateFlow(false)
-    val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
+    private val _currentPage = MutableStateFlow(1)
+    val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
 
-    var currentPage = 1
-        private set
-    var isEndReached = false
-        private set
+    private val _totalPages = MutableStateFlow(1)
+    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
 
     private val _sortType = MutableStateFlow(NSortType.POPULAR_ALL_TIME)
     val sortType: StateFlow<NSortType> = _sortType.asStateFlow()
@@ -48,24 +46,24 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
     private var loadJob: Job? = null
 
     init {
-        loadTopHits()
+        loadPage(1)
     }
 
     fun setSortType(sort: NSortType) {
         _sortType.value = sort
-        loadTopHits()
+        loadPage(1)
     }
 
-    fun loadTopHits() {
-        currentPage = 1
-        isEndReached = false
-        _isLoadingMore.value = false
+    fun loadPage(page: Int) {
+        _currentPage.value = page
         loadJob?.cancel()
         loadJob = screenModelScope.launch {
             _uiState.value = NGalleryListUiState.Loading
-            repository.getGalleries(page = 1, sort = _sortType.value).fold(
-                onSuccess = { galleries ->
-                    _uiState.value = NGalleryListUiState.Success(galleries)
+            repository.getGalleriesPage(page = page, sort = _sortType.value).fold(
+                onSuccess = { result ->
+                    _currentPage.value = result.page
+                    _totalPages.value = result.totalPages.coerceAtLeast(1)
+                    _uiState.value = NGalleryListUiState.Success(result.items)
                 },
                 onFailure = { error ->
                     if (error is CloudflareBlockedException) {
@@ -77,41 +75,13 @@ class N_ScreenGalleryTopHitsSM @Inject constructor(
             )
         }
     }
-
-    /**
-     * Загружает следующую страницу популярной манги.
-     */
-    fun loadNextPage() {
-        val currentItems = (_uiState.value as? NGalleryListUiState.Success)?.items ?: return
-        if (_isLoadingMore.value || isEndReached) return
-
-        _isLoadingMore.value = true
-        val nextPage = currentPage + 1
-
-        screenModelScope.launch {
-            repository.getGalleries(page = nextPage, sort = _sortType.value).fold(
-                onSuccess = { newGalleries ->
-                    if (newGalleries.isEmpty()) {
-                        isEndReached = true
-                    } else {
-                        currentPage = nextPage
-                        _uiState.value = NGalleryListUiState.Success(currentItems + newGalleries)
-                    }
-                    _isLoadingMore.value = false
-                },
-                onFailure = {
-                    _isLoadingMore.value = false
-                }
-            )
-        }
-    }
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class N_ScreenGalleryTopHitsModule {
+abstract class ScreenModuleNGalleryTopHits {
     @Binds
     @IntoMap
     @ScreenModelKey(N_ScreenGalleryTopHitsSM::class)
-    abstract fun bindN_ScreenGalleryTopHitsSM(sm: N_ScreenGalleryTopHitsSM): ScreenModel
+    abstract fun bindN_ScreenGalleryTopHitsSM(model: N_ScreenGalleryTopHitsSM): ScreenModel
 }

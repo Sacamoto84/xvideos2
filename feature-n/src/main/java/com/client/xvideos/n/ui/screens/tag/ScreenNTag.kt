@@ -31,6 +31,7 @@ import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NGalleryTopBar
+import com.client.xvideos.n.ui.molecule.NAlbumListBottomBar
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
@@ -54,7 +55,8 @@ class ScreenNTag(val tag: NTag) : Screen {
         BackHandler(onBack = onBack)
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
-        val isLoadingMore by vm.isLoadingMore.collectAsStateWithLifecycle()
+        val currentPage by vm.currentPage.collectAsStateWithLifecycle()
+        val totalPages by vm.totalPages.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
 
@@ -65,13 +67,14 @@ class ScreenNTag(val tag: NTag) : Screen {
         ScreenNTagContent(
             tag = tag,
             uiState = uiState,
+            currentPage = currentPage,
+            totalPages = totalPages,
             columns = columns,
             challengeUrl = challengeUrl,
-            isLoadingMore = isLoadingMore,
             onBack = onBack,
             onGalleryClick = onGalleryClick,
-            onLoadMore = vm::loadNextPage,
-            onRetry = vm::loadTagGalleries
+            onPageChange = vm::loadPage,
+            onRetry = { vm.loadPage(currentPage) }
         )
     }
 }
@@ -80,14 +83,15 @@ class ScreenNTag(val tag: NTag) : Screen {
 fun ScreenNTagContent(
     tag: NTag,
     uiState: NGalleryListUiState,
+    currentPage: Int,
+    totalPages: Int,
     columns: Int,
     challengeUrl: String?,
     onBack: () -> Unit,
     onGalleryClick: (Long) -> Unit,
+    onPageChange: (Int) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-    isLoadingMore: Boolean = false,
-    onLoadMore: (() -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
     val displayTitle = if (tag.type.isNotEmpty() && tag.type != "tag") {
@@ -103,6 +107,15 @@ fun ScreenNTagContent(
                 onBack = onBack,
                 topInset = topInset
             )
+        },
+        bottomBar = {
+            if (totalPages > 1 || currentPage > 1) {
+                NAlbumListBottomBar(
+                    currentPage = currentPage,
+                    totalPages = totalPages,
+                    onPageChange = onPageChange
+                )
+            }
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.background,
@@ -154,8 +167,6 @@ fun ScreenNTagContent(
                             items = uiState.items,
                             columns = columns,
                             onItemClick = onGalleryClick,
-                            isLoadingMore = isLoadingMore,
-                            onLoadMore = onLoadMore,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -183,10 +194,13 @@ private fun ScreenNTagContentPreview() {
     ScreenNTagContent(
         tag = NTag(id = 1, type = "artist", name = "cool_artist", count = 42),
         uiState = NGalleryListUiState.Loading,
+        currentPage = 1,
+        totalPages = 10,
         columns = 2,
         challengeUrl = null,
         onBack = {},
         onGalleryClick = {},
+        onPageChange = {},
         onRetry = {}
     )
 }
