@@ -1,23 +1,14 @@
 package com.client.xvideos.n.ui.screens.explorer.tab.search
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -26,17 +17,10 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
-import com.client.xvideos.n.model.NTag
-import com.client.xvideos.n.net.NCloudflareState
-import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NSearchBar
 import com.client.xvideos.n.ui.molecule.NAlbumFilterDialog
-import com.client.xvideos.n.ui.molecule.NAlbumListBottomBar
-import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
-import com.client.xvideos.n.ui.molecule.NGalleryGrid
+import com.client.xvideos.n.ui.molecule.NGalleryPager
 import com.client.xvideos.n.ui.molecule.NTagSuggestionsRow
-import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
-import com.client.xvideos.n.ui.screens.explorer.tab.search.model.NSearchActions
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 
 /**
@@ -55,187 +39,31 @@ object N_ScreenGallerySearch : Screen {
 
         val query by vm.query.collectAsStateWithLifecycle()
         val tagSuggestions by vm.tagSuggestions.collectAsStateWithLifecycle()
-        val currentPage by vm.currentPage.collectAsStateWithLifecycle()
-        val totalPages by vm.totalPages.collectAsStateWithLifecycle()
-        val uiState by vm.uiState.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
-        val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
         val filter by vm.filter.collectAsStateWithLifecycle()
+        var showFilter by remember { mutableStateOf(false) }
 
-        var isFilterDialogOpen by remember { mutableStateOf(false) }
-
-        val onGalleryClick: (Long) -> Unit = remember(navigator) {
-            { id -> navigator.push(ScreenNGallery(id)) }
-        }
-
-        val actions = remember(vm, onGalleryClick) {
-            NSearchActions(
-                onQueryChange = vm::setQuery,
-                onSearch = vm::search,
-                onTagSuggestionClick = vm::selectTagSuggestion,
-                onGalleryClick = onGalleryClick,
-                onPageChange = vm::loadPage,
-                onRetry = vm::search,
-                onOpenFilter = { isFilterDialogOpen = true }
+        Column(Modifier.fillMaxSize().background(Theme.background)) {
+            NSearchBar(query, vm::setQuery, vm::search, topInset = getTopInsetDp())
+            NTagSuggestionsRow(suggestions = tagSuggestions, onTagClick = vm::selectTagSuggestion)
+            NGalleryPager(
+                pages = vm.pages,
+                columns = columns,
+                onGalleryClick = { id -> navigator.push(ScreenNGallery(id)) },
+                emptyMessage = if (vm.hasQuery) "Ничего не найдено" else "Введите запрос для поиска",
+                onFilterClick = { showFilter = true },
+                hasActiveFilter = filter.isFiltered
             )
         }
-
-        N_ScreenGallerySearchContent(
-            query = query,
-            tagSuggestions = tagSuggestions,
-            uiState = uiState,
-            currentPage = currentPage,
-            totalPages = totalPages,
-            columns = columns,
-            challengeUrl = challengeUrl,
-            actions = actions,
-            hasActiveFilter = filter.isFiltered
-        )
-
-        if (isFilterDialogOpen) {
+        if (showFilter) {
             NAlbumFilterDialog(
                 initialFilter = filter,
-                onDismiss = { isFilterDialogOpen = false },
-                onApply = { newFilter ->
-                    vm.setFilter(newFilter)
-                    isFilterDialogOpen = false
+                onDismiss = { showFilter = false },
+                onApply = { filter ->
+                    vm.setFilter(filter)
+                    showFilter = false
                 }
             )
         }
     }
-}
-
-@Composable
-fun N_ScreenGallerySearchContent(
-    query: String,
-    tagSuggestions: List<NTag>,
-    uiState: NGalleryListUiState,
-    currentPage: Int,
-    totalPages: Int,
-    columns: Int,
-    challengeUrl: String?,
-    actions: NSearchActions,
-    modifier: Modifier = Modifier,
-    hasActiveFilter: Boolean = false
-) {
-    val topInset = getTopInsetDp()
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Theme.background)
-    ) {
-        NSearchBar(
-            query = query,
-            onQueryChange = actions.onQueryChange,
-            onSearch = actions.onSearch,
-            topInset = topInset
-        )
-
-        NTagSuggestionsRow(
-            suggestions = tagSuggestions,
-            onTagClick = actions.onTagSuggestionClick
-        )
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-        ) {
-            when (uiState) {
-                is NGalleryListUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFFED2553)
-                    )
-                }
-                is NGalleryListUiState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = uiState.message,
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-                        NCloudflareBanner(onVerifyClick = actions.onRetry)
-                    }
-                }
-                is NGalleryListUiState.CloudflareRequired -> {
-                    NCloudflareBanner(
-                        onVerifyClick = actions.onRetry,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                is NGalleryListUiState.Success -> {
-                    if (uiState.items.isEmpty()) {
-                        Text(
-                            text = if (query.isEmpty() && !hasActiveFilter) {
-                                "Введите запрос для поиска"
-                            } else {
-                                "Ничего не найдено"
-                            },
-                            color = Color(0xFF888888),
-                            fontSize = 14.sp,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    } else {
-                        NGalleryGrid(
-                            items = uiState.items,
-                            columns = columns,
-                            onItemClick = actions.onGalleryClick,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                }
-            }
-
-            // Модальный диалог проверки Cloudflare
-            challengeUrl?.let { url ->
-                NCloudflareChallengeDialog(
-                    url = url,
-                    onDismiss = { NCloudflareState.onChallengeDismissed() },
-                    onSuccess = { cookies ->
-                        NCloudflareState.onChallengeCompleted(cookies)
-                        actions.onRetry()
-                    }
-                )
-            }
-        }
-
-        val shouldShowBottomBar = hasActiveFilter || totalPages > 1 || currentPage > 1
-        if (shouldShowBottomBar) {
-            NAlbumListBottomBar(
-                currentPage = currentPage,
-                totalPages = totalPages,
-                onPageChange = actions.onPageChange,
-                onFilterClick = actions.onOpenFilter,
-                hasActiveFilter = hasActiveFilter
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun N_ScreenGallerySearchContentPreview() {
-    N_ScreenGallerySearchContent(
-        query = "manga",
-        tagSuggestions = emptyList(),
-        uiState = NGalleryListUiState.Success(emptyList()),
-        currentPage = 1,
-        totalPages = 10,
-        columns = 2,
-        challengeUrl = null,
-        actions = NSearchActions(
-            onQueryChange = {},
-            onSearch = {},
-            onTagSuggestionClick = {},
-            onGalleryClick = {},
-            onPageChange = {},
-            onRetry = {}
-        )
-    )
 }

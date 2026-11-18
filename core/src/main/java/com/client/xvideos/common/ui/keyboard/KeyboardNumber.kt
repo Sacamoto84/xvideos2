@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -107,7 +108,8 @@ fun KeyboardNumber(
                 Text(
                     "($safeMax)",
                     color = theme.colorText,
-                    fontSize = 20.sp,
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 1.sp, maxFontSize = 20.sp),
                     fontWeight = FontWeight.Bold
                 )
             }

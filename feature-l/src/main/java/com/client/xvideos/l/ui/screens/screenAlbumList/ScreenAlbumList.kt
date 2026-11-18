@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +28,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.ui.scroll.AlbumListPager
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.TopLoadingBar
@@ -106,21 +106,6 @@ private fun Screen.ScreenAlbumListContent(
     // держало бы старую Activity. Число страниц читается лениво и растёт с ответом сети.
     val pagerState = vm.pagerPosition.rememberState { totalPages }
 
-    // Ключ — и число страниц: оно приходит с первым ответом и сбрасывается при
-    // смене фильтра. По одной смене страницы соседние не подгружались, пока
-    // пользователь не листнёт: и при открытии, и после фильтра пейджер стоит на
-    // нулевой странице.
-    LaunchedEffect(pagerState.currentPage, totalPages) {
-        val currentPage = pagerState.currentPage
-        val pagesToLoad = setOf(
-            maxOf(0, currentPage - 1),
-            currentPage,
-            minOf(pagerState.pageCount - 1, currentPage + 1),
-            minOf(pagerState.pageCount - 1, currentPage + 2)
-        )
-        pagesToLoad.forEach { page -> vm.loadAlbumList(page) }
-    }
-
     val onClickVisibleFilter: () -> Unit = remember(haptic) {
         {
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -168,13 +153,10 @@ private fun Screen.ScreenAlbumListContent(
             containerColor = Theme.background
         ) { padding ->
 
-            HorizontalPager(
-                pagerState,
-                Modifier
-                    .padding(bottom = padding.calculateBottomPadding())
-                    .fillMaxSize(),
-                beyondViewportPageCount = 1,
-                key = { page -> "${key}_page_$page" }
+            AlbumListPager(
+                state = pagerState,
+                onLoadPage = vm::loadAlbumList,
+                modifier = Modifier.padding(bottom = padding.calculateBottomPadding())
             ) { page ->
 
                 val pageState = bigList[page]

@@ -1,27 +1,30 @@
 package com.client.xvideos.n.ui.screens.explorer.tab.search
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.n.model.NAlbumFilter
+import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NTag
-import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.repository.NRepository
-import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
+import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryPages
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ScreenModel вкладки поиска манги с постраничной пагинацией.
@@ -37,22 +40,18 @@ class N_ScreenGallerySearchSM @Inject constructor(
     private val _tagSuggestions = MutableStateFlow<List<NTag>>(emptyList())
     val tagSuggestions: StateFlow<List<NTag>> = _tagSuggestions.asStateFlow()
 
-    private val _currentPage = MutableStateFlow(1)
-    val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
-
-    private val _totalPages = MutableStateFlow(1)
-    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
-
-    private val _uiState = MutableStateFlow<NGalleryListUiState>(NGalleryListUiState.Success(emptyList()))
-    val uiState: StateFlow<NGalleryListUiState> = _uiState.asStateFlow()
-
     private val _filter = MutableStateFlow(NAlbumFilter.DEFAULT)
     val filter: StateFlow<NAlbumFilter> = _filter.asStateFlow()
 
     val columns = Settings.n_galleriesTab_column_current_count.field
 
     private var tagSearchJob: Job? = null
-    private var searchJob: Job? = null
+    private var submittedQuery by mutableStateOf("")
+    val hasQuery: Boolean get() = submittedQuery.isNotEmpty()
+    val pages = NGalleryPages(screenModelScope) { number ->
+        if (submittedQuery.isEmpty()) Result.success(NGalleryPageResult())
+        else repository.searchPage(query = submittedQuery, page = number, sort = _filter.value.sort)
+    }
 
     fun setQuery(newQuery: String) {
         _query.value = newQuery
@@ -99,49 +98,21 @@ class N_ScreenGallerySearchSM @Inject constructor(
     }
 
     fun search() {
-        loadPage(1)
+        tagSearchJob?.cancel()
+        _tagSuggestions.value = emptyList()
+        val text = _query.value.trim()
+        val language = _filter.value.language
+        submittedQuery = if (language.isNotEmpty() && !text.contains("language:")) {
+            listOf(text, "language:$language").filter { it.isNotEmpty() }.joinToString(" ")
+        } else {
+            text
+        }
+        pages.reset()
     }
 
     fun setFilter(newFilter: NAlbumFilter) {
         _filter.value = newFilter
-        loadPage(1)
-    }
-
-    fun loadPage(page: Int) {
-        val q = _query.value.trim()
-        val currentFilter = _filter.value
-        val effectiveQuery = buildString {
-            if (q.isNotEmpty()) append(q)
-            if (currentFilter.language.isNotEmpty() && !q.contains("language:")) {
-                if (isNotEmpty()) append(" ")
-                append("language:${currentFilter.language}")
-            }
-        }.trim()
-
-        if (effectiveQuery.isEmpty()) return
-
-        tagSearchJob?.cancel()
-        searchJob?.cancel()
-        _tagSuggestions.value = emptyList()
-        _currentPage.value = page
-
-        searchJob = screenModelScope.launch {
-            _uiState.value = NGalleryListUiState.Loading
-            repository.searchPage(query = effectiveQuery, page = page, sort = currentFilter.sort).fold(
-                onSuccess = { result ->
-                    _currentPage.value = result.page
-                    _totalPages.value = result.totalPages.coerceAtLeast(1)
-                    _uiState.value = NGalleryListUiState.Success(result.items)
-                },
-                onFailure = { error ->
-                    if (error is CloudflareBlockedException) {
-                        _uiState.value = NGalleryListUiState.CloudflareRequired(error.url)
-                    } else {
-                        _uiState.value = NGalleryListUiState.Error(error.localizedMessage ?: "Ошибка поиска")
-                    }
-                }
-            )
-        }
+        search()
     }
 }
 

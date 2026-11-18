@@ -25,10 +25,10 @@ class NRepository @Inject constructor() {
      * Загружает страницу галерей с метаданными пагинации с приоритетом REST API v2.
      */
     suspend fun getGalleriesPage(page: Int = 1, sort: NSortType = NSortType.RECENT): Result<NGalleryPageResult> {
-        val apiEndpoint = when {
-            sort == NSortType.RECENT -> "/api/v2/galleries?page=$page&per_page=25"
-            sort == NSortType.POPULAR_TODAY && page == 1 -> "/api/v2/galleries/popular"
-            else -> "/api/v2/search?query=-nonexisttag&sort=${sort.queryValue}&page=$page"
+        val apiEndpoint = if (sort == NSortType.RECENT) {
+            "/api/v2/galleries?page=$page&per_page=25"
+        } else {
+            "/api/v2/search?query=-nonexisttag&sort=${sort.queryValue}&page=$page"
         }
 
         when (val apiResult = NClient.get(apiEndpoint)) {

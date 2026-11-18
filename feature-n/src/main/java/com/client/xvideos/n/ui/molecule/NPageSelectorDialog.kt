@@ -58,7 +58,7 @@ fun NPageSelectorDialog(
 @Composable
 private fun NPageSelectorDialogPreview() {
     NPageSelectorDialog(
-        pageMax = 99,
+        pageMax = 26462,
         onDismiss = {},
         onPageSelected = {}
     )

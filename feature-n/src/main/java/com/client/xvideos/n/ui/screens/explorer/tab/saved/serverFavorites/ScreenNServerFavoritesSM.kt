@@ -7,21 +7,20 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.n.model.NGalleryPreview
-import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.repository.NRepository
 import com.client.xvideos.n.saved.NFavoritesRepository
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
+import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryPages
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.Job
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ScreenModel вкладки серверного избранного манги.
@@ -32,55 +31,18 @@ class ScreenNServerFavoritesSM @Inject constructor(
     private val favoritesRepository: NFavoritesRepository
 ) : ScreenModel {
 
-    private val _uiState = MutableStateFlow<NGalleryListUiState>(NGalleryListUiState.Loading)
-    val uiState: StateFlow<NGalleryListUiState> = _uiState.asStateFlow()
-
-    private val _currentPage = MutableStateFlow(1)
-    val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
-
-    private val _totalPages = MutableStateFlow(1)
-    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
+    val pages = NGalleryPages(screenModelScope, fetch = repository::getFavoritesPage)
 
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
 
     val columns = Settings.n_saved_column_current_count.field
 
-    private var loadJob: Job? = null
-
-    init {
-        loadPage(1)
-    }
-
-    fun loadPage(page: Int) {
-        _currentPage.value = page
-        loadJob?.cancel()
-        loadJob = screenModelScope.launch {
-            _uiState.value = NGalleryListUiState.Loading
-            repository.getFavoritesPage(page).fold(
-                onSuccess = { result ->
-                    _currentPage.value = result.page
-                    _totalPages.value = result.totalPages.coerceAtLeast(1)
-                    _uiState.value = NGalleryListUiState.Success(result.items)
-                },
-                onFailure = { error ->
-                    if (error is CloudflareBlockedException) {
-                        _uiState.value = NGalleryListUiState.CloudflareRequired(error.url)
-                    } else {
-                        _uiState.value = NGalleryListUiState.Error(
-                            error.localizedMessage ?: "Ошибка загрузки избранного с сервера"
-                        )
-                    }
-                }
-            )
-        }
-    }
-
     /**
      * Импортирует все элементы текущей страницы серверного избранного в локальное избранное.
      */
     fun importCurrentPage() {
-        val items = (_uiState.value as? NGalleryListUiState.Success)?.items ?: return
+        val items = (pages[pages.currentIndex] as? NGalleryListUiState.Success)?.items ?: return
         if (items.isEmpty() || _isImporting.value) return
 
         screenModelScope.launch {
@@ -120,7 +82,7 @@ class ScreenNServerFavoritesSM @Inject constructor(
             repository.toggleServerFavorite(galleryId).fold(
                 onSuccess = {
                     SnackBar.success("Удалено из избранного на сервере")
-                    loadPage(_currentPage.value)
+                    pages.refresh()
                 },
                 onFailure = { error ->
                     SnackBar.error("Не удалось удалить с сервера: ${error.localizedMessage ?: "ошибка"}")
