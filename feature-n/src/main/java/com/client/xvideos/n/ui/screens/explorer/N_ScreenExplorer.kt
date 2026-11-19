@@ -21,7 +21,6 @@ import com.client.xvideos.n.ui.molecule.N_ExplorerBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.list.N_ScreenGalleryList
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTab
 import com.client.xvideos.n.ui.screens.explorer.tab.search.N_ScreenGallerySearch
-import com.client.xvideos.n.ui.screens.explorer.tab.tophits.N_ScreenGalleryTopHits
 
 /**
  * Корневой экран-проводник раздела nhentai (аналог L_ScreenExplorer).
@@ -85,8 +84,7 @@ fun N_ScreenExplorerContent(
             when (screenType) {
                 0 -> N_ScreenGalleryList.Content()
                 1 -> N_SavedTab.Content()
-                2 -> N_ScreenGalleryTopHits.Content()
-                3 -> N_ScreenGallerySearch.Content()
+                2 -> N_ScreenGallerySearch.Content()
                 else -> N_ScreenGalleryList.Content()
             }
         }

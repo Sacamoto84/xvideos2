@@ -7,10 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Shuffle
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,14 +24,13 @@ import com.client.xvideos.n.ui.molecule.NSortMenuButton
 import kotlinx.collections.immutable.toImmutableList
 
 /**
- * Верхняя панель ленты манги с названием и кнопкой открытия случайной работы.
+ * Верхняя панель ленты манги с меню сортировки.
  */
 @Composable
 fun NFeedTopBar(
-    onRandomClick: () -> Unit,
-    modifier: Modifier = Modifier,
     selectedSort: NSortType,
     onSortSelected: (NSortType) -> Unit,
+    modifier: Modifier = Modifier,
     topInset: Dp = 0.dp
 ) {
     Column(
@@ -67,14 +62,6 @@ fun NFeedTopBar(
                 onSelectIndex = { onSortSelected(NSortType.entries[it]) },
                 contentDescription = "Сортировка"
             )
-
-            IconButton(onClick = onRandomClick) {
-                Icon(
-                    imageVector = Icons.Outlined.Shuffle,
-                    contentDescription = "Случайная манга",
-                    tint = Color(0xFFED2553)
-                )
-            }
         }
     }
 }
@@ -85,7 +72,6 @@ private fun NFeedTopBarPreview() {
     NFeedTopBar(
         selectedSort = NSortType.RECENT,
         onSortSelected = {},
-        onRandomClick = {},
         topInset = 24.dp
     )
 }

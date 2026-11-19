@@ -15,7 +15,6 @@ import dagger.multibindings.IntoMap
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 /**
  * ScreenModel вкладки со списком свежей манги с постраничной пагинацией.
@@ -37,15 +36,6 @@ class N_ScreenGalleryListSM @Inject constructor(
         if (_sortType.value == sort) return
         _sortType.value = sort
         pages.reset()
-    }
-
-    /**
-     * Загружает ID случайной манги и вызывает [onSuccess].
-     */
-    fun openRandomGallery(onSuccess: (Long) -> Unit) {
-        screenModelScope.launch {
-            repository.getRandomGalleryId().onSuccess(onSuccess)
-        }
     }
 }
 

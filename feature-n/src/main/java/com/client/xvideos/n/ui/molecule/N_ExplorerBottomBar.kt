@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Topic
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,26 +18,23 @@ import kotlinx.collections.immutable.persistentListOf
 private val EXPLORER_ICONS = persistentListOf(
     Icons.AutoMirrored.Outlined.FormatListBulleted,
     Icons.Outlined.BookmarkBorder,
-    Icons.Outlined.Topic,
     Icons.Outlined.Search,
 )
 
 private val EXPLORER_HINTS = persistentListOf(
     "Манга",
     "Сохранённое",
-    "Топ",
     "Поиск",
 )
 
 private val EXPLORER_TAGS = persistentListOf(
     "tabGalleries",
     "tabSaved",
-    "tabTop",
     "tabSearch",
 )
 
 /**
- * Нижняя панель навигации раздела nhentai (4 вкладки).
+ * Нижняя панель навигации раздела nhentai.
  */
 @Composable
 fun N_ExplorerBottomBar(

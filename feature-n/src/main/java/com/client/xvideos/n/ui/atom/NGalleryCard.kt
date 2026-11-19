@@ -73,7 +73,7 @@ fun NGalleryCard(
                 color = Color.White,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 

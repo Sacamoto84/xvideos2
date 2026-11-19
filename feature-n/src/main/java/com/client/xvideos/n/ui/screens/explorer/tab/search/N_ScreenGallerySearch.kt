@@ -3,12 +3,14 @@ package com.client.xvideos.n.ui.screens.explorer.tab.search
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -20,6 +22,7 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.ui.atom.NSearchBar
 import com.client.xvideos.n.ui.molecule.NAlbumFilterDialog
 import com.client.xvideos.n.ui.molecule.NGalleryPager
+import com.client.xvideos.n.ui.molecule.NTagConditionChips
 import com.client.xvideos.n.ui.molecule.NTagSuggestionsRow
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 
@@ -46,6 +49,7 @@ object N_ScreenGallerySearch : Screen {
         Column(Modifier.fillMaxSize().background(Theme.background)) {
             NSearchBar(query, vm::setQuery, vm::search, topInset = getTopInsetDp())
             NTagSuggestionsRow(suggestions = tagSuggestions, onTagClick = vm::selectTagSuggestion)
+            NTagConditionChips(filter.tags, onRemove = vm::removeTagCondition, modifier = Modifier.padding(4.dp))
             NGalleryPager(
                 pages = vm.pages,
                 columns = columns,
@@ -59,6 +63,8 @@ object N_ScreenGallerySearch : Screen {
             NAlbumFilterDialog(
                 initialFilter = filter,
                 onDismiss = { showFilter = false },
+                loadTagPage = vm::loadTagPage,
+                findTags = vm::findTags,
                 onApply = { filter ->
                     vm.setFilter(filter)
                     showFilter = false

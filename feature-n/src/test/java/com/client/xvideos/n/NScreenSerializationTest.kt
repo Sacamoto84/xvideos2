@@ -11,7 +11,6 @@ import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLik
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.N_ScreenServerFavoritesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.search.N_ScreenGallerySearch
-import com.client.xvideos.n.ui.screens.explorer.tab.tophits.N_ScreenGalleryTopHits
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
@@ -50,7 +49,6 @@ class NScreenSerializationTest {
     @Test
     fun `Вкладки проводника nhentai успешно сериализуются`() {
         assertEquals("N_ScreenGalleryList", assertJavaSerialization(N_ScreenGalleryList).key)
-        assertEquals("N_ScreenGalleryTopHits", assertJavaSerialization(N_ScreenGalleryTopHits).key)
         assertEquals("N_ScreenGallerySearch", assertJavaSerialization(N_ScreenGallerySearch).key)
         assertEquals("N_SavedTab", assertJavaSerialization(N_SavedTab).key)
     }

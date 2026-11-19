@@ -20,7 +20,7 @@ import javax.inject.Inject
 class N_ScreenExplorerSM @Inject constructor() : ScreenModel {
 
     /**
-     * Текущая активная вкладка раздела (0 - свежие, 1 - сохранённые, 2 - топ, 3 - поиск).
+     * Текущая активная вкладка раздела (0 — манга, 1 — сохранённое, 2 — поиск).
      */
     var screenType by mutableIntStateOf(0)
 }

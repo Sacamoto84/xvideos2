@@ -5,6 +5,7 @@ import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NTag
+import com.client.xvideos.n.model.NTagPage
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -248,18 +249,18 @@ object NParser {
         jsonConfig.parseToJsonElement(body).jsonObject["favorited"]?.jsonPrimitive?.booleanOrNull
     ) { "Неверный ответ при обновлении избранного" }
 
-    /** Приватный API возвращает пустой result только для действительно пустой страницы. */
-    fun parseFavoritesPage(body: String, page: Int): NGalleryPageResult {
+    /** Пустой result считается успешным только при корректной структуре ответа v2. */
+    fun parseGalleryPageV2(body: String, page: Int): NGalleryPageResult {
         val root = jsonConfig.parseToJsonElement(body) as? JsonObject
         val items = root?.get("result") as? JsonArray
         val totalPages = root?.get("num_pages")?.jsonPrimitive?.intOrNull
         require(items != null && totalPages != null && totalPages >= 0) {
-            "Неверный формат ответа API избранного"
+            "Неверный формат списка альбомов"
         }
         return NGalleryPageResult(
             items = items.map { item ->
                 requireNotNull((item as? JsonObject)?.let(::parseGalleryListItem)) {
-                    "Не удалось прочитать альбом из избранного"
+                    "Не удалось прочитать альбом"
                 }
             },
             page = page,
@@ -268,38 +269,28 @@ object NParser {
     }
 
     /**
-     * Парсит список тегов из ответа API v2 (/tags/search, /tags/{type}).
+     * Парсит подсказки из ответа API v2 (/tags/search).
      */
-    fun parseTagsJson(jsonString: String): List<NTag> = runCatching {
-        val parsed = jsonConfig.parseToJsonElement(jsonString)
-        val tagsArray: JsonArray = when (parsed) {
-            is JsonArray -> parsed
-            is JsonObject -> {
-                parsed["tags"]?.jsonArray
-                    ?: parsed["result"]?.jsonArray
-                    ?: JsonArray(emptyList())
-            }
-            else -> JsonArray(emptyList())
-        }
+    fun parseTagsJson(jsonString: String): List<NTag> =
+        parseTagItems(jsonConfig.parseToJsonElement(jsonString).jsonArray)
 
-        tagsArray.mapNotNull { element ->
+    fun parseTagPage(jsonString: String): NTagPage {
+        val root = jsonConfig.parseToJsonElement(jsonString).jsonObject
+        val items = requireNotNull(root["result"] as? JsonArray) { "Неверный формат списка тегов" }
+        val pages = requireNotNull(root["num_pages"]?.jsonPrimitive?.intOrNull) { "Нет числа страниц тегов" }
+        return NTagPage(parseTagItems(items), pages.coerceAtLeast(1))
+    }
+
+    private fun parseTagItems(items: JsonArray): List<NTag> =
+        items.map { element ->
             val obj = element.jsonObject
-            val id = obj["id"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
+            val id = requireNotNull(obj["id"]?.jsonPrimitive?.longOrNull) { "Не удалось прочитать тег" }
             val type = obj["type"]?.jsonPrimitive?.contentOrNull.orEmpty()
             val name = obj["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
             val count = obj["count"]?.jsonPrimitive?.intOrNull ?: 0
             val url = obj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
             NTag(id = id, type = type, name = name, count = count, url = url)
         }
-    }.getOrDefault(emptyList())
-
-    /**
-     * Парсит ID случайной галереи из ответа API v2 (/galleries/random).
-     */
-    fun parseRandomGalleryId(jsonString: String): Long? = runCatching {
-        val obj = jsonConfig.parseToJsonElement(jsonString).jsonObject
-        obj["id"]?.jsonPrimitive?.longOrNull
-    }.getOrNull()
 
     /**
      * Парсит список превью галерей из ответа поискового JSON API.

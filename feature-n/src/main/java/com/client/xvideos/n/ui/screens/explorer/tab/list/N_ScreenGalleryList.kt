@@ -39,7 +39,6 @@ object N_ScreenGalleryList : Screen {
             NFeedTopBar(
                 selectedSort = sort,
                 onSortSelected = vm::setSortType,
-                onRandomClick = { vm.openRandomGallery { navigator.push(ScreenNGallery(it)) } },
                 topInset = getTopInsetDp()
             )
             NGalleryPager(vm.pages, columns, onGalleryClick = { id -> navigator.push(ScreenNGallery(id)) })

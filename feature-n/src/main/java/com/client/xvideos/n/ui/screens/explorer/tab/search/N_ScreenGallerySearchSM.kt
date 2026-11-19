@@ -11,6 +11,9 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.n.model.NAlbumFilter
 import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NTag
+import com.client.xvideos.n.model.NTagCondition
+import com.client.xvideos.n.model.NTagSort
+import com.client.xvideos.n.model.NTagType
 import com.client.xvideos.n.repository.NRepository
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryPages
 import dagger.Binds
@@ -52,6 +55,12 @@ class N_ScreenGallerySearchSM @Inject constructor(
         if (submittedQuery.isEmpty()) Result.success(NGalleryPageResult())
         else repository.searchPage(query = submittedQuery, page = number, sort = _filter.value.sort)
     }
+
+    suspend fun loadTagPage(type: NTagType, sort: NTagSort, page: Int) =
+        repository.getTagsPage(type, sort, page)
+
+    suspend fun findTags(query: String, type: NTagType) =
+        repository.searchTags(query, limit = 50, type = type)
 
     fun setQuery(newQuery: String) {
         _query.value = newQuery
@@ -100,19 +109,17 @@ class N_ScreenGallerySearchSM @Inject constructor(
     fun search() {
         tagSearchJob?.cancel()
         _tagSuggestions.value = emptyList()
-        val text = _query.value.trim()
-        val language = _filter.value.language
-        submittedQuery = if (language.isNotEmpty() && !text.contains("language:")) {
-            listOf(text, "language:$language").filter { it.isNotEmpty() }.joinToString(" ")
-        } else {
-            text
-        }
+        submittedQuery = _filter.value.buildQuery(_query.value)
         pages.reset()
     }
 
     fun setFilter(newFilter: NAlbumFilter) {
         _filter.value = newFilter
         search()
+    }
+
+    fun removeTagCondition(condition: NTagCondition) {
+        setFilter(_filter.value.copy(tags = _filter.value.tags - condition))
     }
 }
 
