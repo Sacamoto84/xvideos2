@@ -2,6 +2,7 @@ package com.client.xvideos.n
 
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.net.NParser
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -239,10 +240,11 @@ class NParserTest {
 
     @Test
     fun `parseGalleryHtml извлекает JSON из тега script`() {
+        val payload = JsonPrimitive(sampleJson)
         val html = """
             <html>
             <head>
-              <script>window._gallery = JSON.parse("$sampleJson");</script>
+              <script>window._gallery = JSON.parse($payload);</script>
             </head>
             <body></body>
             </html>
@@ -252,6 +254,37 @@ class NParserTest {
         assertNotNull(gallery)
         assertEquals(123456L, gallery?.id)
         assertEquals("Test Manga", gallery?.title)
+    }
+
+    @Test
+    fun `legacy gallery script preserves a quoted closing parenthesis in the title`() {
+        val title = "A\")B\\"
+        val json = """{"id":42,"media_id":17,"title":{"pretty":${JsonPrimitive(title)}}}"""
+        val html = """<script>window._gallery = JSON.parse(${JsonPrimitive(json)});</script>"""
+
+        assertEquals(title, NParser.parseGalleryHtml(html, expectedGalleryId = 42)?.title)
+    }
+
+    @Test
+    fun `gallery lists keep the first item for each gallery id`() {
+        val first = """{"id":42,"media_id":17,"english_title":"First"}"""
+        val duplicate = """{"id":42,"media_id":17,"english_title":"Duplicate"}"""
+        val other = """{"id":5,"media_id":27,"english_title":"Other"}"""
+        val json = """{"result":[$first,$duplicate,$other],"num_pages":3}"""
+        val html = """
+            <div class="gallery"><a href="/g/42/"><img src="/galleries/17/thumb.jpg"></a></div>
+            <div class="gallery"><a href="/g/42/"><img src="/galleries/17/thumb.jpg"></a></div>
+            <div class="gallery"><a href="/g/5/"><img src="/galleries/27/thumb.jpg"></a></div>
+        """.trimIndent()
+        val related = """{"id":9,"media_id":35,"related":[$first,$duplicate,$other]}"""
+
+        assertEquals(listOf(42L, 5L), NParser.parseGalleryPageJson(json).items.map { it.id })
+        val page = NParser.parseGalleryPageV2(json, page = 2)
+        assertEquals(listOf(42L, 5L), page.items.map { it.id })
+        assertEquals("First", page.items.first().title)
+        assertEquals(3, page.totalPages)
+        assertEquals(listOf(42L, 5L), NParser.parseSearchHtmlPage(html).items.map { it.id })
+        assertEquals(listOf(42L, 5L), NParser.parseGalleryJson(related)?.relatedGalleries?.map { it.id })
     }
 
     @Test

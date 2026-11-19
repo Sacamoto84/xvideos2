@@ -84,7 +84,7 @@ object NParser {
         val relatedGalleries = relatedArray?.mapNotNull { element ->
             val elObj = element as? JsonObject ?: return@mapNotNull null
             parseGalleryListItem(elObj) ?: parseGalleryJson(element.toString())?.toPreview()
-        }.orEmpty()
+        }.orEmpty().distinctBy { it.id }
 
         NGallery(
             id = id,
@@ -139,8 +139,11 @@ object NParser {
             val parseIndex = scriptContent.indexOf("JSON.parse(\"")
             if (parseIndex >= 0) {
                 val start = parseIndex + "JSON.parse(\"".length
-                val end = scriptContent.indexOf("\")", start)
-                if (end > start) {
+                var end = start
+                while (end < scriptContent.length && scriptContent[end] != '"') {
+                    end += if (scriptContent[end] == '\\') 2 else 1
+                }
+                if (end in (start + 1) until scriptContent.length) {
                     val rawJson = scriptContent.substring(start, end)
                     val unescaped = unescapeUnicode(rawJson)
                     val gallery = parseGalleryJson(unescaped)
@@ -243,7 +246,7 @@ object NParser {
         itemsArray.mapNotNull { element ->
             val obj = element.jsonObject
             parseGalleryListItem(obj) ?: parseGalleryJson(element.toString())?.toPreview()
-        }
+        }.distinctBy { it.id }
     }.getOrDefault(emptyList())
 
     fun parseFavoriteState(body: String): Boolean = requireNotNull(
@@ -263,7 +266,7 @@ object NParser {
                 requireNotNull((item as? JsonObject)?.let(::parseGalleryListItem)) {
                     "Не удалось прочитать альбом"
                 }
-            },
+            }.distinctBy { it.id },
             page = page,
             totalPages = totalPages.coerceAtLeast(1)
         )
@@ -324,7 +327,7 @@ object NParser {
     fun parseSearchHtml(html: String): List<NGalleryPreview> {
         val doc: Document = Jsoup.parse(html)
         val galleriesElements = doc.getElementsByClass("gallery")
-        return galleriesElements.mapNotNull { element -> parseGalleryElement(element) }
+        return galleriesElements.mapNotNull(::parseGalleryElement).distinctBy { it.id }
     }
 
     /**

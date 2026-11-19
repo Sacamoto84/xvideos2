@@ -109,9 +109,9 @@ class ScreenNGallerySM @AssistedInject constructor(
     fun isPageLiked(pageNumber: Int): Boolean =
         saved.likes.isLiked(galleryId, pageNumber)
 
-    fun toggleLikePage(gallery: NGallery, page: NPage): Boolean {
+    fun toggleLikePage(gallery: NGallery, page: NPage) {
         val picture = NPicture.fromPage(gallery.id, gallery.mediaId, gallery.title, page)
-        return saved.likes.toggleLike(picture)
+        screenModelScope.launch { saved.likes.toggleLike(picture) }
     }
 
     init {

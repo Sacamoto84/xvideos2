@@ -22,6 +22,7 @@ object NClient {
 
     private const val BASE_URL = "https://nhentai.net"
     private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
+    private val rateLimit = NRateLimit()
 
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -97,8 +98,9 @@ object NClient {
         executeRequest(request.build(), url)
     }
 
-    private suspend fun executeRequest(request: Request, targetUrl: String): NNetworkResult =
-        suspendCancellableCoroutine { continuation ->
+    private suspend fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
+        rateLimit.blockedRequest()?.let { return it }
+        return suspendCancellableCoroutine { continuation ->
             val call = okHttpClient.newCall(request)
             continuation.invokeOnCancellation { call.cancel() }
             call.enqueue(object : Callback {
@@ -118,6 +120,7 @@ object NClient {
                                         NCookieHelper.extractCookieValue(it.request.header("Cookie").orEmpty(), "cf_clearance")
                                     )
                                 it.isSuccessful -> NNetworkResult.Success(body, it.request.url.toString())
+                                it.code == 429 -> rateLimit.onRateLimited(it.headers)
                                 else -> NNetworkResult.Error(it.code, "HTTP error ${it.code}")
                             }
                         }
@@ -128,6 +131,7 @@ object NClient {
                 }
             })
         }
+    }
 
     private fun buildCookieHeader(): String? {
         val cookies = mutableListOf<String>()

@@ -24,7 +24,10 @@ import org.jsoup.Jsoup
  * Репозиторий данных раздела nhentai с кэшированием в оперативной памяти.
  */
 @Singleton
-class NRepository @Inject constructor() {
+class NRepository internal constructor(private val get: suspend (String) -> NNetworkResult) {
+
+    @Inject
+    constructor() : this(NClient::get)
 
     private val galleryCache = NGalleryCache()
     private val favoriteWrites = NServerFavoriteWrites { galleryId, favorite, apiKey ->
@@ -43,13 +46,16 @@ class NRepository @Inject constructor() {
             "/api/v2/search?query=-nonexisttag&sort=${sort.queryValue}&page=$page"
         }
 
-        when (val apiResult = NClient.get(apiEndpoint)) {
+        when (val apiResult = get(apiEndpoint)) {
             is NNetworkResult.Success -> {
                 val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
                 if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
             }
             is NNetworkResult.CloudflareRequired -> {
                 return Result.failure(apiResult.toException())
+            }
+            is NNetworkResult.Error -> if (apiResult.code == 429) {
+                return Result.failure(IllegalStateException(apiResult.message))
             }
             else -> Unit
         }
@@ -78,7 +84,7 @@ class NRepository @Inject constructor() {
         val sortParam = if (sort.queryValue.isNotEmpty()) "&sort=${sort.queryValue}" else ""
         val apiEndpoint = "/api/v2/search?query=$encodedQuery&page=$page$sortParam"
 
-        when (val apiResult = NClient.get(apiEndpoint)) {
+        when (val apiResult = get(apiEndpoint)) {
             is NNetworkResult.Success -> {
                 val parsed = runCatching { NParser.parseGalleryPageV2(apiResult.body, page) }
                 if (parsed.isSuccess) return parsed
@@ -87,7 +93,7 @@ class NRepository @Inject constructor() {
                 return Result.failure(apiResult.toException())
             }
             is NNetworkResult.Error -> if (apiResult.code == 429) {
-                return Result.failure(IllegalStateException("Слишком много запросов. Повторите поиск позже."))
+                return Result.failure(IllegalStateException(apiResult.message))
             }
             else -> Unit
         }
@@ -108,7 +114,7 @@ class NRepository @Inject constructor() {
      */
     suspend fun getFavoritesPage(page: Int = 1): Result<NGalleryPageResult> {
         val authHint = "Для загрузки избранного укажите действующий API-ключ в настройках N."
-        return when (val result = NClient.get("/api/v2/favorites?page=$page")) {
+        return when (val result = get("/api/v2/favorites?page=$page")) {
             is NNetworkResult.Success -> runCatching { NParser.parseGalleryPageV2(result.body, page) }
             is NNetworkResult.CloudflareRequired -> Result.failure(result.toException())
             is NNetworkResult.Failure -> Result.failure(result.throwable)
@@ -132,13 +138,16 @@ class NRepository @Inject constructor() {
         if (tag.id > 0L) {
             val sortParam = if (sort.queryValue.isNotEmpty()) "&sort=${sort.queryValue}" else ""
             val apiEndpoint = "/api/v2/galleries/tagged?tag_id=${tag.id}&page=$page$sortParam"
-            when (val apiResult = NClient.get(apiEndpoint)) {
+            when (val apiResult = get(apiEndpoint)) {
                 is NNetworkResult.Success -> {
                     val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
                     if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
                 }
                 is NNetworkResult.CloudflareRequired -> {
                     return Result.failure(apiResult.toException())
+                }
+                is NNetworkResult.Error -> if (apiResult.code == 429) {
+                    return Result.failure(IllegalStateException(apiResult.message))
                 }
                 else -> Unit
             }
@@ -156,7 +165,7 @@ class NRepository @Inject constructor() {
         defaultPage: Int,
         favoritesAuthHint: String? = null
     ): Result<NGalleryPageResult> {
-        return when (val result = NClient.get(endpoint)) {
+        return when (val result = get(endpoint)) {
             is NNetworkResult.Success -> runCatching {
                 if (favoritesAuthHint == null) NParser.parseSearchHtmlPage(result.body, defaultPage)
                 else checkNotNull(parseNFavoritesPage(result.finalUrl, result.body, defaultPage)) { favoritesAuthHint }
@@ -165,7 +174,7 @@ class NRepository @Inject constructor() {
                 Result.failure(result.toException())
             }
             is NNetworkResult.Error -> {
-                Result.failure(RuntimeException("Ошибка HTTP: ${result.code}"))
+                Result.failure(result.toPageException())
             }
             is NNetworkResult.Failure -> {
                 Result.failure(result.throwable)
@@ -180,7 +189,7 @@ class NRepository @Inject constructor() {
         if (!forceRefresh) galleryCache[id]?.let { return Result.success(it) }
 
         // Сначала пробуем прямой v2 JSON API с рекомендациями похожих работ
-        when (val apiResult = NClient.get("/api/v2/galleries/$id?include=related")) {
+        when (val apiResult = get("/api/v2/galleries/$id?include=related")) {
             is NNetworkResult.Success -> {
                 val gallery = NParser.parseGalleryJson(apiResult.body)
                 if (gallery != null && gallery.id == id) {
@@ -191,11 +200,14 @@ class NRepository @Inject constructor() {
             is NNetworkResult.CloudflareRequired -> {
                 return Result.failure(apiResult.toException())
             }
+            is NNetworkResult.Error -> if (apiResult.code == 429) {
+                return Result.failure(IllegalStateException(apiResult.message))
+            }
             else -> Unit
         }
 
         // Если JSON API недоступен, пробуем распарсить HTML страницы галереи
-        return when (val htmlResult = NClient.get("/g/$id/")) {
+        return when (val htmlResult = get("/g/$id/")) {
             is NNetworkResult.Success -> {
                 val gallery = NParser.parseGalleryHtml(htmlResult.body, expectedGalleryId = id)
                 if (gallery != null) {
@@ -209,7 +221,7 @@ class NRepository @Inject constructor() {
                 Result.failure(htmlResult.toException())
             }
             is NNetworkResult.Error -> {
-                Result.failure(RuntimeException("Ошибка HTTP: ${htmlResult.code}"))
+                Result.failure(htmlResult.toPageException())
             }
             is NNetworkResult.Failure -> {
                 Result.failure(htmlResult.throwable)
@@ -233,18 +245,20 @@ class NRepository @Inject constructor() {
     }
 
     suspend fun getTagsPage(type: NTagType, sort: NTagSort, page: Int): Result<NTagPage> =
-        NClient.get("/api/v2/tags/${type.value}?sort=${sort.value}&page=$page")
+        get("/api/v2/tags/${type.value}?sort=${sort.value}&page=$page")
             .parseTagsResponse(NParser::parseTagPage)
 
     private fun <T> NNetworkResult.parseTagsResponse(parse: (String) -> T): Result<T> = when (this) {
         is NNetworkResult.Success -> runCatching { parse(body) }
         is NNetworkResult.CloudflareRequired -> Result.failure(toException())
-        is NNetworkResult.Error -> Result.failure(IllegalStateException("Не удалось загрузить теги (HTTP $code)"))
+        is NNetworkResult.Error -> Result.failure(
+            IllegalStateException(if (code == 429) message else "Не удалось загрузить теги (HTTP $code)")
+        )
         is NNetworkResult.Failure -> Result.failure(throwable)
     }
 
     suspend fun getServerFavorite(galleryId: Long): Result<Boolean> =
-        parseServerFavoriteResult(NClient.get("/api/v2/galleries/$galleryId/favorite"))
+        parseServerFavoriteResult(get("/api/v2/galleries/$galleryId/favorite"))
 
     suspend fun setServerFavorite(
         galleryId: Long,
@@ -295,3 +309,6 @@ class CloudflareBlockedException(val url: String, internal val sentClearance: St
     RuntimeException("Требуется подтверждение Cloudflare")
 
 internal fun NNetworkResult.CloudflareRequired.toException() = CloudflareBlockedException(challengeUrl, sentClearance)
+
+private fun NNetworkResult.Error.toPageException() =
+    IllegalStateException(if (code == 429) message else "Ошибка HTTP: $code")

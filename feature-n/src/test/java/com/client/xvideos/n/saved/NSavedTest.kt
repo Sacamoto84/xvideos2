@@ -3,6 +3,7 @@ package com.client.xvideos.n.saved
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.CollectionDB
+import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NPage
@@ -44,14 +45,14 @@ class NSavedTest {
         }
         AppPath.init(context)
 
-        likesRepo = NLikesRepository()
+        likesRepo = NLikesRepository(CoroutineScope(Job().apply { cancel() }))
         collectionRepo = NCollectionRepository(CoroutineScope(Job().apply { cancel() }))
         favoritesRepo = NFavoritesRepository()
         saved = NSaved(favoritesRepo, likesRepo, collectionRepo)
     }
 
     @Test
-    fun `likes repository saves and toggles likes`() {
+    fun `likes repository saves and toggles likes`() = runTest {
         val pic = NPicture(
             id = NPicture.makeId(12345L, 3),
             galleryId = 12345L,
@@ -71,6 +72,28 @@ class NSavedTest {
         assertFalse(removed)
         assertFalse(likesRepo.isLiked(12345L, 3))
         assertEquals(0, likesRepo.likes.size)
+    }
+
+    @Test
+    fun `editing a like updates one entry until the next explicit reload`() = runTest {
+        val db = FileDB(AppPath.n_likes, "pic", NPicture.serializer())
+        val older = NPicture(id = "1_1")
+        val changed = NPicture(id = "2_1")
+        val imported = NPicture(id = "3_1")
+        assertTrue(db.insert(older.id, older).isSuccess)
+
+        likesRepo.load()
+        assertTrue(db.insert(imported.id, imported).isSuccess)
+        assertTrue(likesRepo.toggleLike(changed))
+        assertEquals(listOf(changed, older), likesRepo.likes.toList())
+        assertEquals(changed, db.readOrNull(changed.id))
+
+        likesRepo.removeLike(changed.id)
+        assertEquals(listOf(older), likesRepo.likes.toList())
+        assertFalse(db.contains(changed.id))
+
+        likesRepo.refresh()
+        assertEquals(setOf(imported, older), likesRepo.likes.toSet())
     }
 
     @Test

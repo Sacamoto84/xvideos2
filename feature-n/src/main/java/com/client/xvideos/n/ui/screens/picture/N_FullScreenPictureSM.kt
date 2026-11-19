@@ -16,9 +16,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * ScreenModel полноэкранного просмотрщика сохранённых картинок.
@@ -36,8 +34,9 @@ class N_FullScreenPictureSM @Inject constructor(
     fun isPictureLiked(picture: NPicture): Boolean =
         saved.likes.isLiked(picture.id)
 
-    fun toggleLike(picture: NPicture): Boolean =
-        saved.likes.toggleLike(picture)
+    fun toggleLike(picture: NPicture) {
+        screenModelScope.launch { saved.likes.toggleLike(picture) }
+    }
 
     internal suspend fun loadPictures(
         collectionName: String?,
@@ -46,7 +45,8 @@ class N_FullScreenPictureSM @Inject constructor(
     ): NSavedPicturePages {
         loadedPages?.let { return it }
         val items = if (collectionName == null) {
-            withContext(Dispatchers.IO) { saved.likes.likes.toList() }
+            saved.likes.load()
+            saved.likes.likes.toList()
         } else {
             saved.collection.readPictures(collectionName)
         }

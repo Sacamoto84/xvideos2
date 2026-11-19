@@ -64,7 +64,7 @@ class ScreenSavedNLikesSM @Inject constructor(
     }
 
     fun removeLike(picture: NPicture) {
-        saved.likes.removeLike(picture.id)
+        screenModelScope.launch { saved.likes.removeLike(picture.id) }
     }
 
     fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
