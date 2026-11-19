@@ -12,7 +12,6 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.n.model.NGallery
-import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.repository.CloudflareBlockedException
@@ -106,12 +105,11 @@ class ScreenNGallerySM @AssistedInject constructor(
     fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
         saved.collection.getCollectionCoverUrl(collectionName, items)
 
-    fun isPageLiked(pageNumber: Int): Boolean =
+    fun isPageLiked(pageNumber: Int): Boolean? =
         saved.likes.isLiked(galleryId, pageNumber)
 
-    fun toggleLikePage(gallery: NGallery, page: NPage) {
-        val picture = NPicture.fromPage(gallery.id, gallery.mediaId, gallery.title, page)
-        screenModelScope.launch { saved.likes.toggleLike(picture) }
+    fun setLiked(picture: NPicture, liked: Boolean) {
+        screenModelScope.launch { saved.likes.setLiked(picture, liked) }
     }
 
     init {

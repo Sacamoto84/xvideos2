@@ -143,13 +143,7 @@ class N_FullScreenPicture(
         }
 
         val currentPicture = pictures.getOrNull(pagerState.currentPage)
-        val isLiked = currentPicture != null && vm.isPictureLiked(currentPicture)
-
-        val onToggleLike: () -> Unit = remember(vm, currentPicture) {
-            {
-                currentPicture?.let { vm.toggleLike(it) }
-            }
-        }
+        val isLiked = currentPicture?.let(vm::isPictureLiked)
 
         val onAddToCollection: () -> Unit = remember(vm) {
             {
@@ -173,7 +167,7 @@ class N_FullScreenPicture(
             onBack = onBack,
             onOpenGallery = onOpenGallery,
             onToggleOrientation = onToggleOrientation,
-            onToggleLike = onToggleLike,
+            onSetLiked = vm::setLiked,
             onAddToCollection = onAddToCollection,
             onPictureSelected = onPictureSelected
         )
@@ -208,11 +202,11 @@ fun N_FullScreenPictureContent(
     pictures: List<NPicture>,
     pagerState: PagerState,
     isVertical: Boolean,
-    isLiked: Boolean,
+    isLiked: Boolean?,
     onBack: () -> Unit,
     onOpenGallery: () -> Unit,
     onToggleOrientation: () -> Unit,
-    onToggleLike: () -> Unit,
+    onSetLiked: (NPicture, Boolean) -> Unit,
     onAddToCollection: () -> Unit,
     onPictureSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -289,7 +283,7 @@ fun N_FullScreenPictureContent(
                             picture = pic,
                             isLiked = isLiked,
                             onOpenGallery = onOpenGallery,
-                            onToggleLike = onToggleLike,
+                            onSetLiked = onSetLiked,
                             onAddToCollection = onAddToCollection
                         )
                     }
@@ -329,7 +323,7 @@ private fun N_FullScreenPictureContentPreview() {
         onBack = {},
         onOpenGallery = {},
         onToggleOrientation = {},
-        onToggleLike = {},
+        onSetLiked = { _, _ -> },
         onAddToCollection = {},
         onPictureSelected = {}
     )

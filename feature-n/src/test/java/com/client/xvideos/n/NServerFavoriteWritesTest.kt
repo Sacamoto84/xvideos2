@@ -38,6 +38,15 @@ class NServerFavoriteWritesTest {
     }
 
     @Test
+    fun `rate limited favorites retain the retry message`() = runTest {
+        val message = "Слишком много запросов. Повторите через 17 сек."
+        val writes = NServerFavoriteWrites { _, _, _ -> NNetworkResult.Error(429, message) }
+
+        assertEquals(message, writes.set(42, true, "test").exceptionOrNull()?.message)
+        assertEquals(0L, writes.revision.value)
+    }
+
+    @Test
     fun `an ambiguous network failure invalidates the cached server state`() = runTest {
         val writes = NServerFavoriteWrites { _, _, _ -> NNetworkResult.Failure(IOException("connection lost")) }
         val update = backgroundScope.async(start = CoroutineStart.UNDISPATCHED) { writes.updates.first() }

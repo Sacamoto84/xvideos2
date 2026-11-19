@@ -31,11 +31,11 @@ class N_FullScreenPictureSM @Inject constructor(
 
     private var loadedPages: NSavedPicturePages? = null
 
-    fun isPictureLiked(picture: NPicture): Boolean =
+    fun isPictureLiked(picture: NPicture): Boolean? =
         saved.likes.isLiked(picture.id)
 
-    fun toggleLike(picture: NPicture) {
-        screenModelScope.launch { saved.likes.toggleLike(picture) }
+    fun setLiked(picture: NPicture, liked: Boolean) {
+        screenModelScope.launch { saved.likes.setLiked(picture, liked) }
     }
 
     internal suspend fun loadPictures(

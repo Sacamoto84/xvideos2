@@ -116,7 +116,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
                 NPictureItemExpandMenu(
                     picture = picture,
                     isLiked = vm.isPageLiked(page.pageNumber),
-                    onToggleLike = { vm.toggleLikePage(successGallery, page) },
+                    onSetLiked = vm::setLiked,
                     onAddToCollection = { vm.openAddToCollection(picture) }
                 )
             }

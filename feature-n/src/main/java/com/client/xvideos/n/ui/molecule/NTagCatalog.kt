@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.model.NTagCondition
 import com.client.xvideos.n.model.NTagPage
@@ -94,7 +95,7 @@ internal fun NTagCatalog(
                 query = it
                 page = 1
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().excludedFromAutofill(),
             label = { Text("Начало названия") },
             singleLine = true
         )

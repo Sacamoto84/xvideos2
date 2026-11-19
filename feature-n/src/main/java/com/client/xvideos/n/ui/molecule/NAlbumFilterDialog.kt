@@ -40,6 +40,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.n.model.NAlbumFilter
 import com.client.xvideos.n.model.NSortType
 import com.client.xvideos.n.model.NTag
@@ -221,7 +222,7 @@ private fun NFilterNumberField(
             if (text.isEmpty()) onChange(null)
             else text.toIntOrNull()?.takeIf { it >= 0 && text.all(Char::isDigit) }?.let(onChange)
         },
-        modifier = modifier,
+        modifier = modifier.excludedFromAutofill(),
         label = { Text(label) },
         singleLine = true,
         isError = isError,

@@ -111,18 +111,8 @@ object NClient {
                 override fun onResponse(call: Call, response: Response) {
                     val result = try {
                         response.use {
-                            val body = it.body.string()
-                            val contentType = it.header("Content-Type")
-                            when {
-                                isNCloudflareChallenge(it.code, contentType, it.header("cf-mitigated"), body) ->
-                                    NNetworkResult.CloudflareRequired(
-                                        if (request.url.encodedPath.startsWith("/api/")) BASE_URL else targetUrl,
-                                        NCookieHelper.extractCookieValue(it.request.header("Cookie").orEmpty(), "cf_clearance")
-                                    )
-                                it.isSuccessful -> NNetworkResult.Success(body, it.request.url.toString())
-                                it.code == 429 -> rateLimit.onRateLimited(it.headers)
-                                else -> NNetworkResult.Error(it.code, "HTTP error ${it.code}")
-                            }
+                            val challengeUrl = if (request.url.encodedPath.startsWith("/api/")) BASE_URL else targetUrl
+                            it.toNNetworkResult(challengeUrl, rateLimit)
                         }
                     } catch (e: IOException) {
                         NNetworkResult.Failure(e)
@@ -150,6 +140,20 @@ object NClient {
             }
         }
         return if (cookies.isNotEmpty()) cookies.joinToString("; ") else null
+    }
+}
+
+internal fun Response.toNNetworkResult(challengeUrl: String, rateLimit: NRateLimit): NNetworkResult {
+    val text = if (isSuccessful || code == 403 || code == 503) body.string() else ""
+    return when {
+        isNCloudflareChallenge(code, header("Content-Type"), header("cf-mitigated"), text) ->
+            NNetworkResult.CloudflareRequired(
+                challengeUrl,
+                NCookieHelper.extractCookieValue(request.header("Cookie").orEmpty(), "cf_clearance")
+            )
+        code == 429 -> rateLimit.onRateLimited(headers)
+        isSuccessful -> NNetworkResult.Success(text, request.url.toString())
+        else -> NNetworkResult.Error(code, "HTTP error $code")
     }
 }
 

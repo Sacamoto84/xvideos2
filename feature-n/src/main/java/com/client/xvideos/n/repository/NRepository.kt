@@ -174,7 +174,7 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
                 Result.failure(result.toException())
             }
             is NNetworkResult.Error -> {
-                Result.failure(result.toPageException())
+                Result.failure(result.toHttpException())
             }
             is NNetworkResult.Failure -> {
                 Result.failure(result.throwable)
@@ -221,7 +221,7 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
                 Result.failure(htmlResult.toException())
             }
             is NNetworkResult.Error -> {
-                Result.failure(htmlResult.toPageException())
+                Result.failure(htmlResult.toHttpException())
             }
             is NNetworkResult.Failure -> {
                 Result.failure(htmlResult.throwable)
@@ -310,5 +310,5 @@ class CloudflareBlockedException(val url: String, internal val sentClearance: St
 
 internal fun NNetworkResult.CloudflareRequired.toException() = CloudflareBlockedException(challengeUrl, sentClearance)
 
-private fun NNetworkResult.Error.toPageException() =
+internal fun NNetworkResult.Error.toHttpException() =
     IllegalStateException(if (code == 429) message else "Ошибка HTTP: $code")

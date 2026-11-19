@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.R
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
@@ -175,6 +176,7 @@ private fun NApiKeyDialog(hasApiKey: Boolean, onDismiss: () -> Unit) {
                 }
                 OutlinedTextField(
                     value = key,
+                    modifier = Modifier.excludedFromAutofill(),
                     onValueChange = { key = it },
                     label = { Text(if (hasApiKey) "Новый API-ключ" else "API-ключ") },
                     isError = trimmedKey.isNotEmpty() && !validKey,

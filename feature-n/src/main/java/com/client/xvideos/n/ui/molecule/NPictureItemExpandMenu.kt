@@ -29,9 +29,9 @@ import com.client.xvideos.n.model.NPicture
 fun NPictureItemExpandMenu(
     picture: NPicture,
     modifier: Modifier = Modifier,
-    isLiked: Boolean = false,
+    isLiked: Boolean? = null,
     onOpenGallery: (() -> Unit)? = null,
-    onToggleLike: (() -> Unit)? = null,
+    onSetLiked: ((NPicture, Boolean) -> Unit)? = null,
     onAddToCollection: (() -> Unit)? = null,
     onSetCover: (() -> Unit)? = null,
     onSaveToGallery: (() -> Unit)? = null,
@@ -55,12 +55,12 @@ fun NPictureItemExpandMenu(
             }
         }
 
-        if (onToggleLike != null) {
+        if (onSetLiked != null && isLiked != null) {
             val likeIcon = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
             val likeText = if (isLiked) "Удалить из лайков" else "В лайки"
             ExpandMenuActionItem(icon = likeIcon, text = likeText) {
                 dismiss()
-                onToggleLike()
+                onSetLiked(picture, !isLiked)
             }
         }
 
@@ -154,7 +154,7 @@ private fun NPictureItemExpandMenuPreview() {
         ),
         isLiked = true,
         onOpenGallery = {},
-        onToggleLike = {},
+        onSetLiked = { _, _ -> },
         onAddToCollection = {},
         onSetCover = {},
         onDelete = {}

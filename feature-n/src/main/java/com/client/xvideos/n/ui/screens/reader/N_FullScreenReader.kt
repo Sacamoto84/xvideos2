@@ -134,13 +134,7 @@ class N_FullScreenReader(
             }
         }
 
-        val isLiked = gallery.pages.getOrNull(pagerState.currentPage)?.let { vm.isPageLiked(gallery.id, it.pageNumber) } == true
-
-        val onToggleLike: () -> Unit = remember(vm, gallery, pagerState) {
-            {
-                vm.toggleLikePage(gallery, pagerState.currentPage)
-            }
-        }
+        val isLiked = gallery.pages.getOrNull(pagerState.currentPage)?.let { vm.isPageLiked(gallery.id, it.pageNumber) }
 
         val onAddToCollection: () -> Unit = remember(vm) {
             {
@@ -157,7 +151,7 @@ class N_FullScreenReader(
             onToggleControls = { showControls = !showControls },
             onBack = onBack,
             onToggleOrientation = onToggleOrientation,
-            onToggleLike = onToggleLike,
+            onSetLiked = vm::setLiked,
             onAddToCollection = onAddToCollection,
             onPageSelected = onPageSelected
         )
@@ -215,12 +209,12 @@ fun N_FullScreenReaderContent(
     gallery: NGallery,
     pagerState: PagerState,
     isVertical: Boolean,
-    isLiked: Boolean,
+    isLiked: Boolean?,
     showControls: Boolean,
     onToggleControls: () -> Unit,
     onBack: () -> Unit,
     onToggleOrientation: () -> Unit,
-    onToggleLike: () -> Unit,
+    onSetLiked: (NPicture, Boolean) -> Unit,
     onAddToCollection: () -> Unit,
     onPageSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -293,7 +287,7 @@ fun N_FullScreenReaderContent(
                         NPictureItemExpandMenu(
                             picture = currentPicture,
                             isLiked = isLiked,
-                            onToggleLike = onToggleLike,
+                            onSetLiked = onSetLiked,
                             onAddToCollection = onAddToCollection
                         )
                     }
@@ -341,7 +335,7 @@ private fun N_FullScreenReaderContentPreview() {
         onToggleControls = {},
         onBack = {},
         onToggleOrientation = {},
-        onToggleLike = {},
+        onSetLiked = { _, _ -> },
         onAddToCollection = {},
         onPageSelected = {}
     )

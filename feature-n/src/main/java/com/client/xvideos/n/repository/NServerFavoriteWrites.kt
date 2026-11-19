@@ -43,6 +43,6 @@ internal class NServerFavoriteWrites(
 internal fun parseServerFavoriteResult(result: NNetworkResult): Result<Boolean> = when (result) {
     is NNetworkResult.Success -> runCatching { NParser.parseFavoriteState(result.body) }
     is NNetworkResult.CloudflareRequired -> Result.failure(result.toException())
-    is NNetworkResult.Error -> Result.failure(IllegalStateException("Ошибка HTTP: ${result.code}"))
+    is NNetworkResult.Error -> Result.failure(result.toHttpException())
     is NNetworkResult.Failure -> Result.failure(result.throwable)
 }

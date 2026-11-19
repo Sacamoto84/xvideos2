@@ -49,13 +49,11 @@ class N_FullScreenReaderSM @Inject constructor(
         }
     }
 
-    fun isPageLiked(galleryId: Long, pageNumber: Int): Boolean =
+    fun isPageLiked(galleryId: Long, pageNumber: Int): Boolean? =
         saved.likes.isLiked(galleryId, pageNumber)
 
-    fun toggleLikePage(gallery: NGallery, pageIndex: Int) {
-        val page = gallery.pages.getOrNull(pageIndex) ?: return
-        val picture = NPicture.fromPage(gallery.id, gallery.mediaId, gallery.title, page)
-        screenModelScope.launch { saved.likes.toggleLike(picture) }
+    fun setLiked(picture: NPicture, liked: Boolean) {
+        screenModelScope.launch { saved.likes.setLiked(picture, liked) }
     }
 
     fun addToCollection(gallery: NGallery, pageIndex: Int, collectionName: String, create: Boolean = false) {

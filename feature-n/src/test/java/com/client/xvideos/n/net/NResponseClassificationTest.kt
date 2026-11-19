@@ -3,7 +3,14 @@ package com.client.xvideos.n.net
 import com.client.xvideos.n.repository.parseNFavoritesPage
 import com.client.xvideos.n.repository.NRepository
 import kotlinx.coroutines.test.runTest
+import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.asResponseBody
+import okio.Buffer
+import okio.ForwardingSource
+import okio.buffer
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -29,6 +36,28 @@ class NResponseClassificationTest {
     fun `server favorites cannot be changed through the web session fallback`() = runTest {
         val result = NRepository().setServerFavorite(1, favorite = false, apiKey = "")
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `a truncated 429 still starts the cooldown`() {
+        val url = "https://nhentai.net/"
+        val source = object : ForwardingSource(Buffer()) {
+            override fun read(sink: Buffer, byteCount: Long): Long = throw IOException("truncated response")
+        }
+        val response = Response.Builder()
+            .request(Request.Builder().url(url).build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(429)
+            .message("Too Many Requests")
+            .header("Retry-After", "17")
+            .body(source.buffer().asResponseBody())
+            .build()
+        val rateLimit = NRateLimit(kotlin.time.TestTimeSource())
+
+        val result = response.use { it.toNNetworkResult(url, rateLimit) }
+
+        assertEquals(NNetworkResult.Error(429, "Слишком много запросов. Повторите через 17 сек."), result)
+        assertEquals(result, rateLimit.blockedRequest())
     }
 
     @Test

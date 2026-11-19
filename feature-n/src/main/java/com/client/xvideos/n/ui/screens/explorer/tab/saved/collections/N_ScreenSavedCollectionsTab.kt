@@ -111,7 +111,7 @@ object N_ScreenSavedCollectionsTab : Screen {
                 picture = picture,
                 isLiked = vm.isLiked(picture),
                 onOpenGallery = { navigator.push(ScreenNGallery(picture.galleryId)) },
-                onToggleLike = { vm.toggleLike(picture) },
+                onSetLiked = vm::setLiked,
                 onAddToCollection = { vm.openAddToCollection(picture) },
                 onSetCover = { vm.setCover(picture) },
                 onRemoveFromCollection = { vm.removeItem(picture) }

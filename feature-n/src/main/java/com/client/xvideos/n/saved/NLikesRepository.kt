@@ -1,5 +1,8 @@
 package com.client.xvideos.n.saved
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.client.xvideos.common.AppPath
@@ -25,7 +28,7 @@ class NLikesRepository @Inject constructor(@ApplicationScope scope: CoroutineSco
 
     private val db by lazy { FileDB(AppPath.n_likes, "pic", NPicture.serializer()) }
     private val mutex = Mutex()
-    private var loaded = false
+    private var loaded by mutableStateOf(false)
 
     init {
         scope.launch { load() }
@@ -34,24 +37,16 @@ class NLikesRepository @Inject constructor(@ApplicationScope scope: CoroutineSco
     val likes: SnapshotStateList<NPicture>
         get() = db.list
 
-    fun isLiked(id: String): Boolean {
-        if (!AppPath.isInitialized) return false
+    fun isLiked(id: String): Boolean? {
+        if (!loaded) return null
         return likes.any { it.id == id }
     }
 
-    fun isLiked(galleryId: Long, pageNumber: Int): Boolean =
+    fun isLiked(galleryId: Long, pageNumber: Int): Boolean? =
         isLiked(NPicture.makeId(galleryId, pageNumber))
 
-    suspend fun toggleLike(picture: NPicture): Boolean = edit {
-        val liked = db.contains(picture.id)
-        val result = if (liked) db.delete(picture.id) else db.insert(picture.id, picture)
-        if (result.isFailure) {
-            SnackBar.error("Не удалось изменить лайк")
-            return@edit liked
-        }
-        if (liked) likes.removeAll { it.id == picture.id }
-        else publishLike(picture)
-        !liked
+    suspend fun setLiked(picture: NPicture, liked: Boolean) {
+        if (liked) addLike(picture) else removeLike(picture.id)
     }
 
     suspend fun addLike(picture: NPicture) = edit {

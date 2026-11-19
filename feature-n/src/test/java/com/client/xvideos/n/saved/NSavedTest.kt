@@ -52,7 +52,7 @@ class NSavedTest {
     }
 
     @Test
-    fun `likes repository saves and toggles likes`() = runTest {
+    fun `likes stay unknown until load and repeated actions preserve the requested state`() = runTest {
         val pic = NPicture(
             id = NPicture.makeId(12345L, 3),
             galleryId = 12345L,
@@ -61,16 +61,20 @@ class NSavedTest {
             galleryTitle = "Test Gallery"
         )
 
-        assertFalse(likesRepo.isLiked(12345L, 3))
+        val db = FileDB(AppPath.n_likes, "pic", NPicture.serializer())
+        assertTrue(db.insert(pic.id, pic).isSuccess)
+        assertNull(likesRepo.isLiked(12345L, 3))
+        likesRepo.load()
+        assertEquals(true, likesRepo.isLiked(12345L, 3))
 
-        val added = likesRepo.toggleLike(pic)
-        assertTrue(added)
-        assertTrue(likesRepo.isLiked(12345L, 3))
-        assertEquals(1, likesRepo.likes.size)
+        likesRepo.setLiked(pic, true)
+        assertEquals(pic, db.readOrNull(pic.id))
+        assertEquals(listOf(pic), likesRepo.likes.toList())
 
-        val removed = likesRepo.toggleLike(pic)
-        assertFalse(removed)
-        assertFalse(likesRepo.isLiked(12345L, 3))
+        likesRepo.setLiked(pic, false)
+        likesRepo.setLiked(pic, false)
+        assertFalse(db.contains(pic.id))
+        assertEquals(false, likesRepo.isLiked(12345L, 3))
         assertEquals(0, likesRepo.likes.size)
     }
 
@@ -84,7 +88,7 @@ class NSavedTest {
 
         likesRepo.load()
         assertTrue(db.insert(imported.id, imported).isSuccess)
-        assertTrue(likesRepo.toggleLike(changed))
+        likesRepo.setLiked(changed, true)
         assertEquals(listOf(changed, older), likesRepo.likes.toList())
         assertEquals(changed, db.readOrNull(changed.id))
 
