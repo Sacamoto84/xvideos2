@@ -102,13 +102,13 @@ fun LazyExpandMenuAnchor(
 private fun MenuDots() {
     Icon(
         Icons.Default.MoreVert,
-        contentDescription = "",
+        contentDescription = null,
         tint = Color.Black,
         modifier = Modifier.size(24.dp).offset(0.5.dp, 0.5.dp)
     )
     Icon(
         Icons.Default.MoreVert,
-        contentDescription = "",
+        contentDescription = "Действия",
         tint = Color.White,
         modifier = Modifier.size(24.dp)
     )

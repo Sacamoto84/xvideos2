@@ -5,6 +5,7 @@ import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NSortType
 import com.client.xvideos.n.model.NTag
+import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.net.NClient
 import com.client.xvideos.n.net.NNetworkResult
 import com.client.xvideos.n.net.NParser
@@ -12,6 +13,9 @@ import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Репозиторий данных раздела nhentai с кэшированием в оперативной памяти.
@@ -20,6 +24,8 @@ import javax.inject.Singleton
 class NRepository @Inject constructor() {
 
     private val galleryCache = ConcurrentHashMap<Long, NGallery>()
+    private val favoriteChanges = MutableStateFlow(0L)
+    val serverFavoriteRevision = favoriteChanges.asStateFlow()
 
     /**
      * Загружает страницу галерей с метаданными пагинации с приоритетом REST API v2.
@@ -92,21 +98,21 @@ class NRepository @Inject constructor() {
      * Загружает избранные галереи пользователя с сервера (/api/v2/favorites).
      */
     suspend fun getFavoritesPage(page: Int = 1): Result<NGalleryPageResult> {
-        val apiEndpoint = "/api/v2/favorites?page=$page"
-        when (val apiResult = NClient.get(apiEndpoint)) {
-            is NNetworkResult.Success -> {
-                val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
-                return Result.success(pageResult)
+        val authHint = "Для загрузки избранного укажите действующий API-ключ в настройках N."
+        return when (val result = NClient.get("/api/v2/favorites?page=$page")) {
+            is NNetworkResult.Success -> runCatching { NParser.parseFavoritesPage(result.body, page) }
+            is NNetworkResult.CloudflareRequired -> Result.failure(CloudflareBlockedException(result.challengeUrl))
+            is NNetworkResult.Failure -> Result.failure(result.throwable)
+            is NNetworkResult.Error -> when {
+                result.code != 401 && result.code != 403 -> Result.failure(IllegalStateException(result.message))
+                NAuthState.currentApiKey.isBlank() && NAuthState.currentSessionCookie.isNotBlank() ->
+                    fetchGalleriesPageFromHtml("/favorites/?page=$page", page).mapCatching { legacyPage ->
+                        check(legacyPage.items.isNotEmpty()) { authHint }
+                        legacyPage
+                    }
+                else -> Result.failure(IllegalStateException(authHint))
             }
-            is NNetworkResult.CloudflareRequired -> {
-                return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
-            }
-            else -> Unit
         }
-
-        // Запасной вариант через HTML-парсинг
-        val htmlEndpoint = "/favorites/?page=$page"
-        return fetchGalleriesPageFromHtml(htmlEndpoint, defaultPage = page)
     }
 
     /**
@@ -228,27 +234,32 @@ class NRepository @Inject constructor() {
         }
     }
 
+    suspend fun getServerFavorite(galleryId: Long): Result<Boolean> =
+        parseServerFavoriteResult(NClient.get("/api/v2/galleries/$galleryId/favorite"))
+
     /**
-     * Переключает состояние избранного для галереи на сервере (/g/{id}/favorite).
+     * Синхронизирует избранное через API v2 или существующую веб-сессию.
      */
-    suspend fun toggleServerFavorite(galleryId: Long): Result<Boolean> {
-        val endpoint = "/g/$galleryId/favorite"
-        return when (val result = NClient.postForm(endpoint)) {
-            is NNetworkResult.Success -> {
-                val isFav = result.body.contains("\"favorited\": true") ||
-                    result.body.contains("\"favorited\":true")
-                Result.success(isFav)
-            }
-            is NNetworkResult.CloudflareRequired -> {
-                Result.failure(CloudflareBlockedException(result.challengeUrl))
-            }
-            is NNetworkResult.Error -> {
-                Result.failure(RuntimeException("Ошибка обновления избранного на сервере: ${result.code}"))
-            }
-            is NNetworkResult.Failure -> {
-                Result.failure(result.throwable)
-            }
+    suspend fun setServerFavorite(galleryId: Long, favorite: Boolean): Result<Boolean> {
+        val apiKey = NAuthState.currentApiKey
+        val result = if (apiKey.isNotBlank()) {
+            NClient.setFavorite(galleryId, favorite, apiKey)
+        } else {
+            NClient.postForm("/g/$galleryId/favorite")
         }
+        return parseServerFavoriteResult(result)
+            .mapCatching { actual ->
+                check(actual == favorite) { "Сервер вернул другое состояние избранного" }
+                actual
+            }
+            .onSuccess { favoriteChanges.update { revision -> revision + 1 } }
+    }
+
+    private fun parseServerFavoriteResult(result: NNetworkResult): Result<Boolean> = when (result) {
+        is NNetworkResult.Success -> runCatching { NParser.parseFavoriteState(result.body) }
+        is NNetworkResult.CloudflareRequired -> Result.failure(CloudflareBlockedException(result.challengeUrl))
+        is NNetworkResult.Error -> Result.failure(IllegalStateException("Ошибка HTTP: ${result.code}"))
+        is NNetworkResult.Failure -> Result.failure(result.throwable)
     }
 
     /**

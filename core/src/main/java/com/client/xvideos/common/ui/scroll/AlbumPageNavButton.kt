@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenAlbumList.atom
+package com.client.xvideos.common.ui.scroll
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +23,7 @@ fun AlbumPageNavButton(
     contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     HintTooltip(text = contentDescription, modifier = modifier.fillMaxHeight()) {
         Box(
@@ -30,12 +31,12 @@ fun AlbumPageNavButton(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Theme.L.red)
-                .clickable(onClick = onClick),
+                .clickable(enabled = enabled, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
-                tint = Color.White,
+                tint = if (enabled) Color.White else Color.White.copy(alpha = 0.38f),
                 contentDescription = contentDescription
             )
         }

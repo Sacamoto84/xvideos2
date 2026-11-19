@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +28,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
@@ -34,7 +37,6 @@ import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTabSM
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.model.NSavedMangaOrder
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.model.nSortedSavedManga
-import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.molecule.NSavedMangaActionDialog
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.molecule.NSavedMangaTopBar
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 
@@ -53,10 +55,9 @@ object N_ScreenSavedMangaTab : Screen {
         val vm = getScreenModel<N_SavedTabSM>()
 
         val columns by vm.columns.collectAsStateWithLifecycle()
-        val favorites = vm.favorites
+        val favorites = vm.favorites.toList()
 
         var order by remember { mutableStateOf(NSavedMangaOrder.NEWEST) }
-        var selectedItemForAction by remember { mutableStateOf<NGalleryPreview?>(null) }
 
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { id -> navigator.push(ScreenNGallery(id)) }
@@ -70,8 +71,6 @@ object N_ScreenSavedMangaTab : Screen {
         }
 
         val onOrderChange = remember { { newOrder: NSavedMangaOrder -> order = newOrder } }
-        val onItemLongClick = remember { { item: NGalleryPreview -> selectedItemForAction = item } }
-        val onDismissAction = remember { { selectedItemForAction = null } }
 
         val sortedFavorites = remember(favorites, order) {
             nSortedSavedManga(favorites, order)
@@ -83,17 +82,8 @@ object N_ScreenSavedMangaTab : Screen {
             order = order,
             onOrderChange = onOrderChange,
             onGalleryClick = onGalleryClick,
-            onItemLongClick = onItemLongClick
+            onRemoveFavorite = onRemoveFavorite
         )
-
-        selectedItemForAction?.let { item ->
-            NSavedMangaActionDialog(
-                item = item,
-                onDismiss = onDismissAction,
-                onOpen = onGalleryClick,
-                onRemove = onRemoveFavorite
-            )
-        }
     }
 }
 
@@ -104,7 +94,7 @@ fun N_ScreenSavedMangaTabContent(
     order: NSavedMangaOrder,
     onOrderChange: (NSavedMangaOrder) -> Unit,
     onGalleryClick: (Long) -> Unit,
-    onItemLongClick: (NGalleryPreview) -> Unit,
+    onRemoveFavorite: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val topInset = getTopInsetDp()
@@ -150,7 +140,12 @@ fun N_ScreenSavedMangaTabContent(
                     items = favorites,
                     columns = columns,
                     onItemClick = onGalleryClick,
-                    onItemLongClick = onItemLongClick,
+                    itemMenuActions = { item, dismiss ->
+                        ExpandMenuActionItem(Icons.Outlined.Delete, "Удалить из сохранённого") {
+                            dismiss()
+                            onRemoveFavorite(item.id)
+                        }
+                    },
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -167,6 +162,6 @@ private fun N_ScreenSavedMangaTabContentPreview() {
         order = NSavedMangaOrder.NEWEST,
         onOrderChange = {},
         onGalleryClick = {},
-        onItemLongClick = {}
+        onRemoveFavorite = {}
     )
 }

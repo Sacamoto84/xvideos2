@@ -20,6 +20,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /**
@@ -32,6 +34,17 @@ class ScreenNServerFavoritesSM @Inject constructor(
 ) : ScreenModel {
 
     val pages = NGalleryPages(screenModelScope, fetch = repository::getFavoritesPage)
+
+    init {
+        screenModelScope.launch {
+            combine(Settings.n_api_key.field, Settings.n_session_cookie.field) { key, session -> key to session }
+                .drop(1)
+                .collect { pages.reset() }
+        }
+        screenModelScope.launch {
+            repository.serverFavoriteRevision.drop(1).collect { pages.refresh() }
+        }
+    }
 
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
@@ -79,10 +92,9 @@ class ScreenNServerFavoritesSM @Inject constructor(
      */
     fun removeServerFavorite(galleryId: Long) {
         screenModelScope.launch {
-            repository.toggleServerFavorite(galleryId).fold(
+            repository.setServerFavorite(galleryId, false).fold(
                 onSuccess = {
                     SnackBar.success("Удалено из избранного на сервере")
-                    pages.refresh()
                 },
                 onFailure = { error ->
                     SnackBar.error("Не удалось удалить с сервера: ${error.localizedMessage ?: "ошибка"}")

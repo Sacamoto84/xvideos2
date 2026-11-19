@@ -3,6 +3,8 @@ package com.client.xvideos.n
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.net.NParser
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
@@ -10,6 +12,40 @@ import org.junit.Test
  * Юнит-тесты парсера nhentai API и HTML.
  */
 class NParserTest {
+
+    @Test
+    fun `favorites page retains albums and pagination from API v2`() {
+        val json = """{"result":[{"id":42,"media_id":"17","english_title":"Album","japanese_title":null,
+            "thumbnail":"galleries/17/thumb.webp","thumbnail_width":250,"thumbnail_height":350}],"num_pages":4}"""
+        val page = NParser.parseFavoritesPage(json, 2)
+        assertEquals(42L, page.items.single().id)
+        assertEquals("Album", page.items.single().title)
+        assertEquals(2, page.page)
+        assertEquals(4, page.totalPages)
+    }
+
+    @Test
+    fun `empty favorites page is valid`() {
+        val page = NParser.parseFavoritesPage("""{"result":[],"num_pages":0}""", 1)
+        assertEquals(0, page.items.size)
+        assertEquals(1, page.totalPages)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `unexpected favorites payload is an error`() {
+        NParser.parseFavoritesPage("""{"detail":"Unauthorized"}""", 1)
+    }
+
+    @Test
+    fun `reads server favorite status from check and mutation responses`() {
+        assertTrue(NParser.parseFavoriteState("""{"favorited": true, "num_favorites": 12}"""))
+        assertFalse(NParser.parseFavoriteState("""{"favorited": false}"""))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `missing server favorite status is an error`() {
+        NParser.parseFavoriteState("""{"error": "Authentication required"}""")
+    }
 
     private val sampleJson = """
         {

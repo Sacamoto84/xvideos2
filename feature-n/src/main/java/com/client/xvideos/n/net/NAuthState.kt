@@ -55,10 +55,12 @@ object NAuthState {
         Timber.i("NAuthState: успешный вход пользователя $login")
         _username.value = login
         _sessionCookie.value = sessionCookie
+        _apiKey.value = ""
         _isLoggedIn.value = true
 
         runCatching {
             Settings.n_profile.save(login, password)
+            Settings.n_api_key.setValue("")
             Settings.n_session_cookie.setValue(sessionCookie)
         }
     }
@@ -71,26 +73,27 @@ object NAuthState {
         val isCookie = trimmed.contains("sessionid=") || (trimmed.length == 32 && trimmed.all { it.isLetterOrDigit() })
         val displayName = username.ifBlank { "Пользователь" }
 
-        _username.value = displayName
-        _isLoggedIn.value = true
-
         if (isCookie) {
-            val cookieValue = if (trimmed.startsWith("sessionid=")) {
+            val cookieValue = if (trimmed.contains("sessionid=")) {
                 trimmed.substringAfter("sessionid=").substringBefore(";")
             } else {
                 trimmed
             }
-            _sessionCookie.value = cookieValue
-            runCatching {
-                Settings.n_profile.save(displayName, "")
-                Settings.n_session_cookie.setValue(cookieValue)
-            }
+            onLoginSuccess(displayName, cookieValue)
         } else {
-            _apiKey.value = trimmed
-            runCatching {
-                Settings.n_profile.save(displayName, "")
-                Settings.n_api_key.setValue(trimmed)
-            }
+            setApiKey(trimmed, displayName)
+        }
+    }
+
+    fun setApiKey(key: String, displayName: String = "API Key") {
+        _apiKey.value = key.trim()
+        _sessionCookie.value = ""
+        _username.value = displayName
+        _isLoggedIn.value = true
+        runCatching {
+            Settings.n_api_key.setValue(_apiKey.value)
+            Settings.n_session_cookie.setValue("")
+            Settings.n_profile.save(displayName, "")
         }
     }
 

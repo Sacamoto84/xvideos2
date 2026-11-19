@@ -21,11 +21,19 @@ import com.client.xvideos.common.theme.Theme
 fun ExpandMenuActionItem(
     icon: ImageVector,
     text: String,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     DropdownMenuItem(
-        leadingIcon = { Icon(icon, contentDescription = "", tint = Theme.ExpandMenu.tintColor) },
-        text = { Text(text, style = Theme.ExpandMenu.style) },
+        leadingIcon = {
+            val tint = Theme.ExpandMenu.tintColor
+            Icon(icon, contentDescription = null, tint = if (enabled) tint else tint.copy(alpha = 0.38f))
+        },
+        text = {
+            val style = Theme.ExpandMenu.style
+            Text(text, style = if (enabled) style else style.copy(color = style.color.copy(alpha = 0.38f)))
+        },
+        enabled = enabled,
         onClick = onClick,
         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
     )

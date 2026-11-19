@@ -1,10 +1,14 @@
 package com.client.xvideos.screenSettings.section
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,16 +36,21 @@ import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.screenSettings.molecule.NProfileRow
+import com.client.xvideos.screenSettings.molecule.SettingsButtonRow
 
 @Composable
 internal fun NSettingsSection(
     modifier: Modifier = Modifier
 ) {
     val isVerticalReader by Settings.n_fullscreen_vertical_pager.field.collectAsStateWithLifecycle()
+    val apiKey by Settings.n_api_key.field.collectAsStateWithLifecycle()
+    val hasApiKey = apiKey.isNotBlank()
     val isLoggedIn by NAuthState.isLoggedIn.collectAsStateWithLifecycle()
     val username by NAuthState.username.collectAsStateWithLifecycle()
     val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
     var loginDialogVisible by remember { mutableStateOf(false) }
+
+    var keyDialogVisible by remember { mutableStateOf(false) }
 
     val onToggleReader = remember(isVerticalReader) {
         {
@@ -68,6 +79,15 @@ internal fun NSettingsSection(
             hasAccount = isLoggedIn,
             onLogin = { loginDialogVisible = true },
             onLogout = onLogout
+        )
+        SettingsDivider()
+
+        SettingsButtonRow(
+            icon = R.drawable.icon_nhentai,
+            text = "API-ключ nhentai",
+            value = if (hasApiKey) "Изменить" else "Ввести",
+            subtitle = if (hasApiKey) "Ключ сохранён" else "Для загрузки избранного с сайта",
+            onClick = { keyDialogVisible = true }
         )
         SettingsDivider()
 
@@ -111,6 +131,10 @@ internal fun NSettingsSection(
         Config_G_0_4("N Коллекции", Settings.n_collectionTab_G_0_4)
     }
 
+    if (keyDialogVisible) {
+        NApiKeyDialog(hasApiKey = hasApiKey, onDismiss = { keyDialogVisible = false })
+    }
+
     if (loginDialogVisible) {
         NLoginDialog(
             onDismiss = { loginDialogVisible = false },
@@ -132,6 +156,41 @@ internal fun NSettingsSection(
             }
         )
     }
+}
+
+@Composable
+private fun NApiKeyDialog(hasApiKey: Boolean, onDismiss: () -> Unit) {
+    var key by remember { mutableStateOf("") }
+    val trimmedKey = key.trim()
+    val validKey = trimmedKey.isNotEmpty() && trimmedKey.all { it in '!'..'~' }
+    val uriHandler = LocalUriHandler.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (hasApiKey) "Изменить API-ключ nhentai" else "API-ключ nhentai") },
+        text = {
+            Column {
+                Text("Создайте ключ в аккаунте, где сохранены ваши альбомы.")
+                TextButton(onClick = { uriHandler.openUri("https://nhentai.net/user/settings#apikeys") }) {
+                    Text("Открыть настройки сайта")
+                }
+                OutlinedTextField(
+                    value = key,
+                    onValueChange = { key = it },
+                    label = { Text(if (hasApiKey) "Новый API-ключ" else "API-ключ") },
+                    isError = trimmedKey.isNotEmpty() && !validKey,
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = validKey, onClick = {
+                NAuthState.setApiKey(trimmedKey)
+                onDismiss()
+            }) { Text("Сохранить") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
+    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)

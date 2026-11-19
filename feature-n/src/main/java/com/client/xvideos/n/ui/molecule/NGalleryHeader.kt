@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,8 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.AlbumInfoButtonServerFavorite
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.ui.atom.NGalleryTagChip
@@ -46,11 +44,13 @@ import com.client.xvideos.n.ui.atom.NGalleryTagChip
 @Composable
 fun NGalleryHeader(
     gallery: NGallery,
-    onReadClick: () -> Unit,
     onTagClick: (NTag) -> Unit,
     modifier: Modifier = Modifier,
     isFavorite: Boolean = false,
-    onFavoriteClick: () -> Unit = {}
+    onFavoriteClick: () -> Unit = {},
+    isServerFavorite: Boolean = false,
+    isServerFavoriteLoading: Boolean = false,
+    onServerFavoriteClick: () -> Unit = {}
 ) {
     val coverShape = RoundedCornerShape(8.dp)
 
@@ -107,45 +107,24 @@ fun NGalleryHeader(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isFavorite) Color(0xFFED2553).copy(alpha = 0.2f) else Theme.tabLevel2)
+                        .border(
+                            1.dp,
+                            if (isFavorite) Color(0xFFED2553) else Theme.tabLevel3,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .clickable(onClick = onFavoriteClick),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Button(
-                        onClick = onReadClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFED2553)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(40.dp)
-                    ) {
-                        Text(
-                            text = "Читать",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isFavorite) Color(0xFFED2553).copy(alpha = 0.2f) else Theme.tabLevel2)
-                            .border(
-                                1.dp,
-                                if (isFavorite) Color(0xFFED2553) else Theme.tabLevel3,
-                                RoundedCornerShape(8.dp)
-                            )
-                            .clickable(onClick = onFavoriteClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                            contentDescription = if (isFavorite) "Удалить из закладок" else "В закладки",
-                            tint = if (isFavorite) Color(0xFFED2553) else Color.White
-                        )
-                    }
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = if (isFavorite) "Удалить из закладок" else "В закладки",
+                        tint = if (isFavorite) Color(0xFFED2553) else Color.White
+                    )
                 }
             }
         }
@@ -169,6 +148,12 @@ fun NGalleryHeader(
                 }
             }
         }
+
+        AlbumInfoButtonServerFavorite(
+            isFavorite = isServerFavorite,
+            isLoading = isServerFavoriteLoading,
+            onClick = onServerFavoriteClick
+        )
     }
 }
 
@@ -189,7 +174,6 @@ private fun NGalleryHeaderPreview() {
                 NTag(id = 3, type = "language", name = "english", count = 98000)
             )
         ),
-        onReadClick = {},
         onTagClick = {}
     )
 }

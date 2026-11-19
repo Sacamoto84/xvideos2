@@ -175,28 +175,6 @@ private fun setupNLoginWebView(
                         onLoginDetected(cleanName, sessionId)
                     }
                 }
-            } else {
-                view?.evaluateJavascript(
-                    "(function() { " +
-                        "var user = document.querySelector('a[href*=\"/users/\"]'); " +
-                        "var logout = document.querySelector('a[href*=\"/logout\"]'); " +
-                        "if (logout || user) { " +
-                        "  return user ? (user.innerText || user.textContent || '').trim() : 'Пользователь'; " +
-                        "} " +
-                        "return ''; " +
-                        "})()"
-                ) { result ->
-                    val nameInDom = result?.trim('"', ' ', '\'').orEmpty()
-                    if (nameInDom.isNotEmpty() && isHandled.compareAndSet(false, true)) {
-                        cookieManager.flush()
-                        val retryCookies = NCookieHelper.getAllCookies(cookieManager, view.url)
-                        val retrySession = NCookieHelper.extractCookieValue(retryCookies, "sessionid")
-                        val token = retrySession.ifEmpty {
-                            NCookieHelper.extractCookieValue(retryCookies, "csrftoken").ifEmpty { "session" }
-                        }
-                        onLoginDetected(nameInDom, token)
-                    }
-                }
             }
         }
 

@@ -27,6 +27,17 @@ class NAuthStateTest {
     }
 
     @Test
+    fun `explicit API key replaces a web session even for 32 character keys`() {
+        val key = "a".repeat(32)
+        NAuthState.onLoginSuccess("User", "old_session")
+        NAuthState.setApiKey(key)
+        assertEquals(key, NAuthState.currentApiKey)
+        assertEquals("", NAuthState.currentSessionCookie)
+        assertTrue(NAuthState.isLoggedIn.value)
+        NAuthState.logout()
+    }
+
+    @Test
     fun `login success updates state and logout resets`() {
         NAuthState.onLoginSuccess(login = "OtakuUser", sessionCookie = "mock_session_123")
         assertTrue(NAuthState.isLoggedIn.value)

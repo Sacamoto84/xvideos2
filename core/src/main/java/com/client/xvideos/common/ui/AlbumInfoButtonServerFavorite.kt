@@ -1,4 +1,4 @@
-package com.client.xvideos.l.ui.screens.screenAlbum.atom
+package com.client.xvideos.common.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,10 +27,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.HintTooltip
 
 /**
- * Кнопка «добавить/удалить альбом из избранного на сервере L» в шапке ScreenLAlbum.
+ * Кнопка серверного избранного в шапке альбома.
  */
 @Composable
 fun AlbumInfoButtonServerFavorite(

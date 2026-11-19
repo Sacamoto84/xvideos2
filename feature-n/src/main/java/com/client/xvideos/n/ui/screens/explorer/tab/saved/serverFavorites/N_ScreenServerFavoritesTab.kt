@@ -2,27 +2,26 @@ package com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
-import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.ui.molecule.NGalleryPager
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
-import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.molecule.NServerFavoriteActionDialog
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.molecule.NServerFavoritesTopBar
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 
@@ -43,13 +42,9 @@ object N_ScreenServerFavoritesTab : Screen {
         val isImporting by vm.isImporting.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
 
-        var selectedItemForAction by remember { mutableStateOf<NGalleryPreview?>(null) }
-
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { id -> navigator.push(ScreenNGallery(id)) }
         }
-        val onItemLongClick = remember { { item: NGalleryPreview -> selectedItemForAction = item } }
-        val onDismissAction = remember { { selectedItemForAction = null } }
 
         val pages = vm.pages
         val current = pages[pages.currentIndex] as? NGalleryListUiState.Success
@@ -65,21 +60,26 @@ object N_ScreenServerFavoritesTab : Screen {
                 pages = pages,
                 columns = columns,
                 onGalleryClick = onGalleryClick,
-                onItemLongClick = onItemLongClick,
-                contentPadding = PaddingValues(4.dp),
+                itemMenuActions = { item, dismiss ->
+                    if (vm.isLocallySaved(item.id)) {
+                        ExpandMenuActionItem(
+                            Icons.Filled.Bookmark,
+                            "Уже сохранено локально",
+                            enabled = false,
+                            onClick = {}
+                        )
+                    } else {
+                        ExpandMenuActionItem(Icons.Outlined.BookmarkBorder, "Сохранить локально") {
+                            dismiss()
+                            vm.importSingle(item)
+                        }
+                    }
+                    ExpandMenuActionItem(Icons.Outlined.Delete, "Удалить с сервера") {
+                        dismiss()
+                        vm.removeServerFavorite(item.id)
+                    }
+                },
                 emptyMessage = "На сервере пока нет добавленных закладок"
-            )
-        }
-
-        selectedItemForAction?.let { item ->
-            val isLocallySaved = remember(item.id) { vm.isLocallySaved(item.id) }
-            NServerFavoriteActionDialog(
-                item = item,
-                isLocallySaved = isLocallySaved,
-                onDismiss = onDismissAction,
-                onOpen = onGalleryClick,
-                onImport = vm::importSingle,
-                onRemoveFromServer = vm::removeServerFavorite
             )
         }
     }

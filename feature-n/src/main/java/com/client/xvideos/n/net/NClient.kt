@@ -109,6 +109,17 @@ object NClient {
         executeRequest(requestBuilder.build(), targetUrl)
     }
 
+    suspend fun setFavorite(galleryId: Long, favorite: Boolean, apiKey: String): NNetworkResult = withContext(Dispatchers.IO) {
+        val url = "$BASE_URL/api/v2/galleries/$galleryId/favorite"
+        val request = Request.Builder().url(url)
+            .header("User-Agent", NUserAgent.current)
+            .header("Accept", "application/json")
+            .header("Authorization", "Key $apiKey")
+        buildCookieHeader()?.let { request.header("Cookie", it) }
+        if (favorite) request.post("".toRequestBody(null)) else request.delete()
+        executeRequest(request.build(), url)
+    }
+
     private fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
         return try {
             okHttpClient.newCall(request).execute().use { response ->

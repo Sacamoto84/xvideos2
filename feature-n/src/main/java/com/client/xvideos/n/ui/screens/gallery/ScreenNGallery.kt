@@ -65,6 +65,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
         val isFavorite by vm.isFavorite.collectAsStateWithLifecycle()
+        val serverFavorite by vm.serverFavorite.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
 
@@ -77,14 +78,6 @@ class ScreenNGallery(val galleryId: Long) : Screen {
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { nextGalleryId ->
                 navigator.push(ScreenNGallery(nextGalleryId))
-            }
-        }
-
-        val onRandomClick: () -> Unit = remember(navigator, vm) {
-            {
-                vm.openRandomGallery { randomId ->
-                    navigator.push(ScreenNGallery(randomId))
-                }
             }
         }
 
@@ -130,8 +123,9 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             onBack = onBack,
             onRead = onRead,
             onFavoriteClick = vm::toggleFavorite,
+            serverFavorite = serverFavorite,
+            onServerFavoriteClick = vm::toggleServerFavorite,
             onGalleryClick = onGalleryClick,
-            onRandomClick = onRandomClick,
             onShareClick = onShareClick,
             onTagClick = onTagClick,
             onRetry = vm::loadGallery,
@@ -166,12 +160,13 @@ fun ScreenNGalleryContent(
     onBack: () -> Unit,
     onRead: (NGallery, Int) -> Unit,
     onGalleryClick: (Long) -> Unit,
-    onRandomClick: () -> Unit,
     onTagClick: (NTag) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
+    serverFavorite: NServerFavoriteState = NServerFavoriteState(),
+    onServerFavoriteClick: () -> Unit = {},
     onShareClick: (() -> Unit)? = null,
     pageMenuContent: (@Composable (NPage, Int) -> Unit)? = null
 ) {
@@ -183,7 +178,6 @@ fun ScreenNGalleryContent(
             NGalleryTopBar(
                 title = title,
                 onBack = onBack,
-                onRandomClick = onRandomClick,
                 onShareClick = onShareClick,
                 topInset = topInset
             )
@@ -238,8 +232,10 @@ fun ScreenNGalleryContent(
                                 NGalleryHeader(
                                     gallery = gallery,
                                     isFavorite = isFavorite,
-                                    onReadClick = { onRead(gallery, 0) },
                                     onFavoriteClick = onFavoriteClick,
+                                    isServerFavorite = serverFavorite.saved == true,
+                                    isServerFavoriteLoading = serverFavorite.loading,
+                                    onServerFavoriteClick = onServerFavoriteClick,
                                     onTagClick = onTagClick
                                 )
                                 NGalleryRelatedStrip(
@@ -279,7 +275,6 @@ private fun ScreenNGalleryContentPreview() {
         onBack = {},
         onRead = { _, _ -> },
         onGalleryClick = {},
-        onRandomClick = {},
         onTagClick = {},
         onRetry = {}
     )

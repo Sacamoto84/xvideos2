@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.scroll.AlbumPageNavButton
 import com.client.xvideos.n.ui.molecule.NPageSelectorDialog
 
 fun calculatePrevNPage(page: Int): Int = (page - 1).coerceAtLeast(1)
@@ -86,17 +85,13 @@ fun NAlbumListPageSelector(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
+        AlbumPageNavButton(
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            contentDescription = "Предыдущая страница",
             onClick = onPrev,
             enabled = page > 1,
             modifier = Modifier.weight(1f)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Предыдущая страница",
-                tint = if (page > 1) Color.White else Color(0xFF555555)
-            )
-        }
+        )
 
         Box(
             modifier = Modifier
@@ -129,17 +124,13 @@ fun NAlbumListPageSelector(
             )
         }
 
-        IconButton(
+        AlbumPageNavButton(
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = "Следующая страница",
             onClick = onNext,
             enabled = page < pageMax,
             modifier = Modifier.weight(1f)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Следующая страница",
-                tint = if (page < pageMax) Color.White else Color(0xFF555555)
-            )
-        }
+        )
     }
 
     if (showDialog) {

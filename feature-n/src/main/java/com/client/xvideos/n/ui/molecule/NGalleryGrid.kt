@@ -1,7 +1,6 @@
 package com.client.xvideos.n.ui.molecule
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -25,26 +24,23 @@ fun NGalleryGrid(
     columns: Int,
     onItemClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(8.dp),
-    onItemLongClick: ((NGalleryPreview) -> Unit)? = null,
+    itemMenuActions: (@Composable (NGalleryPreview, dismiss: () -> Unit) -> Unit)? = null,
     gridState: LazyGridState = rememberLazyGridState()
 ) {
     LazyVerticalGrid(
         state = gridState,
         columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
         modifier = modifier,
-        contentPadding = adaptiveListPadding(contentPadding),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = adaptiveListPadding()
     ) {
         items(items, key = { it.id }) { item ->
             NGalleryCard(
                 item = item,
+                modifier = Modifier.padding(2.dp),
                 onClick = { onItemClick(item.id) },
-                onLongClick = onItemLongClick?.let { callback -> { callback(item) } }
+                menuActions = if (itemMenuActions == null) null else { dismiss -> itemMenuActions(item, dismiss) }
             )
         }
-
     }
 }
 

@@ -8,6 +8,7 @@ import com.client.xvideos.n.model.NTag
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
@@ -242,6 +243,29 @@ object NParser {
             parseGalleryListItem(obj) ?: parseGalleryJson(element.toString())?.toPreview()
         }
     }.getOrDefault(emptyList())
+
+    fun parseFavoriteState(body: String): Boolean = requireNotNull(
+        jsonConfig.parseToJsonElement(body).jsonObject["favorited"]?.jsonPrimitive?.booleanOrNull
+    ) { "Неверный ответ при обновлении избранного" }
+
+    /** Приватный API возвращает пустой result только для действительно пустой страницы. */
+    fun parseFavoritesPage(body: String, page: Int): NGalleryPageResult {
+        val root = jsonConfig.parseToJsonElement(body) as? JsonObject
+        val items = root?.get("result") as? JsonArray
+        val totalPages = root?.get("num_pages")?.jsonPrimitive?.intOrNull
+        require(items != null && totalPages != null && totalPages >= 0) {
+            "Неверный формат ответа API избранного"
+        }
+        return NGalleryPageResult(
+            items = items.map { item ->
+                requireNotNull((item as? JsonObject)?.let(::parseGalleryListItem)) {
+                    "Не удалось прочитать альбом из избранного"
+                }
+            },
+            page = page,
+            totalPages = totalPages.coerceAtLeast(1)
+        )
+    }
 
     /**
      * Парсит список тегов из ответа API v2 (/tags/search, /tags/{type}).
