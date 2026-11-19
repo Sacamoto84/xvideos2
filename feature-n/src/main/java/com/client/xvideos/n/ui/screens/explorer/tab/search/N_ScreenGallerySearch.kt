@@ -56,7 +56,8 @@ object N_ScreenGallerySearch : Screen {
                 onGalleryClick = { id -> navigator.push(ScreenNGallery(id)) },
                 emptyMessage = if (vm.hasQuery) "Ничего не найдено" else "Введите запрос для поиска",
                 onFilterClick = { showFilter = true },
-                hasActiveFilter = filter.isFiltered
+                hasActiveFilter = filter.isFiltered,
+                allowChallenge = !showFilter
             )
         }
         if (showFilter) {

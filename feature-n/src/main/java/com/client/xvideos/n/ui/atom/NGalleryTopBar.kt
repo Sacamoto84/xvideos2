@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -34,7 +35,8 @@ fun NGalleryTopBar(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onShareClick: (() -> Unit)? = null,
-    topInset: Dp = 0.dp
+    topInset: Dp = 0.dp,
+    onRefresh: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -69,6 +71,11 @@ fun NGalleryTopBar(
                     .weight(1f)
                     .padding(end = 8.dp)
             )
+            if (onRefresh != null) {
+                IconButton(onClick = onRefresh) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Обновить альбом", tint = Color.White)
+                }
+            }
             if (onShareClick != null) {
                 IconButton(onClick = onShareClick) {
                     Icon(

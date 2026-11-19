@@ -21,6 +21,7 @@ import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.ui.molecule.NGalleryPager
+import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.molecule.NServerFavoritesTopBar
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
@@ -35,12 +36,17 @@ object N_ScreenServerFavoritesTab : Screen {
     override val key: ScreenKey = "N_ScreenServerFavoritesTab"
 
     @Composable
-    override fun Content() {
+    override fun Content() = Content(active = true)
+
+    @Composable
+    internal fun Content(active: Boolean) {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenNServerFavoritesSM>()
 
         val isImporting by vm.isImporting.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
+        val apiKey by vm.apiKey.collectAsStateWithLifecycle()
+        val removalChallenge by vm.removalChallenge.collectAsStateWithLifecycle()
 
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { id -> navigator.push(ScreenNGallery(id)) }
@@ -74,12 +80,24 @@ object N_ScreenServerFavoritesTab : Screen {
                             vm.importSingle(item)
                         }
                     }
-                    ExpandMenuActionItem(Icons.Outlined.Delete, "Удалить с сервера") {
+                    ExpandMenuActionItem(
+                        Icons.Outlined.Delete,
+                        if (apiKey.isNotBlank()) "Удалить с сервера" else "Для удаления нужен API-ключ",
+                        enabled = apiKey.isNotBlank()
+                    ) {
                         dismiss()
                         vm.removeServerFavorite(item.id)
                     }
                 },
+                allowChallenge = active && removalChallenge == null,
                 emptyMessage = "На сервере пока нет добавленных закладок"
+            )
+        }
+        removalChallenge?.takeIf { active }?.let {
+            NRequestChallengeDialog(
+                challenge = it,
+                onDismiss = { vm.finishRemovalChallenge(verified = false) },
+                onVerified = { vm.finishRemovalChallenge(verified = true) }
             )
         }
     }

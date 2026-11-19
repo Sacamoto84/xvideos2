@@ -1,6 +1,7 @@
 package com.client.xvideos.n.net
 
 import android.webkit.CookieManager
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /**
  * Утилиты для надёжного извлечения cookie сайта nhentai.net из [CookieManager].
@@ -18,11 +19,7 @@ object NCookieHelper {
      * Возвращает объединённую строку всех cookie для nhentai с учётом путей и поддоменов.
      */
     fun getAllCookies(cookieManager: CookieManager, currentUrl: String? = null): String {
-        val targets = if (currentUrl.isNullOrBlank()) {
-            NHENTAI_URLS
-        } else {
-            listOf(currentUrl) + NHENTAI_URLS
-        }
+        val targets = listOfNotNull(currentUrl?.takeIf(::isNTrustedWebUrl)) + NHENTAI_URLS
 
         return targets
             .mapNotNull { runCatching { cookieManager.getCookie(it) }.getOrNull() }
@@ -45,3 +42,6 @@ object NCookieHelper {
             .orEmpty()
     }
 }
+
+internal fun isNTrustedWebUrl(url: String): Boolean =
+    url.toHttpUrlOrNull()?.let { it.isHttps && it.host == "nhentai.net" && it.port == 443 } == true

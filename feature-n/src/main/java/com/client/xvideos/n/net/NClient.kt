@@ -1,14 +1,19 @@
 package com.client.xvideos.n.net
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import android.webkit.CookieManager
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
 
 /**
  * Сетевой клиент для взаимодействия с сайтом nhentai.net.
@@ -21,7 +26,10 @@ object NClient {
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
+        .callTimeout(40, TimeUnit.SECONDS)
         .followRedirects(true)
+        .followSslRedirects(false)
+        .addNetworkInterceptor { chain -> chain.proceed(requireTrustedNRequest(chain.request())) }
         .build()
 
     /**
@@ -29,6 +37,7 @@ object NClient {
      */
     suspend fun get(url: String): NNetworkResult = withContext(Dispatchers.IO) {
         val targetUrl = if (url.startsWith("http")) url else "$BASE_URL$url"
+        if (!isNTrustedWebUrl(targetUrl)) return@withContext NNetworkResult.Failure(untrustedNOrigin())
 
         val requestBuilder = Request.Builder()
             .url(targetUrl)
@@ -54,6 +63,7 @@ object NClient {
      */
     suspend fun postJson(url: String, jsonBody: String): NNetworkResult = withContext(Dispatchers.IO) {
         val targetUrl = if (url.startsWith("http")) url else "$BASE_URL$url"
+        if (!isNTrustedWebUrl(targetUrl)) return@withContext NNetworkResult.Failure(untrustedNOrigin())
         val requestBody = jsonBody.toRequestBody(JSON_MEDIA_TYPE)
 
         val requestBuilder = Request.Builder()
@@ -76,39 +86,6 @@ object NClient {
         executeRequest(requestBuilder.build(), targetUrl)
     }
 
-    /**
-     * Выполняет POST-запрос формы к nhentai.net с поддержкой CSRF-токена.
-     */
-    suspend fun postForm(url: String, headers: Map<String, String> = emptyMap()): NNetworkResult = withContext(Dispatchers.IO) {
-        val targetUrl = if (url.startsWith("http")) url else "$BASE_URL$url"
-        val emptyBody = "".toRequestBody(null)
-
-        val requestBuilder = Request.Builder()
-            .url(targetUrl)
-            .post(emptyBody)
-            .header("User-Agent", NUserAgent.current)
-            .header("Accept", "application/json, text/javascript, */*; q=0.01")
-            .header("X-Requested-With", "XMLHttpRequest")
-            .header("Referer", targetUrl)
-
-        headers.forEach { (k, v) -> requestBuilder.header(k, v) }
-
-        val apiKey = NAuthState.currentApiKey
-        if (apiKey.isNotBlank()) {
-            requestBuilder.header("Authorization", "Key $apiKey")
-        }
-
-        buildCookieHeader()?.let { cookieHeader ->
-            requestBuilder.header("Cookie", cookieHeader)
-            val csrf = NCookieHelper.extractCookieValue(cookieHeader, "csrftoken")
-            if (csrf.isNotEmpty()) {
-                requestBuilder.header("X-CSRFToken", csrf)
-            }
-        }
-
-        executeRequest(requestBuilder.build(), targetUrl)
-    }
-
     suspend fun setFavorite(galleryId: Long, favorite: Boolean, apiKey: String): NNetworkResult = withContext(Dispatchers.IO) {
         val url = "$BASE_URL/api/v2/galleries/$galleryId/favorite"
         val request = Request.Builder().url(url)
@@ -120,43 +97,37 @@ object NClient {
         executeRequest(request.build(), url)
     }
 
-    private fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
-        return try {
-            okHttpClient.newCall(request).execute().use { response ->
-                val code = response.code
-                val body = response.body.string()
-
-                if (isCloudflareChallenge(code, body)) {
-                    val challengeUrl = if (targetUrl.contains("/api/")) BASE_URL else targetUrl
-                    NCloudflareState.triggerChallenge(challengeUrl)
-                    return NNetworkResult.CloudflareRequired(challengeUrl)
+    private suspend fun executeRequest(request: Request, targetUrl: String): NNetworkResult =
+        suspendCancellableCoroutine { continuation ->
+            val call = okHttpClient.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    continuation.resume(NNetworkResult.Failure(e))
                 }
 
-                if (response.isSuccessful) {
-                    NNetworkResult.Success(body)
-                } else {
-                    NNetworkResult.Error(code, "HTTP error $code")
+                override fun onResponse(call: Call, response: Response) {
+                    val result = try {
+                        response.use {
+                            val body = it.body.string()
+                            val contentType = it.header("Content-Type")
+                            when {
+                                isNCloudflareChallenge(it.code, contentType, it.header("cf-mitigated"), body) ->
+                                    NNetworkResult.CloudflareRequired(
+                                        if (request.url.encodedPath.startsWith("/api/")) BASE_URL else targetUrl,
+                                        NCookieHelper.extractCookieValue(it.request.header("Cookie").orEmpty(), "cf_clearance")
+                                    )
+                                it.isSuccessful -> NNetworkResult.Success(body, it.request.url.toString())
+                                else -> NNetworkResult.Error(it.code, "HTTP error ${it.code}")
+                            }
+                        }
+                    } catch (e: IOException) {
+                        NNetworkResult.Failure(e)
+                    }
+                    continuation.resume(result)
                 }
-            }
-        } catch (e: IOException) {
-            NNetworkResult.Failure(e)
+            })
         }
-    }
-
-    private val cfMarkers = listOf(
-        "challenges.cloudflare.com",
-        "Just a moment...",
-        "cf-turnstile",
-        "window._cf_chl_opt"
-    )
-
-    private fun isCloudflareChallenge(code: Int, body: String): Boolean {
-        if (body.contains("Use new API", ignoreCase = true)) return false
-        if (cfMarkers.any { body.contains(it) }) return true
-        val isBlockCode = code == 403 || code == 503
-        if (!isBlockCode) return false
-        return body.contains("<html", ignoreCase = true) && body.contains("Cloudflare", ignoreCase = true)
-    }
 
     private fun buildCookieHeader(): String? {
         val cookies = mutableListOf<String>()
@@ -178,12 +149,31 @@ object NClient {
     }
 }
 
+internal fun requireTrustedNRequest(request: Request): Request {
+    if (!isNTrustedWebUrl(request.url.toString())) throw untrustedNOrigin()
+    return request
+}
+
+private fun untrustedNOrigin() = IOException("Запрос N отклонён: адрес вне доверенного HTTPS-источника")
+
+internal fun isNCloudflareChallenge(code: Int, contentType: String?, mitigation: String?, body: String): Boolean {
+    if (mitigation.equals("challenge", ignoreCase = true)) return true
+    if (code != 403 && code != 503) return false
+    if (contentType != null && !contentType.startsWith("text/html", ignoreCase = true)) return false
+    val html = body.trimStart()
+    if (!html.startsWith("<!doctype html", ignoreCase = true) && !html.startsWith("<html", ignoreCase = true)) return false
+    return html.contains("window._cf_chl_opt") ||
+        html.contains("/cdn-cgi/challenge-platform/") ||
+        html.contains("<title>Just a moment...</title>", ignoreCase = true) ||
+        (html.contains("Cloudflare", ignoreCase = true) && html.contains("cf-turnstile"))
+}
+
 /**
  * Результат сетевого запроса к nhentai.net.
  */
 sealed interface NNetworkResult {
-    data class Success(val body: String) : NNetworkResult
-    data class CloudflareRequired(val challengeUrl: String) : NNetworkResult
+    data class Success(val body: String, val finalUrl: String) : NNetworkResult
+    class CloudflareRequired(val challengeUrl: String, val sentClearance: String) : NNetworkResult
     data class Error(val code: Int, val message: String) : NNetworkResult
     data class Failure(val throwable: Throwable) : NNetworkResult
 }

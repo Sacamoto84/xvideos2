@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.n.model.NGalleryPreview
 
 /**
@@ -48,19 +47,19 @@ fun NGalleryRelatedStrip(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = "Похожие работы",
             color = Color.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 6.dp)
         )
 
         LazyRow(
-            contentPadding = adaptiveListPadding(PaddingValues(horizontal = 16.dp)),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             items(relatedGalleries, key = { it.id }) { item ->
                 Box(

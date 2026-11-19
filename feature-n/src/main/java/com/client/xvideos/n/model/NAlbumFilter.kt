@@ -18,7 +18,7 @@ data class NAlbumFilter(
     fun buildQuery(text: String = ""): String = buildList {
         val query = text.trim()
         if (query.isNotEmpty()) add(query)
-        if (language.isNotEmpty() && !query.contains("language:", ignoreCase = true)) {
+        if (language.isNotEmpty() && !query.hasLanguageOperator()) {
             add("language:$language")
         }
         tags.forEach { add(it.searchToken) }
@@ -31,6 +31,26 @@ data class NAlbumFilter(
     companion object {
         val DEFAULT = NAlbumFilter()
     }
+}
+
+private fun String.hasLanguageOperator(): Boolean {
+    var quoted = false
+    var escaped = false
+    for ((index, char) in withIndex()) {
+        if (escaped) {
+            escaped = false
+            continue
+        }
+        when {
+            quoted && char == '\\' -> escaped = true
+            char == '"' -> quoted = !quoted
+            !quoted && (index == 0 || this[index - 1].isWhitespace() || this[index - 1] == '(') -> {
+                val start = if (char == '-') index + 1 else index
+                if (startsWith("language:", start, ignoreCase = true)) return true
+            }
+        }
+    }
+    return false
 }
 
 data class NTagCondition(val tag: NTag, val excluded: Boolean) {

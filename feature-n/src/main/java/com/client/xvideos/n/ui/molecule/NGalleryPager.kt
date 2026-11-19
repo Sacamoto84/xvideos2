@@ -11,6 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -19,13 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.common.ui.scroll.AlbumListPager
 import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
-import com.client.xvideos.n.net.NCloudflareState
+import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryPages
@@ -40,11 +42,13 @@ fun NGalleryPager(
     emptyMessage: String = "Нет работ",
     itemMenuActions: (@Composable (NGalleryPreview, dismiss: () -> Unit) -> Unit)? = null,
     onFilterClick: (() -> Unit)? = null,
-    hasActiveFilter: Boolean = false
+    hasActiveFilter: Boolean = false,
+    allowChallenge: Boolean = true
 ) {
     val scope = rememberCoroutineScope()
     val pager = pages.position.rememberState { pages.totalPages }
-    val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
+    var dismissedChallenge by remember { mutableStateOf<CloudflareBlockedException?>(null) }
+    val visibleChallenge = pages.visibleChallenge
 
     Column(modifier.fillMaxSize().background(Theme.background)) {
         Box(Modifier.weight(1f)) {
@@ -62,7 +66,7 @@ fun NGalleryPager(
                                 TextButton(onClick = { pages.retry(index) }) { Text("Повторить") }
                             }
                             is NGalleryListUiState.CloudflareRequired ->
-                                NCloudflareBanner(onVerifyClick = { NCloudflareState.triggerChallenge(state.url) })
+                                NCloudflareBanner(onVerifyClick = { dismissedChallenge = null })
                             is NGalleryListUiState.Success -> if (state.items.isEmpty()) {
                                 Text(emptyMessage, color = Color.LightGray)
                             } else {
@@ -90,14 +94,11 @@ fun NGalleryPager(
         )
     }
 
-    challengeUrl?.let { url ->
-        NCloudflareChallengeDialog(
-            url = url,
-            onDismiss = NCloudflareState::onChallengeDismissed,
-            onSuccess = { cookies ->
-                NCloudflareState.onChallengeCompleted(cookies)
-                pages.refresh()
-            }
+    if (allowChallenge && visibleChallenge != null && visibleChallenge !== dismissedChallenge) {
+        NRequestChallengeDialog(
+            challenge = visibleChallenge,
+            onDismiss = { dismissedChallenge = visibleChallenge },
+            onVerified = { pages.refresh() }
         )
     }
 }

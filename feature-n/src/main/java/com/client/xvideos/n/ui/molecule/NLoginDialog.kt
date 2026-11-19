@@ -1,7 +1,6 @@
 package com.client.xvideos.n.ui.molecule
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
@@ -18,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,8 +29,10 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.net.NCookieHelper
 import com.client.xvideos.n.net.NUserAgent
+import com.client.xvideos.n.net.isNTrustedWebUrl
 import com.client.xvideos.n.ui.atom.NLoginTopBar
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.Json
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -47,41 +49,27 @@ fun NLoginDialog(
     val isHandled = remember { AtomicBoolean(false) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
 
+    val currentDismiss by rememberUpdatedState(onDismiss)
+    val currentSuccess by rememberUpdatedState(onSuccess)
+    val dismiss = {
+        isHandled.set(true)
+        currentDismiss()
+    }
+    val complete: (String, String) -> Unit = { user, session ->
+        currentSuccess(user, session)
+        currentDismiss()
+    }
+
     LaunchedEffect(webViewInstance) {
+        val webView = webViewInstance ?: return@LaunchedEffect
         while (!isHandled.get()) {
             delay(1000L)
-            val wv = webViewInstance ?: continue
-            val cookieManager = CookieManager.getInstance()
-            val allCookies = NCookieHelper.getAllCookies(cookieManager, wv.url)
-            val cfClearance = NCookieHelper.extractCookieValue(allCookies, "cf_clearance")
-            if (cfClearance.isNotEmpty()) {
-                NCloudflareState.onChallengeCompleted(allCookies)
-            }
-            val sessionId = NCookieHelper.extractCookieValue(allCookies, "sessionid")
-            if (sessionId.isNotEmpty() && !isHandled.get()) {
-                wv.evaluateJavascript(
-                    "(function() { " +
-                        "var userLink = document.querySelector('a[href*=\"/users/\"]'); " +
-                        "if (userLink) return (userLink.innerText || userLink.textContent || '').trim(); " +
-                        "var userSpan = document.querySelector('.username'); " +
-                        "if (userSpan) return (userSpan.innerText || userSpan.textContent || '').trim(); " +
-                        "return ''; " +
-                        "})()"
-                ) { result ->
-                    if (isHandled.compareAndSet(false, true)) {
-                        val nameInDom = result?.trim('"', ' ', '\'').orEmpty().ifEmpty { "Пользователь" }
-                        cookieManager.flush()
-                        onSuccess(nameInDom, sessionId)
-                        onDismiss()
-                    }
-                }
-                break
-            }
+            checkNLogin(webView, isHandled, complete)
         }
     }
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = dismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
@@ -91,21 +79,19 @@ fun NLoginDialog(
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 NLoginTopBar(
-                    onDismiss = onDismiss,
+                    onDismiss = dismiss,
                     topInset = topInset
                 )
 
                 AndroidView(
                     factory = { context ->
                         WebView(context).apply {
-                            setupNLoginWebView(this, isHandled) { user, session ->
-                                onSuccess(user, session)
-                                onDismiss()
-                            }
+                            setupNLoginWebView(this, isHandled, complete)
                             webViewInstance = this
                         }
                     },
                     onRelease = { webView ->
+                        isHandled.set(true)
                         runCatching {
                             webView.stopLoading()
                             webView.destroy()
@@ -147,55 +133,49 @@ private fun setupNLoginWebView(
 
     webView.webChromeClient = WebChromeClient()
     webView.webViewClient = object : WebViewClient() {
-        private fun checkAndDetectLogin(view: WebView?, currentUrl: String?) {
-            if (isHandled.get()) return
-
-            val allCookies = NCookieHelper.getAllCookies(cookieManager, currentUrl ?: view?.url)
-            val cfClearance = NCookieHelper.extractCookieValue(allCookies, "cf_clearance")
-            if (cfClearance.isNotEmpty()) {
-                NCloudflareState.onChallengeCompleted(allCookies)
-            }
-
-            val sessionId = NCookieHelper.extractCookieValue(allCookies, "sessionid")
-            if (sessionId.isNotEmpty()) {
-                view?.evaluateJavascript(
-                    "(function() { " +
-                        "var userLink = document.querySelector('a[href*=\"/users/\"]'); " +
-                        "if (userLink) return (userLink.innerText || userLink.textContent || '').trim(); " +
-                        "var userSpan = document.querySelector('.username'); " +
-                        "if (userSpan) return (userSpan.innerText || userSpan.textContent || '').trim(); " +
-                        "var logoutLink = document.querySelector('a[href*=\"/logout\"]'); " +
-                        "if (logoutLink) return 'Пользователь'; " +
-                        "return ''; " +
-                        "})()"
-                ) { result ->
-                    if (isHandled.compareAndSet(false, true)) {
-                        val cleanName = result?.trim('"', ' ', '\'').orEmpty().ifEmpty { "Пользователь" }
-                        cookieManager.flush()
-                        onLoginDetected(cleanName, sessionId)
-                    }
-                }
-            }
-        }
-
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
-            checkAndDetectLogin(view, url)
-        }
-
-        override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
-            super.doUpdateVisitedHistory(view, url, isReload)
-            checkAndDetectLogin(view, url)
-        }
-
-        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-            super.onPageStarted(view, url, favicon)
-            checkAndDetectLogin(view, url)
+            if (view != null) checkNLogin(view, isHandled, onLoginDetected)
         }
     }
 
     webView.loadUrl("https://nhentai.net/login/")
 }
+
+private fun checkNLogin(
+    webView: WebView,
+    isHandled: AtomicBoolean,
+    onLoginDetected: (String, String) -> Unit
+) {
+    val pageUrl = webView.url ?: return
+    if (isHandled.get() || !isNTrustedWebUrl(pageUrl)) return
+    val cookieManager = CookieManager.getInstance()
+    val initialCookies = NCookieHelper.getAllCookies(cookieManager, pageUrl)
+    if (NCookieHelper.extractCookieValue(initialCookies, "sessionid").isEmpty()) return
+
+    webView.evaluateJavascript(authenticatedProfileScript) { result ->
+        val name = result?.let { runCatching { Json.decodeFromString<String>(it) }.getOrNull() }?.trim().orEmpty()
+        if (name.isEmpty() || webView.url != pageUrl || isHandled.get()) return@evaluateJavascript
+        val cookies = NCookieHelper.getAllCookies(cookieManager, pageUrl)
+        val session = NCookieHelper.extractCookieValue(cookies, "sessionid")
+        if (session.isEmpty() || !isHandled.compareAndSet(false, true)) return@evaluateJavascript
+        cookieManager.flush()
+        NCloudflareState.storeClearance(cookies)
+        onLoginDetected(name, session)
+    }
+}
+
+private val authenticatedProfileScript = """
+    (function() {
+        if (location.origin !== 'https://nhentai.net') return '';
+        var profile = document.querySelector('header a[href*="/users/"], nav a[href*="/users/"], header .username, nav .username');
+        var logout = document.querySelector('a[href*="/logout"], form[action*="/logout"]');
+        var name = profile && profile.textContent.trim();
+        var loginForm = document.querySelector('form input[type="password"]');
+        if (!logout && (!name || loginForm || location.pathname.startsWith('/login'))) return '';
+        return name || 'Пользователь';
+    })()
+""".trimIndent()
 
 @Preview
 @Composable

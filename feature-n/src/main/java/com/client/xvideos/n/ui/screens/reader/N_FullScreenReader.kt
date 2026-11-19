@@ -8,37 +8,52 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.ui.scroll.PagerPosition
 import com.client.xvideos.common.ui.statusbar.HideStatusBarEffect
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
+import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NReaderTopBar
 import com.client.xvideos.n.ui.atom.ReaderImagePage
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.molecule.NReaderBottomStrip
+import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
+import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import kotlinx.coroutines.launch
 
 /**
@@ -46,11 +61,11 @@ import kotlinx.coroutines.launch
  * лайков отдельных страниц и добавления в коллекции.
  */
 class N_FullScreenReader(
-    val gallery: NGallery,
-    val initialPage: Int = 0
+    val galleryId: Long,
+    val initialPageNumber: Int = 1
 ) : Screen {
 
-    override val key: ScreenKey = "NReader:${gallery.id}:$initialPage"
+    override val key: ScreenKey = "NReader:$galleryId:$initialPageNumber"
 
     @Composable
     override fun Content() {
@@ -58,9 +73,30 @@ class N_FullScreenReader(
 
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<N_FullScreenReaderSM>()
-
-        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
-        BackHandler(onBack = onBack)
+        val screens = navigator.items
+        val album = (screens.getOrNull(screens.lastIndex - 1) as? ScreenNGallery)
+            ?.takeIf { it.galleryId == galleryId }
+            ?.rememberModel()
+        var currentPageNumber by rememberSaveable { mutableIntStateOf(initialPageNumber) }
+        var reload by remember { mutableIntStateOf(0) }
+        val result by produceState<Result<NGallery>?>(null, galleryId, album, reload) {
+            value = null
+            value = vm.loadGallery(galleryId, album?.uiState, forceRefresh = album == null && reload > 0)
+        }
+        fun returnToAlbum(pageNumber: Int) {
+            album?.scrollToReaderPage(pageNumber)
+            navigator.pop()
+        }
+        val gallery = result?.getOrNull()
+        if (gallery == null) {
+            val onBack = { returnToAlbum(currentPageNumber) }
+            BackHandler(onBack = onBack)
+            ReaderLoadingScreen(result?.exceptionOrNull(), onBack, onRetry = {
+                album?.loadGallery()
+                reload++
+            })
+            return
+        }
 
         val coroutineScope = rememberCoroutineScope()
         var isVertical by remember {
@@ -68,14 +104,19 @@ class N_FullScreenReader(
         }
         var showControls by remember { mutableStateOf(true) }
 
-        val safeInitialPage = remember(gallery.pages.size, initialPage) {
-            initialPage.coerceIn(0, (gallery.pages.size - 1).coerceAtLeast(0))
+        val position = remember(gallery) {
+            PagerPosition(gallery.pages.indexOfFirst { it.pageNumber == currentPageNumber }.coerceAtLeast(0))
         }
-
-        val pagerState = rememberPagerState(
-            initialPage = safeInitialPage,
-            pageCount = { gallery.pages.size }
-        )
+        val pagerState = position.rememberState { gallery.pages.size }
+        val onBack: () -> Unit = {
+            returnToAlbum(gallery.pages.getOrNull(pagerState.currentPage)?.pageNumber ?: currentPageNumber)
+        }
+        BackHandler(onBack = onBack)
+        LaunchedEffect(pagerState) {
+            snapshotFlow { gallery.pages.getOrNull(pagerState.currentPage)?.pageNumber }.collect { number ->
+                if (number != null) currentPageNumber = number
+            }
+        }
 
         val onToggleOrientation = remember {
             {
@@ -93,8 +134,7 @@ class N_FullScreenReader(
             }
         }
 
-        val currentPageNumber = gallery.pages.getOrNull(pagerState.currentPage)?.pageNumber ?: (pagerState.currentPage + 1)
-        val isLiked = vm.isPageLiked(gallery.id, currentPageNumber)
+        val isLiked = gallery.pages.getOrNull(pagerState.currentPage)?.let { vm.isPageLiked(gallery.id, it.pageNumber) } == true
 
         val onToggleLike: () -> Unit = remember(vm, gallery, pagerState) {
             {
@@ -135,7 +175,7 @@ class N_FullScreenReader(
                 vm.isCreateCollectionOpen = true
             },
             onCreateCollection = { name ->
-                vm.createCollectionAndAdd(gallery, pagerState.currentPage, name)
+                vm.addToCollection(gallery, pagerState.currentPage, name, create = true)
                 vm.isCreateCollectionOpen = false
             },
             onSelectCollection = { name ->
@@ -144,6 +184,29 @@ class N_FullScreenReader(
             },
             coverUrlProvider = vm::getCollectionCoverUrl
         )
+    }
+}
+
+@Composable
+private fun ReaderLoadingScreen(error: Throwable?, onBack: () -> Unit, onRetry: () -> Unit) {
+    var dismissed by remember(error) { mutableStateOf(false) }
+    Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+        if (error == null) {
+            CircularProgressIndicator()
+        } else {
+            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(error.localizedMessage ?: "Ошибка загрузки альбома", color = Color.White)
+                TextButton(onClick = {
+                    if (error is CloudflareBlockedException) dismissed = false else onRetry()
+                }) {
+                    Text(if (error is CloudflareBlockedException) "Пройти проверку" else "Повторить")
+                }
+                TextButton(onClick = onBack) { Text("Назад") }
+            }
+        }
+    }
+    if (error is CloudflareBlockedException && !dismissed) {
+        NRequestChallengeDialog(challenge = error, onDismiss = { dismissed = true }, onVerified = onRetry)
     }
 }
 

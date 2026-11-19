@@ -1,9 +1,19 @@
 package com.client.xvideos.n.net
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NCookieHelperTest {
+
+    @Test
+    fun `login reads cookies only on the canonical HTTPS origin`() {
+        assertTrue(isNTrustedWebUrl("https://nhentai.net/login/"))
+        assertFalse(isNTrustedWebUrl("http://nhentai.net/login/"))
+        assertFalse(isNTrustedWebUrl("https://nhentai.net:444/"))
+        assertFalse(isNTrustedWebUrl("https://nhentai.net.example.test/"))
+    }
 
     @Test
     fun `extractCookieValue extracts existing cookie`() {

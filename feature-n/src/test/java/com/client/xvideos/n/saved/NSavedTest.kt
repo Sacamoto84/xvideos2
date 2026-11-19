@@ -2,11 +2,18 @@ package com.client.xvideos.n.saved
 
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.collectionDB.CollectionDB
+import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.nSavedTabPage
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.nSavedTabPageCount
+import com.client.xvideos.n.ui.screens.picture.N_FullScreenPictureSM
+import com.client.xvideos.n.ui.screens.picture.savedPictureIndex
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -38,7 +45,7 @@ class NSavedTest {
         AppPath.init(context)
 
         likesRepo = NLikesRepository()
-        collectionRepo = NCollectionRepository()
+        collectionRepo = NCollectionRepository(CoroutineScope(Job().apply { cancel() }))
         favoritesRepo = NFavoritesRepository()
         saved = NSaved(favoritesRepo, likesRepo, collectionRepo)
     }
@@ -67,7 +74,7 @@ class NSavedTest {
     }
 
     @Test
-    fun `collection repository creates collections and manages items`() {
+    fun `collection repository creates collections and manages items`() = runTest {
         val created = collectionRepo.createCollection("ArtCollection")
         assertTrue(created)
         assertTrue(collectionRepo.collections.any { it.collection == "ArtCollection" })
@@ -102,7 +109,7 @@ class NSavedTest {
     }
 
     @Test
-    fun `collection repository sets collection cover without changing items order`() {
+    fun `collection repository sets collection cover without changing items order`() = runTest {
         val pic1 = NPicture(id = "1_1", galleryId = 1L, mediaId = 1L, pageNumber = 1)
         val pic2 = NPicture(id = "1_2", galleryId = 1L, mediaId = 1L, pageNumber = 2)
 
@@ -128,11 +135,47 @@ class NSavedTest {
     }
 
     @Test
-    fun `NSaved refreshAll executes without errors`() {
+    fun `NSaved refreshAll executes without errors`() = runTest {
         assertNotNull(saved.favorites)
         assertNotNull(saved.likes)
         assertNotNull(saved.collection)
         saved.refreshAll()
+    }
+
+    @Test
+    fun `editing one collection leaves unrelated cached collections alone`() = runTest {
+        collectionRepo.createCollection("Second")
+        val otherPicture = NPicture(id = "2_1")
+        val db = CollectionDB(AppPath.n_collection, NPicture.serializer())
+        assertTrue(db.insert(otherPicture.id, "Second", otherPicture).isSuccess)
+
+        val added = NPicture(id = "1_1")
+        assertTrue(collectionRepo.createCollectionAndAdd("First", added))
+        assertEquals(listOf(added), collectionRepo.collections.first { it.collection == "First" }.items)
+        assertTrue(collectionRepo.collections.first { it.collection == "Second" }.items.isEmpty())
+        collectionRepo.refresh()
+        assertEquals(listOf(otherPicture), collectionRepo.collections.first { it.collection == "Second" }.items)
+    }
+
+    @Test
+    fun `favorite deletion failure is reported to the caller`() {
+        val gallery = NGallery(id = 411)
+        val blockedPath = File(AppPath.n_favorites, "411.manga")
+        assertTrue(blockedPath.mkdir())
+        File(blockedPath, "entry").writeText("test")
+
+        assertTrue(favoritesRepo.toggleFavorite(gallery).isFailure)
+        assertTrue(favoritesRepo.removeFavorite(gallery.id).isFailure)
+        assertTrue(blockedPath.exists())
+    }
+
+    @Test
+    fun `return position follows the picture id through reordering or deletion`() {
+        val pictures = listOf(NPicture(id = "1_3"), NPicture(id = "1_1"), NPicture(id = "1_5"))
+
+        assertEquals(0, savedPictureIndex(pictures, "1_3", previousIndex = 2))
+        assertEquals(2, savedPictureIndex(pictures, "deleted", previousIndex = 8))
+        assertNull(savedPictureIndex(emptyList(), "deleted", previousIndex = 8))
     }
 
     @Test
@@ -143,14 +186,47 @@ class NSavedTest {
         assertFalse(favoritesRepo.isFavorite(101L))
         assertFalse(favoritesRepo.isFavorite(102L))
 
-        val importedCount = favoritesRepo.importFavorites(listOf(gallery1, gallery2))
-        assertEquals(2, importedCount)
+        val imported = favoritesRepo.importFavorites(listOf(gallery1, gallery2))
+        assertEquals(NFavoritesImport(added = 2, skipped = 0, failed = 0), imported)
         assertTrue(favoritesRepo.isFavorite(101L))
         assertTrue(favoritesRepo.isFavorite(102L))
 
         // Повторный импорт не дублирует
         val secondImport = favoritesRepo.importFavorites(listOf(gallery1))
-        assertEquals(0, secondImport)
+        assertEquals(NFavoritesImport(added = 0, skipped = 1, failed = 0), secondImport)
+    }
+
+    @Test
+    fun `new collection with a duplicate name leaves the existing picture untouched`() = runTest {
+        val picture = NPicture(id = "1_1", galleryTitle = "First title")
+        assertTrue(collectionRepo.createCollectionAndAdd("Art", picture))
+        assertFalse(collectionRepo.createCollection(" Art "))
+        assertFalse(collectionRepo.createCollectionAndAdd("Art", picture.copy(galleryTitle = "New title")))
+        assertEquals(listOf(picture), collectionRepo.readPictures("Art"))
+        assertFalse(collectionRepo.addToCollection("Missing", picture))
+        assertFalse(File(AppPath.n_collection, "Missing").exists())
+    }
+
+    @Test
+    fun `restored viewer starts from saved picture id`() = runTest {
+        val initial = NPicture(id = "1_1")
+        val selected = NPicture(id = "1_2")
+        assertTrue(collectionRepo.createCollectionAndAdd("Saved", initial))
+        assertTrue(collectionRepo.addToCollection("Saved", selected))
+
+        val pages = N_FullScreenPictureSM(saved).loadPictures("Saved", initial, selected.id)
+        assertEquals(selected, pages.pictures[pages.position.page])
+    }
+
+    @Test
+    fun `favorites import reports failed writes separately from duplicates`() {
+        val favoritesPath = File(AppPath.n_favorites)
+        assertTrue(favoritesPath.delete())
+        favoritesPath.writeText("unavailable directory")
+        val gallery = NGalleryPreview(id = 101L)
+
+        assertTrue(favoritesRepo.importFavorite(gallery).isFailure)
+        assertEquals(NFavoritesImport(added = 0, skipped = 0, failed = 1), favoritesRepo.importFavorites(listOf(gallery)))
     }
 
     @Test

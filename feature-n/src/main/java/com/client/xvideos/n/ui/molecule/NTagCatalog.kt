@@ -36,6 +36,8 @@ import com.client.xvideos.n.model.NTagCondition
 import com.client.xvideos.n.model.NTagPage
 import com.client.xvideos.n.model.NTagSort
 import com.client.xvideos.n.model.NTagType
+import com.client.xvideos.n.repository.CloudflareBlockedException
+import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NFilterChip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -60,6 +62,7 @@ internal fun NTagCatalog(
     val browsing = term.isEmpty()
     val pageSort = sort.takeIf { browsing }
     var result by remember(type, pageSort, term, page, retry) { mutableStateOf<Result<NTagPage>?>(null) }
+    var dismissedChallenge by remember { mutableStateOf<CloudflareBlockedException?>(null) }
 
     LaunchedEffect(type, pageSort, term, page, retry) {
         val response = if (pageSort != null) {
@@ -73,6 +76,7 @@ internal fun NTagCatalog(
     }
 
     val matchedPage = result?.getOrNull()
+    val challenge = result?.exceptionOrNull() as? CloudflareBlockedException
     val tags = remember(matchedPage, browsing, sort) {
         val items = matchedPage?.tags.orEmpty()
         when {
@@ -107,6 +111,7 @@ internal fun NTagCatalog(
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
             when {
                 result == null -> CircularProgressIndicator()
+                challenge != null -> NCloudflareBanner(onVerifyClick = { dismissedChallenge = null })
                 matchedPage == null -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Не удалось загрузить теги", color = Color.LightGray)
                     TextButton(onClick = { retry++ }) { Text("Повторить") }
@@ -133,6 +138,13 @@ internal fun NTagCatalog(
                 TextButton(onClick = { page++ }, enabled = page < (matchedPage?.totalPages ?: 0)) { Text("Далее") }
             }
         }
+    }
+    if (challenge != null && challenge !== dismissedChallenge) {
+        NRequestChallengeDialog(
+            challenge = challenge,
+            onDismiss = { dismissedChallenge = challenge },
+            onVerified = { retry++ }
+        )
     }
 }
 

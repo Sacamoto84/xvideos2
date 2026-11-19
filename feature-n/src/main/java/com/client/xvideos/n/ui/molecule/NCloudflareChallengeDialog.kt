@@ -1,7 +1,6 @@
 package com.client.xvideos.n.ui.molecule
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
@@ -35,7 +34,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.net.NCookieHelper
+import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.net.NUserAgent
+import com.client.xvideos.n.net.isNTrustedWebUrl
+import com.client.xvideos.n.repository.CloudflareBlockedException
 
 /**
  * Интерактивный диалог проверки Cloudflare Turnstile через встроенный WebView.
@@ -45,7 +47,8 @@ fun NCloudflareChallengeDialog(
     url: String,
     onDismiss: () -> Unit,
     onSuccess: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    rejectedClearance: String = ""
 ) {
     val topInset = getTopInsetDp()
 
@@ -95,7 +98,7 @@ fun NCloudflareChallengeDialog(
                 AndroidView(
                     factory = { context ->
                         WebView(context).apply {
-                            setupCloudflareWebView(this, url) { cookies ->
+                            setupCloudflareWebView(this, url, rejectedClearance) { cookies ->
                                 onSuccess(cookies)
                             }
                         }
@@ -115,10 +118,28 @@ fun NCloudflareChallengeDialog(
     }
 }
 
+@Composable
+internal fun NRequestChallengeDialog(
+    challenge: CloudflareBlockedException,
+    onDismiss: () -> Unit,
+    onVerified: () -> Unit
+) {
+    NCloudflareChallengeDialog(
+        url = challenge.url,
+        rejectedClearance = challenge.sentClearance,
+        onDismiss = onDismiss,
+        onSuccess = { cookies ->
+            NCloudflareState.onChallengeCompleted(cookies)
+            onVerified()
+        }
+    )
+}
+
 @SuppressLint("SetJavaScriptEnabled")
 private fun setupCloudflareWebView(
     webView: WebView,
     url: String,
+    rejectedClearance: String,
     onClearanceFound: (String) -> Unit
 ) {
     val cookieManager = CookieManager.getInstance()
@@ -144,11 +165,12 @@ private fun setupCloudflareWebView(
     webView.webViewClient = object : WebViewClient() {
         private var handled = false
 
-        private fun checkClearance(view: WebView?, finishedUrl: String?) {
+        private fun checkClearance(finishedUrl: String?) {
             if (handled) return
-            val cookies = NCookieHelper.getAllCookies(cookieManager, finishedUrl ?: view?.url)
+            if (finishedUrl == null || !isNTrustedWebUrl(finishedUrl)) return
+            val cookies = NCookieHelper.getAllCookies(cookieManager, finishedUrl)
             val cf = NCookieHelper.extractCookieValue(cookies, "cf_clearance")
-            if (cf.isNotEmpty()) {
+            if (cf.isNotEmpty() && cf != rejectedClearance) {
                 handled = true
                 cookieManager.flush()
                 onClearanceFound(cookies)
@@ -157,18 +179,9 @@ private fun setupCloudflareWebView(
 
         override fun onPageFinished(view: WebView?, finishedUrl: String?) {
             super.onPageFinished(view, finishedUrl)
-            checkClearance(view, finishedUrl)
+            checkClearance(finishedUrl)
         }
 
-        override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
-            super.doUpdateVisitedHistory(view, url, isReload)
-            checkClearance(view, url)
-        }
-
-        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-            super.onPageStarted(view, url, favicon)
-            checkClearance(view, url)
-        }
     }
 
     webView.loadUrl(url)

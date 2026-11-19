@@ -3,6 +3,7 @@ package com.client.xvideos.n.ui.molecule
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -26,10 +27,9 @@ fun NPictureGrid(
     onItemClick: (NPicture) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(8.dp),
-    menuContent: (@Composable (NPicture) -> Unit)? = null
+    menuContent: (@Composable (NPicture) -> Unit)? = null,
+    gridState: LazyGridState = rememberLazyGridState()
 ) {
-    val gridState = rememberLazyGridState()
-
     LazyVerticalGrid(
         state = gridState,
         columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),

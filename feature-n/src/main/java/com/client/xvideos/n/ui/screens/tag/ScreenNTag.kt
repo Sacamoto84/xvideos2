@@ -20,13 +20,14 @@ import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.ui.atom.NGalleryTopBar
 import com.client.xvideos.n.ui.molecule.NGalleryPager
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
+import java.util.UUID
 
 /**
  * Экран списка работ по выбранному тегу, категории или автору.
  */
 class ScreenNTag(val tag: NTag) : Screen {
 
-    override val key: ScreenKey = "NTag:${tag.type}:${tag.id}:${tag.name}"
+    override val key: ScreenKey = "NTag:${tag.type}:${tag.id}:${UUID.randomUUID()}"
 
     @Composable
     override fun Content() {

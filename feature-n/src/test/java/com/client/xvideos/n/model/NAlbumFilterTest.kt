@@ -8,6 +8,14 @@ import org.junit.Test
 class NAlbumFilterTest {
 
     @Test
+    fun `quoted language text does not suppress the selected filter`() {
+        val filter = NAlbumFilter(language = "russian")
+        val query = "tag:\"language: music\""
+        assertEquals("$query language:russian", filter.buildQuery(query))
+        assertEquals("-language:english", filter.buildQuery("-language:english"))
+    }
+
+    @Test
     fun `default filter has default flags`() {
         val filter = NAlbumFilter.DEFAULT
 

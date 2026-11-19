@@ -17,7 +17,7 @@ class NSaved @Inject constructor(
     val likes: NLikesRepository,
     val collection: NCollectionRepository
 ) {
-    fun refreshAll() {
+    suspend fun refreshAll() {
         favorites.refresh()
         likes.refresh()
         collection.refresh()

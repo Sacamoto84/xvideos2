@@ -33,12 +33,14 @@ class NFavoritesRepository @Inject constructor() {
         return favorites.any { it.id == id } || db.contains(id.toString())
     }
 
-    fun toggleFavorite(gallery: NGallery): Boolean {
+    @Synchronized
+    fun toggleFavorite(gallery: NGallery): Result<Boolean> {
         val idStr = gallery.id.toString()
         return if (db.contains(idStr)) {
-            db.delete(idStr)
-            db.refresh()
-            false
+            db.delete(idStr).map {
+                db.refresh()
+                false
+            }
         } else {
             val preview = NGalleryPreview(
                 id = gallery.id,
@@ -48,50 +50,47 @@ class NFavoritesRepository @Inject constructor() {
                 numPages = gallery.numPages,
                 language = gallery.languages.firstOrNull()?.name.orEmpty()
             )
-            db.insert(idStr, preview)
-            db.refresh()
-            true
+            db.insert(idStr, preview).map {
+                db.refresh()
+                true
+            }
         }
     }
 
-    fun removeFavorite(id: Long) {
-        db.delete(id.toString())
-        db.refresh()
-    }
+    @Synchronized
+    fun removeFavorite(id: Long): Result<Boolean> =
+        db.delete(id.toString()).onSuccess { db.refresh() }
 
     /**
      * Импортирует одну галерею в локальное избранное.
-     * Возвращает true, если элемент добавлен (ранее отсутствовал).
+     * Возвращает false для уже сохранённой галереи.
      */
-    fun importFavorite(preview: NGalleryPreview): Boolean {
+    @Synchronized
+    fun importFavorite(preview: NGalleryPreview): Result<Boolean> {
         val idStr = preview.id.toString()
-        if (db.contains(idStr)) return false
-        val inserted = db.insert(idStr, preview)
-        if (inserted.isSuccess) {
-            db.refresh()
-            return true
-        }
-        return false
+        if (db.contains(idStr)) return Result.success(false)
+        return db.insert(idStr, preview).onSuccess { db.refresh() }
     }
 
     /**
      * Пакетно импортирует список галерей в локальное избранное.
-     * Возвращает количество успешно добавленных новых элементов.
+     * Учитывает дубликаты и ошибки записи отдельно.
      */
-    fun importFavorites(galleries: List<NGalleryPreview>): Int {
-        var addedCount = 0
+    @Synchronized
+    internal fun importFavorites(galleries: List<NGalleryPreview>): NFavoritesImport {
+        var added = 0
+        var skipped = 0
+        var failed = 0
         galleries.forEach { preview ->
             val idStr = preview.id.toString()
-            if (!db.contains(idStr)) {
-                if (db.insert(idStr, preview).isSuccess) {
-                    addedCount++
-                }
+            when {
+                db.contains(idStr) -> skipped++
+                db.insert(idStr, preview).isSuccess -> added++
+                else -> failed++
             }
         }
-        if (addedCount > 0) {
-            db.refresh()
-        }
-        return addedCount
+        if (added > 0) db.refresh()
+        return NFavoritesImport(added, skipped, failed)
     }
 
     /**
@@ -103,3 +102,5 @@ class NFavoritesRepository @Inject constructor() {
         }
     }
 }
+
+internal data class NFavoritesImport(val added: Int, val skipped: Int, val failed: Int)

@@ -3,16 +3,16 @@ package com.client.xvideos.n.ui.molecule
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,16 +41,16 @@ fun NGalleryPagesGrid(
     onPageClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     header: (@Composable () -> Unit)? = null,
-    menuContent: (@Composable (page: NPage, index: Int) -> Unit)? = null
+    menuContent: (@Composable (page: NPage, index: Int) -> Unit)? = null,
+    gridState: LazyGridState = rememberLazyGridState()
 ) {
     val pageShape = RoundedCornerShape(6.dp)
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
+        state = gridState,
         modifier = modifier,
-        contentPadding = adaptiveListPadding(PaddingValues(8.dp)),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = adaptiveListPadding()
     ) {
         if (header != null) {
             item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
@@ -62,6 +62,7 @@ fun NGalleryPagesGrid(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(1.dp)
                     .aspectRatio(137f / 200f)
                     .clip(pageShape)
                     .border(1.dp, Theme.tabLevel3, pageShape)

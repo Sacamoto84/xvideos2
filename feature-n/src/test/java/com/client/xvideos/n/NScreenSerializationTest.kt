@@ -1,6 +1,5 @@
 package com.client.xvideos.n
 
-import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorer
@@ -16,6 +15,7 @@ import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
 import com.client.xvideos.n.ui.screens.tag.ScreenNTag
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -62,10 +62,11 @@ class NScreenSerializationTest {
     }
 
     @Test
-    fun `ScreenNGallery сохраняет детерминированный ключ и восстанавливается`() {
+    fun `ScreenNGallery сохраняет ключ экземпляра при восстановлении`() {
         val screen = ScreenNGallery(galleryId = 697416L)
         val restored = assertJavaSerialization(screen)
-        assertEquals("NGallery:697416", restored.key)
+        assertEquals(screen.key, restored.key)
+        assertNotEquals(screen.key, ScreenNGallery(galleryId = 697416L).key)
         assertEquals(697416L, restored.galleryId)
     }
 
@@ -74,27 +75,28 @@ class NScreenSerializationTest {
         val tag = NTag(id = 123503L, type = "parody", name = "genshin impact", count = 4518)
         val screen = ScreenNTag(tag = tag)
         val restored = assertJavaSerialization(screen)
-        assertEquals("NTag:parody:123503:genshin impact", restored.key)
+        assertEquals(screen.key, restored.key)
+        assertNotEquals(screen.key, ScreenNTag(tag).key)
         assertEquals("genshin impact", restored.tag.name)
         assertEquals("parody", restored.tag.type)
     }
 
     @Test
-    fun `N_FullScreenReader успешно сериализуется`() {
-        val gallery = NGallery(id = 100L, mediaId = 200L, title = "Reader Title")
-        val screen = N_FullScreenReader(gallery = gallery, initialPage = 2)
+    fun `ридер сохраняет только ID альбома и номер страницы`() {
+        val screen = N_FullScreenReader(galleryId = 100L, initialPageNumber = 2)
         val restored = assertJavaSerialization(screen)
         assertEquals("NReader:100:2", restored.key)
-        assertEquals(2, restored.initialPage)
+        assertEquals(100L, restored.galleryId)
+        assertEquals(2, restored.initialPageNumber)
     }
 
     @Test
     fun `N_FullScreenPicture успешно сериализуется`() {
         val picture = NPicture(id = "100_2", galleryId = 100L, mediaId = 200L, pageNumber = 2)
-        val screen = N_FullScreenPicture(pictures = arrayListOf(picture), initialIndex = 0)
+        val screen = N_FullScreenPicture(initialPicture = picture, collectionName = "Saved")
         val restored = assertJavaSerialization(screen)
-        assertEquals("NPicture:100_2:0", restored.key)
-        assertEquals(1, restored.pictures.size)
-        assertEquals("100_2", restored.pictures.first().id)
+        assertEquals(screen.key, restored.key)
+        assertEquals("Saved", restored.collectionName)
+        assertEquals(picture, restored.initialPicture)
     }
 }

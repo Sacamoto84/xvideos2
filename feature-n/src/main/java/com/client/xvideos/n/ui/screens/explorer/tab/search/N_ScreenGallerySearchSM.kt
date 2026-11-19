@@ -24,6 +24,7 @@ import dagger.multibindings.IntoMap
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,22 +66,15 @@ class N_ScreenGallerySearchSM @Inject constructor(
     fun setQuery(newQuery: String) {
         _query.value = newQuery
         tagSearchJob?.cancel()
-
-        val trimmed = newQuery.trim()
-        val lastWord = trimmed.substringAfterLast(' ')
-        if (lastWord.length >= 2) {
+        _tagSuggestions.value = emptyList()
+        val token = activeNTagToken(newQuery)
+        if (token.searchTerm.length >= 2) {
             tagSearchJob = screenModelScope.launch {
                 delay(300)
-                val cleanWord = lastWord.removePrefix("tag:").removePrefix("artist:").removeSurrounding("\"")
-                if (cleanWord.length >= 2) {
-                    val result = repository.searchTags(cleanWord, limit = 8)
-                    _tagSuggestions.value = result.getOrDefault(emptyList())
-                } else {
-                    _tagSuggestions.value = emptyList()
-                }
+                val result = repository.searchTags(token.searchTerm, limit = 8, type = token.type)
+                ensureActive()
+                _tagSuggestions.value = result.getOrDefault(emptyList())
             }
-        } else {
-            _tagSuggestions.value = emptyList()
         }
     }
 
@@ -88,21 +82,9 @@ class N_ScreenGallerySearchSM @Inject constructor(
      * Подставляет выбранный тег из подсказок и запускает поиск.
      */
     fun selectTagSuggestion(tag: NTag) {
-        val current = _query.value.trim()
-        val tagToken = if (tag.type == "tag" || tag.type.isEmpty()) {
-            "\"${tag.name}\""
-        } else {
-            "${tag.type}:\"${tag.name}\""
-        }
-
-        val updated = if (current.contains(' ')) {
-            current.substringBeforeLast(' ') + " " + tagToken
-        } else {
-            tagToken
-        }
-
-        _query.value = updated
-        _tagSuggestions.value = emptyList()
+        val current = _query.value
+        val token = activeNTagToken(current)
+        _query.value = current.take(token.start) + NTagCondition(tag, excluded = token.excluded).searchToken
         search()
     }
 
@@ -121,6 +103,39 @@ class N_ScreenGallerySearchSM @Inject constructor(
     fun removeTagCondition(condition: NTagCondition) {
         setFilter(_filter.value.copy(tags = _filter.value.tags - condition))
     }
+}
+
+internal data class NActiveTagToken(
+    val start: Int,
+    val searchTerm: String,
+    val type: NTagType?,
+    val excluded: Boolean
+)
+
+private val escapedTagCharacter = Regex("""\\(["\\])""")
+
+internal fun activeNTagToken(query: String): NActiveTagToken {
+    var start = 0
+    var quoted = false
+    var escaped = false
+    for ((index, char) in query.withIndex()) {
+        when {
+            escaped -> escaped = false
+            char == '\\' && quoted -> escaped = true
+            char == '"' -> quoted = !quoted
+            char.isWhitespace() && !quoted -> start = index + 1
+        }
+    }
+    val raw = query.substring(start)
+    val token = raw.removePrefix("-")
+    val type = NTagType.entries.firstOrNull { token.startsWith(it.value + ":", ignoreCase = true) }
+    val name = if (type == null) token else token.substringAfter(':')
+    val unquotedName = if (name.startsWith('"')) {
+        val content = name.drop(1)
+        if (quoted) content else content.removeSuffix("\"")
+    } else name
+    val searchTerm = escapedTagCharacter.replace(unquotedName) { it.groupValues[1] }
+    return NActiveTagToken(start, searchTerm, type, excluded = raw.startsWith('-'))
 }
 
 @Module

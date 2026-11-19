@@ -6,17 +6,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.saved.NSaved
+import com.client.xvideos.n.ui.screens.picture.savedPictureIndex
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 /**
  * ScreenModel вкладки коллекций страниц манги.
@@ -31,7 +35,20 @@ class ScreenSavedNCollectionsSM @Inject constructor(
     val currentCollectionName: String?
         get() = saved.collection.currentCollectionName
 
-    val currentCollectionItems: SnapshotStateList<NPicture> = saved.collection.currentCollectionItems
+    val currentCollectionItems: List<NPicture>
+        get() = saved.collection.currentCollectionItems
+
+    val picturesPosition = LazyGridPosition()
+
+    internal fun showPicture(collectionName: String, pictureId: String, previousIndex: Int) {
+        screenModelScope.launch {
+            if (currentCollectionName != collectionName) saved.collection.openCollection(collectionName)
+            if (currentCollectionName == collectionName) {
+                val index = savedPictureIndex(currentCollectionItems, pictureId, previousIndex)
+                if (index != null) picturesPosition.scrollToItem(index)
+            }
+        }
+    }
 
     val columns = Settings.n_collectionTab_column_current_count.field
 
@@ -45,17 +62,15 @@ class ScreenSavedNCollectionsSM @Inject constructor(
         isSelectOtherCollectionOpen = true
     }
 
-    fun addTargetToCollection(collectionName: String) {
+    fun addTargetToCollection(collectionName: String, create: Boolean = false) {
         val picture = targetPictureForOtherCollection ?: return
-        saved.collection.addToCollection(collectionName, picture)
+        screenModelScope.launch {
+            if (create) saved.collection.createCollectionAndAdd(collectionName, picture)
+            else saved.collection.addToCollection(collectionName, picture)
+        }
         isSelectOtherCollectionOpen = false
-        targetPictureForOtherCollection = null
-    }
-
-    fun createCollectionAndAddTarget(collectionName: String) {
-        saved.collection.createCollection(collectionName)
-        addTargetToCollection(collectionName)
         isCreateOtherCollectionOpen = false
+        targetPictureForOtherCollection = null
     }
 
     fun isLiked(picture: NPicture): Boolean =
@@ -64,36 +79,40 @@ class ScreenSavedNCollectionsSM @Inject constructor(
     fun toggleLike(picture: NPicture): Boolean =
         saved.likes.toggleLike(picture)
 
-    fun setCover(picture: NPicture): Boolean {
-        val current = currentCollectionName ?: return false
-        return saved.collection.setCollectionCover(current, picture)
+    fun setCover(picture: NPicture) {
+        val current = currentCollectionName ?: return
+        screenModelScope.launch { saved.collection.setCollectionCover(current, picture) }
     }
 
     fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
         saved.collection.getCollectionCoverUrl(collectionName, items)
 
     fun openCollection(name: String) {
-        saved.collection.openCollection(name)
+        screenModelScope.launch {
+            if (currentCollectionName != name) picturesPosition.scrollToItem(0)
+            saved.collection.openCollection(name)
+        }
     }
 
     fun closeCollection() {
-        saved.collection.closeCollection()
+        screenModelScope.launch { saved.collection.closeCollection() }
     }
 
     fun createCollection(name: String) {
-        saved.collection.createCollection(name)
+        screenModelScope.launch { saved.collection.createCollection(name) }
     }
 
-    fun renameCollection(oldName: String, newName: String): Boolean =
-        saved.collection.renameCollection(oldName, newName)
+    fun renameCollection(oldName: String, newName: String) {
+        screenModelScope.launch { saved.collection.renameCollection(oldName, newName) }
+    }
 
     fun deleteCollection(name: String) {
-        saved.collection.deleteCollection(name)
+        screenModelScope.launch { saved.collection.deleteCollection(name) }
     }
 
     fun removeItem(picture: NPicture) {
         val current = currentCollectionName ?: return
-        saved.collection.removeFromCollection(current, picture.id)
+        screenModelScope.launch { saved.collection.removeFromCollection(current, picture.id) }
     }
 }
 

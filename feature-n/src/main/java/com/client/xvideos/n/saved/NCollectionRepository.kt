@@ -2,228 +2,228 @@ package com.client.xvideos.n.saved
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.CollectionDB
 import com.client.xvideos.common.collectionDB.CollectionName
 import com.client.xvideos.common.collectionDB.model.CollectionEntity
+import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.n.model.NPicture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Репозиторий пользовательских коллекций страниц/картинок nhentai на базе CollectionDB.
- */
 @Singleton
-class NCollectionRepository @Inject constructor() {
+class NCollectionRepository @Inject constructor(@ApplicationScope scope: CoroutineScope) {
 
-    private val dbPath: String by lazy {
-        File(AppPath.n_collection).apply { mkdirs() }.absolutePath
-    }
+    private val db by lazy { CollectionDB(AppPath.n_collection, NPicture.serializer()) }
+    private val mutex = Mutex()
+    private val configs = mutableStateMapOf<String, NCollectionConfig>()
 
-    private val db: CollectionDB<NPicture> by lazy {
-        CollectionDB(dbPath, NPicture.serializer())
-    }
-
-    /** Список всех существующих коллекций с элементами. */
     val collections = mutableStateListOf<CollectionEntity<NPicture>>()
 
-    /** Имя открытой в данный момент коллекции или null, если открыт список коллекций. */
     var currentCollectionName by mutableStateOf<String?>(null)
         private set
 
-    /** Элементы текущей открытой коллекции. */
-    val currentCollectionItems = mutableStateListOf<NPicture>()
-
-    /** In-memory кэш конфигураций коллекций для исключения дискового I/O на главном потоке. */
-    private val configsCache = ConcurrentHashMap<String, NCollectionConfig>()
+    val currentCollectionItems: List<NPicture>
+        get() = collections.firstOrNull { it.collection == currentCollectionName }?.items.orEmpty()
 
     init {
-        refresh()
+        scope.launch { refresh() }
     }
 
-    fun refresh() {
-        if (!AppPath.isInitialized) return
-        configsCache.clear()
-        val list = db.readAllCollections().getOrDefault(emptyList())
-        collections.clear()
-        collections.addAll(list)
-
-        val current = currentCollectionName
-        if (current != null) {
-            val entity = list.firstOrNull { it.collection.equals(current, ignoreCase = true) }
-            currentCollectionItems.clear()
-            if (entity != null) {
-                currentCollectionItems.addAll(entity.items)
-            } else {
-                currentCollectionName = null
-            }
+    suspend fun refresh() = onDisk {
+        if (!AppPath.isInitialized) return@onDisk
+        val loaded = db.readAllCollections().getOrNull() ?: return@onDisk
+        val loadedConfigs = loaded.associate { it.collection to readConfig(it.collection) }
+        Snapshot.withMutableSnapshot {
+            collections.clear()
+            collections.addAll(loaded)
+            configs.clear()
+            configs.putAll(loadedConfigs)
+            if (loaded.none { it.collection == currentCollectionName }) currentCollectionName = null
         }
     }
 
-    fun openCollection(name: String) {
-        currentCollectionName = name
-        val entity = db.readCollection(name).getOrNull()
-        currentCollectionItems.clear()
-        if (entity != null) {
-            currentCollectionItems.addAll(entity.items)
-        }
+    suspend fun openCollection(name: String) = onDisk {
+        val safeName = CollectionName.normalizeOrNull(name) ?: return@onDisk
+        if (collections.none { it.collection == safeName }) reloadCollection(safeName)
+        if (collections.any { it.collection == safeName }) currentCollectionName = safeName
     }
 
-    fun closeCollection() {
+    suspend fun closeCollection() = onDisk {
         currentCollectionName = null
-        currentCollectionItems.clear()
     }
 
-    fun createCollection(name: String): Boolean {
-        val result = db.create(name)
-        if (result.isSuccess) {
-            refresh()
-            SnackBar.success("Коллекция $name создана")
-            return true
+    internal suspend fun readPictures(collectionName: String): List<NPicture> = onDisk {
+        db.readCollection(collectionName).getOrNull()?.items.orEmpty()
+    }
+
+    suspend fun createCollection(name: String): Boolean = mutate {
+        val folder = createCollectionFolder(name).getOrElse {
+            SnackBar.error(it.message ?: "Ошибка создания коллекции")
+            return@mutate false
         }
-        SnackBar.error("Ошибка создания коллекции")
-        return false
+        reloadCollection(folder.name)
+        SnackBar.success("Коллекция ${folder.name} создана")
+        true
     }
 
-    fun deleteCollection(name: String): Boolean {
+    suspend fun createCollectionAndAdd(name: String, picture: NPicture): Boolean = mutate {
+        val folder = createCollectionFolder(name).getOrElse {
+            SnackBar.error(it.message ?: "Ошибка создания коллекции")
+            return@mutate false
+        }
+        val inserted = db.insert(picture.id, folder.name, picture)
+        if (inserted.isFailure) folder.delete()
+        reloadCollection(folder.name)
+        report(inserted, "Добавлено в новую коллекцию", "Ошибка добавления в коллекцию")
+    }
+
+    suspend fun deleteCollection(name: String): Boolean = mutate {
         val result = db.deleteCollection(name)
-        if (result.isSuccess) {
-            CollectionName.normalizeOrNull(name)?.let { configsCache.remove(it) }
-            if (currentCollectionName.equals(name, ignoreCase = true)) {
-                closeCollection()
+        if (result.getOrDefault(false)) {
+            val safeName = requireNotNull(CollectionName.normalizeOrNull(name))
+            Snapshot.withMutableSnapshot {
+                collections.removeAll { it.collection == safeName }
+                configs.remove(safeName)
+                if (currentCollectionName == safeName) currentCollectionName = null
             }
-            refresh()
-            SnackBar.success("Коллекция $name удалена")
-            return true
         }
-        SnackBar.error("Ошибка удаления коллекции")
-        return false
+        report(result, "Коллекция $name удалена", "Ошибка удаления коллекции")
     }
 
-    fun renameCollection(oldName: String, newName: String): Boolean {
+    suspend fun renameCollection(oldName: String, newName: String): Boolean = mutate {
         val result = db.renameCollection(oldName, newName)
-        if (result.isSuccess) {
-            val safeOld = CollectionName.normalizeOrNull(oldName)
-            val safeNew = CollectionName.normalizeOrNull(newName)
-            if (safeOld != null && safeNew != null) {
-                configsCache.remove(safeOld)?.let { configsCache[safeNew] = it }
+        if (result.getOrDefault(false)) {
+            val safeOld = requireNotNull(CollectionName.normalizeOrNull(oldName))
+            val safeNew = requireNotNull(CollectionName.normalizeOrNull(newName))
+            val renamed = db.readCollection(safeNew).getOrNull()
+            val config = readConfig(safeNew)
+            Snapshot.withMutableSnapshot {
+                collections.removeAll { it.collection == safeOld }
+                configs.remove(safeOld)
+                if (renamed != null) storeCollection(renamed, config)
+                if (currentCollectionName == safeOld) currentCollectionName = renamed?.collection
             }
-            if (currentCollectionName.equals(oldName, ignoreCase = true)) {
-                currentCollectionName = newName
-            }
-            refresh()
-            SnackBar.success("Коллекция переименована")
-            return true
         }
-        SnackBar.error("Ошибка переименования коллекции")
-        return false
+        report(result, "Коллекция переименована", "Ошибка переименования коллекции")
     }
 
-    fun addToCollection(collectionName: String, picture: NPicture): Boolean {
-        val result = db.insert(picture.id, collectionName, picture)
-        if (result.isSuccess) {
-            refresh()
-            SnackBar.success("Добавлено в коллекцию")
-            return true
+    suspend fun addToCollection(collectionName: String, picture: NPicture): Boolean = mutate {
+        val safeName = CollectionName.normalizeOrNull(collectionName)
+        if (safeName == null || !File(AppPath.n_collection, safeName).isDirectory) {
+            SnackBar.error("Коллекция больше недоступна")
+            return@mutate false
         }
-        SnackBar.error("Ошибка добавления в коллекцию")
-        return false
+        val result = db.insert(picture.id, safeName, picture)
+        if (result.isSuccess) reloadCollection(safeName)
+        report(result, "Добавлено в коллекцию", "Ошибка добавления в коллекцию")
     }
 
-    fun removeFromCollection(collectionName: String, pictureId: String): Boolean {
+    suspend fun removeFromCollection(collectionName: String, pictureId: String): Boolean = mutate {
         val result = db.deleteItem(pictureId, collectionName)
-        if (result.isSuccess) {
-            val config = getCollectionConfig(collectionName)
-            if (config.coverPictureId == pictureId) {
-                saveCollectionConfig(collectionName, config.copy(coverPictureId = null))
-            }
-            refresh()
-            SnackBar.success("Удалено из коллекции")
-            return true
+        if (result.getOrDefault(false)) {
+            val safeName = requireNotNull(CollectionName.normalizeOrNull(collectionName))
+            val config = readConfig(safeName)
+            if (config.coverPictureId == pictureId) writeConfig(safeName, config.copy(coverPictureId = null))
+            reloadCollection(safeName)
         }
-        SnackBar.error("Ошибка удаления из коллекции")
-        return false
+        report(result, "Удалено из коллекции", "Ошибка удаления из коллекции")
     }
 
-    /**
-     * Читает конфигурацию коллекции [collectionName] из кэша или директории коллекции.
-     */
-    fun getCollectionConfig(collectionName: String): NCollectionConfig {
-        val safeName = CollectionName.normalizeOrNull(collectionName) ?: return NCollectionConfig()
-        return configsCache.computeIfAbsent(safeName) {
-            val file = File(File(AppPath.n_collection, safeName), CONFIG_FILE_NAME)
-            if (!file.exists() || file.length() == 0L) return@computeIfAbsent NCollectionConfig()
-            try {
-                val text = file.readText(Charsets.UTF_8)
-                AppJson.decodeFromString(NCollectionConfig.serializer(), text)
-            } catch (e: Exception) {
-                Timber.w(e, "Не удалось прочитать конфигурацию коллекции $safeName")
-                NCollectionConfig()
-            }
-        }
-    }
+    fun getCollectionConfig(collectionName: String): NCollectionConfig =
+        CollectionName.normalizeOrNull(collectionName)?.let(configs::get) ?: NCollectionConfig()
 
-    /**
-     * Сохраняет конфигурацию коллекции [collectionName] в её директории и обновляет кэш.
-     */
-    private fun saveCollectionConfig(collectionName: String, config: NCollectionConfig): Boolean {
-        val safeName = CollectionName.normalizeOrNull(collectionName) ?: return false
-        val dir = File(AppPath.n_collection, safeName)
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-        val file = File(dir, CONFIG_FILE_NAME)
-        return try {
-            val jsonText = AppJson.encodeToString(NCollectionConfig.serializer(), config)
-            file.writeTextAtomically(jsonText)
-            configsCache[safeName] = config
-            true
-        } catch (e: Exception) {
-            Timber.e(e, "Не удалось сохранить конфигурацию коллекции $safeName")
-            false
-        }
-    }
-
-    /**
-     * Возвращает URL обложки коллекции: вручную назначенную обложку или первый доступный элемент.
-     */
     fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? {
-        val config = getCollectionConfig(collectionName)
-        if (!config.coverPictureId.isNullOrEmpty()) {
-            val found = items.firstOrNull { it.id == config.coverPictureId }
-            if (found != null) {
-                return found.thumbnailUrl
-            }
-        }
-        return items.firstOrNull()?.thumbnailUrl
+        val coverId = getCollectionConfig(collectionName).coverPictureId
+        return (items.firstOrNull { it.id == coverId } ?: items.firstOrNull())?.thumbnailUrl
     }
 
-    /**
-     * Назначает выбранную картинку [picture] обложкой коллекции [collectionName],
-     * сохраняя её ID в файле конфигурации коллекции без изменения порядка элементов.
-     */
-    fun setCollectionCover(collectionName: String, picture: NPicture): Boolean {
-        val currentConfig = getCollectionConfig(collectionName)
-        val newConfig = currentConfig.copy(coverPictureId = picture.id)
-        val saved = saveCollectionConfig(collectionName, newConfig)
-        if (saved) {
-            refresh()
-            SnackBar.success("Обложка коллекции обновлена")
-            return true
+    suspend fun setCollectionCover(collectionName: String, picture: NPicture): Boolean = mutate {
+        val safeName = CollectionName.normalizeOrNull(collectionName)
+        val saved = if (safeName == null) {
+            false
+        } else {
+            val config = readConfig(safeName).copy(coverPictureId = picture.id)
+            writeConfig(safeName, config).also { if (it) configs[safeName] = config }
         }
-        SnackBar.error("Ошибка обновления обложки")
-        return false
+        report(Result.success(saved), "Обложка коллекции обновлена", "Ошибка обновления обложки")
     }
 
-    companion object {
-        private const val CONFIG_FILE_NAME = "collection_config.json"
+    private suspend fun <T> onDisk(action: () -> T): T =
+        withContext(Dispatchers.IO) { mutex.withLock { action() } }
+
+    private suspend fun <T> mutate(action: () -> T): T =
+        withContext(NonCancellable) { onDisk(action) }
+
+    private fun createCollectionFolder(name: String): Result<File> = runCatching {
+        val safeName = requireNotNull(CollectionName.normalizeOrNull(name)) { "Недопустимое имя коллекции" }
+        val root = File(AppPath.n_collection)
+        check(root.isDirectory || root.mkdirs()) { "Хранилище коллекций недоступно" }
+        val folder = File(root, safeName)
+        if (!folder.mkdir()) {
+            check(!folder.exists()) { "Коллекция «$safeName» уже существует" }
+            error("Не удалось создать коллекцию")
+        }
+        folder
+    }
+
+    private fun reloadCollection(name: String) {
+        val entry = db.readCollection(name).getOrNull() ?: return
+        val config = readConfig(entry.collection)
+        Snapshot.withMutableSnapshot { storeCollection(entry, config) }
+    }
+
+    private fun storeCollection(entry: CollectionEntity<NPicture>, config: NCollectionConfig) {
+        val index = collections.indexOfFirst { it.collection >= entry.collection }
+        when {
+            index == -1 -> collections.add(entry)
+            collections[index].collection == entry.collection -> collections[index] = entry
+            else -> collections.add(index, entry)
+        }
+        configs[entry.collection] = config
+    }
+
+    private fun readConfig(safeName: String): NCollectionConfig {
+        val file = configFile(safeName)
+        if (!file.exists() || file.length() == 0L) return NCollectionConfig()
+        return runCatching {
+            AppJson.decodeFromString(NCollectionConfig.serializer(), file.readText(Charsets.UTF_8))
+        }.getOrElse {
+            Timber.w(it, "Не удалось прочитать конфигурацию коллекции $safeName")
+            NCollectionConfig()
+        }
+    }
+
+    private fun writeConfig(safeName: String, config: NCollectionConfig): Boolean = runCatching {
+        val file = configFile(safeName)
+        check(file.parentFile?.isDirectory == true)
+        file.writeTextAtomically(AppJson.encodeToString(NCollectionConfig.serializer(), config))
+    }.onFailure {
+        Timber.e(it, "Не удалось сохранить конфигурацию коллекции $safeName")
+    }.isSuccess
+
+    private fun configFile(safeName: String) =
+        File(File(AppPath.n_collection, safeName), "collection_config.json")
+
+    private fun report(result: Result<Boolean>, success: String, error: String): Boolean {
+        val succeeded = result.getOrDefault(false)
+        if (succeeded) SnackBar.success(success) else SnackBar.error(error)
+        return succeeded
     }
 }

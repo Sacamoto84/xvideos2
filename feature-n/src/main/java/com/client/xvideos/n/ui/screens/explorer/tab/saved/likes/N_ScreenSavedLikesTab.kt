@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,11 +52,8 @@ object N_ScreenSavedLikesTab : Screen {
         val columns by vm.columns.collectAsStateWithLifecycle()
         val likes = vm.likes
 
-        val onPictureClick: (NPicture) -> Unit = remember(navigator, likes) {
-            { picture ->
-                val index = likes.indexOfFirst { it.id == picture.id }.coerceAtLeast(0)
-                navigator.push(N_FullScreenPicture(pictures = likes.toList(), initialIndex = index))
-            }
+        val onPictureClick: (NPicture) -> Unit = remember(navigator) {
+            { picture -> navigator.push(N_FullScreenPicture(initialPicture = picture)) }
         }
 
         val onOpenGallery: (NPicture) -> Unit = remember(navigator) {
@@ -83,7 +82,8 @@ object N_ScreenSavedLikesTab : Screen {
             likes = likes,
             columns = columns,
             onPictureClick = onPictureClick,
-            pictureMenuContent = pictureMenuContent
+            pictureMenuContent = pictureMenuContent,
+            gridState = if (likes.isNotEmpty()) vm.picturesPosition.rememberState() else rememberLazyGridState()
         )
 
         NCollectionDialogs(
@@ -98,8 +98,8 @@ object N_ScreenSavedLikesTab : Screen {
                 vm.isSelectCollectionOpen = false
                 vm.isCreateCollectionOpen = true
             },
-            onCreateCollection = { name -> vm.createCollectionAndAdd(name) },
-            onSelectCollection = { name -> vm.addToCollection(name) },
+            onCreateCollection = { vm.addToCollection(it, create = true) },
+            onSelectCollection = { vm.addToCollection(it) },
             coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
@@ -111,7 +111,8 @@ fun N_ScreenSavedLikesTabContent(
     columns: Int,
     onPictureClick: (NPicture) -> Unit,
     pictureMenuContent: @Composable (NPicture) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    gridState: LazyGridState = rememberLazyGridState()
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -153,6 +154,7 @@ fun N_ScreenSavedLikesTabContent(
                     items = likes,
                     columns = columns,
                     onItemClick = onPictureClick,
+                    gridState = gridState,
                     menuContent = pictureMenuContent,
                     modifier = Modifier.fillMaxSize()
                 )

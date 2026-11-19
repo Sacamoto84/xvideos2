@@ -13,14 +13,12 @@ import com.client.xvideos.n.net.NClient
 import com.client.xvideos.n.net.NNetworkResult
 import com.client.xvideos.n.net.NParser
 import java.net.URLEncoder
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import org.jsoup.Jsoup
 
 /**
  * Репозиторий данных раздела nhentai с кэшированием в оперативной памяти.
@@ -28,9 +26,12 @@ import kotlinx.serialization.json.put
 @Singleton
 class NRepository @Inject constructor() {
 
-    private val galleryCache = ConcurrentHashMap<Long, NGallery>()
-    private val favoriteChanges = MutableStateFlow(0L)
-    val serverFavoriteRevision = favoriteChanges.asStateFlow()
+    private val galleryCache = NGalleryCache()
+    private val favoriteWrites = NServerFavoriteWrites { galleryId, favorite, apiKey ->
+        NClient.setFavorite(galleryId, favorite, apiKey)
+    }
+    val serverFavoriteRevision = favoriteWrites.revision
+    internal val serverFavoriteUpdates = favoriteWrites.updates
 
     /**
      * Загружает страницу галерей с метаданными пагинации с приоритетом REST API v2.
@@ -48,7 +49,7 @@ class NRepository @Inject constructor() {
                 if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
             }
             is NNetworkResult.CloudflareRequired -> {
-                return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+                return Result.failure(apiResult.toException())
             }
             else -> Unit
         }
@@ -83,7 +84,7 @@ class NRepository @Inject constructor() {
                 if (parsed.isSuccess) return parsed
             }
             is NNetworkResult.CloudflareRequired -> {
-                return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+                return Result.failure(apiResult.toException())
             }
             is NNetworkResult.Error -> if (apiResult.code == 429) {
                 return Result.failure(IllegalStateException("Слишком много запросов. Повторите поиск позже."))
@@ -109,15 +110,12 @@ class NRepository @Inject constructor() {
         val authHint = "Для загрузки избранного укажите действующий API-ключ в настройках N."
         return when (val result = NClient.get("/api/v2/favorites?page=$page")) {
             is NNetworkResult.Success -> runCatching { NParser.parseGalleryPageV2(result.body, page) }
-            is NNetworkResult.CloudflareRequired -> Result.failure(CloudflareBlockedException(result.challengeUrl))
+            is NNetworkResult.CloudflareRequired -> Result.failure(result.toException())
             is NNetworkResult.Failure -> Result.failure(result.throwable)
             is NNetworkResult.Error -> when {
                 result.code != 401 && result.code != 403 -> Result.failure(IllegalStateException(result.message))
                 NAuthState.currentApiKey.isBlank() && NAuthState.currentSessionCookie.isNotBlank() ->
-                    fetchGalleriesPageFromHtml("/favorites/?page=$page", page).mapCatching { legacyPage ->
-                        check(legacyPage.items.isNotEmpty()) { authHint }
-                        legacyPage
-                    }
+                    fetchGalleriesPageFromHtml("/favorites/?page=$page", page, authHint)
                 else -> Result.failure(IllegalStateException(authHint))
             }
         }
@@ -140,7 +138,7 @@ class NRepository @Inject constructor() {
                     if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
                 }
                 is NNetworkResult.CloudflareRequired -> {
-                    return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+                    return Result.failure(apiResult.toException())
                 }
                 else -> Unit
             }
@@ -153,14 +151,18 @@ class NRepository @Inject constructor() {
         return searchPage(query = tagQuery, page = page, sort = sort)
     }
 
-    private suspend fun fetchGalleriesPageFromHtml(endpoint: String, defaultPage: Int): Result<NGalleryPageResult> {
+    private suspend fun fetchGalleriesPageFromHtml(
+        endpoint: String,
+        defaultPage: Int,
+        favoritesAuthHint: String? = null
+    ): Result<NGalleryPageResult> {
         return when (val result = NClient.get(endpoint)) {
-            is NNetworkResult.Success -> {
-                val pageResult = NParser.parseSearchHtmlPage(result.body, defaultPage = defaultPage)
-                Result.success(pageResult)
+            is NNetworkResult.Success -> runCatching {
+                if (favoritesAuthHint == null) NParser.parseSearchHtmlPage(result.body, defaultPage)
+                else checkNotNull(parseNFavoritesPage(result.finalUrl, result.body, defaultPage)) { favoritesAuthHint }
             }
             is NNetworkResult.CloudflareRequired -> {
-                Result.failure(CloudflareBlockedException(result.challengeUrl))
+                Result.failure(result.toException())
             }
             is NNetworkResult.Error -> {
                 Result.failure(RuntimeException("Ошибка HTTP: ${result.code}"))
@@ -174,20 +176,20 @@ class NRepository @Inject constructor() {
     /**
      * Загружает подробную информацию о галерее и похожие работы (API v2 ?include=related).
      */
-    suspend fun getGalleryDetails(id: Long): Result<NGallery> {
-        galleryCache[id]?.let { return Result.success(it) }
+    suspend fun getGalleryDetails(id: Long, forceRefresh: Boolean = false): Result<NGallery> {
+        if (!forceRefresh) galleryCache[id]?.let { return Result.success(it) }
 
         // Сначала пробуем прямой v2 JSON API с рекомендациями похожих работ
         when (val apiResult = NClient.get("/api/v2/galleries/$id?include=related")) {
             is NNetworkResult.Success -> {
                 val gallery = NParser.parseGalleryJson(apiResult.body)
-                if (gallery != null) {
+                if (gallery != null && gallery.id == id) {
                     galleryCache[id] = gallery
                     return Result.success(gallery)
                 }
             }
             is NNetworkResult.CloudflareRequired -> {
-                return Result.failure(CloudflareBlockedException(apiResult.challengeUrl))
+                return Result.failure(apiResult.toException())
             }
             else -> Unit
         }
@@ -195,7 +197,7 @@ class NRepository @Inject constructor() {
         // Если JSON API недоступен, пробуем распарсить HTML страницы галереи
         return when (val htmlResult = NClient.get("/g/$id/")) {
             is NNetworkResult.Success -> {
-                val gallery = NParser.parseGalleryHtml(htmlResult.body)
+                val gallery = NParser.parseGalleryHtml(htmlResult.body, expectedGalleryId = id)
                 if (gallery != null) {
                     galleryCache[id] = gallery
                     Result.success(gallery)
@@ -204,7 +206,7 @@ class NRepository @Inject constructor() {
                 }
             }
             is NNetworkResult.CloudflareRequired -> {
-                Result.failure(CloudflareBlockedException(htmlResult.challengeUrl))
+                Result.failure(htmlResult.toException())
             }
             is NNetworkResult.Error -> {
                 Result.failure(RuntimeException("Ошибка HTTP: ${htmlResult.code}"))
@@ -236,7 +238,7 @@ class NRepository @Inject constructor() {
 
     private fun <T> NNetworkResult.parseTagsResponse(parse: (String) -> T): Result<T> = when (this) {
         is NNetworkResult.Success -> runCatching { parse(body) }
-        is NNetworkResult.CloudflareRequired -> Result.failure(CloudflareBlockedException(challengeUrl))
+        is NNetworkResult.CloudflareRequired -> Result.failure(toException())
         is NNetworkResult.Error -> Result.failure(IllegalStateException("Не удалось загрузить теги (HTTP $code)"))
         is NNetworkResult.Failure -> Result.failure(throwable)
     }
@@ -244,33 +246,52 @@ class NRepository @Inject constructor() {
     suspend fun getServerFavorite(galleryId: Long): Result<Boolean> =
         parseServerFavoriteResult(NClient.get("/api/v2/galleries/$galleryId/favorite"))
 
-    /**
-     * Синхронизирует избранное через API v2 или существующую веб-сессию.
-     */
-    suspend fun setServerFavorite(galleryId: Long, favorite: Boolean): Result<Boolean> {
-        val apiKey = NAuthState.currentApiKey
-        val result = if (apiKey.isNotBlank()) {
-            NClient.setFavorite(galleryId, favorite, apiKey)
-        } else {
-            NClient.postForm("/g/$galleryId/favorite")
-        }
-        return parseServerFavoriteResult(result)
-            .mapCatching { actual ->
-                check(actual == favorite) { "Сервер вернул другое состояние избранного" }
-                actual
-            }
-            .onSuccess { favoriteChanges.update { revision -> revision + 1 } }
+    suspend fun setServerFavorite(
+        galleryId: Long,
+        favorite: Boolean,
+        apiKey: String = NAuthState.currentApiKey
+    ): Result<Boolean> = favoriteWrites.set(galleryId, favorite, apiKey)
+}
+
+internal class NGalleryCache(
+    private val capacity: Int = 32,
+    private val ttlMillis: Long = 5 * 60_000L,
+    private val nowMillis: () -> Long = { System.nanoTime() / 1_000_000 }
+) {
+    private class Entry(val gallery: NGallery, val loadedAt: Long)
+    private val entries = LinkedHashMap<Long, Entry>(capacity, 0.75f, true)
+
+    @Synchronized
+    operator fun get(id: Long): NGallery? {
+        val entry = entries[id] ?: return null
+        if (nowMillis() - entry.loadedAt < ttlMillis) return entry.gallery
+        entries.remove(id)
+        return null
     }
 
-    private fun parseServerFavoriteResult(result: NNetworkResult): Result<Boolean> = when (result) {
-        is NNetworkResult.Success -> runCatching { NParser.parseFavoriteState(result.body) }
-        is NNetworkResult.CloudflareRequired -> Result.failure(CloudflareBlockedException(result.challengeUrl))
-        is NNetworkResult.Error -> Result.failure(IllegalStateException("Ошибка HTTP: ${result.code}"))
-        is NNetworkResult.Failure -> Result.failure(result.throwable)
+    @Synchronized
+    operator fun set(id: Long, gallery: NGallery) {
+        entries[id] = Entry(gallery, nowMillis())
+        if (entries.size > capacity) entries.remove(entries.keys.first())
     }
+}
+
+internal fun parseNFavoritesPage(url: String, html: String, page: Int): NGalleryPageResult? {
+    val target = url.toHttpUrlOrNull() ?: return null
+    if (!target.isHttps || target.host != "nhentai.net" || target.encodedPath.trimEnd('/') != "/favorites") return null
+    val parsed = NParser.parseSearchHtmlPage(html, page)
+    if (parsed.items.isNotEmpty()) return parsed
+    val loginForm = Jsoup.parse(html, url).select("form").any {
+        val action = it.absUrl("action").toHttpUrlOrNull()
+        action?.encodedPath?.trimEnd('/') == "/login" && it.selectFirst("input[type=password]") != null
+    }
+    return parsed.takeUnless { loginForm }
 }
 
 /**
  * Исключение при блокировке запроса проверкой Cloudflare.
  */
-class CloudflareBlockedException(val url: String) : RuntimeException("Требуется подтверждение Cloudflare: $url")
+class CloudflareBlockedException(val url: String, internal val sentClearance: String = "") :
+    RuntimeException("Требуется подтверждение Cloudflare")
+
+internal fun NNetworkResult.CloudflareRequired.toException() = CloudflareBlockedException(challengeUrl, sentClearance)

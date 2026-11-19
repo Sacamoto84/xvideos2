@@ -3,6 +3,7 @@ package com.client.xvideos.n.saved
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.FileDB
+import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.n.model.NPicture
 import java.io.File
 import javax.inject.Inject
@@ -35,26 +36,28 @@ class NLikesRepository @Inject constructor() {
     fun isLiked(galleryId: Long, pageNumber: Int): Boolean =
         isLiked(NPicture.makeId(galleryId, pageNumber))
 
+    @Synchronized
     fun toggleLike(picture: NPicture): Boolean {
-        return if (db.contains(picture.id)) {
-            db.delete(picture.id)
-            db.refresh()
-            false
-        } else {
-            db.insert(picture.id, picture)
-            db.refresh()
-            true
+        val liked = db.contains(picture.id)
+        val result = if (liked) db.delete(picture.id) else db.insert(picture.id, picture)
+        if (result.isFailure) {
+            SnackBar.error("Не удалось изменить лайк")
+            return liked
         }
+        db.refresh()
+        return !liked
     }
 
     fun addLike(picture: NPicture) {
         db.insert(picture.id, picture)
-        db.refresh()
+            .onSuccess { db.refresh() }
+            .onFailure { SnackBar.error("Не удалось сохранить лайк") }
     }
 
     fun removeLike(id: String) {
         db.delete(id)
-        db.refresh()
+            .onSuccess { db.refresh() }
+            .onFailure { SnackBar.error("Не удалось удалить лайк") }
     }
 
     fun removeLike(galleryId: Long, pageNumber: Int) {

@@ -61,9 +61,13 @@ object NParser {
         val cover = parsePage(coverObj, 1)
         val thumbnail = parsePage(thumbObj, 1)
 
-        val pages = pagesArray.mapIndexed { index, pageElement ->
+        val parsedPages = pagesArray.mapIndexed { index, pageElement ->
             parsePage(pageElement.jsonObject, index + 1)
         }
+        val numbers = parsedPages.map { it.pageNumber }
+        val pages = if (numbers.any { it <= 0 } || numbers.toSet().size != numbers.size) {
+            parsedPages.mapIndexed { index, page -> page.copy(pageNumber = index + 1) }
+        } else parsedPages
 
         val tagsArray = root["tags"]?.jsonArray ?: JsonArray(emptyList())
         val tags = tagsArray.mapNotNull { tagElement ->
@@ -76,9 +80,9 @@ object NParser {
             NTag(id = tagId, type = type, name = name, count = count, url = url)
         }
 
-        val relatedArray = root["related"]?.jsonArray
+        val relatedArray = root["related"] as? JsonArray
         val relatedGalleries = relatedArray?.mapNotNull { element ->
-            val elObj = element.jsonObject
+            val elObj = element as? JsonObject ?: return@mapNotNull null
             parseGalleryListItem(elObj) ?: parseGalleryJson(element.toString())?.toPreview()
         }.orEmpty()
 
@@ -127,7 +131,7 @@ object NParser {
     /**
      * Извлекает JSON галереи из HTML страницы `/g/{id}/`.
      */
-    fun parseGalleryHtml(html: String): NGallery? {
+    fun parseGalleryHtml(html: String, expectedGalleryId: Long? = null): NGallery? {
         val doc: Document = Jsoup.parse(html)
         // 1. Поиск в тегах <script>: window._gallery = JSON.parse("...")
         for (script in doc.getElementsByTag("script")) {
@@ -140,19 +144,16 @@ object NParser {
                     val rawJson = scriptContent.substring(start, end)
                     val unescaped = unescapeUnicode(rawJson)
                     val gallery = parseGalleryJson(unescaped)
-                    if (gallery != null) return gallery
+                    if (gallery != null && (expectedGalleryId == null || gallery.id == expectedGalleryId)) return gallery
                 }
             }
             // 2. В SvelteKit версии данные галереи лежат в JSON внутри data-скрипта
-            if (scriptContent.contains("\"media_id\":")) {
-                val galleryIndex = scriptContent.indexOf("\"gallery\":")
-                if (galleryIndex >= 0) {
-                    val candidate = scriptContent.substring(galleryIndex + "\"gallery\":".length)
-                    val gallery = parseGalleryJson(candidate)
-                    if (gallery != null) return gallery
-                }
-                val direct = parseGalleryJson(scriptContent)
-                if (direct != null) return direct
+            if (scriptContent.contains("\"media_id\"")) {
+                val root = runCatching { jsonConfig.parseToJsonElement(scriptContent) }.getOrNull() as? JsonObject
+                val data = root?.get("data") as? JsonObject
+                val embedded = (root?.get("gallery") as? JsonObject) ?: (data?.get("gallery") as? JsonObject)
+                val gallery = (embedded ?: root)?.let { parseGalleryJson(it.toString()) }
+                if (gallery != null && (expectedGalleryId == null || gallery.id == expectedGalleryId)) return gallery
             }
         }
         return null
@@ -331,7 +332,7 @@ object NParser {
      */
     fun parseSearchHtmlPage(html: String, defaultPage: Int = 1): NGalleryPageResult {
         val galleries = parseSearchHtml(html)
-        val totalPages = parseHtmlTotalPages(html).coerceAtLeast(1)
+        val totalPages = parseHtmlTotalPages(html).coerceAtLeast(defaultPage.coerceAtLeast(1))
         return NGalleryPageResult(
             items = galleries,
             page = defaultPage,

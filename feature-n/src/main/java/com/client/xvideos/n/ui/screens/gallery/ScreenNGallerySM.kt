@@ -10,6 +10,7 @@ import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
@@ -27,12 +28,15 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * ScreenModel экрана деталей манги.
@@ -53,13 +57,15 @@ class ScreenNGallerySM @AssistedInject constructor(
     private val _uiState = MutableStateFlow<NGalleryUiState>(NGalleryUiState.Loading)
     val uiState: StateFlow<NGalleryUiState> = _uiState.asStateFlow()
 
-    private val _isFavorite = MutableStateFlow(favoritesRepository.isFavorite(galleryId))
-    val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
+    val isFavorite: Boolean get() = favoritesRepository.favorites.any { it.id == galleryId }
 
     private val _serverFavorite = MutableStateFlow(NServerFavoriteState(loading = NAuthState.currentApiKey.isNotBlank()))
     val serverFavorite: StateFlow<NServerFavoriteState> = _serverFavorite.asStateFlow()
+    private val _favoriteChallenge = MutableStateFlow<CloudflareBlockedException?>(null)
+    internal val favoriteChallenge = _favoriteChallenge.asStateFlow()
 
     val columns = Settings.n_galleriesTab_column_current_count.field
+    val pagesPosition = LazyGridPosition()
 
     var isSelectCollectionOpen by mutableStateOf(false)
     var isCreateCollectionOpen by mutableStateOf(false)
@@ -67,23 +73,34 @@ class ScreenNGallerySM @AssistedInject constructor(
 
     private val favoriteStatusRefresh = MutableStateFlow(0L)
     private var loadJob: Job? = null
+    private var favoriteJob: Job? = null
+    private var serverFavoriteVersion = 0L
+    private var retryFavorite: (() -> Unit)? = null
+
+    internal fun scrollToReaderPage(pageNumber: Int) {
+        screenModelScope.launch {
+            val state = uiState.first { it !is NGalleryUiState.Loading } as? NGalleryUiState.Success ?: return@launch
+            val pageIndex = state.gallery.pages.indexOfFirst { it.pageNumber == pageNumber }
+            if (pageIndex < 0) return@launch
+            // Первый элемент сетки занимает заголовок альбома.
+            pagesPosition.scrollToItem(pageIndex + 1)
+        }
+    }
 
     fun openAddToCollection(picture: NPicture) {
         targetPictureForCollection = picture
         isSelectCollectionOpen = true
     }
 
-    fun addToCollection(collectionName: String) {
+    fun addToCollection(collectionName: String, create: Boolean = false) {
         val picture = targetPictureForCollection ?: return
-        saved.collection.addToCollection(collectionName, picture)
+        screenModelScope.launch {
+            if (create) saved.collection.createCollectionAndAdd(collectionName, picture)
+            else saved.collection.addToCollection(collectionName, picture)
+        }
         isSelectCollectionOpen = false
-        targetPictureForCollection = null
-    }
-
-    fun createCollectionAndAdd(collectionName: String) {
-        saved.collection.createCollection(collectionName)
-        addToCollection(collectionName)
         isCreateCollectionOpen = false
+        targetPictureForCollection = null
     }
 
     fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
@@ -98,7 +115,16 @@ class ScreenNGallerySM @AssistedInject constructor(
     }
 
     init {
-        loadGallery()
+        loadGallery(forceRefresh = false)
+        screenModelScope.launch {
+            repository.serverFavoriteUpdates.collect { update ->
+                if (update.galleryId == galleryId && update.apiKey == NAuthState.currentApiKey) {
+                    serverFavoriteVersion++
+                    if (update.saved == null) favoriteStatusRefresh.value++
+                    else _serverFavorite.value = NServerFavoriteState(saved = update.saved)
+                }
+            }
+        }
         screenModelScope.launch {
             combine(Settings.n_api_key.field, favoriteStatusRefresh) { key, _ -> key }.collectLatest { key ->
                 if (key.isBlank()) {
@@ -112,13 +138,18 @@ class ScreenNGallerySM @AssistedInject constructor(
 
     fun toggleFavorite() {
         val gallery = (_uiState.value as? NGalleryUiState.Success)?.gallery ?: return
-        _isFavorite.value = favoritesRepository.toggleFavorite(gallery)
+        if (favoriteJob?.isActive == true) return
+        favoriteJob = screenModelScope.launch {
+            withContext(Dispatchers.IO) { favoritesRepository.toggleFavorite(gallery) }
+                .onFailure { SnackBar.error("Не удалось изменить локальное избранное") }
+        }
     }
 
     private suspend fun readServerFavorite(apiKey: String) {
+        val version = serverFavoriteVersion
         _serverFavorite.value = NServerFavoriteState(loading = true)
         val result = repository.getServerFavorite(galleryId)
-        if (NAuthState.currentApiKey == apiKey) {
+        if (NAuthState.currentApiKey == apiKey && version == serverFavoriteVersion) {
             _serverFavorite.value = NServerFavoriteState(saved = result.getOrNull())
         }
     }
@@ -129,41 +160,56 @@ class ScreenNGallerySM @AssistedInject constructor(
             SnackBar.info("Укажите API-ключ в настройках N, чтобы сохранять альбомы на сервере")
             return
         }
-        val current = _serverFavorite.value
-        if (current.loading) return
+        if (_serverFavorite.value.loading) return
+        setServerFavorite(apiKey, _serverFavorite.value.saved != true)
+    }
 
+    private fun setServerFavorite(apiKey: String, save: Boolean) {
+        val current = _serverFavorite.value
+        val version = ++serverFavoriteVersion
         _serverFavorite.value = current.copy(loading = true)
         screenModelScope.launch {
-            // Добавление через POST идемпотентно даже при неизвестном начальном статусе.
-            val save = current.saved != true
-            val result = repository.setServerFavorite(galleryId, save)
+            val result = repository.setServerFavorite(galleryId, save, apiKey)
             if (NAuthState.currentApiKey != apiKey) return@launch
 
             result.fold(
                 onSuccess = { saved ->
-                    _serverFavorite.value = NServerFavoriteState(saved = saved)
                     SnackBar.success(if (saved) "Альбом добавлен на сервер" else "Альбом удалён с сервера")
                 },
                 onFailure = { error ->
-                    _serverFavorite.value = current
-                    SnackBar.error("Не удалось обновить избранное на сервере: ${error.localizedMessage ?: "ошибка"}")
+                    if (version == serverFavoriteVersion) _serverFavorite.value = current
+                    if (error is CloudflareBlockedException) {
+                        retryFavorite = { if (NAuthState.currentApiKey == apiKey) setServerFavorite(apiKey, save) }
+                        _favoriteChallenge.value = error
+                    } else {
+                        SnackBar.error("Не удалось обновить избранное на сервере: ${error.localizedMessage ?: "ошибка"}")
+                    }
                 }
             )
         }
     }
 
-    fun loadGallery() {
+    internal fun finishFavoriteChallenge(verified: Boolean) {
+        val retry = retryFavorite
+        _favoriteChallenge.value = null
+        retryFavorite = null
+        if (verified) retry?.invoke()
+    }
+
+    fun loadGallery() = loadGallery(forceRefresh = true)
+
+    private fun loadGallery(forceRefresh: Boolean) {
         favoriteStatusRefresh.value += 1
         loadJob?.cancel()
         loadJob = screenModelScope.launch {
             _uiState.value = NGalleryUiState.Loading
-            repository.getGalleryDetails(galleryId).fold(
+            repository.getGalleryDetails(galleryId, forceRefresh).fold(
                 onSuccess = { gallery ->
                     _uiState.value = NGalleryUiState.Success(gallery)
                 },
                 onFailure = { error ->
                     if (error is CloudflareBlockedException) {
-                        _uiState.value = NGalleryUiState.CloudflareRequired(error.url)
+                        _uiState.value = NGalleryUiState.CloudflareRequired(error)
                     } else {
                         _uiState.value = NGalleryUiState.Error(error.localizedMessage ?: "Ошибка загрузки")
                     }
@@ -190,5 +236,5 @@ sealed interface NGalleryUiState {
     data object Loading : NGalleryUiState
     data class Success(val gallery: NGallery) : NGalleryUiState
     data class Error(val message: String) : NGalleryUiState
-    data class CloudflareRequired(val url: String) : NGalleryUiState
+    data class CloudflareRequired(val challenge: CloudflareBlockedException) : NGalleryUiState
 }

@@ -20,7 +20,6 @@ object NCloudflareState {
      * Сохранённое значение куки cf_clearance.
      */
     private val clearanceCookieRef = AtomicReference<String?>(null)
-
     val cfClearanceCookie: String?
         get() = clearanceCookieRef.get()
 
@@ -35,15 +34,13 @@ object NCloudflareState {
      * Успешное завершение проверки Cloudflare: сохраняет полученные куки и скрывает диалог.
      */
     fun onChallengeCompleted(cookieHeader: String?) {
-        if (!cookieHeader.isNullOrBlank()) {
-            cookieHeader.split(";").forEach { part ->
-                val trimmed = part.trim()
-                if (trimmed.startsWith("cf_clearance=")) {
-                    clearanceCookieRef.set(trimmed.substringAfter("cf_clearance="))
-                }
-            }
-        }
+        storeClearance(cookieHeader)
         _challengeUrl.value = null
+    }
+
+    internal fun storeClearance(cookieHeader: String?) {
+        val clearance = NCookieHelper.extractCookieValue(cookieHeader.orEmpty(), "cf_clearance")
+        if (clearance.isNotEmpty()) clearanceCookieRef.set(clearance)
     }
 
     /**

@@ -2,6 +2,7 @@ package com.client.xvideos.n.ui.screens.explorer.tab.list
 
 import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
+import com.client.xvideos.n.repository.CloudflareBlockedException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -16,6 +17,23 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NGalleryPagesTest {
+    @Test
+    fun `a blocked preloaded page is exposed only when it becomes visible`() = runTest {
+        val challenge = CloudflareBlockedException("https://nhentai.net/")
+        val pages = NGalleryPages(backgroundScope, StandardTestDispatcher(testScheduler)) { number ->
+            if (number == 2) Result.failure(challenge) else Result.success(NGalleryPageResult(totalPages = 2))
+        }
+        pages.load(0)
+        runCurrent()
+        pages.load(1)
+        runCurrent()
+
+        assertTrue(pages[1] is NGalleryListUiState.CloudflareRequired)
+        assertNull(pages.visibleChallenge)
+        pages.position.scrollToPage(1)
+        assertSame(challenge, pages.visibleChallenge)
+    }
+
     @Test
     fun `page numbers are one based and revisiting a page reuses its data and position`() = runTest {
         val requests = mutableListOf<Int>()

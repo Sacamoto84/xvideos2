@@ -7,14 +7,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,7 +29,6 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
-import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGalleryPreview
@@ -57,20 +56,13 @@ object N_ScreenSavedMangaTab : Screen {
         val columns by vm.columns.collectAsStateWithLifecycle()
         val favorites = vm.favorites.toList()
 
-        var order by remember { mutableStateOf(NSavedMangaOrder.NEWEST) }
+        val order = vm.mangaOrder
 
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
             { id -> navigator.push(ScreenNGallery(id)) }
         }
 
-        val onRemoveFavorite: (Long) -> Unit = remember(vm) {
-            { id ->
-                vm.removeFavorite(id)
-                SnackBar.success("Манга удалена из сохранённого")
-            }
-        }
-
-        val onOrderChange = remember { { newOrder: NSavedMangaOrder -> order = newOrder } }
+        val onOrderChange = remember(vm) { { newOrder: NSavedMangaOrder -> vm.mangaOrder = newOrder } }
 
         val sortedFavorites = remember(favorites, order) {
             nSortedSavedManga(favorites, order)
@@ -82,7 +74,8 @@ object N_ScreenSavedMangaTab : Screen {
             order = order,
             onOrderChange = onOrderChange,
             onGalleryClick = onGalleryClick,
-            onRemoveFavorite = onRemoveFavorite
+            onRemoveFavorite = vm::removeFavorite,
+            gridState = if (sortedFavorites.isNotEmpty()) vm.mangaPosition.rememberState() else rememberLazyGridState()
         )
     }
 }
@@ -95,7 +88,8 @@ fun N_ScreenSavedMangaTabContent(
     onOrderChange: (NSavedMangaOrder) -> Unit,
     onGalleryClick: (Long) -> Unit,
     onRemoveFavorite: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    gridState: LazyGridState = rememberLazyGridState()
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -140,6 +134,7 @@ fun N_ScreenSavedMangaTabContent(
                     items = favorites,
                     columns = columns,
                     onItemClick = onGalleryClick,
+                    gridState = gridState,
                     itemMenuActions = { item, dismiss ->
                         ExpandMenuActionItem(Icons.Outlined.Delete, "Удалить из сохранённого") {
                             dismiss()

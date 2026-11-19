@@ -1,6 +1,7 @@
 package com.client.xvideos.n.ui.screens.explorer.tab.saved.collections
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -138,10 +139,14 @@ object N_ScreenSavedCollectionsTab : Screen {
             columns = columns,
             actions = actions,
             onPictureClick = { picture ->
-                val index = currentItems.indexOfFirst { it.id == picture.id }.coerceAtLeast(0)
-                navigator.push(N_FullScreenPicture(pictures = currentItems.toList(), initialIndex = index))
+                if (selectedCollection != null) {
+                    navigator.push(N_FullScreenPicture(initialPicture = picture, collectionName = selectedCollection))
+                }
             },
             pictureMenuContent = pictureMenuContent,
+            picturesGridState = if (selectedCollection != null && currentItems.isNotEmpty()) {
+                vm.picturesPosition.rememberState()
+            } else rememberLazyGridState(),
             coverUrlProvider = vm::getCollectionCoverUrl
         )
 
@@ -166,8 +171,8 @@ object N_ScreenSavedCollectionsTab : Screen {
                 vm.isSelectOtherCollectionOpen = false
                 vm.isCreateOtherCollectionOpen = true
             },
-            onCreateCollection = { name -> vm.createCollectionAndAddTarget(name) },
-            onSelectCollection = { name -> vm.addTargetToCollection(name) },
+            onCreateCollection = { vm.addTargetToCollection(it, create = true) },
+            onSelectCollection = { vm.addTargetToCollection(it) },
             coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
@@ -183,7 +188,8 @@ fun N_ScreenSavedCollectionsTabContent(
     onPictureClick: (NPicture) -> Unit,
     pictureMenuContent: @Composable (NPicture) -> Unit,
     modifier: Modifier = Modifier,
-    coverUrlProvider: (String, List<NPicture>) -> String? = { _, items -> items.firstOrNull()?.thumbnailUrl }
+    coverUrlProvider: (String, List<NPicture>) -> String? = { _, items -> items.firstOrNull()?.thumbnailUrl },
+    picturesGridState: LazyGridState = rememberLazyGridState()
 ) {
     val gridState = rememberLazyGridState()
     val topInset = getTopInsetDp()
@@ -232,6 +238,7 @@ fun N_ScreenSavedCollectionsTabContent(
                     onDeleteCollection = { actions.onDeleteCollection(selectedCollection) },
                     onPictureClick = onPictureClick,
                     pictureMenuContent = pictureMenuContent,
+                    gridState = picturesGridState,
                     modifier = modifier
                 )
             }

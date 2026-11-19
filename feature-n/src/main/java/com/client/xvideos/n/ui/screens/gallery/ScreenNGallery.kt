@@ -8,12 +8,17 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,44 +39,47 @@ import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.model.NTag
-import com.client.xvideos.n.net.NCloudflareState
+import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NGalleryTopBar
-import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NGalleryHeader
 import com.client.xvideos.n.ui.molecule.NGalleryPagesGrid
 import com.client.xvideos.n.ui.molecule.NGalleryRelatedStrip
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
+import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
 import com.client.xvideos.n.ui.screens.tag.ScreenNTag
+import java.util.UUID
 
 /**
  * Экран информации о манге / галерее nhentai (аналог ScreenLAlbum).
  */
 class ScreenNGallery(val galleryId: Long) : Screen {
 
-    override val key: ScreenKey = "NGallery:$galleryId"
+    override val key: ScreenKey = "NGallery:$galleryId:${UUID.randomUUID()}"
+
+    @Composable
+    internal fun rememberModel(): ScreenNGallerySM =
+        getScreenModel<ScreenNGallerySM, ScreenNGallerySM.Factory> { it.create(galleryId) }
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val vm = getScreenModel<ScreenNGallerySM, ScreenNGallerySM.Factory> { factory ->
-            factory.create(galleryId)
-        }
+        val vm = rememberModel()
 
         val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
         BackHandler(onBack = onBack)
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
-        val isFavorite by vm.isFavorite.collectAsStateWithLifecycle()
+        val isFavorite = vm.isFavorite
         val serverFavorite by vm.serverFavorite.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
-        val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()
+        val favoriteChallenge by vm.favoriteChallenge.collectAsStateWithLifecycle()
 
-        val onRead: (NGallery, Int) -> Unit = remember(navigator) {
-            { gallery, pageIndex ->
-                navigator.push(N_FullScreenReader(gallery = gallery, initialPage = pageIndex))
+        val onRead: (Int) -> Unit = remember(navigator, galleryId) {
+            { pageNumber ->
+                navigator.push(N_FullScreenReader(galleryId, pageNumber))
             }
         }
 
@@ -118,7 +126,6 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             galleryId = galleryId,
             uiState = uiState,
             columns = columns,
-            challengeUrl = challengeUrl,
             isFavorite = isFavorite,
             onBack = onBack,
             onRead = onRead,
@@ -129,8 +136,19 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             onShareClick = onShareClick,
             onTagClick = onTagClick,
             onRetry = vm::loadGallery,
-            pageMenuContent = pageMenuContent
+            pageMenuContent = pageMenuContent,
+            gridState = vm.pagesPosition.rememberState()
         )
+
+        if (uiState is NGalleryUiState.Success) {
+            favoriteChallenge?.let {
+                NRequestChallengeDialog(
+                    challenge = it,
+                    onDismiss = { vm.finishFavoriteChallenge(verified = false) },
+                    onVerified = { vm.finishFavoriteChallenge(verified = true) }
+                )
+            }
+        }
 
         NCollectionDialogs(
             isSelectOpen = vm.isSelectCollectionOpen,
@@ -144,8 +162,8 @@ class ScreenNGallery(val galleryId: Long) : Screen {
                 vm.isSelectCollectionOpen = false
                 vm.isCreateCollectionOpen = true
             },
-            onCreateCollection = { name -> vm.createCollectionAndAdd(name) },
-            onSelectCollection = { name -> vm.addToCollection(name) },
+            onCreateCollection = { vm.addToCollection(it, create = true) },
+            onSelectCollection = { vm.addToCollection(it) },
             coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
@@ -156,9 +174,8 @@ fun ScreenNGalleryContent(
     galleryId: Long,
     uiState: NGalleryUiState,
     columns: Int,
-    challengeUrl: String?,
     onBack: () -> Unit,
-    onRead: (NGallery, Int) -> Unit,
+    onRead: (Int) -> Unit,
     onGalleryClick: (Long) -> Unit,
     onTagClick: (NTag) -> Unit,
     onRetry: () -> Unit,
@@ -168,10 +185,12 @@ fun ScreenNGalleryContent(
     serverFavorite: NServerFavoriteState = NServerFavoriteState(),
     onServerFavoriteClick: () -> Unit = {},
     onShareClick: (() -> Unit)? = null,
-    pageMenuContent: (@Composable (NPage, Int) -> Unit)? = null
+    pageMenuContent: (@Composable (NPage, Int) -> Unit)? = null,
+    gridState: LazyGridState = rememberLazyGridState()
 ) {
     val topInset = getTopInsetDp()
     val title = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId"
+    var dismissedChallenge by remember { mutableStateOf<CloudflareBlockedException?>(null) }
 
     Scaffold(
         topBar = {
@@ -179,6 +198,7 @@ fun ScreenNGalleryContent(
                 title = title,
                 onBack = onBack,
                 onShareClick = onShareClick,
+                onRefresh = onRetry.takeIf { uiState is NGalleryUiState.Success },
                 topInset = topInset
             )
         },
@@ -210,14 +230,21 @@ fun ScreenNGalleryContent(
                             color = Color.White,
                             fontSize = 14.sp
                         )
-                        NCloudflareBanner(onVerifyClick = onRetry)
+                        TextButton(onClick = onRetry) { Text("Повторить") }
                     }
                 }
                 is NGalleryUiState.CloudflareRequired -> {
                     NCloudflareBanner(
-                        onVerifyClick = onRetry,
+                        onVerifyClick = { dismissedChallenge = null },
                         modifier = Modifier.align(Alignment.Center)
                     )
+                    if (dismissedChallenge !== uiState.challenge) {
+                        NRequestChallengeDialog(
+                            challenge = uiState.challenge,
+                            onDismiss = { dismissedChallenge = uiState.challenge },
+                            onVerified = onRetry
+                        )
+                    }
                 }
                 is NGalleryUiState.Success -> {
                     val gallery = uiState.gallery
@@ -225,7 +252,10 @@ fun ScreenNGalleryContent(
                         pages = gallery.pages,
                         mediaId = gallery.mediaId,
                         columns = columns,
-                        onPageClick = { pageIndex -> onRead(gallery, pageIndex) },
+                        onPageClick = { pageIndex ->
+                            gallery.pages.getOrNull(pageIndex)?.let { onRead(it.pageNumber) }
+                        },
+                        gridState = gridState,
                         menuContent = pageMenuContent,
                         header = {
                             Column(modifier = Modifier.fillMaxWidth()) {
@@ -249,17 +279,6 @@ fun ScreenNGalleryContent(
                 }
             }
 
-            // Модальный диалог проверки Cloudflare
-            challengeUrl?.let { url ->
-                NCloudflareChallengeDialog(
-                    url = url,
-                    onDismiss = { NCloudflareState.onChallengeDismissed() },
-                    onSuccess = { cookies ->
-                        NCloudflareState.onChallengeCompleted(cookies)
-                        onRetry()
-                    }
-                )
-            }
         }
     }
 }
@@ -271,9 +290,8 @@ private fun ScreenNGalleryContentPreview() {
         galleryId = 123456L,
         uiState = NGalleryUiState.Loading,
         columns = 3,
-        challengeUrl = null,
         onBack = {},
-        onRead = { _, _ -> },
+        onRead = {},
         onGalleryClick = {},
         onTagClick = {},
         onRetry = {}

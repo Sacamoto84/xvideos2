@@ -38,6 +38,8 @@ class NGalleryPages(
 
     val currentIndex: Int get() = position.state?.currentPage ?: position.page
     val loading: Boolean get() = states.containsValue(NGalleryListUiState.Loading)
+    internal val visibleChallenge: CloudflareBlockedException?
+        get() = (states[currentIndex] as? NGalleryListUiState.CloudflareRequired)?.challenge
 
     operator fun get(index: Int): NGalleryListUiState? = states[index]
 
@@ -56,7 +58,7 @@ class NGalleryPages(
                 throw cancelled
             } catch (blocked: CloudflareBlockedException) {
                 ensureActive()
-                states[index] = NGalleryListUiState.CloudflareRequired(blocked.url)
+                states[index] = NGalleryListUiState.CloudflareRequired(blocked)
             } catch (error: Exception) {
                 ensureActive()
                 states[index] = NGalleryListUiState.Error(error.localizedMessage ?: "Ошибка загрузки страницы")

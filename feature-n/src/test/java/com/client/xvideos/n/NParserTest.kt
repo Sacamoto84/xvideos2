@@ -6,12 +6,53 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
  * Юнит-тесты парсера nhentai API и HTML.
  */
 class NParserTest {
+
+    @Test
+    fun `mixed page numbers fall back to a unique sequence`() {
+        val json = """{"id":42,"media_id":17,"pages":[{"number":2,"path":"galleries/17/1.webp"},{"path":"galleries/17/2.webp"}]}"""
+        val pages = NParser.parseGalleryJson(json)?.pages.orEmpty()
+        assertEquals(listOf(1, 2), pages.map { it.pageNumber })
+        assertEquals("galleries/17/1.webp", pages.first().path)
+    }
+
+    @Test
+    fun `HTML skips unrelated albums when a gallery id is requested`() {
+        val html = """
+            <script type="application/json">{"id":41,"media_id":16}</script>
+            <script type="application/json">{"gallery":{"id":42,"media_id":17}}</script>
+        """.trimIndent()
+        assertEquals(42L, NParser.parseGalleryHtml(html, expectedGalleryId = 42)?.id)
+        assertNull(NParser.parseGalleryHtml(html, expectedGalleryId = 43))
+    }
+
+    @Test
+    fun `optional recommendations do not prevent opening an album`() {
+        val missing = """{"id":42,"media_id":17,"pages":[{}],"related":null}"""
+        val malformed = """{"id":42,"media_id":17,"pages":[{}],"related":[null,"unknown"]}"""
+        assertEquals(1, NParser.parseGalleryJson(missing)?.pages?.size)
+        assertEquals(1, NParser.parseGalleryJson(malformed)?.pages?.size)
+    }
+
+    @Test
+    fun `HTML can embed gallery under a JSON key with sibling fields`() {
+        val html = """<script type="application/json">{"gallery":{"id":42,"media_id" : 17},"other":true}</script>"""
+        assertEquals(42L, NParser.parseGalleryHtml(html)?.id)
+    }
+
+    @Test
+    fun `HTML pagination never drops the current page when it is not a link`() {
+        val html = """<section class="pagination"><a class="page" href="?page=4">4</a><span>5</span></section>"""
+        val page = NParser.parseSearchHtmlPage(html, defaultPage = 5)
+        assertEquals(5, page.page)
+        assertEquals(5, page.totalPages)
+    }
 
     @Test
     fun `favorites page retains albums and pagination from API v2`() {

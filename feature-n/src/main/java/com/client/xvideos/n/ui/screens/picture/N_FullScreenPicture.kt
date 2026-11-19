@@ -13,11 +13,16 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,18 +43,25 @@ import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.molecule.NPictureViewerBottomStrip
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
+import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorer
+import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorerSM
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTabSM
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.ScreenSavedNCollectionsSM
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.ScreenSavedNLikesSM
 import kotlinx.coroutines.launch
 
 /**
  * Полноэкранный просмотрщик сохранённых картинок (из лайков и коллекций).
  */
 class N_FullScreenPicture(
-    val pictures: List<NPicture>,
-    val initialIndex: Int = 0
+    val initialPicture: NPicture,
+    val collectionName: String? = null
 ) : Screen {
 
-    override val key: ScreenKey =
-        "NPicture:${pictures.getOrNull(initialIndex)?.id ?: "empty"}:$initialIndex"
+    override val key: ScreenKey = "NPicture:${initialPicture.id}:${collectionName.orEmpty()}"
 
     @Composable
     override fun Content() {
@@ -58,22 +70,61 @@ class N_FullScreenPicture(
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<N_FullScreenPictureSM>()
 
-        val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
-        BackHandler(onBack = onBack)
+        val savedTab = N_SavedTab.getScreenModel<N_SavedTabSM>()
+        val screens = navigator.items
+        val explorer = (screens.getOrNull(screens.lastIndex - 1) as? N_ScreenExplorer)
+            ?.getScreenModel<N_ScreenExplorerSM>()
+        val likes = if (collectionName == null) N_ScreenSavedLikesTab.getScreenModel<ScreenSavedNLikesSM>() else null
+        val collections = if (collectionName != null) {
+            N_ScreenSavedCollectionsTab.getScreenModel<ScreenSavedNCollectionsSM>()
+        } else null
+
+        fun returnToSource(pictureId: String, index: Int) {
+            explorer?.screenType = 1
+            if (collectionName == null) {
+                savedTab.screenType = 0
+                likes?.showPicture(pictureId, index)
+            } else {
+                savedTab.screenType = 2
+                collections?.showPicture(collectionName, pictureId, index)
+            }
+            navigator.pop()
+        }
+
+        var currentPictureId by rememberSaveable { mutableStateOf(initialPicture.id) }
+        val loaded by produceState<NSavedPicturePages?>(null, vm, initialPicture, collectionName) {
+            value = vm.loadPictures(collectionName, initialPicture, currentPictureId)
+        }
+        val pages = loaded
+        if (pages == null) {
+            BackHandler { returnToSource(currentPictureId, 0) }
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return
+        }
 
         val coroutineScope = rememberCoroutineScope()
         var isVertical by remember {
             mutableStateOf(Settings.n_fullscreen_vertical_pager.field.value)
         }
 
-        val safeInitialIndex = remember(pictures.size, initialIndex) {
-            initialIndex.coerceIn(0, (pictures.size - 1).coerceAtLeast(0))
+        val pictures = pages.pictures
+        val pagerState = pages.position.rememberState { pictures.size }
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pictures.getOrNull(pagerState.currentPage)?.id }.collect { id ->
+                if (id != null) currentPictureId = id
+            }
         }
-
-        val pagerState = rememberPagerState(
-            initialPage = safeInitialIndex,
-            pageCount = { pictures.size }
-        )
+        val onBack: () -> Unit = {
+            val index = pagerState.currentPage
+            val picture = pictures.getOrNull(index) ?: initialPicture
+            returnToSource(picture.id, index)
+        }
+        BackHandler(onBack = onBack)
 
         val onToggleOrientation = remember {
             {
@@ -140,7 +191,7 @@ class N_FullScreenPicture(
                 vm.isCreateCollectionOpen = true
             },
             onCreateCollection = { name ->
-                currentPicture?.let { vm.createCollectionAndAdd(it, name) }
+                currentPicture?.let { vm.addToCollection(it, name, create = true) }
                 vm.isCreateCollectionOpen = false
             },
             onSelectCollection = { name ->
