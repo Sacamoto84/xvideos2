@@ -5,42 +5,50 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.AlbumInfoButtonServerFavorite
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NTag
-import com.client.xvideos.n.ui.atom.NGalleryTagChip
 
-/**
- * Шапка экрана манги: обложка, названия, метаинформация, кнопки действий и теги.
- */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NGalleryHeader(
     gallery: NGallery,
@@ -52,128 +60,163 @@ fun NGalleryHeader(
     isServerFavoriteLoading: Boolean = false,
     onServerFavoriteClick: () -> Unit = {}
 ) {
-    val coverShape = RoundedCornerShape(8.dp)
+    BoxWithConstraints(modifier.fillMaxWidth().padding(16.dp)) {
+        val wide = maxWidth >= 600.dp
+        val gutter = if (wide) 32.dp else 16.dp
+        val coverWidth = if (wide) minOf(maxWidth * 0.33f, 360.dp) else minOf(maxWidth * 0.34f, 144.dp)
+        val details: @Composable () -> Unit = {
+            NGalleryMetadata(gallery = gallery, onTagClick = onTagClick)
+            NGalleryFavoriteActions(
+                isFavorite = isFavorite,
+                onFavoriteClick = onFavoriteClick,
+                isServerFavorite = isServerFavorite,
+                isServerFavoriteLoading = isServerFavoriteLoading,
+                onServerFavoriteClick = onServerFavoriteClick
+            )
+        }
 
-    Column(
+        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(gutter)) {
+                NGalleryCover(gallery = gallery, modifier = Modifier.width(coverWidth))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    NGalleryTitles(gallery)
+                    if (wide) details()
+                }
+            }
+            if (!wide) details()
+        }
+    }
+}
+
+@Composable
+private fun NGalleryCover(gallery: NGallery, modifier: Modifier) {
+    val cover = gallery.cover
+    val ratio = if (cover.width > 0 && cover.height > 0) {
+        (cover.width.toFloat() / cover.height).coerceIn(0.55f, 2f)
+    } else {
+        137f / 200f
+    }
+    val shape = RoundedCornerShape(8.dp)
+    UrlImage(
+        url = gallery.coverUrl,
         modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Верхний ряд: Обложка слева + Названия и кнопка справа
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(130.dp)
-                    .aspectRatio(137f / 200f)
-                    .clip(coverShape)
-                    .border(1.dp, Theme.tabLevel3, coverShape)
-                    .background(Theme.tabLevel1)
-            ) {
-                UrlImage(
-                    url = gallery.coverUrl,
-                    modifier = Modifier.fillMaxWidth(),
-                    contentScale = ContentScale.Crop
-                )
-            }
+            .aspectRatio(ratio)
+            .clip(shape)
+            .background(Theme.tabLevel1)
+            .border(1.dp, Theme.Surface.border, shape),
+        contentScale = ContentScale.Fit
+    )
+}
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = gallery.title,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 20.sp
-                )
+private val titleNotes = Regex("""\[[^\[\]]*]""")
 
-                if (gallery.japaneseTitle.isNotEmpty() && gallery.japaneseTitle != gallery.title) {
-                    Text(
-                        text = gallery.japaneseTitle,
-                        color = Color(0xFFAAAAAA),
-                        fontSize = 12.sp
-                    )
-                }
-
-                Text(
-                    text = "${gallery.numPages} страниц • #${gallery.id}",
-                    color = Color(0xFFED2553),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isFavorite) Color(0xFFED2553).copy(alpha = 0.2f) else Theme.tabLevel2)
-                        .border(
-                            1.dp,
-                            if (isFavorite) Color(0xFFED2553) else Theme.tabLevel3,
-                            RoundedCornerShape(8.dp)
-                        )
-                        .clickable(onClick = onFavoriteClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = if (isFavorite) "Удалить из закладок" else "В закладки",
-                        tint = if (isFavorite) Color(0xFFED2553) else Color.White
-                    )
+@Composable
+private fun NGalleryTitles(gallery: NGallery) {
+    val title = gallery.englishTitle.ifBlank { gallery.title }.ifBlank { gallery.japaneseTitle }
+    val displayTitle = remember(title, gallery.title) {
+        buildAnnotatedString {
+            append(title)
+            if (title != gallery.title) {
+                titleNotes.findAll(title).forEach { note ->
+                    addStyle(SpanStyle(color = Theme.Text.secondary), note.range.first, note.range.last + 1)
                 }
             }
         }
-
-        // Блок тегов
-        if (gallery.tags.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Теги и категории:",
-                    color = Color(0xFFCCCCCC),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    gallery.tags.forEach { tag ->
-                        NGalleryTagChip(tag = tag, onClick = onTagClick)
-                    }
-                }
-            }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (title.isNotBlank()) {
+            Text(
+                text = displayTitle,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Theme.Text.primary,
+                modifier = Modifier.semantics { heading() }
+            )
         }
-
-        AlbumInfoButtonServerFavorite(
-            isFavorite = isServerFavorite,
-            isLoading = isServerFavoriteLoading,
-            onClick = onServerFavoriteClick
+        if (gallery.japaneseTitle.isNotBlank() && gallery.japaneseTitle != title) {
+            Text(
+                text = gallery.japaneseTitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Theme.Text.secondary
+            )
+        }
+        Text(
+            text = "#${gallery.id}",
+            style = MaterialTheme.typography.labelLarge,
+            color = Theme.Text.secondary
         )
     }
 }
 
-@Preview
+@Composable
+private fun NGalleryFavoriteActions(
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
+    isServerFavorite: Boolean,
+    isServerFavoriteLoading: Boolean,
+    onServerFavoriteClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(6.dp)
+    val accent = Color(0xFFED2553)
+    Row(
+        modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(shape)
+                .background(if (isFavorite) accent.copy(alpha = 0.16f) else Theme.tabLevel2)
+                .border(1.dp, if (isFavorite) accent else Theme.Surface.border, shape)
+                .clickable(role = Role.Button, onClick = onFavoriteClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                contentDescription = if (isFavorite) "Удалить из закладок" else "В закладки",
+                tint = if (isFavorite) accent else Theme.Text.primary
+            )
+        }
+        AlbumInfoButtonServerFavorite(
+            isFavorite = isServerFavorite,
+            isLoading = isServerFavoriteLoading,
+            onClick = onServerFavoriteClick,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Preview(name = "Телефон", widthDp = 360)
+@Preview(name = "Планшет", widthDp = 840)
 @Composable
 private fun NGalleryHeaderPreview() {
-    NGalleryHeader(
-        gallery = NGallery(
-            id = 123456L,
-            mediaId = 987654L,
-            title = "Sample Manga Title for Preview",
-            japaneseTitle = "サンプルマンガ",
-            numPages = 32,
-            numFavorites = 540,
-            tags = listOf(
-                NTag(id = 1, type = "artist", name = "artist_name", count = 120),
-                NTag(id = 2, type = "tag", name = "full color", count = 5300),
-                NTag(id = 3, type = "language", name = "english", count = 98000)
+    CompositionLocalProvider(LocalInspectionMode provides true) {
+        Surface(modifier = Modifier.fillMaxSize(), color = Theme.background) {
+            NGalleryHeader(
+                gallery = NGallery(
+                    id = 123456L,
+                    mediaId = 987654L,
+                    title = "The Midnight Library",
+                    englishTitle = "[Studio Paper] The Midnight Library [Digital Edition]",
+                    japaneseTitle = "真夜中の図書館",
+                    uploadDate = 1_579_132_800L,
+                    numPages = 32,
+                    tags = listOf(
+                        NTag(id = 1, type = "artist", name = "Aki Sato", count = 120),
+                        NTag(id = 2, type = "tag", name = "full color", count = 5300),
+                        NTag(id = 3, type = "tag", name = "illustrations", count = 15650),
+                        NTag(id = 4, type = "tag", name = "short stories", count = 73900),
+                        NTag(id = 5, type = "language", name = "japanese", count = 98000),
+                        NTag(id = 6, type = "category", name = "manga", count = 521100)
+                    )
+                ),
+                onTagClick = {},
+                modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
             )
-        ),
-        onTagClick = {}
-    )
+        }
+    }
 }
