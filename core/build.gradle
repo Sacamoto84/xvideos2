@@ -136,6 +136,7 @@ dependencies {
     // P2P Nearby Connections. Весь обмен живёт в common/p2p, наружу уходят
     // только собственные типы :core — разделы про Nearby не знают.
     implementation libs.play.services.nearby
+    implementation libs.mlkit.translate
 
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test

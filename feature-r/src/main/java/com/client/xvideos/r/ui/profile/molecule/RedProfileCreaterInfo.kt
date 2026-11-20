@@ -33,12 +33,12 @@ fun RedProfileCreaterInfo(
     isFollow: Boolean,
     onFollowClick: () -> Unit,
     modifier: Modifier = Modifier,
+    about: String? = item.description?.trimMargin(),
 ) {
     val followersPretty = remember(item.followers) { item.followers.toPrettyCount() }
     val viewsPretty = remember(item.views) { item.views.toPrettyCount() }
     val publishedGifsPretty = remember(item.publishedGifs) { item.publishedGifs.toPrettyCount() }
     val aboutTitle = remember(item.username) { "About ${item.username}:" }
-    val descriptionTrimmed = remember(item.description) { item.description?.trimMargin() }
 
     Column(modifier = modifier.adaptiveContentWidth().padding(horizontal = 4.dp).fillMaxWidth()) {
         CreatorTopInfoRow(
@@ -53,7 +53,7 @@ fun RedProfileCreaterInfo(
             publishedGifsPretty = publishedGifsPretty
         )
 
-        if (descriptionTrimmed != null) {
+        if (!about.isNullOrBlank()) {
             Text(
                 aboutTitle,
                 color = Theme.R.colorTextGray,
@@ -64,7 +64,7 @@ fun RedProfileCreaterInfo(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                descriptionTrimmed,
+                about,
                 color = Color.White,
                 fontSize = 14.sp,
                 fontFamily = Theme.R.fontFamilyPopinsRegular

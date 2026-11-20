@@ -27,6 +27,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
+import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.translation.TranslationEngine
+import com.client.xvideos.common.translation.rememberEnglishToRussianTranslation
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.molecule.RedProfileCreaterInfo
@@ -51,6 +54,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
         val tags by vm.tags.collectAsStateWithLifecycle()
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
+        val translationEngine by Settings.translation_engine.field.collectAsStateWithLifecycle()
 
         val onResetTags: () -> Unit = remember(vm) { { vm.resetSelectedTags() } }
 
@@ -93,7 +97,8 @@ class ScreenRedProfile(val profileName: String) : Screen {
             onTagClick = onTagClick,
             onAppendLoaded = onAppendLoaded,
             isFollow = isFollow,
-            onFollowClick = onFollowClick
+            onFollowClick = onFollowClick,
+            translationEngine = TranslationEngine.fromStoredValue(translationEngine)
         )
     }
 
@@ -109,13 +114,19 @@ fun ScreenRedProfileContent(
     onTagClick: (String) -> Unit,
     onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit,
     isFollow: Boolean,
-    onFollowClick: () -> Unit
+    onFollowClick: () -> Unit,
+    translationEngine: TranslationEngine = TranslationEngine.NONE
 ) {
     val topInset = getTopInsetDp()
+    val originalAbout = remember(creator?.description) {
+        creator?.description?.trimMargin()?.takeIf { it.isNotBlank() }
+    }
+    val about = originalAbout?.let { rememberEnglishToRussianTranslation(it, translationEngine) }
 
     val renderContentBeforeList: @Composable () -> Unit = remember(
         topInset,
         creator,
+        about,
         tags,
         tagsSelect,
         onTagClick,
@@ -127,7 +138,7 @@ fun ScreenRedProfileContent(
                 Box(modifier = Modifier.fillMaxWidth().height(topInset))
 
                 if (creator != null) {
-                    RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick)
+                    RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick, about = about)
                 }
 
                 if ((creator != null) && (tags.isNotEmpty())) {

@@ -26,6 +26,7 @@ import com.client.xvideos.screenSettings.section.NSettingsSection
 import com.client.xvideos.screenSettings.section.NetworkSettingsSection
 import com.client.xvideos.screenSettings.section.P2PSettingsSection
 import com.client.xvideos.screenSettings.section.RSettingsSection
+import com.client.xvideos.screenSettings.section.TranslationSettingsSection
 import com.client.xvideos.screenSettings.section.XSettingsSection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -107,6 +108,7 @@ internal fun SettingsDetailPage(
             modifier = modifier
         )
         SettingsPage.Appearance -> AppearanceSettingsSection(modifier = modifier)
+        SettingsPage.Translation -> TranslationSettingsSection(modifier = modifier)
         SettingsPage.Storage -> StorageStatisticsSection(params.storageStats, modifier = modifier)
         SettingsPage.Backup -> BackupSettingsSection(
             controller = params.data.backup,

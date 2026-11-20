@@ -49,6 +49,7 @@ fun XLiveRoomAboutCard(
     aboutExpanded: Boolean,
     onToggleAbout: () -> Unit,
     modifier: Modifier = Modifier,
+    aboutText: String = bio.aboutMe,
 ) {
     val fields = listOfNotNull(
         gender.takeIf { it.isNotBlank() }?.let { "Пол" to it },
@@ -83,12 +84,12 @@ fun XLiveRoomAboutCard(
                 fields.forEach { (label, value) -> XLiveInfoField(label = label, value = value) }
             }
         }
-        if (bio.aboutMe.isNotBlank()) {
+        if (aboutText.isNotBlank()) {
             // Кнопка — только когда текст правда не влезает в свёрнутый вид.
-            var aboutOverflows by remember(bio.aboutMe) { mutableStateOf(false) }
+            var aboutOverflows by remember(aboutText) { mutableStateOf(false) }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = bio.aboutMe,
+                text = aboutText,
                 fontSize = 13.sp,
                 color = XLiveColors.Value,
                 maxLines = if (aboutExpanded) Int.MAX_VALUE else ABOUT_COLLAPSED_LINES,

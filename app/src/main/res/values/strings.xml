@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">xvideos</string>
     <string name="app_name_calculator">Калькулятор</string>
+    <string name="translation_engine">Движок перевода</string>
+    <string name="translation_engine_none">Без перевода</string>
+    <string name="translation_engine_mlkit">ML Kit</string>
+    <string name="translation_engine_mlkit_description">Перевод на устройстве. Для первой загрузки моделей нужен Wi-Fi.</string>
+    <string name="translation_sample">Пример перевода</string>
+    <string name="translation_sample_source" translatable="false">The library opens at nine.</string>
+    <string name="translation_run_sample">Перевести с Google</string>
+    <string name="translation_in_progress">Подготовка перевода…</string>
+    <string name="translation_failed">Не удалось перевести текст. Проверьте подключение к Wi-Fi и попробуйте снова.</string>
 </resources>

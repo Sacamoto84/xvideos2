@@ -20,6 +20,11 @@ internal enum class SettingsPage(
         icon = R.drawable.ic_blur_24,
         subtitle = "Кнопки скролла, эффекты, поворот экрана"
     ),
+    Translation(
+        title = "Перевод",
+        icon = R.drawable.exo_ic_subtitle_on,
+        subtitle = "Движок перевода текста"
+    ),
     Privacy(
         title = "Приватность",
         icon = R.drawable.key_24,
@@ -74,6 +79,7 @@ internal enum class SettingsPage(
     companion object {
         val primaryPages: PersistentList<SettingsPage> = persistentListOf(
             Appearance,
+            Translation,
             Privacy,
             Network,
             Cache,

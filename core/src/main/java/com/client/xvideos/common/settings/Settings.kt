@@ -10,6 +10,7 @@ import com.client.xvideos.common.settings.element.SettingElementSecureCredential
 import com.client.xvideos.common.settings.element.SettingElementString
 import com.client.xvideos.common.applock.AppLockTimeout
 import com.client.xvideos.common.net.doh.DohProvider
+import com.client.xvideos.common.translation.TranslationEngine
 import timber.log.Timber
 
 //data class DC_galleryCount(var g0: Boolean, var g1: Boolean, var g2: Boolean, var g3: Boolean, var g4: Boolean )
@@ -88,6 +89,10 @@ object Settings {
     private const val KEY_L_PASS = "l_pass"
 
     //-- app ---
+
+    val translation_engine by lazy {
+        SettingElementString(pref, "translation_engine", TranslationEngine.NONE.name)
+    }
 
     val image_cache_ram_percent by lazy { SettingElementInt(pref, "image_cache_ram_percent", 10) }
 

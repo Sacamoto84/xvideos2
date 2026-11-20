@@ -46,6 +46,7 @@ voyager = "2.2.21-1.10.3"
 zoomable = "2.16.0"
 runtimeSavedInstanceState = "1.0.0-alpha11"
 playServicesNearby = "19.5.1"
+mlKitTranslate = "17.0.3"
 kotlinxCoroutinesTest = "1.11.0"
 
 [libraries]
@@ -110,6 +111,7 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 #Test
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 play-services-nearby = { group = "com.google.android.gms", name = "play-services-nearby", version.ref = "playServicesNearby" }
+mlkit-translate = { module = "com.google.mlkit:translate", version.ref = "mlKitTranslate" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }

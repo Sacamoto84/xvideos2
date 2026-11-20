@@ -36,6 +36,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.translation.TranslationEngine
+import com.client.xvideos.common.translation.rememberEnglishToRussianTranslation
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.common.util.KeepScreenOn
@@ -76,6 +79,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
         val follow by vm.follow.collectAsStateWithLifecycle()
         val recording by vm.recording.collectAsStateWithLifecycle()
         val isFullScreen by vm.isFullScreen.collectAsStateWithLifecycle()
+        val translationEngine by Settings.translation_engine.field.collectAsStateWithLifecycle()
 
         OrientationAndSystemBarsEffect(isFullScreen)
         NoStatusBarScrimEffect()
@@ -121,6 +125,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
             recording = recording,
             actions = actions,
             isFullScreen = isFullScreen,
+            translationEngine = TranslationEngine.fromStoredValue(translationEngine),
         )
     }
 }
@@ -140,6 +145,7 @@ fun ScreenXLiveRoomContent(
     actions: XLiveRoomActions,
     modifier: Modifier = Modifier,
     isFullScreen: Boolean = false,
+    translationEngine: TranslationEngine = TranslationEngine.NONE,
 ) {
     // Над переключением состояний: позиция переживает и «Повторить», и сложение складного.
     val scrollState = rememberScrollState()
@@ -168,6 +174,8 @@ fun ScreenXLiveRoomContent(
             is XLiveRoomState.Live -> {
                 val info = state.room
                 val topic = remember(info.title) { splitRoomTitle(info.title) }
+                val topicText = rememberEnglishToRussianTranslation(topic.text, translationEngine)
+                val aboutText = rememberEnglishToRussianTranslation(bio?.aboutMe.orEmpty(), translationEngine)
                 val onAir = remember(info.startedAt) {
                     onAirLabel(info.startedAt, System.currentTimeMillis() / MILLIS_PER_SECOND)
                 }
@@ -227,7 +235,7 @@ fun ScreenXLiveRoomContent(
                             },
                         )
                         if (topic.text.isNotBlank() || topic.tags.isNotEmpty()) {
-                            XLiveRoomTopic(topic = topic, onOpenTag = actions.onOpenTag)
+                            XLiveRoomTopic(topic = topic.copy(text = topicText), onOpenTag = actions.onOpenTag)
                         }
                         if (bio != null) {
                             XLiveRoomAboutCard(
@@ -235,6 +243,7 @@ fun ScreenXLiveRoomContent(
                                 gender = genderLabel(info.gender),
                                 aboutExpanded = aboutExpanded,
                                 onToggleAbout = actions.onToggleAbout,
+                                aboutText = aboutText,
                             )
                         }
                     }
