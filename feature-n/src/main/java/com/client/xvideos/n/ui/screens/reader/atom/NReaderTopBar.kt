@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -81,9 +82,9 @@ fun NReaderTopBar(
 
             IconButton(onClick = onToggleOrientation) {
                 Icon(
-                    imageVector = Icons.Default.SwapVert,
+                    imageVector = if (isVertical) Icons.Default.SwapVert else Icons.Default.SwapHoriz,
                     contentDescription = if (isVertical) "Горизонтально" else "Вертикально",
-                    tint = if (isVertical) Color(0xFFED2553) else Color.White
+                    tint = Color.White
                 )
             }
 
