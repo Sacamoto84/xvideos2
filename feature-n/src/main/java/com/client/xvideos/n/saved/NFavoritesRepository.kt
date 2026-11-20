@@ -1,9 +1,5 @@
 package com.client.xvideos.n.saved
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.fileDB.FileDB
@@ -13,6 +9,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -26,24 +24,19 @@ class NFavoritesRepository @Inject constructor(@ApplicationScope scope: Coroutin
         FileDB(AppPath.n_favorites, "manga", NGalleryPreview.serializer())
     }
 
-    var isLoaded by mutableStateOf(false)
-        private set
+    private val _favorites = MutableStateFlow<List<NGalleryPreview>?>(null)
+    internal val favorites = _favorites.asStateFlow()
 
     init {
         scope.launch { refresh() }
     }
-
-    val favorites: SnapshotStateList<NGalleryPreview>
-        get() = db.list
-
-    fun isFavorite(id: Long): Boolean = AppPath.isInitialized && favorites.any { it.id == id }
 
     @Synchronized
     fun toggleFavorite(gallery: NGallery): Result<Boolean> {
         val idStr = gallery.id.toString()
         return if (db.readOrNull(idStr)?.id == gallery.id) {
             db.delete(idStr).map {
-                db.refresh()
+                publishFavorites()
                 false
             }
         } else {
@@ -56,7 +49,7 @@ class NFavoritesRepository @Inject constructor(@ApplicationScope scope: Coroutin
                 language = gallery.languages.firstOrNull()?.name.orEmpty()
             )
             db.insert(idStr, preview).map {
-                db.refresh()
+                publishFavorites()
                 true
             }
         }
@@ -64,7 +57,7 @@ class NFavoritesRepository @Inject constructor(@ApplicationScope scope: Coroutin
 
     @Synchronized
     fun removeFavorite(id: Long): Result<Boolean> =
-        db.delete(id.toString()).onSuccess { db.refresh() }
+        db.delete(id.toString()).onSuccess { publishFavorites() }
 
     /**
      * Импортирует одну галерею в локальное избранное.
@@ -74,7 +67,7 @@ class NFavoritesRepository @Inject constructor(@ApplicationScope scope: Coroutin
     fun importFavorite(preview: NGalleryPreview): Result<Boolean> {
         val idStr = preview.id.toString()
         if (db.readOrNull(idStr)?.id == preview.id) return Result.success(false)
-        return db.insert(idStr, preview).onSuccess { db.refresh() }
+        return db.insert(idStr, preview).onSuccess { publishFavorites() }
     }
 
     /**
@@ -94,7 +87,7 @@ class NFavoritesRepository @Inject constructor(@ApplicationScope scope: Coroutin
                 else -> failed++
             }
         }
-        if (added > 0) db.refresh()
+        if (added > 0) publishFavorites()
         return NFavoritesImport(added, skipped, failed)
     }
 
@@ -107,10 +100,14 @@ class NFavoritesRepository @Inject constructor(@ApplicationScope scope: Coroutin
 
     @Synchronized
     private fun refreshFromDisk() {
-        if (AppPath.isInitialized) {
-            db.refresh()
-            isLoaded = true
-        }
+        if (AppPath.isInitialized) publishFavorites()
+    }
+
+    private fun publishFavorites() {
+        // Список FileDB может быть создан в фоновом потоке позже снапшота экрана.
+        db.refresh()
+            .onSuccess { _favorites.value = db.list.toList() }
+            .onFailure { if (_favorites.value == null) _favorites.value = emptyList() }
     }
 }
 

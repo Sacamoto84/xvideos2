@@ -55,7 +55,7 @@ object N_ScreenSavedMangaTab : Screen {
         val vm = getScreenModel<N_SavedTabSM>()
 
         val columns by vm.columns.collectAsStateWithLifecycle()
-        val favorites = vm.favorites.toList()
+        val favorites by vm.favorites.collectAsStateWithLifecycle()
 
         val order = vm.mangaOrder
 
@@ -66,7 +66,7 @@ object N_ScreenSavedMangaTab : Screen {
         val onOrderChange = remember(vm) { { newOrder: NSavedMangaOrder -> vm.mangaOrder = newOrder } }
 
         val sortedFavorites = remember(favorites, order) {
-            nSortedSavedManga(favorites, order)
+            nSortedSavedManga(favorites.orEmpty(), order)
         }
 
         N_ScreenSavedMangaTabContent(
@@ -77,7 +77,7 @@ object N_ScreenSavedMangaTab : Screen {
             onGalleryClick = onGalleryClick,
             onRemoveFavorite = vm::removeFavorite,
             gridState = if (sortedFavorites.isNotEmpty()) vm.mangaPosition.rememberState() else rememberLazyGridState(),
-            isLoading = !vm.saved.favorites.isLoaded
+            isLoading = favorites == null
         )
     }
 }

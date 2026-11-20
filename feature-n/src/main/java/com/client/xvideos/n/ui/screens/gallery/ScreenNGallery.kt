@@ -71,7 +71,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
         BackHandler(onBack = onBack)
 
         val uiState by vm.uiState.collectAsStateWithLifecycle()
-        val isFavorite = vm.isFavorite
+        val localFavorites by vm.localFavorites.collectAsStateWithLifecycle()
         val serverFavorite by vm.serverFavorite.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val favoriteChallenge by vm.favoriteChallenge.collectAsStateWithLifecycle()
@@ -125,8 +125,8 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             galleryId = galleryId,
             uiState = uiState,
             columns = columns,
-            isFavorite = isFavorite,
-            canToggleFavorite = vm.canToggleFavorite,
+            isFavorite = localFavorites?.any { it.id == galleryId } == true,
+            canToggleFavorite = localFavorites != null,
             onBack = onBack,
             onRead = onRead,
             onFavoriteClick = vm::toggleFavorite,

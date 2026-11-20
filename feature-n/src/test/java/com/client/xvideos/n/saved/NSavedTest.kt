@@ -1,6 +1,7 @@
 package com.client.xvideos.n.saved
 
 import android.content.ContextWrapper
+import androidx.compose.runtime.snapshots.Snapshot
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.collectionDB.CollectionDB
 import com.client.xvideos.common.fileDB.FileDB
@@ -57,13 +58,30 @@ class NSavedTest {
         val db = FileDB(AppPath.n_favorites, "manga", NGalleryPreview.serializer())
         assertTrue(db.insert(preview.id.toString(), preview).isSuccess)
 
-        assertFalse(favoritesRepo.isFavorite(preview.id))
-        assertTrue(favoritesRepo.favorites.isEmpty())
-        assertFalse(favoritesRepo.isLoaded)
+        assertNull(favoritesRepo.favorites.value)
         favoritesRepo.refresh()
-        assertTrue(favoritesRepo.isLoaded)
-        assertTrue(favoritesRepo.isFavorite(preview.id))
-        assertEquals(listOf(preview), favoritesRepo.favorites.toList())
+        assertEquals(listOf(preview), favoritesRepo.favorites.value)
+    }
+
+    @Test
+    fun `an older Compose snapshot can read favorites loaded on another thread`() = runTest {
+        val preview = NGalleryPreview(id = 42L, title = "Saved album")
+        val db = FileDB(AppPath.n_favorites, "manga", NGalleryPreview.serializer())
+        assertTrue(db.insert("42", preview).isSuccess)
+        val snapshot = Snapshot.takeSnapshot()
+        try {
+            assertNull(snapshot.enter { favoritesRepo.favorites.value })
+
+            favoritesRepo.refresh()
+            val loaded = snapshot.enter { favoritesRepo.favorites.value }
+            assertEquals(listOf(preview), loaded)
+
+            assertTrue(favoritesRepo.removeFavorite(42).getOrThrow())
+            assertEquals(emptyList<NGalleryPreview>(), snapshot.enter { favoritesRepo.favorites.value })
+            assertEquals(listOf(preview), loaded)
+        } finally {
+            snapshot.dispose()
+        }
     }
 
     @Test
@@ -72,13 +90,13 @@ class NSavedTest {
         File(AppPath.n_favorites, "43.manga").writeText("{")
         File(AppPath.n_favorites, "44.manga").writeText("{")
         favoritesRepo.refresh()
-        assertTrue(favoritesRepo.favorites.isEmpty())
+        assertEquals(emptyList<NGalleryPreview>(), favoritesRepo.favorites.value)
 
         assertTrue(favoritesRepo.toggleFavorite(NGallery(id = 42, title = "Gallery")).getOrThrow())
         assertTrue(favoritesRepo.importFavorite(NGalleryPreview(id = 43, title = "Import")).getOrThrow())
         val batch = favoritesRepo.importFavorites(listOf(NGalleryPreview(id = 44), NGalleryPreview(id = 43)))
         assertEquals(NFavoritesImport(added = 1, skipped = 1, failed = 0), batch)
-        assertEquals(setOf(42L, 43L, 44L), favoritesRepo.favorites.map { it.id }.toSet())
+        assertEquals(setOf(42L, 43L, 44L), favoritesRepo.favorites.value.orEmpty().map { it.id }.toSet())
     }
 
     @Test
@@ -243,13 +261,11 @@ class NSavedTest {
         val gallery1 = NGalleryPreview(id = 101L, mediaId = 201L, title = "Manga 1", thumbnailUrl = "thumb1", numPages = 20)
         val gallery2 = NGalleryPreview(id = 102L, mediaId = 202L, title = "Manga 2", thumbnailUrl = "thumb2", numPages = 25)
 
-        assertFalse(favoritesRepo.isFavorite(101L))
-        assertFalse(favoritesRepo.isFavorite(102L))
+        assertNull(favoritesRepo.favorites.value)
 
         val imported = favoritesRepo.importFavorites(listOf(gallery1, gallery2))
         assertEquals(NFavoritesImport(added = 2, skipped = 0, failed = 0), imported)
-        assertTrue(favoritesRepo.isFavorite(101L))
-        assertTrue(favoritesRepo.isFavorite(102L))
+        assertEquals(setOf(101L, 102L), favoritesRepo.favorites.value.orEmpty().map { it.id }.toSet())
 
         // Повторный импорт не дублирует
         val secondImport = favoritesRepo.importFavorites(listOf(gallery1))

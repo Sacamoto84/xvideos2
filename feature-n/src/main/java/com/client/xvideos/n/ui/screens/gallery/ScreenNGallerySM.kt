@@ -56,8 +56,7 @@ class ScreenNGallerySM @AssistedInject constructor(
     private val _uiState = MutableStateFlow<NGalleryUiState>(NGalleryUiState.Loading)
     val uiState: StateFlow<NGalleryUiState> = _uiState.asStateFlow()
 
-    val isFavorite: Boolean get() = favoritesRepository.isFavorite(galleryId)
-    val canToggleFavorite: Boolean get() = favoritesRepository.isLoaded
+    internal val localFavorites = favoritesRepository.favorites
 
     private val _serverFavorite = MutableStateFlow(NServerFavoriteState(loading = NAuthState.currentApiKey.isNotBlank()))
     val serverFavorite: StateFlow<NServerFavoriteState> = _serverFavorite.asStateFlow()
@@ -140,7 +139,7 @@ class ScreenNGallerySM @AssistedInject constructor(
 
     fun toggleFavorite() {
         val gallery = (_uiState.value as? NGalleryUiState.Success)?.gallery ?: return
-        if (!canToggleFavorite || favoriteJob?.isActive == true) return
+        if (localFavorites.value == null || favoriteJob?.isActive == true) return
         favoriteJob = screenModelScope.launch {
             withContext(Dispatchers.IO) { favoritesRepository.toggleFavorite(gallery) }
                 .onFailure { SnackBar.error("Не удалось изменить локальное избранное") }

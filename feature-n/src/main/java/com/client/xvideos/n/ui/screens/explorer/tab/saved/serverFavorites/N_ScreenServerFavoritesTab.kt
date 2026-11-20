@@ -46,6 +46,7 @@ object N_ScreenServerFavoritesTab : Screen {
         val isImporting by vm.isImporting.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val apiKey by vm.apiKey.collectAsStateWithLifecycle()
+        val localFavorites by vm.localFavorites.collectAsStateWithLifecycle()
         val removalChallenge by vm.removalChallenge.collectAsStateWithLifecycle()
 
         val onGalleryClick: (Long) -> Unit = remember(navigator) {
@@ -67,7 +68,7 @@ object N_ScreenServerFavoritesTab : Screen {
                 columns = columns,
                 onGalleryClick = onGalleryClick,
                 itemMenuActions = { item, dismiss ->
-                    if (vm.isLocallySaved(item.id)) {
+                    if (localFavorites?.any { it.id == item.id } == true) {
                         ExpandMenuActionItem(
                             Icons.Filled.Bookmark,
                             "Уже сохранено локально",

@@ -110,7 +110,7 @@ class ScreenNServerFavoritesSM @Inject constructor(
     /**
      * Проверяет, сохранена ли галерея локально.
      */
-    fun isLocallySaved(galleryId: Long): Boolean = favoritesRepository.isFavorite(galleryId)
+    internal val localFavorites = favoritesRepository.favorites
 
     /**
      * Удаляет галерею из серверного избранного и перезагружает текущую страницу.
