@@ -46,9 +46,9 @@ fun NCollectionDialogs(
 @Composable
 private fun NCollectionDialogsPreview() {
     NCollectionDialogs(
-        isSelectOpen = false,
+        isSelectOpen = true,
         isCreateOpen = false,
-        collections = emptyList(),
+        collections = listOf(CollectionEntity("Избранные страницы", emptyList())),
         onDismiss = {},
         onOpenCreate = {},
         onCreateCollection = {},

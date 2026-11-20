@@ -28,12 +28,12 @@ import com.client.xvideos.common.collectionDB.ui.DialogNewCollection
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
-import com.client.xvideos.n.ui.molecule.NCollectionDetailContent
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
-import com.client.xvideos.n.ui.molecule.NCollectionDialogsHost
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.model.NCollectionActions
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.model.NCollectionDialogData
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.molecule.NCollectionDetailContent
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.molecule.NCollectionDialogsHost
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.picture.N_FullScreenPicture
 

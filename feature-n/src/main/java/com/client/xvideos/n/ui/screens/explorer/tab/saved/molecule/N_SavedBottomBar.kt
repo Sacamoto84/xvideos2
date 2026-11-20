@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.molecule
+package com.client.xvideos.n.ui.screens.explorer.tab.saved.molecule
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons

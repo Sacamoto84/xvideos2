@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.atom
+package com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column

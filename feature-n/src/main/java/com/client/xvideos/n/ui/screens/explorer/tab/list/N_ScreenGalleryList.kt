@@ -14,8 +14,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
-import com.client.xvideos.n.ui.atom.NFeedTopBar
 import com.client.xvideos.n.ui.molecule.NGalleryPager
+import com.client.xvideos.n.ui.screens.explorer.tab.list.atom.NFeedTopBar
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 
 /**

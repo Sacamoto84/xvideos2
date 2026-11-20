@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.molecule
+package com.client.xvideos.n.ui.screens.explorer.tab.search.molecule
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,7 +31,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.model.NTagCondition
@@ -39,7 +42,8 @@ import com.client.xvideos.n.model.NTagSort
 import com.client.xvideos.n.model.NTagType
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
-import com.client.xvideos.n.ui.atom.NFilterChip
+import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
+import com.client.xvideos.n.ui.screens.explorer.tab.search.atom.NFilterChip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 
@@ -184,5 +188,24 @@ private fun NTagCatalogItem(tag: NTag, excluded: Boolean?, onChange: (NTag, Bool
             NFilterChip("Добавить", excluded == false, onClick = { onChange(tag, if (excluded == false) null else false) })
             NFilterChip("Исключить", excluded == true, onClick = { onChange(tag, if (excluded == true) null else true) })
         }
+    }
+}
+
+@Preview(name = "Каталог тегов", widthDp = 360, heightDp = 440)
+@Composable
+private fun NTagCatalogPreview() {
+    val tags = listOf(
+        NTag(id = 1, type = "tag", name = "full color", count = 5300),
+        NTag(id = 2, type = "tag", name = "monochrome", count = 2100),
+        NTag(id = 3, type = "tag", name = "illustrations", count = 1250)
+    )
+    Surface(color = Theme.background) {
+        NTagCatalog(
+            selectedTags = listOf(NTagCondition(tags[0], excluded = false), NTagCondition(tags[1], excluded = true)),
+            onTagChange = { _, _ -> },
+            loadPage = { _, _, _ -> Result.success(NTagPage(tags, totalPages = 2)) },
+            findTags = { query, _ -> Result.success(tags.filter { it.name.startsWith(query, ignoreCase = true) }) },
+            modifier = Modifier.fillMaxSize().padding(16.dp)
+        )
     }
 }

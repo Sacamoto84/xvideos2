@@ -25,10 +25,10 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.n.net.NAuthState
-import com.client.xvideos.n.ui.molecule.N_SavedBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.molecule.N_SavedBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.N_ScreenServerFavoritesTab
 import kotlinx.coroutines.launch
 

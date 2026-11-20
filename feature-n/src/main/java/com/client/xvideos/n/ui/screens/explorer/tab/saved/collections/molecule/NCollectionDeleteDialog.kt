@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.molecule
+package com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.molecule
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

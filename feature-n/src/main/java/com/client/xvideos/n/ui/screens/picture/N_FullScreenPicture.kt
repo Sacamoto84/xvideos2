@@ -37,11 +37,8 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.ui.statusbar.HideStatusBarEffect
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
-import com.client.xvideos.n.ui.atom.NPictureViewerPage
-import com.client.xvideos.n.ui.atom.NPictureViewerTopBar
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
-import com.client.xvideos.n.ui.molecule.NPictureViewerBottomStrip
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorer
 import com.client.xvideos.n.ui.screens.explorer.N_ScreenExplorerSM
@@ -51,6 +48,9 @@ import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSa
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.ScreenSavedNCollectionsSM
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.ScreenSavedNLikesSM
+import com.client.xvideos.n.ui.screens.picture.atom.NPictureViewerPage
+import com.client.xvideos.n.ui.screens.picture.atom.NPictureViewerTopBar
+import com.client.xvideos.n.ui.screens.picture.molecule.NPictureViewerBottomStrip
 import kotlinx.coroutines.launch
 
 /**

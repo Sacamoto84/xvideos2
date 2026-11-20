@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.atom
+package com.client.xvideos.n.ui.screens.reader.atom
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

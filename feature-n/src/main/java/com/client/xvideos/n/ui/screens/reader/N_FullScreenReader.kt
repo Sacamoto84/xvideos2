@@ -47,13 +47,13 @@ import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.repository.CloudflareBlockedException
-import com.client.xvideos.n.ui.atom.NReaderTopBar
-import com.client.xvideos.n.ui.atom.ReaderImagePage
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
-import com.client.xvideos.n.ui.molecule.NReaderBottomStrip
 import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
+import com.client.xvideos.n.ui.screens.reader.atom.NReaderTopBar
+import com.client.xvideos.n.ui.screens.reader.atom.ReaderImagePage
+import com.client.xvideos.n.ui.screens.reader.molecule.NReaderBottomStrip
 import kotlinx.coroutines.launch
 
 /**

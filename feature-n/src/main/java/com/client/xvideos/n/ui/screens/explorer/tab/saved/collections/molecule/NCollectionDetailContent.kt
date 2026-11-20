@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.molecule
+package com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.n.model.NPicture
-import com.client.xvideos.n.ui.atom.NCollectionTopBar
+import com.client.xvideos.n.ui.molecule.NPictureGrid
+import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.atom.NCollectionTopBar
 
 /**
  * Содержимое выбранной коллекции манги: верхняя панель и сетка картинок (или заглушка при пустоте).

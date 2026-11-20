@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.molecule
+package com.client.xvideos.n.ui.screens.reader.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

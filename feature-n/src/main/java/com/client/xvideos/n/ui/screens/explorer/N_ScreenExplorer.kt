@@ -17,7 +17,7 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.n.ui.molecule.N_ExplorerBottomBar
+import com.client.xvideos.n.ui.screens.explorer.molecule.N_ExplorerBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.list.N_ScreenGalleryList
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTab
 import com.client.xvideos.n.ui.screens.explorer.tab.search.N_ScreenGallerySearch

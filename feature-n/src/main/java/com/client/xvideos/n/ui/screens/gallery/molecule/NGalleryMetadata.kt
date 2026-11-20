@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.molecule
+package com.client.xvideos.n.ui.screens.gallery.molecule
 
 import android.icu.text.RelativeDateTimeFormatter
 import android.icu.text.RelativeDateTimeFormatter.RelativeDateTimeUnit
@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -21,11 +22,12 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NTag
-import com.client.xvideos.n.ui.atom.NGalleryTagChip
+import com.client.xvideos.n.ui.screens.gallery.atom.NGalleryTagChip
 import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
@@ -145,4 +147,27 @@ private fun relativeUploadDate(date: LocalDate, today: LocalDate): String? {
         else -> elapsed.days to RelativeDateTimeUnit.DAY
     }
     return RelativeDateTimeFormatter.getInstance(uploadDateLocale).format(-amount.toDouble(), unit)
+}
+
+@Preview(name = "Сведения об альбоме", widthDp = 360)
+@Composable
+private fun NGalleryMetadataPreview() {
+    Surface(color = Theme.background) {
+        Column(Modifier.padding(16.dp)) {
+            NGalleryMetadata(
+                gallery = NGallery(
+                    numPages = 32,
+                    uploadDate = 1_579_132_800L,
+                    tags = listOf(
+                        NTag(id = 1, type = "tag", name = "full color", count = 5300),
+                        NTag(id = 2, type = "tag", name = "illustrations", count = 15_650),
+                        NTag(id = 3, type = "tag", name = "short stories", count = 73_900),
+                        NTag(id = 4, type = "artist", name = "Aki Sato", count = 120),
+                        NTag(id = 5, type = "language", name = "japanese", count = 98_000)
+                    )
+                ),
+                onTagClick = {}
+            )
+        }
+    }
 }

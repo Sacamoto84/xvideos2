@@ -35,7 +35,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.share.useCaseShareText
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
-import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.model.NTag
@@ -43,11 +42,11 @@ import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NGalleryTopBar
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
-import com.client.xvideos.n.ui.molecule.NGalleryHeader
-import com.client.xvideos.n.ui.molecule.NGalleryPagesGrid
-import com.client.xvideos.n.ui.molecule.NGalleryRelatedStrip
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
+import com.client.xvideos.n.ui.screens.gallery.molecule.NGalleryHeader
+import com.client.xvideos.n.ui.screens.gallery.molecule.NGalleryPagesGrid
+import com.client.xvideos.n.ui.screens.gallery.molecule.NGalleryRelatedStrip
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
 import com.client.xvideos.n.ui.screens.tag.ScreenNTag
 import java.util.UUID

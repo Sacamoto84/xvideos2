@@ -1,4 +1,4 @@
-package com.client.xvideos.n.ui.molecule
+package com.client.xvideos.n.ui.screens.explorer.tab.search.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -49,7 +48,7 @@ import com.client.xvideos.n.model.NTagPage
 import com.client.xvideos.n.model.NTagSort
 import com.client.xvideos.n.model.NTagType
 import com.client.xvideos.n.model.NUploadPeriod
-import com.client.xvideos.n.ui.atom.NFilterChip
+import com.client.xvideos.n.ui.screens.explorer.tab.search.atom.NFilterChip
 
 private val languages = listOf(
     "" to "Все языки",
@@ -194,21 +193,6 @@ private fun <T> NFilterChoices(title: String, options: List<Pair<T, String>>, se
 }
 
 @Composable
-internal fun NTagConditionChips(
-    tags: List<NTagCondition>,
-    onRemove: (NTagCondition) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (tags.isEmpty()) return
-    LazyRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        items(tags, key = { it.tag.id }) { condition ->
-            val sign = if (condition.excluded) "−" else "+"
-            NFilterChip("$sign ${condition.tag.name} ×", isSelected = true, onClick = { onRemove(condition) })
-        }
-    }
-}
-
-@Composable
 private fun NFilterNumberField(
     value: Int?,
     label: String,
@@ -227,5 +211,22 @@ private fun NFilterNumberField(
         singleLine = true,
         isError = isError,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    )
+}
+
+@Preview(name = "Фильтры альбомов", widthDp = 390, heightDp = 760)
+@Composable
+private fun NAlbumFilterDialogPreview() {
+    NAlbumFilterDialog(
+        initialFilter = NAlbumFilter(
+            language = "english",
+            tags = listOf(NTagCondition(NTag(id = 1, type = "tag", name = "full color"), excluded = false)),
+            minPages = 12,
+            maxPages = 48
+        ),
+        onDismiss = {},
+        onApply = {},
+        loadTagPage = { _, _, _ -> Result.success(NTagPage(emptyList(), totalPages = 1)) },
+        findTags = { _, _ -> Result.success(emptyList()) }
     )
 }
