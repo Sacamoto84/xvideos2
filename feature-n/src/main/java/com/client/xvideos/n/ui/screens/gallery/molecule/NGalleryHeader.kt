@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -48,6 +49,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.AlbumInfoButtonServerFavorite
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NTag
+import com.client.xvideos.n.ui.screens.gallery.NServerFavoriteState
 
 @Composable
 fun NGalleryHeader(
@@ -56,9 +58,9 @@ fun NGalleryHeader(
     modifier: Modifier = Modifier,
     isFavorite: Boolean = false,
     onFavoriteClick: () -> Unit = {},
-    isServerFavorite: Boolean = false,
-    isServerFavoriteLoading: Boolean = false,
-    onServerFavoriteClick: () -> Unit = {}
+    serverFavorite: NServerFavoriteState = NServerFavoriteState(),
+    onServerFavoriteClick: () -> Unit = {},
+    canToggleFavorite: Boolean = true
 ) {
     BoxWithConstraints(modifier.fillMaxWidth().padding(16.dp)) {
         val wide = maxWidth >= 600.dp
@@ -68,9 +70,9 @@ fun NGalleryHeader(
             NGalleryMetadata(gallery = gallery, onTagClick = onTagClick)
             NGalleryFavoriteActions(
                 isFavorite = isFavorite,
+                canToggleFavorite = canToggleFavorite,
                 onFavoriteClick = onFavoriteClick,
-                isServerFavorite = isServerFavorite,
-                isServerFavoriteLoading = isServerFavoriteLoading,
+                serverFavorite = serverFavorite,
                 onServerFavoriteClick = onServerFavoriteClick
             )
         }
@@ -154,9 +156,9 @@ private fun NGalleryTitles(gallery: NGallery) {
 @Composable
 private fun NGalleryFavoriteActions(
     isFavorite: Boolean,
+    canToggleFavorite: Boolean,
     onFavoriteClick: () -> Unit,
-    isServerFavorite: Boolean,
-    isServerFavoriteLoading: Boolean,
+    serverFavorite: NServerFavoriteState,
     onServerFavoriteClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(6.dp)
@@ -172,20 +174,25 @@ private fun NGalleryFavoriteActions(
                 .clip(shape)
                 .background(if (isFavorite) accent.copy(alpha = 0.16f) else Theme.tabLevel2)
                 .border(1.dp, if (isFavorite) accent else Theme.Surface.border, shape)
-                .clickable(role = Role.Button, onClick = onFavoriteClick),
+                .clickable(enabled = canToggleFavorite, role = Role.Button, onClick = onFavoriteClick),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                contentDescription = if (isFavorite) "Удалить из закладок" else "В закладки",
-                tint = if (isFavorite) accent else Theme.Text.primary
-            )
+            if (canToggleFavorite) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = if (isFavorite) "Удалить из закладок" else "В закладки",
+                    tint = if (isFavorite) accent else Theme.Text.primary
+                )
+            } else {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = accent, strokeWidth = 2.dp)
+            }
         }
         AlbumInfoButtonServerFavorite(
-            isFavorite = isServerFavorite,
-            isLoading = isServerFavoriteLoading,
+            isFavorite = serverFavorite.saved == true,
+            isLoading = serverFavorite.loading,
             onClick = onServerFavoriteClick,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            label = if (serverFavorite.readError != null) "Проверить избранное" else null
         )
     }
 }

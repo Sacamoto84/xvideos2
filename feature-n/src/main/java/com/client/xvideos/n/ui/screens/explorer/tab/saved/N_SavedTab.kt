@@ -152,7 +152,7 @@ fun N_SavedTabContent(
                     when (page) {
                         0 -> N_ScreenSavedLikesTab.Content()
                         1 -> N_ScreenSavedMangaTab.Content()
-                        2 -> N_ScreenSavedCollectionsTab.Content()
+                        2 -> N_ScreenSavedCollectionsTab.Content(active = pagerState.currentPage == 2)
                         3 -> N_ScreenServerFavoritesTab.Content(active = pagerState.currentPage == 3)
                     }
                 }

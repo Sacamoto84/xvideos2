@@ -1,42 +1,47 @@
 package com.client.xvideos.n.saved
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.fileDB.FileDB
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NGalleryPreview
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Репозиторий локально сохранённого (избранного) манги nhentai на базе FileDB.
  */
 @Singleton
-class NFavoritesRepository @Inject constructor() {
-
-    private val dbPath: String by lazy {
-        File(AppPath.n_favorites).apply { mkdirs() }.absolutePath
-    }
+class NFavoritesRepository @Inject constructor(@ApplicationScope scope: CoroutineScope) {
 
     private val db: FileDB<NGalleryPreview> by lazy {
-        FileDB(dbPath, "manga", NGalleryPreview.serializer()).apply {
-            refresh()
-        }
+        FileDB(AppPath.n_favorites, "manga", NGalleryPreview.serializer())
+    }
+
+    var isLoaded by mutableStateOf(false)
+        private set
+
+    init {
+        scope.launch { refresh() }
     }
 
     val favorites: SnapshotStateList<NGalleryPreview>
         get() = db.list
 
-    fun isFavorite(id: Long): Boolean {
-        if (!AppPath.isInitialized) return false
-        return favorites.any { it.id == id } || db.contains(id.toString())
-    }
+    fun isFavorite(id: Long): Boolean = AppPath.isInitialized && favorites.any { it.id == id }
 
     @Synchronized
     fun toggleFavorite(gallery: NGallery): Result<Boolean> {
         val idStr = gallery.id.toString()
-        return if (db.contains(idStr)) {
+        return if (db.readOrNull(idStr)?.id == gallery.id) {
             db.delete(idStr).map {
                 db.refresh()
                 false
@@ -68,7 +73,7 @@ class NFavoritesRepository @Inject constructor() {
     @Synchronized
     fun importFavorite(preview: NGalleryPreview): Result<Boolean> {
         val idStr = preview.id.toString()
-        if (db.contains(idStr)) return Result.success(false)
+        if (db.readOrNull(idStr)?.id == preview.id) return Result.success(false)
         return db.insert(idStr, preview).onSuccess { db.refresh() }
     }
 
@@ -84,7 +89,7 @@ class NFavoritesRepository @Inject constructor() {
         galleries.forEach { preview ->
             val idStr = preview.id.toString()
             when {
-                db.contains(idStr) -> skipped++
+                db.readOrNull(idStr)?.id == preview.id -> skipped++
                 db.insert(idStr, preview).isSuccess -> added++
                 else -> failed++
             }
@@ -96,9 +101,15 @@ class NFavoritesRepository @Inject constructor() {
     /**
      * Принудительно перечитывает закладки с диска (например, после восстановления бэкапа).
      */
-    fun refresh() {
+    suspend fun refresh() = withContext(Dispatchers.IO) {
+        refreshFromDisk()
+    }
+
+    @Synchronized
+    private fun refreshFromDisk() {
         if (AppPath.isInitialized) {
             db.refresh()
+            isLoaded = true
         }
     }
 }

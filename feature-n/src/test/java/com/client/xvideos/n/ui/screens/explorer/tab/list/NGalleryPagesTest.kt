@@ -105,4 +105,78 @@ class NGalleryPagesTest {
         assertNull(pages[0])
         assertNull(pages[1])
     }
+
+    @Test
+    fun `a smaller list moves the pager and discards removed pages and their positions`() = runTest {
+        var count = 3
+        val pages = NGalleryPages(backgroundScope, StandardTestDispatcher(testScheduler)) { number ->
+            Result.success(NGalleryPageResult(page = number, totalPages = count))
+        }
+        pages.load(0)
+        runCurrent()
+        pages.position.scrollToPage(2)
+        pages.load(2)
+        runCurrent()
+        val removedGrid = pages.grid(2)
+
+        count = 2
+        pages.retry(0)
+        runCurrent()
+
+        assertEquals(2, pages.totalPages)
+        assertEquals(1, pages.currentIndex)
+        assertNull(pages[2])
+        assertNotSame(removedGrid, pages.grid(2))
+    }
+
+    @Test
+    fun `an older prefetch cannot revive a removed page`() = runTest {
+        val prefetch = CompletableDeferred<NGalleryPageResult>()
+        val pages = NGalleryPages(backgroundScope, StandardTestDispatcher(testScheduler)) { number ->
+            val result = when (number) {
+                1 -> NGalleryPageResult(page = 1, totalPages = 3)
+                2 -> NGalleryPageResult(page = 2, totalPages = 2)
+                else -> prefetch.await()
+            }
+            Result.success(result)
+        }
+        pages.load(0)
+        runCurrent()
+        pages.load(2)
+        runCurrent()
+        pages.load(1)
+        runCurrent()
+        prefetch.complete(NGalleryPageResult(page = 3, totalPages = 3))
+        runCurrent()
+
+        assertEquals(2, pages.totalPages)
+        assertNull(pages[2])
+    }
+
+    @Test
+    fun `a slow response for a valid page cannot overwrite a newer page count`() = runTest {
+        val olderPage = CompletableDeferred<NGalleryPageResult>()
+        var refreshing = false
+        val pages = NGalleryPages(backgroundScope, StandardTestDispatcher(testScheduler)) { number ->
+            Result.success(
+                when {
+                    number == 2 -> NGalleryPageResult(page = 2, totalPages = 2)
+                    refreshing -> olderPage.await()
+                    else -> NGalleryPageResult(page = 1, totalPages = 3)
+                }
+            )
+        }
+        pages.load(0)
+        runCurrent()
+        refreshing = true
+        pages.retry(0)
+        runCurrent()
+        pages.load(1)
+        runCurrent()
+        olderPage.complete(NGalleryPageResult(listOf(NGalleryPreview(id = 1L)), page = 1, totalPages = 3))
+        runCurrent()
+
+        assertEquals(2, pages.totalPages)
+        assertEquals(1L, (pages[0] as NGalleryListUiState.Success).items.single().id)
+    }
 }

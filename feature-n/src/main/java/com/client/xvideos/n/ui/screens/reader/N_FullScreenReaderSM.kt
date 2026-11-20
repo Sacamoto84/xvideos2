@@ -34,6 +34,7 @@ class N_FullScreenReaderSM @Inject constructor(
 
     var isSelectCollectionOpen by mutableStateOf(false)
     var isCreateCollectionOpen by mutableStateOf(false)
+    private var targetPictureForCollection: NPicture? = null
 
     internal suspend fun loadGallery(
         galleryId: Long,
@@ -56,9 +57,20 @@ class N_FullScreenReaderSM @Inject constructor(
         screenModelScope.launch { saved.likes.setLiked(picture, liked) }
     }
 
-    fun addToCollection(gallery: NGallery, pageIndex: Int, collectionName: String, create: Boolean = false) {
-        val page = gallery.pages.getOrNull(pageIndex) ?: return
-        val picture = NPicture.fromPage(gallery.id, gallery.mediaId, gallery.title, page)
+    fun openCollectionPicker(picture: NPicture) {
+        targetPictureForCollection = picture
+        isSelectCollectionOpen = true
+    }
+
+    fun dismissCollectionPicker() {
+        isSelectCollectionOpen = false
+        isCreateCollectionOpen = false
+        targetPictureForCollection = null
+    }
+
+    fun addToCollection(collectionName: String, create: Boolean = false) {
+        val picture = targetPictureForCollection ?: return
+        dismissCollectionPicker()
         screenModelScope.launch {
             if (create) saved.collection.createCollectionAndAdd(collectionName, picture)
             else saved.collection.addToCollection(collectionName, picture)

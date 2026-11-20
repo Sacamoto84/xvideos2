@@ -145,12 +145,6 @@ class N_FullScreenPicture(
         val currentPicture = pictures.getOrNull(pagerState.currentPage)
         val isLiked = currentPicture?.let(vm::isPictureLiked)
 
-        val onAddToCollection: () -> Unit = remember(vm) {
-            {
-                vm.isSelectCollectionOpen = true
-            }
-        }
-
         val onOpenGallery: () -> Unit = remember(navigator, currentPicture) {
             {
                 currentPicture?.let {
@@ -168,7 +162,7 @@ class N_FullScreenPicture(
             onOpenGallery = onOpenGallery,
             onToggleOrientation = onToggleOrientation,
             onSetLiked = vm::setLiked,
-            onAddToCollection = onAddToCollection,
+            onAddToCollection = vm::openCollectionPicker,
             onPictureSelected = onPictureSelected
         )
 
@@ -176,22 +170,13 @@ class N_FullScreenPicture(
             isSelectOpen = vm.isSelectCollectionOpen,
             isCreateOpen = vm.isCreateCollectionOpen,
             collections = vm.saved.collection.collections,
-            onDismiss = {
-                vm.isSelectCollectionOpen = false
-                vm.isCreateCollectionOpen = false
-            },
+            onDismiss = vm::dismissCollectionPicker,
             onOpenCreate = {
                 vm.isSelectCollectionOpen = false
                 vm.isCreateCollectionOpen = true
             },
-            onCreateCollection = { name ->
-                currentPicture?.let { vm.addToCollection(it, name, create = true) }
-                vm.isCreateCollectionOpen = false
-            },
-            onSelectCollection = { name ->
-                currentPicture?.let { vm.addToCollection(it, name) }
-                vm.isSelectCollectionOpen = false
-            },
+            onCreateCollection = { name -> vm.addToCollection(name, create = true) },
+            onSelectCollection = { name -> vm.addToCollection(name) },
             coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
@@ -207,7 +192,7 @@ fun N_FullScreenPictureContent(
     onOpenGallery: () -> Unit,
     onToggleOrientation: () -> Unit,
     onSetLiked: (NPicture, Boolean) -> Unit,
-    onAddToCollection: () -> Unit,
+    onAddToCollection: (NPicture) -> Unit,
     onPictureSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -284,7 +269,7 @@ fun N_FullScreenPictureContent(
                             isLiked = isLiked,
                             onOpenGallery = onOpenGallery,
                             onSetLiked = onSetLiked,
-                            onAddToCollection = onAddToCollection
+                            onAddToCollection = { onAddToCollection(pic) }
                         )
                     }
                 }

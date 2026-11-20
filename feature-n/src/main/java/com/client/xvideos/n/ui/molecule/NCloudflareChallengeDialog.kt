@@ -22,6 +22,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +42,7 @@ import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.net.NUserAgent
 import com.client.xvideos.n.net.isNTrustedWebUrl
 import com.client.xvideos.n.repository.CloudflareBlockedException
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Интерактивный диалог проверки Cloudflare Turnstile через встроенный WebView.
@@ -51,9 +56,15 @@ fun NCloudflareChallengeDialog(
     rejectedClearance: String = ""
 ) {
     val topInset = getTopInsetDp()
+    val handled = remember(url, rejectedClearance) { AtomicBoolean(false) }
+    val currentDismiss by rememberUpdatedState(onDismiss)
+    val currentSuccess by rememberUpdatedState(onSuccess)
+    val dismiss = {
+        if (handled.compareAndSet(false, true)) currentDismiss()
+    }
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = dismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
@@ -84,7 +95,7 @@ fun NCloudflareChallengeDialog(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
-                        IconButton(onClick = onDismiss) {
+                        IconButton(onClick = dismiss) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Закрыть",
@@ -95,24 +106,27 @@ fun NCloudflareChallengeDialog(
                 }
 
                 // Интерактивный WebView для подтверждения "Verify you are human"
-                AndroidView(
-                    factory = { context ->
-                        WebView(context).apply {
-                            setupCloudflareWebView(this, url, rejectedClearance) { cookies ->
-                                onSuccess(cookies)
+                key(url, rejectedClearance) {
+                    AndroidView(
+                        factory = { context ->
+                            WebView(context).apply {
+                                setupCloudflareWebView(this, url, rejectedClearance) { cookies ->
+                                    if (handled.compareAndSet(false, true)) currentSuccess(cookies)
+                                }
                             }
-                        }
-                    },
-                    onRelease = { webView ->
-                        runCatching {
-                            webView.stopLoading()
-                            webView.destroy()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
+                        },
+                        onRelease = { webView ->
+                            handled.set(true)
+                            runCatching {
+                                webView.stopLoading()
+                                webView.destroy()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                }
             }
         }
     }
@@ -163,15 +177,11 @@ private fun setupCloudflareWebView(
 
     webView.webChromeClient = WebChromeClient()
     webView.webViewClient = object : WebViewClient() {
-        private var handled = false
-
         private fun checkClearance(finishedUrl: String?) {
-            if (handled) return
             if (finishedUrl == null || !isNTrustedWebUrl(finishedUrl)) return
             val cookies = NCookieHelper.getAllCookies(cookieManager, finishedUrl)
             val cf = NCookieHelper.extractCookieValue(cookies, "cf_clearance")
             if (cf.isNotEmpty() && cf != rejectedClearance) {
-                handled = true
                 cookieManager.flush()
                 onClearanceFound(cookies)
             }

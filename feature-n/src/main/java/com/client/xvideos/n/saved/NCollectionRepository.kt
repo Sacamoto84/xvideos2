@@ -156,12 +156,14 @@ class NCollectionRepository @Inject constructor(@ApplicationScope scope: Corouti
 
     suspend fun setCollectionCover(collectionName: String, picture: NPicture): Boolean = mutate {
         val safeName = CollectionName.normalizeOrNull(collectionName)
-        val saved = if (safeName == null) {
-            false
-        } else {
-            val config = readConfig(safeName).copy(coverPictureId = picture.id)
-            writeConfig(safeName, config).also { if (it) configs[safeName] = config }
+        val items = safeName?.let { db.readCollection(it).getOrNull()?.items }
+        if (safeName == null || items?.any { it.id == picture.id } != true) {
+            SnackBar.error("Страница больше не входит в коллекцию")
+            return@mutate false
         }
+        val config = readConfig(safeName).copy(coverPictureId = picture.id)
+        val saved = writeConfig(safeName, config)
+        if (saved) configs[safeName] = config
         report(Result.success(saved), "Обложка коллекции обновлена", "Ошибка обновления обложки")
     }
 

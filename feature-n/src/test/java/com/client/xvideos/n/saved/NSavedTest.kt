@@ -47,8 +47,38 @@ class NSavedTest {
 
         likesRepo = NLikesRepository(CoroutineScope(Job().apply { cancel() }))
         collectionRepo = NCollectionRepository(CoroutineScope(Job().apply { cancel() }))
-        favoritesRepo = NFavoritesRepository()
+        favoritesRepo = NFavoritesRepository(CoroutineScope(Job().apply { cancel() }))
         saved = NSaved(favoritesRepo, likesRepo, collectionRepo)
+    }
+
+    @Test
+    fun `local favorites are read only after background loading`() = runTest {
+        val preview = NGalleryPreview(id = 42L, title = "Saved album")
+        val db = FileDB(AppPath.n_favorites, "manga", NGalleryPreview.serializer())
+        assertTrue(db.insert(preview.id.toString(), preview).isSuccess)
+
+        assertFalse(favoritesRepo.isFavorite(preview.id))
+        assertTrue(favoritesRepo.favorites.isEmpty())
+        assertFalse(favoritesRepo.isLoaded)
+        favoritesRepo.refresh()
+        assertTrue(favoritesRepo.isLoaded)
+        assertTrue(favoritesRepo.isFavorite(preview.id))
+        assertEquals(listOf(preview), favoritesRepo.favorites.toList())
+    }
+
+    @Test
+    fun `a broken favorite file can be replaced from the gallery or a server import`() = runTest {
+        File(AppPath.n_favorites, "42.manga").writeText("{")
+        File(AppPath.n_favorites, "43.manga").writeText("{")
+        File(AppPath.n_favorites, "44.manga").writeText("{")
+        favoritesRepo.refresh()
+        assertTrue(favoritesRepo.favorites.isEmpty())
+
+        assertTrue(favoritesRepo.toggleFavorite(NGallery(id = 42, title = "Gallery")).getOrThrow())
+        assertTrue(favoritesRepo.importFavorite(NGalleryPreview(id = 43, title = "Import")).getOrThrow())
+        val batch = favoritesRepo.importFavorites(listOf(NGalleryPreview(id = 44), NGalleryPreview(id = 43)))
+        assertEquals(NFavoritesImport(added = 1, skipped = 1, failed = 0), batch)
+        assertEquals(setOf(42L, 43L, 44L), favoritesRepo.favorites.map { it.id }.toSet())
     }
 
     @Test
@@ -158,6 +188,9 @@ class NSavedTest {
         assertEquals("1_2", collectionRepo.getCollectionConfig("CoversRenamed").coverPictureId)
 
         collectionRepo.removeFromCollection("CoversRenamed", pic2.id)
+        assertNull(collectionRepo.getCollectionConfig("CoversRenamed").coverPictureId)
+        assertFalse(collectionRepo.setCollectionCover("CoversRenamed", pic2))
+        collectionRepo.refresh()
         assertNull(collectionRepo.getCollectionConfig("CoversRenamed").coverPictureId)
     }
 

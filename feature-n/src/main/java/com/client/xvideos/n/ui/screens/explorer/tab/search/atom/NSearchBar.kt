@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -36,8 +37,8 @@ import com.client.xvideos.common.ui.excludedFromAutofill
  */
 @Composable
 fun NSearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
+    query: TextFieldValue,
+    onQueryChange: (TextFieldValue) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
     topInset: Dp = 0.dp
@@ -79,8 +80,8 @@ fun NSearchBar(
                     )
                 },
                 trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        IconButton(onClick = { onQueryChange("") }) {
+                    if (query.text.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChange(TextFieldValue()) }) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = "Очистить",
@@ -115,7 +116,7 @@ fun NSearchBar(
 @Composable
 private fun NSearchBarPreview() {
     NSearchBar(
-        query = "parody:naruto",
+        query = TextFieldValue("parody:naruto"),
         onQueryChange = {},
         onSearch = {},
         topInset = 24.dp

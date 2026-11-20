@@ -28,19 +28,32 @@ class NRateLimitTest {
     }
 
     @Test
-    fun `an HTTP date sets a cooldown and missing or expired dates do not`() {
+    fun `a future HTTP date sets a cooldown`() {
         val now = Instant.parse("2026-11-19T12:00:00Z").toEpochMilli()
         val clock = TestTimeSource()
         val rateLimit = NRateLimit(clock) { now }
-
-        assertEquals(429, rateLimit.onRateLimited(Headers.Builder().build()).code)
-        assertNull(rateLimit.blockedRequest())
-        rateLimit.onRateLimited(headersOf("Retry-After", "Thu, 19 Nov 2026 11:59:00 GMT"))
-        assertNull(rateLimit.blockedRequest())
 
         rateLimit.onRateLimited(headersOf("Retry-After", "Thu, 19 Nov 2026 12:00:10 GMT"))
         assertEquals("Слишком много запросов. Повторите через 10 сек.", rateLimit.blockedRequest()?.message)
         clock += 10.seconds
         assertNull(rateLimit.blockedRequest())
+    }
+
+    @Test
+    fun `missing invalid and expired headers use a short cooldown`() {
+        val now = Instant.parse("2026-11-19T12:00:00Z").toEpochMilli()
+        val clock = TestTimeSource()
+        val rateLimit = NRateLimit(clock) { now }
+        val headers = listOf(
+            Headers.Builder().build(),
+            headersOf("Retry-After", "invalid"),
+            headersOf("Retry-After", "Thu, 19 Nov 2026 11:59:00 GMT")
+        )
+        for (header in headers) {
+            assertEquals(429, rateLimit.onRateLimited(header).code)
+            assertEquals("Слишком много запросов. Повторите через 5 сек.", rateLimit.blockedRequest()?.message)
+            clock += 5.seconds
+            assertNull(rateLimit.blockedRequest())
+        }
     }
 }

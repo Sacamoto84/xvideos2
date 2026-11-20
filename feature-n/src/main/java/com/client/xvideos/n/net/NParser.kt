@@ -8,6 +8,7 @@ import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.model.NTagPage
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -34,8 +35,10 @@ object NParser {
      * Парсит детальную информацию о галерее из JSON (ответ API v2/v1 или тело скрипта).
      */
     fun parseGalleryJson(jsonString: String): NGallery? = runCatching {
-        val root = jsonConfig.parseToJsonElement(jsonString).jsonObject
+        parseGallery(jsonConfig.parseToJsonElement(jsonString).jsonObject)
+    }.getOrNull()
 
+    private fun parseGallery(root: JsonObject, includeRelated: Boolean = true): NGallery? {
         val id = root["id"]?.jsonPrimitive?.longOrNull ?: 0L
         val mediaId = root["media_id"]?.jsonPrimitive?.let {
             it.longOrNull ?: it.contentOrNull?.toLongOrNull()
@@ -56,37 +59,19 @@ object NParser {
         val imagesObj = root["images"]?.jsonObject
         val coverObj = root["cover"]?.jsonObject ?: imagesObj?.get("cover")?.jsonObject
         val thumbObj = root["thumbnail"]?.jsonObject ?: imagesObj?.get("thumbnail")?.jsonObject
-        val pagesArray = root["pages"]?.jsonArray ?: imagesObj?.get("pages")?.jsonArray ?: JsonArray(emptyList())
+        val pages = parseGalleryPages(root["pages"] ?: imagesObj?.get("pages"))
 
         val cover = parsePage(coverObj, 1)
         val thumbnail = parsePage(thumbObj, 1)
 
-        val parsedPages = pagesArray.mapIndexed { index, pageElement ->
-            parsePage(pageElement.jsonObject, index + 1)
-        }
-        val numbers = parsedPages.map { it.pageNumber }
-        val pages = if (numbers.any { it <= 0 } || numbers.toSet().size != numbers.size) {
-            parsedPages.mapIndexed { index, page -> page.copy(pageNumber = index + 1) }
-        } else parsedPages
+        val tags = (root["tags"] as? JsonArray).orEmpty()
+            .mapNotNull { runCatching { parseTag(it) }.getOrNull() }
+            .distinctBy { it.id }
 
-        val tagsArray = root["tags"]?.jsonArray ?: JsonArray(emptyList())
-        val tags = tagsArray.mapNotNull { tagElement ->
-            val tagObj = tagElement.jsonObject
-            val tagId = tagObj["id"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
-            val type = tagObj["type"]?.jsonPrimitive?.contentOrNull.orEmpty()
-            val name = tagObj["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
-            val count = tagObj["count"]?.jsonPrimitive?.intOrNull ?: 0
-            val url = tagObj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
-            NTag(id = tagId, type = type, name = name, count = count, url = url)
-        }
+        val relatedArray = if (includeRelated) root["related"] as? JsonArray else null
+        val relatedGalleries = relatedArray?.mapNotNull(::parseGalleryPreview).orEmpty().distinctBy { it.id }
 
-        val relatedArray = root["related"] as? JsonArray
-        val relatedGalleries = relatedArray?.mapNotNull { element ->
-            val elObj = element as? JsonObject ?: return@mapNotNull null
-            parseGalleryListItem(elObj) ?: parseGalleryJson(element.toString())?.toPreview()
-        }.orEmpty().distinctBy { it.id }
-
-        NGallery(
+        return NGallery(
             id = id,
             mediaId = mediaId,
             title = title,
@@ -101,7 +86,17 @@ object NParser {
             pages = pages,
             relatedGalleries = relatedGalleries
         )
-    }.getOrNull()
+    }
+
+    private fun parseGalleryPages(element: JsonElement?): List<NPage> {
+        val pages = element?.jsonArray.orEmpty().mapIndexed { index, page ->
+            parsePage(page.jsonObject, index + 1)
+        }
+        val numbers = pages.map { it.pageNumber }
+        return if (numbers.any { it <= 0 } || numbers.toSet().size != numbers.size) {
+            pages.mapIndexed { index, page -> page.copy(pageNumber = index + 1) }
+        } else pages
+    }
 
     private fun parsePage(pageObj: JsonObject?, index: Int): NPage {
         if (pageObj == null) return NPage(pageNumber = index)
@@ -131,7 +126,10 @@ object NParser {
     /**
      * Извлекает JSON галереи из HTML страницы `/g/{id}/`.
      */
-    fun parseGalleryHtml(html: String, expectedGalleryId: Long? = null): NGallery? {
+    fun parseGalleryHtml(html: String, expectedGalleryId: Long? = null, requirePages: Boolean = false): NGallery? {
+        fun NGallery.matches(): Boolean =
+            (expectedGalleryId == null || id == expectedGalleryId) && (!requirePages || pages.isNotEmpty())
+
         val doc: Document = Jsoup.parse(html)
         // 1. Поиск в тегах <script>: window._gallery = JSON.parse("...")
         for (script in doc.getElementsByTag("script")) {
@@ -147,7 +145,7 @@ object NParser {
                     val rawJson = scriptContent.substring(start, end)
                     val unescaped = unescapeUnicode(rawJson)
                     val gallery = parseGalleryJson(unescaped)
-                    if (gallery != null && (expectedGalleryId == null || gallery.id == expectedGalleryId)) return gallery
+                    if (gallery?.matches() == true) return gallery
                 }
             }
             // 2. В SvelteKit версии данные галереи лежат в JSON внутри data-скрипта
@@ -155,8 +153,8 @@ object NParser {
                 val root = runCatching { jsonConfig.parseToJsonElement(scriptContent) }.getOrNull() as? JsonObject
                 val data = root?.get("data") as? JsonObject
                 val embedded = (root?.get("gallery") as? JsonObject) ?: (data?.get("gallery") as? JsonObject)
-                val gallery = (embedded ?: root)?.let { parseGalleryJson(it.toString()) }
-                if (gallery != null && (expectedGalleryId == null || gallery.id == expectedGalleryId)) return gallery
+                val gallery = (embedded ?: root)?.let { runCatching { parseGallery(it) }.getOrNull() }
+                if (gallery?.matches() == true) return gallery
             }
         }
         return null
@@ -228,6 +226,15 @@ object NParser {
         )
     }.getOrNull()
 
+    private fun parseGalleryPreview(element: JsonElement): NGalleryPreview? {
+        val obj = element as? JsonObject ?: return null
+        return if (obj["title"] is JsonObject || obj["images"] is JsonObject || obj["thumbnail"] is JsonObject) {
+            runCatching { parseGallery(obj, includeRelated = false)?.toPreview() }.getOrNull()
+        } else {
+            parseGalleryListItem(obj)
+        }
+    }
+
     /**
      * Парсит список превью галерей из ответа API v2 (/galleries, /popular, /search).
      */
@@ -243,10 +250,7 @@ object NParser {
             else -> JsonArray(emptyList())
         }
 
-        itemsArray.mapNotNull { element ->
-            val obj = element.jsonObject
-            parseGalleryListItem(obj) ?: parseGalleryJson(element.toString())?.toPreview()
-        }.distinctBy { it.id }
+        itemsArray.mapNotNull(::parseGalleryPreview).distinctBy { it.id }
     }.getOrDefault(emptyList())
 
     fun parseFavoriteState(body: String): Boolean = requireNotNull(
@@ -263,7 +267,7 @@ object NParser {
         }
         return NGalleryPageResult(
             items = items.map { item ->
-                requireNotNull((item as? JsonObject)?.let(::parseGalleryListItem)) {
+                requireNotNull(parseGalleryPreview(item)) {
                     "Не удалось прочитать альбом"
                 }
             }.distinctBy { it.id },
@@ -286,15 +290,17 @@ object NParser {
     }
 
     private fun parseTagItems(items: JsonArray): List<NTag> =
-        items.map { element ->
-            val obj = element.jsonObject
-            val id = requireNotNull(obj["id"]?.jsonPrimitive?.longOrNull) { "Не удалось прочитать тег" }
-            val type = obj["type"]?.jsonPrimitive?.contentOrNull.orEmpty()
-            val name = obj["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
-            val count = obj["count"]?.jsonPrimitive?.intOrNull ?: 0
-            val url = obj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
-            NTag(id = id, type = type, name = name, count = count, url = url)
-        }
+        items.map(::parseTag).distinctBy { it.id }
+
+    private fun parseTag(element: JsonElement): NTag {
+        val obj = element.jsonObject
+        val id = requireNotNull(obj["id"]?.jsonPrimitive?.longOrNull) { "Не удалось прочитать тег" }
+        val type = obj["type"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val name = obj["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val count = obj["count"]?.jsonPrimitive?.intOrNull ?: 0
+        val url = obj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        return NTag(id = id, type = type, name = name, count = count, url = url)
+    }
 
     /**
      * Парсит список превью галерей из ответа поискового JSON API.

@@ -5,6 +5,7 @@ import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.model.NSortType
 import com.client.xvideos.n.model.NTag
+import com.client.xvideos.n.model.NTagCondition
 import com.client.xvideos.n.model.NTagPage
 import com.client.xvideos.n.model.NTagSort
 import com.client.xvideos.n.model.NTagType
@@ -13,8 +14,11 @@ import com.client.xvideos.n.net.NClient
 import com.client.xvideos.n.net.NNetworkResult
 import com.client.xvideos.n.net.NParser
 import java.net.URLEncoder
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -30,7 +34,8 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
     constructor() : this(NClient::get)
 
     private val galleryCache = NGalleryCache()
-    private val favoriteWrites = NServerFavoriteWrites { galleryId, favorite, apiKey ->
+    private val galleryRequests = AtomicLong()
+    private val favoriteWrites = NServerFavoriteWrites(isCurrentKey = { it == NAuthState.currentApiKey }) { galleryId, favorite, apiKey ->
         NClient.setFavorite(galleryId, favorite, apiKey)
     }
     val serverFavoriteRevision = favoriteWrites.revision
@@ -48,8 +53,7 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
 
         when (val apiResult = get(apiEndpoint)) {
             is NNetworkResult.Success -> {
-                val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
-                if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
+                parseGalleryListing(apiResult.body, page)?.let { return Result.success(it) }
             }
             is NNetworkResult.CloudflareRequired -> {
                 return Result.failure(apiResult.toException())
@@ -140,8 +144,7 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
             val apiEndpoint = "/api/v2/galleries/tagged?tag_id=${tag.id}&page=$page$sortParam"
             when (val apiResult = get(apiEndpoint)) {
                 is NNetworkResult.Success -> {
-                    val pageResult = NParser.parseGalleryPageJson(apiResult.body, defaultPage = page)
-                    if (pageResult.items.isNotEmpty()) return Result.success(pageResult)
+                    parseGalleryListing(apiResult.body, page)?.let { return Result.success(it) }
                 }
                 is NNetworkResult.CloudflareRequired -> {
                     return Result.failure(apiResult.toException())
@@ -153,12 +156,13 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
             }
         }
 
-        val tagQuery = when {
-            tag.type.isNotEmpty() && tag.type != "tag" -> "${tag.type}:\"${tag.name}\""
-            else -> "\"${tag.name}\""
-        }
+        val tagQuery = NTagCondition(tag, excluded = false).searchToken
         return searchPage(query = tagQuery, page = page, sort = sort)
     }
+
+    private fun parseGalleryListing(body: String, page: Int): NGalleryPageResult? =
+        runCatching { NParser.parseGalleryPageV2(body, page) }.getOrNull()
+            ?: NParser.parseGalleryPageJson(body, page).takeIf { it.items.isNotEmpty() }
 
     private suspend fun fetchGalleriesPageFromHtml(
         endpoint: String,
@@ -188,12 +192,19 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
     suspend fun getGalleryDetails(id: Long, forceRefresh: Boolean = false): Result<NGallery> {
         if (!forceRefresh) galleryCache[id]?.let { return Result.success(it) }
 
+        val requestNumber = galleryRequests.incrementAndGet()
+        return requestGalleryDetails(id).onSuccess { gallery ->
+            currentCoroutineContext().ensureActive()
+            galleryCache.put(gallery, requestNumber)
+        }
+    }
+
+    private suspend fun requestGalleryDetails(id: Long): Result<NGallery> {
         // Сначала пробуем прямой v2 JSON API с рекомендациями похожих работ
         when (val apiResult = get("/api/v2/galleries/$id?include=related")) {
             is NNetworkResult.Success -> {
                 val gallery = NParser.parseGalleryJson(apiResult.body)
-                if (gallery != null && gallery.id == id) {
-                    galleryCache[id] = gallery
+                if (gallery != null && gallery.id == id && gallery.pages.isNotEmpty()) {
                     return Result.success(gallery)
                 }
             }
@@ -209,9 +220,8 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
         // Если JSON API недоступен, пробуем распарсить HTML страницы галереи
         return when (val htmlResult = get("/g/$id/")) {
             is NNetworkResult.Success -> {
-                val gallery = NParser.parseGalleryHtml(htmlResult.body, expectedGalleryId = id)
+                val gallery = NParser.parseGalleryHtml(htmlResult.body, expectedGalleryId = id, requirePages = true)
                 if (gallery != null) {
-                    galleryCache[id] = gallery
                     Result.success(gallery)
                 } else {
                     Result.failure(RuntimeException("Не удалось разобрать данные галереи #$id"))
@@ -272,7 +282,7 @@ internal class NGalleryCache(
     private val ttlMillis: Long = 5 * 60_000L,
     private val nowMillis: () -> Long = { System.nanoTime() / 1_000_000 }
 ) {
-    private class Entry(val gallery: NGallery, val loadedAt: Long)
+    private class Entry(val gallery: NGallery, val loadedAt: Long, val requestNumber: Long)
     private val entries = LinkedHashMap<Long, Entry>(capacity, 0.75f, true)
 
     @Synchronized
@@ -284,8 +294,11 @@ internal class NGalleryCache(
     }
 
     @Synchronized
-    operator fun set(id: Long, gallery: NGallery) {
-        entries[id] = Entry(gallery, nowMillis())
+    fun put(gallery: NGallery, requestNumber: Long) {
+        val id = gallery.id
+        val cached = entries[id]
+        if (cached != null && cached.requestNumber > requestNumber) return
+        entries[id] = Entry(gallery, nowMillis(), requestNumber)
         if (entries.size > capacity) entries.remove(entries.keys.first())
     }
 }

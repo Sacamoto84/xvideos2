@@ -80,9 +80,8 @@ class ScreenSavedNCollectionsSM @Inject constructor(
         screenModelScope.launch { saved.likes.setLiked(picture, liked) }
     }
 
-    fun setCover(picture: NPicture) {
-        val current = currentCollectionName ?: return
-        screenModelScope.launch { saved.collection.setCollectionCover(current, picture) }
+    fun setCover(collectionName: String, picture: NPicture) {
+        screenModelScope.launch { saved.collection.setCollectionCover(collectionName, picture) }
     }
 
     fun getCollectionCoverUrl(collectionName: String, items: List<NPicture>): String? =
@@ -111,9 +110,8 @@ class ScreenSavedNCollectionsSM @Inject constructor(
         screenModelScope.launch { saved.collection.deleteCollection(name) }
     }
 
-    fun removeItem(picture: NPicture) {
-        val current = currentCollectionName ?: return
-        screenModelScope.launch { saved.collection.removeFromCollection(current, picture.id) }
+    fun removeItem(collectionName: String, picture: NPicture) {
+        screenModelScope.launch { saved.collection.removeFromCollection(collectionName, picture.id) }
     }
 }
 

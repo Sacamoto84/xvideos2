@@ -86,7 +86,7 @@ object N_ScreenServerFavoritesTab : Screen {
                         enabled = apiKey.isNotBlank()
                     ) {
                         dismiss()
-                        vm.removeServerFavorite(item.id)
+                        vm.removeServerFavorite(item.id, apiKey)
                     }
                 },
                 allowChallenge = active && removalChallenge == null,

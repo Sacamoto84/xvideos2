@@ -47,15 +47,7 @@ object NClient {
             .header("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
             .header("Referer", BASE_URL)
 
-        val apiKey = NAuthState.currentApiKey
-        if (apiKey.isNotBlank()) {
-            requestBuilder.header("Authorization", "Key $apiKey")
-        }
-
-        buildCookieHeader()?.let { cookieHeader ->
-            requestBuilder.header("Cookie", cookieHeader)
-        }
-
+        requestBuilder.addCredentials(NAuthState.currentCredentials)?.let { return@withContext it }
         executeRequest(requestBuilder.build(), targetUrl)
     }
 
@@ -75,15 +67,7 @@ object NClient {
             .header("Accept-Language", "en-US,en;q=0.9,ru;q=0.8")
             .header("Referer", BASE_URL)
 
-        val apiKey = NAuthState.currentApiKey
-        if (apiKey.isNotBlank()) {
-            requestBuilder.header("Authorization", "Key $apiKey")
-        }
-
-        buildCookieHeader()?.let { cookieHeader ->
-            requestBuilder.header("Cookie", cookieHeader)
-        }
-
+        requestBuilder.addCredentials(NAuthState.currentCredentials)?.let { return@withContext it }
         executeRequest(requestBuilder.build(), targetUrl)
     }
 
@@ -92,10 +76,24 @@ object NClient {
         val request = Request.Builder().url(url)
             .header("User-Agent", NUserAgent.current)
             .header("Accept", "application/json")
-            .header("Authorization", "Key $apiKey")
-        buildCookieHeader()?.let { request.header("Cookie", it) }
+        request.addCredentials(NRequestCredentials(apiKey = apiKey))?.let { return@withContext it }
         if (favorite) request.post("".toRequestBody(null)) else request.delete()
         executeRequest(request.build(), url)
+    }
+
+    private fun Request.Builder.addCredentials(credentials: NRequestCredentials): NNetworkResult.Failure? {
+        val apiKey = credentials.apiKey
+        if (apiKey.isNotBlank()) {
+            if (apiKey.any { it !in '!'..'~' }) {
+                return NNetworkResult.Failure(IllegalArgumentException("Проверьте формат API-ключа N в настройках"))
+            }
+            header("Authorization", "Key $apiKey")
+        }
+        val webCookies = runCatching { CookieManager.getInstance().getCookie(BASE_URL).orEmpty() }.getOrDefault("")
+        nCookieHeader(credentials.sessionCookie, NCloudflareState.cfClearanceCookie, webCookies)?.let {
+            header("Cookie", it)
+        }
+        return null
     }
 
     private suspend fun executeRequest(request: Request, targetUrl: String): NNetworkResult {
@@ -123,39 +121,41 @@ object NClient {
         }
     }
 
-    private fun buildCookieHeader(): String? {
-        val cookies = mutableListOf<String>()
-        NCloudflareState.cfClearanceCookie?.let { clearance ->
-            cookies.add("cf_clearance=$clearance")
-        }
-        val sessionCookie = NAuthState.currentSessionCookie
-        if (sessionCookie.isNotBlank()) {
-            cookies.add("sessionid=$sessionCookie")
-        }
-        runCatching {
-            val cmCookies = CookieManager.getInstance().getCookie(BASE_URL).orEmpty()
-            val csrf = NCookieHelper.extractCookieValue(cmCookies, "csrftoken")
-            if (csrf.isNotBlank() && cookies.none { it.startsWith("csrftoken=") }) {
-                cookies.add("csrftoken=$csrf")
-            }
-        }
-        return if (cookies.isNotEmpty()) cookies.joinToString("; ") else null
-    }
 }
 
+internal fun nCookieHeader(sessionCookie: String, cachedClearance: String?, webCookies: String): String? {
+    val clearance = NCookieHelper.extractCookieValue(webCookies, "cf_clearance").takeIf(::isNCookieValue)
+        ?: cachedClearance?.takeIf(::isNCookieValue)
+    val csrf = NCookieHelper.extractCookieValue(webCookies, "csrftoken")
+    val cookies = buildList {
+        if (clearance != null) add("cf_clearance=$clearance")
+        if (isNCookieValue(sessionCookie)) add("sessionid=$sessionCookie")
+        if (isNCookieValue(csrf)) add("csrftoken=$csrf")
+    }
+    return cookies.takeIf { it.isNotEmpty() }?.joinToString("; ")
+}
+
+private fun isNCookieValue(value: String): Boolean =
+    value.isNotEmpty() && value.all { it in '!'..'~' && it != ';' }
+
 internal fun Response.toNNetworkResult(challengeUrl: String, rateLimit: NRateLimit): NNetworkResult {
-    val text = if (isSuccessful || code == 403 || code == 503) body.string() else ""
+    val mitigation = header("cf-mitigated")
+    if (mitigation.equals("challenge", ignoreCase = true)) return cloudflareRequired(challengeUrl)
+    if (code == 429) return rateLimit.onRateLimited(headers)
+    if (isSuccessful) return NNetworkResult.Success(body.string(), request.url.toString())
+
+    val contentType = header("Content-Type")
     return when {
-        isNCloudflareChallenge(code, header("Content-Type"), header("cf-mitigated"), text) ->
-            NNetworkResult.CloudflareRequired(
-                challengeUrl,
-                NCookieHelper.extractCookieValue(request.header("Cookie").orEmpty(), "cf_clearance")
-            )
-        code == 429 -> rateLimit.onRateLimited(headers)
-        isSuccessful -> NNetworkResult.Success(text, request.url.toString())
+        isNHtmlBlockingResponse(code, contentType) && isNCloudflareChallenge(code, contentType, mitigation, body.string()) ->
+            cloudflareRequired(challengeUrl)
         else -> NNetworkResult.Error(code, "HTTP error $code")
     }
 }
+
+private fun Response.cloudflareRequired(challengeUrl: String) = NNetworkResult.CloudflareRequired(
+    challengeUrl,
+    NCookieHelper.extractCookieValue(request.header("Cookie").orEmpty(), "cf_clearance")
+)
 
 internal fun requireTrustedNRequest(request: Request): Request {
     if (!isNTrustedWebUrl(request.url.toString())) throw untrustedNOrigin()
@@ -166,8 +166,7 @@ private fun untrustedNOrigin() = IOException("Запрос N отклонён: �
 
 internal fun isNCloudflareChallenge(code: Int, contentType: String?, mitigation: String?, body: String): Boolean {
     if (mitigation.equals("challenge", ignoreCase = true)) return true
-    if (code != 403 && code != 503) return false
-    if (contentType != null && !contentType.startsWith("text/html", ignoreCase = true)) return false
+    if (!isNHtmlBlockingResponse(code, contentType)) return false
     val html = body.trimStart()
     if (!html.startsWith("<!doctype html", ignoreCase = true) && !html.startsWith("<html", ignoreCase = true)) return false
     return html.contains("window._cf_chl_opt") ||
@@ -175,6 +174,9 @@ internal fun isNCloudflareChallenge(code: Int, contentType: String?, mitigation:
         html.contains("<title>Just a moment...</title>", ignoreCase = true) ||
         (html.contains("Cloudflare", ignoreCase = true) && html.contains("cf-turnstile"))
 }
+
+private fun isNHtmlBlockingResponse(code: Int, contentType: String?): Boolean =
+    (code == 403 || code == 503) && (contentType == null || contentType.startsWith("text/html", ignoreCase = true))
 
 /**
  * Результат сетевого запроса к nhentai.net.

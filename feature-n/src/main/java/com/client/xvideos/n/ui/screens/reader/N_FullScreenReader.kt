@@ -136,12 +136,6 @@ class N_FullScreenReader(
 
         val isLiked = gallery.pages.getOrNull(pagerState.currentPage)?.let { vm.isPageLiked(gallery.id, it.pageNumber) }
 
-        val onAddToCollection: () -> Unit = remember(vm) {
-            {
-                vm.isSelectCollectionOpen = true
-            }
-        }
-
         N_FullScreenReaderContent(
             gallery = gallery,
             pagerState = pagerState,
@@ -152,7 +146,7 @@ class N_FullScreenReader(
             onBack = onBack,
             onToggleOrientation = onToggleOrientation,
             onSetLiked = vm::setLiked,
-            onAddToCollection = onAddToCollection,
+            onAddToCollection = vm::openCollectionPicker,
             onPageSelected = onPageSelected
         )
 
@@ -160,22 +154,13 @@ class N_FullScreenReader(
             isSelectOpen = vm.isSelectCollectionOpen,
             isCreateOpen = vm.isCreateCollectionOpen,
             collections = vm.saved.collection.collections,
-            onDismiss = {
-                vm.isSelectCollectionOpen = false
-                vm.isCreateCollectionOpen = false
-            },
+            onDismiss = vm::dismissCollectionPicker,
             onOpenCreate = {
                 vm.isSelectCollectionOpen = false
                 vm.isCreateCollectionOpen = true
             },
-            onCreateCollection = { name ->
-                vm.addToCollection(gallery, pagerState.currentPage, name, create = true)
-                vm.isCreateCollectionOpen = false
-            },
-            onSelectCollection = { name ->
-                vm.addToCollection(gallery, pagerState.currentPage, name)
-                vm.isSelectCollectionOpen = false
-            },
+            onCreateCollection = { name -> vm.addToCollection(name, create = true) },
+            onSelectCollection = { name -> vm.addToCollection(name) },
             coverUrlProvider = vm::getCollectionCoverUrl
         )
     }
@@ -215,7 +200,7 @@ fun N_FullScreenReaderContent(
     onBack: () -> Unit,
     onToggleOrientation: () -> Unit,
     onSetLiked: (NPicture, Boolean) -> Unit,
-    onAddToCollection: () -> Unit,
+    onAddToCollection: (NPicture) -> Unit,
     onPageSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -288,7 +273,7 @@ fun N_FullScreenReaderContent(
                             picture = currentPicture,
                             isLiked = isLiked,
                             onSetLiked = onSetLiked,
-                            onAddToCollection = onAddToCollection
+                            onAddToCollection = { onAddToCollection(currentPicture) }
                         )
                     }
                 }

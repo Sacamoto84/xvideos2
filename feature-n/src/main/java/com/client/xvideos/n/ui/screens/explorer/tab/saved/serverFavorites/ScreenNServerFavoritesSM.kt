@@ -115,10 +115,10 @@ class ScreenNServerFavoritesSM @Inject constructor(
     /**
      * Удаляет галерею из серверного избранного и перезагружает текущую страницу.
      */
-    fun removeServerFavorite(galleryId: Long) {
-        val key = NAuthState.currentApiKey
-        if (key.isBlank() || pendingRemovals.any { it.galleryId == galleryId && it.apiKey == key }) return
-        pendingRemovals.addLast(PendingRemoval(galleryId, key))
+    fun removeServerFavorite(galleryId: Long, apiKey: String) {
+        if (apiKey.isBlank() || apiKey != NAuthState.currentApiKey) return
+        if (pendingRemovals.any { it.galleryId == galleryId && it.apiKey == apiKey }) return
+        pendingRemovals.addLast(PendingRemoval(galleryId, apiKey))
         processRemovals()
     }
 

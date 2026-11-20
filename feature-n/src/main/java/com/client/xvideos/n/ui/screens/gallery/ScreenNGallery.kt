@@ -126,6 +126,7 @@ class ScreenNGallery(val galleryId: Long) : Screen {
             uiState = uiState,
             columns = columns,
             isFavorite = isFavorite,
+            canToggleFavorite = vm.canToggleFavorite,
             onBack = onBack,
             onRead = onRead,
             onFavoriteClick = vm::toggleFavorite,
@@ -185,7 +186,8 @@ fun ScreenNGalleryContent(
     onServerFavoriteClick: () -> Unit = {},
     onShareClick: (() -> Unit)? = null,
     pageMenuContent: (@Composable (NPage, Int) -> Unit)? = null,
-    gridState: LazyGridState = rememberLazyGridState()
+    gridState: LazyGridState = rememberLazyGridState(),
+    canToggleFavorite: Boolean = true
 ) {
     val topInset = getTopInsetDp()
     val title = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId"
@@ -261,9 +263,9 @@ fun ScreenNGalleryContent(
                                 NGalleryHeader(
                                     gallery = gallery,
                                     isFavorite = isFavorite,
+                                    canToggleFavorite = canToggleFavorite,
                                     onFavoriteClick = onFavoriteClick,
-                                    isServerFavorite = serverFavorite.saved == true,
-                                    isServerFavoriteLoading = serverFavorite.loading,
+                                    serverFavorite = serverFavorite,
                                     onServerFavoriteClick = onServerFavoriteClick,
                                     onTagClick = onTagClick
                                 )

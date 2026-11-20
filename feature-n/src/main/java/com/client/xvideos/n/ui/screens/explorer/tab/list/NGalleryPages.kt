@@ -30,6 +30,9 @@ class NGalleryPages(
     private val loadScope = CoroutineScope(scope.coroutineContext + loads)
     private val states = mutableStateMapOf<Int, NGalleryListUiState>()
     private val grids = mutableMapOf<Int, LazyGridPosition>()
+    private val requests = mutableMapOf<Int, Long>()
+    private var nextRequest = 0L
+    private var latestPageCountRequest = 0L
 
     var position by mutableStateOf(PagerPosition())
         private set
@@ -47,23 +50,43 @@ class NGalleryPages(
 
     fun load(index: Int) {
         if (index !in 0 until totalPages || states.containsKey(index)) return
+        val request = ++nextRequest
+        requests[index] = request
         states[index] = NGalleryListUiState.Loading
         loadScope.launch {
             try {
                 val result = withContext(dispatcher) { fetch(index + 1).getOrThrow() }
                 ensureActive()
-                totalPages = result.totalPages.coerceAtLeast(1)
-                states[index] = NGalleryListUiState.Success(result.items)
+                if (requests[index] != request) return@launch
+                updatePageCount(result.totalPages, request)
+                if (index < totalPages) states[index] = NGalleryListUiState.Success(result.items)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (blocked: CloudflareBlockedException) {
                 ensureActive()
-                states[index] = NGalleryListUiState.CloudflareRequired(blocked)
+                if (requests[index] == request) states[index] = NGalleryListUiState.CloudflareRequired(blocked)
             } catch (error: Exception) {
                 ensureActive()
-                states[index] = NGalleryListUiState.Error(error.localizedMessage ?: "Ошибка загрузки страницы")
+                if (requests[index] == request) {
+                    states[index] = NGalleryListUiState.Error(error.localizedMessage ?: "Ошибка загрузки страницы")
+                }
+            } finally {
+                if (requests[index] == request) requests.remove(index)
             }
         }
+    }
+
+    private fun updatePageCount(count: Int, request: Long) {
+        if (request < latestPageCountRequest) return
+        latestPageCountRequest = request
+        val newTotal = count.coerceAtLeast(1)
+        if (newTotal < totalPages) {
+            states.keys.removeAll { it >= newTotal }
+            grids.keys.removeAll { it >= newTotal }
+            requests.keys.removeAll { it >= newTotal }
+            if (currentIndex >= newTotal) position = PagerPosition(newTotal - 1)
+        }
+        totalPages = newTotal
     }
 
     fun retry(index: Int) {
@@ -74,6 +97,7 @@ class NGalleryPages(
 
     fun reset() {
         loads.cancelChildren()
+        requests.clear()
         states.clear()
         grids.clear()
         totalPages = 1
@@ -84,6 +108,7 @@ class NGalleryPages(
     fun refresh() {
         val index = currentIndex
         loads.cancelChildren()
+        requests.clear()
         states.clear()
         position = PagerPosition(index.coerceIn(0, totalPages - 1))
     }

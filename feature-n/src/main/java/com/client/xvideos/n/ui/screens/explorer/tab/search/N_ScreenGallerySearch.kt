@@ -40,14 +40,13 @@ object N_ScreenGallerySearch : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<N_ScreenGallerySearchSM>()
 
-        val query by vm.query.collectAsStateWithLifecycle()
         val tagSuggestions by vm.tagSuggestions.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
         val filter by vm.filter.collectAsStateWithLifecycle()
         var showFilter by remember { mutableStateOf(false) }
 
         Column(Modifier.fillMaxSize().background(Theme.background)) {
-            NSearchBar(query, vm::setQuery, vm::search, topInset = getTopInsetDp())
+            NSearchBar(vm.query, vm::updateQuery, vm::search, topInset = getTopInsetDp())
             NTagSuggestionsRow(suggestions = tagSuggestions, onTagClick = vm::selectTagSuggestion)
             NTagConditionChips(filter.tags, onRemove = vm::removeTagCondition, modifier = Modifier.padding(4.dp))
             NGalleryPager(

@@ -16,6 +16,40 @@ import org.junit.Test
 class NParserTest {
 
     @Test
+    fun `an invalid optional tag does not hide readable pages or valid album tags`() {
+        val json = """{"id":42,"media_id":17,"pages":[{"t":"p"}],"tags":[null,
+            {"id":21,"type":"artist","name":"Valid"},{"id":22,"name":{"invalid":true}}]}"""
+
+        val gallery = requireNotNull(NParser.parseGalleryJson(json))
+        assertEquals("png", gallery.pages.single().ext)
+        assertEquals("Valid", gallery.tags.single().name)
+    }
+
+    @Test
+    fun `tag lists keep only one entry per Compose item key`() {
+        val tags = """[{"id":21,"type":"artist","name":"First"},{"id":21,"type":"artist","name":"Duplicate"},
+            {"id":22,"type":"artist","name":"Second"}]"""
+        val expected = listOf("First", "Second")
+
+        assertEquals(expected, NParser.parseTagsJson(tags).map { it.name })
+        assertEquals(expected, NParser.parseTagPage("""{"result":$tags,"num_pages":2}""").tags.map { it.name })
+    }
+
+    @Test
+    fun `nested album previews retain titles and thumbnails in every listing`() {
+        val full = """{"id":42,"media_id":"17","title":{"pretty":"Album"},
+            "images":{"thumbnail":{"t":"p"}},"num_pages":12}"""
+        val related = NParser.parseGalleryJson("""{"id":8,"media_id":9,"related":[null,$full]}""")
+        val lenient = NParser.parseGalleryListJson("""{"result":[null,$full]}""")
+        val strict = NParser.parseGalleryPageV2("""{"result":[$full],"num_pages":2}""", 1)
+
+        assertEquals(lenient, related?.relatedGalleries)
+        assertEquals(lenient, strict.items)
+        assertEquals("Album", lenient.single().title)
+        assertEquals("https://t.nhentai.net/galleries/17/thumb.png", lenient.single().thumbnailUrl)
+    }
+
+    @Test
     fun `mixed page numbers fall back to a unique sequence`() {
         val json = """{"id":42,"media_id":17,"pages":[{"number":2,"path":"galleries/17/1.webp"},{"path":"galleries/17/2.webp"}]}"""
         val pages = NParser.parseGalleryJson(json)?.pages.orEmpty()

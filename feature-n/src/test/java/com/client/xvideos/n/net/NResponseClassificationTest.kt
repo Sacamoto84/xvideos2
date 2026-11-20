@@ -20,6 +20,16 @@ import org.junit.Test
 import java.io.IOException
 
 class NResponseClassificationTest {
+    @Test
+    fun `requests use the existing WebView clearance after process restart`() {
+        val cookies = "sessionid=other_account; cf_clearance=from_webview; csrftoken=token"
+        assertEquals("cf_clearance=from_webview; csrftoken=token", nCookieHeader("", null, cookies))
+        assertEquals(
+            "cf_clearance=from_webview; sessionid=selected; csrftoken=token",
+            nCookieHeader("selected", "outdated", cookies)
+        )
+    }
+
 
     @Test
     fun `redirect guard accepts only the canonical HTTPS origin`() {
@@ -36,6 +46,15 @@ class NResponseClassificationTest {
     fun `server favorites cannot be changed through the web session fallback`() = runTest {
         val result = NRepository().setServerFavorite(1, favorite = false, apiKey = "")
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `an invalid saved API key is rejected without exposing it`() = runTest {
+        val key = "invalid🔑key"
+        val result = NClient.setFavorite(1, favorite = true, apiKey = key) as NNetworkResult.Failure
+
+        assertTrue(result.throwable is IllegalArgumentException)
+        assertFalse(result.throwable.message.orEmpty().contains(key))
     }
 
     @Test
@@ -65,6 +84,27 @@ class NResponseClassificationTest {
         val body = """{"result":[{"english_title":"Just a moment..."}],"num_pages":1}"""
         assertFalse(isNCloudflareChallenge(200, "application/json", null, body))
         assertFalse(isNCloudflareChallenge(403, "application/json", null, body))
+    }
+
+    @Test
+    fun `a challenge header is recognized even if its response body cannot be read`() {
+        val url = "https://nhentai.net/"
+        val source = object : ForwardingSource(Buffer()) {
+            override fun read(sink: Buffer, byteCount: Long): Long = throw IOException("truncated response")
+        }
+        val response = Response.Builder()
+            .request(Request.Builder().url(url).header("Cookie", "cf_clearance=old").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(503)
+            .message("Service Unavailable")
+            .header("cf-mitigated", "challenge")
+            .body(source.buffer().asResponseBody())
+            .build()
+
+        val result = response.use { it.toNNetworkResult(url, NRateLimit()) } as NNetworkResult.CloudflareRequired
+
+        assertEquals(url, result.challengeUrl)
+        assertEquals("old", result.sentClearance)
     }
 
     @Test

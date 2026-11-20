@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicReference
+
+internal data class NRequestCredentials(val apiKey: String = "", val sessionCookie: String = "")
 
 /**
  * Состояние авторизации пользователя в nhentai.
@@ -22,40 +25,38 @@ object NAuthState {
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username.asStateFlow()
 
-    private val _sessionCookie = MutableStateFlow("")
-    val currentSessionCookie: String
-        get() = _sessionCookie.value.ifEmpty {
-            runCatching { Settings.n_session_cookie.field.value }.getOrDefault("")
-        }
+    private val credentials = AtomicReference<NRequestCredentials?>(null)
+    internal val currentCredentials: NRequestCredentials
+        get() = credentials.get() ?: readStoredCredentials()
 
-    private val _apiKey = MutableStateFlow("")
+    val currentSessionCookie: String
+        get() = currentCredentials.sessionCookie
+
     val currentApiKey: String
-        get() = _apiKey.value.ifEmpty {
-            runCatching { Settings.n_api_key.field.value }.getOrDefault("")
-        }
+        get() = currentCredentials.apiKey
 
     init {
-        runCatching {
-            val savedCookie = Settings.n_session_cookie.field.value
-            val savedKey = Settings.n_api_key.field.value
-            val savedUser = Settings.n_profile.field.value.login
-            if (savedCookie.isNotBlank() || savedKey.isNotBlank()) {
-                _sessionCookie.value = savedCookie
-                _apiKey.value = savedKey
-                _username.value = savedUser.ifEmpty { if (savedKey.isNotBlank()) "API Key" else "User" }
-                _isLoggedIn.value = true
-            }
+        val saved = readStoredCredentials()
+        if (saved.sessionCookie.isNotBlank() || saved.apiKey.isNotBlank()) {
+            credentials.set(saved)
+            val savedUser = runCatching { Settings.n_profile.field.value.login }.getOrDefault("")
+            _username.value = savedUser.ifEmpty { if (saved.apiKey.isNotBlank()) "API Key" else "User" }
+            _isLoggedIn.value = true
         }
     }
+
+    private fun readStoredCredentials() = NRequestCredentials(
+        apiKey = runCatching { Settings.n_api_key.field.value }.getOrDefault(""),
+        sessionCookie = runCatching { Settings.n_session_cookie.field.value }.getOrDefault("")
+    )
 
     /**
      * Вызывается при успешном входе через WebView или форму.
      */
     fun onLoginSuccess(login: String, sessionCookie: String, password: String = "") {
         Timber.i("NAuthState: успешный вход пользователя $login")
+        credentials.set(NRequestCredentials(sessionCookie = sessionCookie))
         _username.value = login
-        _sessionCookie.value = sessionCookie
-        _apiKey.value = ""
         _isLoggedIn.value = true
 
         runCatching {
@@ -86,12 +87,12 @@ object NAuthState {
     }
 
     fun setApiKey(key: String, displayName: String = "API Key") {
-        _apiKey.value = key.trim()
-        _sessionCookie.value = ""
+        val apiKey = key.trim()
+        credentials.set(NRequestCredentials(apiKey = apiKey))
         _username.value = displayName
         _isLoggedIn.value = true
         runCatching {
-            Settings.n_api_key.setValue(_apiKey.value)
+            Settings.n_api_key.setValue(apiKey)
             Settings.n_session_cookie.setValue("")
             Settings.n_profile.save(displayName, "")
         }
@@ -102,9 +103,8 @@ object NAuthState {
      */
     fun logout() {
         Timber.i("NAuthState: выход из аккаунта")
+        credentials.set(NRequestCredentials())
         _username.value = ""
-        _sessionCookie.value = ""
-        _apiKey.value = ""
         _isLoggedIn.value = false
 
         runCatching {

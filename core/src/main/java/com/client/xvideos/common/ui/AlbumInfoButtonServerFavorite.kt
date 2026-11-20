@@ -36,9 +36,10 @@ fun AlbumInfoButtonServerFavorite(
     isFavorite: Boolean,
     isLoading: Boolean = false,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    label: String? = null
 ) {
-    val buttonText = if (isFavorite) "Удалить альбом с сервера" else "Добавить альбом на сервер"
+    val buttonText = label ?: if (isFavorite) "Удалить альбом с сервера" else "Добавить альбом на сервер"
     val iconVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
     val iconTint = if (isFavorite) Theme.L.red else Color.White
     val backgroundColor = if (isFavorite) Theme.L.grey6 else Theme.L.red

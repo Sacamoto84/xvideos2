@@ -11,10 +11,10 @@ class NGalleryCacheTest {
     @Test
     fun `cache evicts the least recently used album`() {
         val cache = NGalleryCache(capacity = 2, nowMillis = { 0L })
-        cache[1] = NGallery(id = 1)
-        cache[2] = NGallery(id = 2)
+        cache.put(NGallery(id = 1), requestNumber = 1)
+        cache.put(NGallery(id = 2), requestNumber = 2)
         assertEquals(1L, cache[1]?.id)
-        cache[3] = NGallery(id = 3)
+        cache.put(NGallery(id = 3), requestNumber = 3)
 
         assertNull(cache[2])
         assertEquals(1L, cache[1]?.id)
@@ -25,7 +25,7 @@ class NGalleryCacheTest {
     fun `cache expires an album even when it was recently read`() {
         var now = 0L
         val cache = NGalleryCache(ttlMillis = 500, nowMillis = { now })
-        cache[1] = NGallery(id = 1)
+        cache.put(NGallery(id = 1), requestNumber = 1)
         now = 400
         assertEquals(1L, cache[1]?.id)
         now = 500

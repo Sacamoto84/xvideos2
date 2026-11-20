@@ -28,6 +28,7 @@ class N_FullScreenPictureSM @Inject constructor(
 
     var isSelectCollectionOpen by mutableStateOf(false)
     var isCreateCollectionOpen by mutableStateOf(false)
+    private var targetPictureForCollection: NPicture? = null
 
     private var loadedPages: NSavedPicturePages? = null
 
@@ -58,7 +59,20 @@ class N_FullScreenPictureSM @Inject constructor(
         return NSavedPicturePages(pictures, PagerPosition(index)).also { loadedPages = it }
     }
 
-    fun addToCollection(picture: NPicture, collectionName: String, create: Boolean = false) {
+    fun openCollectionPicker(picture: NPicture) {
+        targetPictureForCollection = picture
+        isSelectCollectionOpen = true
+    }
+
+    fun dismissCollectionPicker() {
+        isSelectCollectionOpen = false
+        isCreateCollectionOpen = false
+        targetPictureForCollection = null
+    }
+
+    fun addToCollection(collectionName: String, create: Boolean = false) {
+        val picture = targetPictureForCollection ?: return
+        dismissCollectionPicker()
         screenModelScope.launch {
             if (create) saved.collection.createCollectionAndAdd(collectionName, picture)
             else saved.collection.addToCollection(collectionName, picture)

@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -75,7 +76,8 @@ object N_ScreenSavedMangaTab : Screen {
             onOrderChange = onOrderChange,
             onGalleryClick = onGalleryClick,
             onRemoveFavorite = vm::removeFavorite,
-            gridState = if (sortedFavorites.isNotEmpty()) vm.mangaPosition.rememberState() else rememberLazyGridState()
+            gridState = if (sortedFavorites.isNotEmpty()) vm.mangaPosition.rememberState() else rememberLazyGridState(),
+            isLoading = !vm.saved.favorites.isLoaded
         )
     }
 }
@@ -89,7 +91,8 @@ fun N_ScreenSavedMangaTabContent(
     onGalleryClick: (Long) -> Unit,
     onRemoveFavorite: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    gridState: LazyGridState = rememberLazyGridState()
+    gridState: LazyGridState = rememberLazyGridState(),
+    isLoading: Boolean = false
 ) {
     val topInset = getTopInsetDp()
     Column(
@@ -109,7 +112,9 @@ fun N_ScreenSavedMangaTabContent(
                 .fillMaxSize()
                 .padding(horizontal = 4.dp)
         ) {
-            if (favorites.isEmpty()) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (favorites.isEmpty()) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier

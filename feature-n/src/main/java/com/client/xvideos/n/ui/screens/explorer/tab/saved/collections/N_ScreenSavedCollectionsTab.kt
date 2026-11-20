@@ -47,7 +47,10 @@ object N_ScreenSavedCollectionsTab : Screen {
     override val key: ScreenKey = "N_ScreenSavedCollectionsTab"
 
     @Composable
-    override fun Content() {
+    override fun Content() = Content(active = true)
+
+    @Composable
+    internal fun Content(active: Boolean) {
         val navigator = LocalNavigator.currentOrThrow
         val vm = getScreenModel<ScreenSavedNCollectionsSM>()
 
@@ -62,12 +65,12 @@ object N_ScreenSavedCollectionsTab : Screen {
         var renameValue by rememberSaveable { mutableStateOf("") }
 
         val hasDialog = itemPendingAction != null || itemPendingRename != null || itemPendingDelete != null
-        BackHandler(enabled = hasDialog) {
+        BackHandler(enabled = active && hasDialog) {
             itemPendingAction = null
             itemPendingRename = null
             itemPendingDelete = null
         }
-        BackHandler(enabled = selectedCollection != null && !hasDialog) {
+        BackHandler(enabled = active && selectedCollection != null && !hasDialog) {
             vm.closeCollection()
         }
 
@@ -80,7 +83,7 @@ object N_ScreenSavedCollectionsTab : Screen {
             )
         }
 
-        NCollectionDialogsHost(
+        if (active) NCollectionDialogsHost(
             dialogData = dialogData,
             collections = collections,
             onDismissAction = { itemPendingAction = null },
@@ -113,8 +116,8 @@ object N_ScreenSavedCollectionsTab : Screen {
                 onOpenGallery = { navigator.push(ScreenNGallery(picture.galleryId)) },
                 onSetLiked = vm::setLiked,
                 onAddToCollection = { vm.openAddToCollection(picture) },
-                onSetCover = { vm.setCover(picture) },
-                onRemoveFromCollection = { vm.removeItem(picture) }
+                onSetCover = selectedCollection?.let { name -> { vm.setCover(name, picture) } },
+                onRemoveFromCollection = selectedCollection?.let { name -> { vm.removeItem(name, picture) } }
             )
         }
 
@@ -151,7 +154,7 @@ object N_ScreenSavedCollectionsTab : Screen {
         )
 
         DialogNewCollection(
-            visible = vm.isCreateDialogOpen,
+            visible = active && vm.isCreateDialogOpen,
             onDismiss = { vm.isCreateDialogOpen = false },
             onBlockConfirmed = { name ->
                 vm.createCollection(name)
@@ -160,8 +163,8 @@ object N_ScreenSavedCollectionsTab : Screen {
         )
 
         NCollectionDialogs(
-            isSelectOpen = vm.isSelectOtherCollectionOpen,
-            isCreateOpen = vm.isCreateOtherCollectionOpen,
+            isSelectOpen = active && vm.isSelectOtherCollectionOpen,
+            isCreateOpen = active && vm.isCreateOtherCollectionOpen,
             collections = collections,
             onDismiss = {
                 vm.isSelectOtherCollectionOpen = false

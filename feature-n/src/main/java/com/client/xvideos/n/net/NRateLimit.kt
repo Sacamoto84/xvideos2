@@ -15,9 +15,10 @@ internal class NRateLimit(
 
     @Synchronized
     fun onRateLimited(headers: Headers): NNetworkResult.Error {
-        val retryAfter = headers["Retry-After"]?.toLongOrNull()?.seconds
+        val advertisedDelay = headers["Retry-After"]?.toLongOrNull()?.seconds
             ?: headers.getDate("Retry-After")?.let { (it.time - nowMillis()).milliseconds }
-        if (retryAfter != null && retryAfter.isFinite() && retryAfter > remaining()) {
+        val retryAfter = advertisedDelay?.takeIf { it.isFinite() && it > Duration.ZERO } ?: 5.seconds
+        if (retryAfter > remaining()) {
             retryAt = clock.markNow() + retryAfter
         }
         return error(remaining())

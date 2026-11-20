@@ -56,7 +56,8 @@ class ScreenNGallerySM @AssistedInject constructor(
     private val _uiState = MutableStateFlow<NGalleryUiState>(NGalleryUiState.Loading)
     val uiState: StateFlow<NGalleryUiState> = _uiState.asStateFlow()
 
-    val isFavorite: Boolean get() = favoritesRepository.favorites.any { it.id == galleryId }
+    val isFavorite: Boolean get() = favoritesRepository.isFavorite(galleryId)
+    val canToggleFavorite: Boolean get() = favoritesRepository.isLoaded
 
     private val _serverFavorite = MutableStateFlow(NServerFavoriteState(loading = NAuthState.currentApiKey.isNotBlank()))
     val serverFavorite: StateFlow<NServerFavoriteState> = _serverFavorite.asStateFlow()
@@ -73,6 +74,8 @@ class ScreenNGallerySM @AssistedInject constructor(
     private val favoriteStatusRefresh = MutableStateFlow(0L)
     private var loadJob: Job? = null
     private var favoriteJob: Job? = null
+    private var serverFavoriteWrite: Job? = null
+    private var serverFavoriteApiKey = NAuthState.currentApiKey
     private var serverFavoriteVersion = 0L
     private var retryFavorite: (() -> Unit)? = null
 
@@ -117,17 +120,18 @@ class ScreenNGallerySM @AssistedInject constructor(
         screenModelScope.launch {
             repository.serverFavoriteUpdates.collect { update ->
                 if (update.galleryId == galleryId && update.apiKey == NAuthState.currentApiKey) {
+                    selectServerFavoriteAccount(update.apiKey)
                     serverFavoriteVersion++
-                    if (update.saved == null) favoriteStatusRefresh.value++
+                    if (update.saved == null) refreshServerFavorite()
                     else _serverFavorite.value = NServerFavoriteState(saved = update.saved)
                 }
             }
         }
         screenModelScope.launch {
             combine(Settings.n_api_key.field, favoriteStatusRefresh) { key, _ -> key }.collectLatest { key ->
-                if (key.isBlank()) {
-                    _serverFavorite.value = NServerFavoriteState()
-                } else {
+                selectServerFavoriteAccount(key)
+                if (key.isNotBlank()) {
+                    serverFavoriteWrite?.join()
                     readServerFavorite(key)
                 }
             }
@@ -136,19 +140,34 @@ class ScreenNGallerySM @AssistedInject constructor(
 
     fun toggleFavorite() {
         val gallery = (_uiState.value as? NGalleryUiState.Success)?.gallery ?: return
-        if (favoriteJob?.isActive == true) return
+        if (!canToggleFavorite || favoriteJob?.isActive == true) return
         favoriteJob = screenModelScope.launch {
             withContext(Dispatchers.IO) { favoritesRepository.toggleFavorite(gallery) }
                 .onFailure { SnackBar.error("Не удалось изменить локальное избранное") }
         }
     }
 
+    private fun selectServerFavoriteAccount(apiKey: String) {
+        if (serverFavoriteApiKey == apiKey) return
+        serverFavoriteApiKey = apiKey
+        serverFavoriteVersion++
+        _serverFavorite.value = NServerFavoriteState(loading = apiKey.isNotBlank())
+        finishFavoriteChallenge(verified = false)
+    }
+
+    private fun refreshServerFavorite() {
+        _serverFavorite.value = _serverFavorite.value.copy(loading = true)
+        favoriteStatusRefresh.value++
+    }
+
     private suspend fun readServerFavorite(apiKey: String) {
+        if (NAuthState.currentApiKey != apiKey) return
         val version = serverFavoriteVersion
-        _serverFavorite.value = NServerFavoriteState(loading = true)
+        val previous = _serverFavorite.value
+        _serverFavorite.value = previous.copy(loading = true)
         val result = repository.getServerFavorite(galleryId)
         if (NAuthState.currentApiKey == apiKey && version == serverFavoriteVersion) {
-            _serverFavorite.value = NServerFavoriteState(saved = result.getOrNull())
+            _serverFavorite.value = previous.afterRead(result)
         }
     }
 
@@ -158,20 +177,33 @@ class ScreenNGallerySM @AssistedInject constructor(
             SnackBar.info("Укажите API-ключ в настройках N, чтобы сохранять альбомы на сервере")
             return
         }
-        if (_serverFavorite.value.loading) return
-        setServerFavorite(apiKey, _serverFavorite.value.saved != true)
+        selectServerFavoriteAccount(apiKey)
+        val state = _serverFavorite.value
+        if (state.loading || serverFavoriteWrite?.isActive == true) return
+        val challenge = state.readError as? CloudflareBlockedException
+        val desired = state.desiredUpdate
+        when {
+            challenge != null -> {
+                retryFavorite = ::refreshServerFavorite
+                _favoriteChallenge.value = challenge
+            }
+            desired != null -> setServerFavorite(apiKey, desired)
+            else -> refreshServerFavorite()
+        }
     }
 
     private fun setServerFavorite(apiKey: String, save: Boolean) {
+        if (serverFavoriteWrite?.isActive == true) return
         val current = _serverFavorite.value
         val version = ++serverFavoriteVersion
         _serverFavorite.value = current.copy(loading = true)
-        screenModelScope.launch {
+        serverFavoriteWrite = screenModelScope.launch {
             val result = repository.setServerFavorite(galleryId, save, apiKey)
             if (NAuthState.currentApiKey != apiKey) return@launch
 
             result.fold(
                 onSuccess = { saved ->
+                    if (version == serverFavoriteVersion) _serverFavorite.value = NServerFavoriteState(saved = saved)
                     SnackBar.success(if (saved) "Альбом добавлен на сервер" else "Альбом удалён с сервера")
                 },
                 onFailure = { error ->
@@ -199,8 +231,8 @@ class ScreenNGallerySM @AssistedInject constructor(
     private fun loadGallery(forceRefresh: Boolean) {
         favoriteStatusRefresh.value += 1
         loadJob?.cancel()
+        _uiState.value = NGalleryUiState.Loading
         loadJob = screenModelScope.launch {
-            _uiState.value = NGalleryUiState.Loading
             repository.getGalleryDetails(galleryId, forceRefresh).fold(
                 onSuccess = { gallery ->
                     _uiState.value = NGalleryUiState.Success(gallery)
@@ -228,7 +260,19 @@ abstract class ScreenModuleNGallery {
     ): ScreenModelFactory
 }
 
-data class NServerFavoriteState(val saved: Boolean? = null, val loading: Boolean = false)
+data class NServerFavoriteState(
+    val saved: Boolean? = null,
+    val loading: Boolean = false,
+    val readError: Throwable? = null
+) {
+    internal val desiredUpdate: Boolean?
+        get() = saved?.takeIf { !loading && readError == null }?.not()
+
+    internal fun afterRead(result: Result<Boolean>): NServerFavoriteState = result.fold(
+        onSuccess = { NServerFavoriteState(saved = it) },
+        onFailure = { NServerFavoriteState(saved = saved, readError = it) }
+    )
+}
 
 sealed interface NGalleryUiState {
     data object Loading : NGalleryUiState
