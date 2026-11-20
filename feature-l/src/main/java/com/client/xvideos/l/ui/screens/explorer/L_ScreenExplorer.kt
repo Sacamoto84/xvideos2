@@ -18,8 +18,8 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.navigation.rememberNavigationDepth
-import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.settings.advanceColumnCount
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.LSession
 import com.client.xvideos.l.ui.screens.explorer.molecule.L_ExplorerBottomBar
@@ -27,9 +27,7 @@ import com.client.xvideos.l.ui.screens.explorer.tab.albumSearch.L_ScreenAlbumSea
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.L_ScreenAlbumTopHits
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.L_SavedTab
 import com.client.xvideos.l.ui.screens.molecule.LLoginForm
-import com.client.xvideos.l.ui.screens.screenAlbumList.ALBUM_LIST_MIN_COLUMNS
 import com.client.xvideos.l.ui.screens.screenAlbumList.L_ScreenAlbumList
-import com.client.xvideos.l.ui.screens.screenAlbumList.albumListColumns
 
 class L_ScreenExplorer : Screen {
 
@@ -82,10 +80,8 @@ class L_ScreenExplorer : Screen {
 
         val onTabChange: (Int) -> Unit = remember(vm) {
             { tab ->
-                if (tab == vm.screenType) {
-                    when (tab) {
-                        0 -> { ColumnSelect_AddColumn(Settings.l_gifsTab_column_current_count, Settings.l_gifsTab_G_0_4, minCol = ALBUM_LIST_MIN_COLUMNS) }
-                    }
+                if (tab == vm.screenType && tab == 0) {
+                    advanceColumnCount(Settings.l_gifsTab_column_current_count)
                 }
                 vm.screenType = tab
             }
@@ -98,7 +94,7 @@ class L_ScreenExplorer : Screen {
             // На широком окне у сетки на одну-две колонки больше
             // (`adaptiveUserGridColumns`), а точки по-прежнему показывают выбор —
             // так задумано спекой складных.
-            columnGifsTab = albumListColumns(columnGifsTab),
+            columnGifsTab = columnGifsTab,
             onTabChange = onTabChange
         )
     }

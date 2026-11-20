@@ -20,8 +20,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.settings.advanceColumnCount
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.n.net.NAuthState
@@ -92,9 +92,9 @@ object N_SavedTab : Screen {
             { tab ->
                 if (tab == pagerState.currentPage) {
                     when (tab) {
-                        0 -> ColumnSelect_AddColumn(Settings.n_likesTab_column_current_count, Settings.n_likesTab_G_0_4)
-                        1, 3 -> ColumnSelect_AddColumn(Settings.n_saved_column_current_count, Settings.n_galleriesTab_G_0_4)
-                        2 -> ColumnSelect_AddColumn(Settings.n_collectionTab_column_current_count, Settings.n_collectionTab_G_0_4)
+                        0 -> advanceColumnCount(Settings.n_likesTab_column_current_count)
+                        1, 3 -> advanceColumnCount(Settings.n_saved_column_current_count)
+                        2 -> advanceColumnCount(Settings.n_collectionTab_column_current_count)
                     }
                 } else {
                     scope.launch { pagerState.scrollToPage(tab) }

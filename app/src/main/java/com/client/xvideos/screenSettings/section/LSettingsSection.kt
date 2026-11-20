@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.screenSettings.Config_G_0_4
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
@@ -65,11 +64,6 @@ internal fun LSettingsSection(
             currentValue = currentDisplayName,
             onSelected = onSelectThumbnailSize
         )
-        SettingsDivider()
-
-        Config_G_0_4("L Gifs", Settings.l_gifsTab_G_0_4)
-        Config_G_0_4("L Likes", Settings.l_likesTab_G_0_4)
-        Config_G_0_4("L Collection", Settings.l_collectionTab_G_0_4)
     }
 }
 

@@ -3,9 +3,6 @@ package com.client.xvideos.common
 import com.client.xvideos.common.applock.AppLockTimeout
 import com.client.xvideos.common.settings.ScrollButtonEffect
 import com.client.xvideos.common.settings.ThumbnailsSize
-import com.client.xvideos.common.settings.calculateNextColumn
-import com.client.xvideos.common.settings.calculatePrevColumn
-import com.client.xvideos.common.settings.getEnabledColumns
 import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.videoplayer.model.PlayerOption
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
@@ -46,28 +43,6 @@ class Batch65CoreSettingsAndPlayerTest {
 
         assertTrue(ThumbnailsSize.XMAX.isLarge)
         assertTrue(ThumbnailsSize.SMALL.isMedium)
-    }
-
-    @Test
-    fun `ColumnSelect calculation pure functions`() {
-        val flags = listOf(false, true, true, false, true) // indices: 1, 2, 4 enabled
-
-        assertEquals(listOf(1, 2, 4), getEnabledColumns(flags))
-        assertEquals(emptyList<Int>(), getEnabledColumns(emptyList()))
-
-        assertEquals(2, calculateNextColumn(1, flags))
-        assertEquals(4, calculateNextColumn(2, flags))
-        assertEquals(1, calculateNextColumn(4, flags))
-        assertEquals(1, calculateNextColumn(3, flags)) // unknown index falls back to first
-
-        assertEquals(4, calculatePrevColumn(1, flags))
-        assertEquals(1, calculatePrevColumn(2, flags))
-        assertEquals(2, calculatePrevColumn(4, flags))
-        assertEquals(4, calculatePrevColumn(3, flags)) // unknown index falls back to last
-
-        // Empty flags check
-        assertEquals(2, calculateNextColumn(2, emptyList()))
-        assertEquals(2, calculatePrevColumn(2, emptyList()))
     }
 
     @Test

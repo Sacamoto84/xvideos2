@@ -8,9 +8,6 @@ import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.settings.ScrollButtonEffect
 import com.client.xvideos.common.settings.ThumbnailsSize
-import com.client.xvideos.common.settings.hasEnabledColumns
-import com.client.xvideos.common.settings.isColumnEnabled
-import com.client.xvideos.common.settings.validateColumnCount
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -52,23 +49,6 @@ class Batch72CoreSettingsAndAppLockTest {
         val lockedState = AppLockThrottle.State(attempts = 5, lockoutUntilWall = 100_000L, lockoutUntilElapsed = 100_000L)
         val remainingSecs = AppLockThrottle.remainingSeconds(lockedState, wallNow = 85_000L, elapsedNow = 85_000L)
         assertEquals(15L, remainingSecs)
-    }
-
-    @Test
-    fun `ColumnSelect helpers`() {
-        val flags = listOf(false, true, true, false, false)
-        assertTrue(hasEnabledColumns(flags))
-        assertTrue(isColumnEnabled(flags, 1))
-        assertTrue(isColumnEnabled(flags, 2))
-        assertFalse(isColumnEnabled(flags, 3))
-        assertFalse(isColumnEnabled(flags, 99))
-
-        val emptyFlags = emptyList<Boolean>()
-        assertFalse(hasEnabledColumns(emptyFlags))
-
-        assertEquals(1, validateColumnCount(0, 1, 4))
-        assertEquals(4, validateColumnCount(5, 1, 4))
-        assertEquals(3, validateColumnCount(3, 1, 4))
     }
 
     @Test

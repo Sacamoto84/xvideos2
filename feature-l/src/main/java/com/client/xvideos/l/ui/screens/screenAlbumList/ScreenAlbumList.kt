@@ -175,7 +175,7 @@ private fun Screen.ScreenAlbumListContent(
                         topInset = topInset,
                         haptic = haptic,
                         onAlbumClick = onAlbumClick,
-                        columns = albumListColumns(selectedColumns)
+                        columns = selectedColumns
                     )
                 }
             }

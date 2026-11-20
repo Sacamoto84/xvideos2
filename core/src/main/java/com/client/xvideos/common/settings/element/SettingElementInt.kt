@@ -6,18 +6,26 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class SettingElementInt(private val sharedPrefs: SharedPreferences, val name: String, val default: Int = 0) {
-    private val _field = MutableStateFlow(sharedPrefs.getInt(name, default))
+class SettingElementInt(
+    private val sharedPrefs: SharedPreferences,
+    val name: String,
+    val default: Int = 0,
+    private val normalize: (Int) -> Int = { it },
+) {
+    private fun readValue() = normalize(sharedPrefs.getInt(name, default))
+
+    private val _field = MutableStateFlow(readValue())
     val field: StateFlow<Int> = _field.asStateFlow()
 
     fun setValue(value: Int) {
-        if (_field.value == value && sharedPrefs.contains(name)) return
-        sharedPrefs.edit { putInt(name, value) }
-        _field.value = value
+        val normalized = normalize(value)
+        if (_field.value == normalized && sharedPrefs.contains(name)) return
+        sharedPrefs.edit { putInt(name, normalized) }
+        _field.value = normalized
     }
 
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == name) { _field.value = sharedPrefs.getInt(key, default) }
+        if (key == name) { _field.value = readValue() }
     }
 
     init { sharedPrefs.registerOnSharedPreferenceChangeListener(listener) }

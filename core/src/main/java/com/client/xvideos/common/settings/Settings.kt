@@ -6,7 +6,6 @@ import androidx.core.content.edit
 import com.client.xvideos.common.settings.element.NAccessSettings
 import com.client.xvideos.common.settings.element.SettingElementBoolean
 import com.client.xvideos.common.settings.element.SettingElementInt
-import com.client.xvideos.common.settings.element.SettingElementList
 import com.client.xvideos.common.settings.element.SettingElementSecureCredentials
 import com.client.xvideos.common.settings.element.SettingElementString
 import com.client.xvideos.common.applock.AppLockTimeout
@@ -20,8 +19,8 @@ import timber.log.Timber
  * Централизованная точка доступа к настройкам приложения, которые хранятся в [SharedPreferences].
  *
  * Объект инициализируется один раз через [init], после чего предоставляет ленивый доступ
- * к типизированным настройкам через обёртки [SettingElementBoolean], [SettingElementInt],
- * [SettingElementString] и [SettingElementList].
+ * к типизированным настройкам через обёртки [SettingElementBoolean], [SettingElementInt]
+ * и [SettingElementString].
  *
  * Настройки сгруппированы по функциональным зонам приложения:
  * - `r_*` — настройки разделов R;
@@ -215,50 +214,29 @@ object Settings {
 
 
     /**
-     * Количество столбиков в L Gifs Tab T 1 2 3 4
-     */
-    val l_gifsTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "l_gifsTab_G_0_4", default = listOf(false, true, true, true, true)) }
-
-
-    /**
      * Текущее количество столбиков в L Gifs Tab
      */
-    val l_gifsTab_column_current_count by lazy { SettingElementInt(pref, "l_gifsTab_column_current_count", 2) }
-
-
-
-    /**
-     * Количество столбиков в L Likes Tab T 1 2 3 4
-     */
-    val l_likesTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "l_likesTab_G_0_4", default = listOf(false, true, true, true, true)) }
+    val l_gifsTab_column_current_count by lazy { pref.columnCountSetting("l_gifsTab_column_current_count") }
 
     /**
      * Текущее количество столбиков в L Likes Tab
      */
-    val l_likesTab_column_current_count by lazy { SettingElementInt(pref, "l_likesTab_column_current_count", 2) }
-
-    /**
-     * Количество столбиков в L Collection Tab T 1 2 3 4
-     */
-    val l_collectionTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "l_collectionTab_G_0_4", default = listOf(false, true, true, true, true)) }
+    val l_likesTab_column_current_count by lazy { pref.columnCountSetting("l_likesTab_column_current_count") }
 
     /**
      * Текущее количество столбиков в L Collection Tab
      */
-    val l_collectionTab_column_current_count by lazy { SettingElementInt(pref, "l_collectionTab_column_current_count", 2) }
+    val l_collectionTab_column_current_count by lazy { pref.columnCountSetting("l_collectionTab_column_current_count") }
 
     //Порядок сохранённых альбомов L: номер в LSavedAlbumsOrder (0 — сначала новые)
     val l_savedAlbums_order by lazy { SettingElementInt(pref, "l_savedAlbums_order", 0) }
 
     //-- N (nHentai) ---
     val n_fullscreen_vertical_pager by lazy { SettingElementBoolean(pref, "n_fullscreen_vertical_pager", false) }
-    val n_galleriesTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "n_galleriesTab_G_0_4", default = listOf(false, true, true, true, true)) }
-    val n_galleriesTab_column_current_count by lazy { SettingElementInt(pref, "n_galleriesTab_column_current_count", 2) }
-    val n_saved_column_current_count by lazy { SettingElementInt(pref, "n_saved_column_current_count", 2) }
-    val n_likesTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "n_likesTab_G_0_4", default = listOf(false, true, true, true, true)) }
-    val n_likesTab_column_current_count by lazy { SettingElementInt(pref, "n_likesTab_column_current_count", 2) }
-    val n_collectionTab_G_0_4 by lazy { SettingElementList<Boolean>(pref, "n_collectionTab_G_0_4", default = listOf(false, true, true, true, true)) }
-    val n_collectionTab_column_current_count by lazy { SettingElementInt(pref, "n_collectionTab_column_current_count", 2) }
+    val n_galleriesTab_column_current_count by lazy { pref.columnCountSetting("n_galleriesTab_column_current_count") }
+    val n_saved_column_current_count by lazy { pref.columnCountSetting("n_saved_column_current_count") }
+    val n_likesTab_column_current_count by lazy { pref.columnCountSetting("n_likesTab_column_current_count") }
+    val n_collectionTab_column_current_count by lazy { pref.columnCountSetting("n_collectionTab_column_current_count") }
 
 
 

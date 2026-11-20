@@ -14,8 +14,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.settings.advanceColumnCount
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.n.ui.screens.explorer.molecule.N_ExplorerBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.list.N_ScreenGalleryList
@@ -42,11 +42,7 @@ class N_ScreenExplorer : Screen {
         val onTabChange: (Int) -> Unit = remember(vm) {
             { tab ->
                 if (tab == vm.screenType && tab == 0) {
-                    ColumnSelect_AddColumn(
-                        Settings.n_galleriesTab_column_current_count,
-                        Settings.n_galleriesTab_G_0_4,
-                        minCol = 1
-                    )
+                    advanceColumnCount(Settings.n_galleriesTab_column_current_count)
                 }
                 vm.screenType = tab
             }

@@ -18,7 +18,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
@@ -30,10 +29,6 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.molecule.LikesFi
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-
-fun L_ScreenSavedLikesTab_AddColumn() {
-    ColumnSelect_AddColumn(Settings.l_likesTab_column_current_count, Settings.l_likesTab_G_0_4)
-}
 
 val LIKES_FILTER_OPTIONS: ImmutableList<String> = persistentListOf("All", "Image", "Gif")
 

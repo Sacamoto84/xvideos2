@@ -20,14 +20,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import com.client.xvideos.common.settings.ColumnSelect_AddColumn
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.settings.advanceColumnCount
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.L_ScreenSavedAlbumsTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.L_Screen_CollectionTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab
-import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab_AddColumn
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.L_SavedBottomBar
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.L_ScreenServerLikesTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.L_ScreenSubscribedAlbumsTab
@@ -82,9 +81,8 @@ object L_SavedTab : Screen {
             { tab ->
                 if (tab == pagerState.currentPage) {
                     when (tab) {
-                        0 -> L_ScreenSavedLikesTab_AddColumn()
-                        2 -> { ColumnSelect_AddColumn(Settings.l_collectionTab_column_current_count, Settings.l_collectionTab_G_0_4) }
-                        4 -> L_ScreenSavedLikesTab_AddColumn()
+                        0, 4 -> advanceColumnCount(Settings.l_likesTab_column_current_count)
+                        2 -> advanceColumnCount(Settings.l_collectionTab_column_current_count)
                     }
                 } else {
                     scope.launch { pagerState.scrollToPage(tab) }

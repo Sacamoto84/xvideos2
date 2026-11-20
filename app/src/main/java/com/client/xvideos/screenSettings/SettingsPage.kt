@@ -43,12 +43,12 @@ internal enum class SettingsPage(
     L(
         title = "L",
         icon = R.drawable.icon_luscious,
-        subtitle = "Профиль, миниатюры и колонки"
+        subtitle = "Профиль и миниатюры"
     ),
     N(
         title = "N",
         icon = R.drawable.icon_nhentai,
-        subtitle = "Ридер, колонки и Cloudflare"
+        subtitle = "Ридер и Cloudflare"
     ),
     Red(
         title = "R",

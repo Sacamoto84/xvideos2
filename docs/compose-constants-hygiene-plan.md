@@ -98,7 +98,6 @@
   - [`AppSettingsScreen.kt`](file:///g:/xvideos2/app/src/main/java/com/client/xvideos/screenSettings/AppSettingsScreen.kt)
   - [`AppearanceSettingsSection.kt`](file:///g:/xvideos2/app/src/main/java/com/client/xvideos/screenSettings/section/AppearanceSettingsSection.kt)
   - [`StorageStatistics.kt`](file:///g:/xvideos2/app/src/main/java/com/client/xvideos/screenSettings/components/StorageStatistics.kt)
-  - [`Config_G_0_4.kt`](file:///g:/xvideos2/app/src/main/java/com/client/xvideos/screenSettings/Config_G_0_4.kt)
   - [`ThumbnailSizeSelector.kt`](file:///g:/xvideos2/app/src/main/java/com/client/xvideos/screenSettings/components/ThumbnailSizeSelector.kt)
   - [`MenuScreen.kt`](file:///g:/xvideos2/app/src/main/java/com/client/xvideos/screenRoot/MenuScreen.kt)
   - [`HapticDemoScreen.kt`](file:///g:/xvideos2/app/src/main/java/com/client/xvideos/HapticDemoScreen.kt)

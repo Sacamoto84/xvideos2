@@ -31,7 +31,6 @@ import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NLoginDialog
-import com.client.xvideos.screenSettings.Config_G_0_4
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsPreview
@@ -125,11 +124,6 @@ internal fun NSettingsSection(
                 fontSize = 14.sp
             )
         }
-        SettingsDivider()
-
-        Config_G_0_4("N Манга", Settings.n_galleriesTab_G_0_4)
-        Config_G_0_4("N Лайки", Settings.n_likesTab_G_0_4)
-        Config_G_0_4("N Коллекции", Settings.n_collectionTab_G_0_4)
     }
 
     if (keyDialogVisible) {
