@@ -2,13 +2,12 @@ package com.client.xvideos.n.net
 
 import android.webkit.CookieManager
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.settings.element.NAccessCredentials
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicReference
-
-internal data class NRequestCredentials(val apiKey: String = "", val sessionCookie: String = "")
 
 /**
  * Состояние авторизации пользователя в nhentai.
@@ -25,9 +24,9 @@ object NAuthState {
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username.asStateFlow()
 
-    private val credentials = AtomicReference<NRequestCredentials?>(null)
-    internal val currentCredentials: NRequestCredentials
-        get() = credentials.get() ?: readStoredCredentials()
+    private val processCredentials = AtomicReference(NAccessCredentials())
+    internal val currentCredentials: NAccessCredentials
+        get() = if (Settings.isInitialized) Settings.nAccess.field.value else processCredentials.get()
 
     val currentSessionCookie: String
         get() = currentCredentials.sessionCookie
@@ -36,33 +35,25 @@ object NAuthState {
         get() = currentCredentials.apiKey
 
     init {
-        val saved = readStoredCredentials()
+        val saved = currentCredentials
         if (saved.sessionCookie.isNotBlank() || saved.apiKey.isNotBlank()) {
-            credentials.set(saved)
             val savedUser = runCatching { Settings.n_profile.field.value.login }.getOrDefault("")
             _username.value = savedUser.ifEmpty { if (saved.apiKey.isNotBlank()) "API Key" else "User" }
             _isLoggedIn.value = true
         }
     }
 
-    private fun readStoredCredentials() = NRequestCredentials(
-        apiKey = runCatching { Settings.n_api_key.field.value }.getOrDefault(""),
-        sessionCookie = runCatching { Settings.n_session_cookie.field.value }.getOrDefault("")
-    )
-
     /**
      * Вызывается при успешном входе через WebView или форму.
      */
     fun onLoginSuccess(login: String, sessionCookie: String, password: String = "") {
         Timber.i("NAuthState: успешный вход пользователя $login")
-        credentials.set(NRequestCredentials(sessionCookie = sessionCookie))
+        saveAccess(NAccessCredentials(sessionCookie = sessionCookie))
         _username.value = login
         _isLoggedIn.value = true
 
         runCatching {
             Settings.n_profile.save(login, password)
-            Settings.n_api_key.setValue("")
-            Settings.n_session_cookie.setValue(sessionCookie)
         }
     }
 
@@ -88,12 +79,10 @@ object NAuthState {
 
     fun setApiKey(key: String, displayName: String = "API Key") {
         val apiKey = key.trim()
-        credentials.set(NRequestCredentials(apiKey = apiKey))
+        saveAccess(NAccessCredentials(apiKey = apiKey))
         _username.value = displayName
         _isLoggedIn.value = true
         runCatching {
-            Settings.n_api_key.setValue(apiKey)
-            Settings.n_session_cookie.setValue("")
             Settings.n_profile.save(displayName, "")
         }
     }
@@ -103,14 +92,12 @@ object NAuthState {
      */
     fun logout() {
         Timber.i("NAuthState: выход из аккаунта")
-        credentials.set(NRequestCredentials())
+        saveAccess(NAccessCredentials())
         _username.value = ""
         _isLoggedIn.value = false
 
         runCatching {
             Settings.n_profile.clear()
-            Settings.n_session_cookie.setValue("")
-            Settings.n_api_key.setValue("")
         }
 
         runCatching {
@@ -128,5 +115,14 @@ object NAuthState {
                 cookieManager.flush()
             }
         }
+    }
+
+    private fun saveAccess(credentials: NAccessCredentials) {
+        if (!Settings.isInitialized) {
+            processCredentials.set(credentials)
+            return
+        }
+        runCatching { Settings.nAccess.save(credentials) }
+            .onFailure { Timber.w("N: не удалось сохранить авторизацию (%s)", it.javaClass.simpleName) }
     }
 }

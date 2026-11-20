@@ -8,16 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
@@ -46,14 +40,13 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGallery
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
-import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
-import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
 import com.client.xvideos.n.ui.screens.reader.atom.NReaderTopBar
 import com.client.xvideos.n.ui.screens.reader.atom.ReaderImagePage
 import com.client.xvideos.n.ui.screens.reader.molecule.NReaderBottomStrip
+import com.client.xvideos.n.ui.screens.reader.molecule.ReaderLoadingScreen
 import kotlinx.coroutines.launch
 
 /**
@@ -163,29 +156,6 @@ class N_FullScreenReader(
             onSelectCollection = { name -> vm.addToCollection(name) },
             coverUrlProvider = vm::getCollectionCoverUrl
         )
-    }
-}
-
-@Composable
-private fun ReaderLoadingScreen(error: Throwable?, onBack: () -> Unit, onRetry: () -> Unit) {
-    var dismissed by remember(error) { mutableStateOf(false) }
-    Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-        if (error == null) {
-            CircularProgressIndicator()
-        } else {
-            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(error.localizedMessage ?: "Ошибка загрузки альбома", color = Color.White)
-                TextButton(onClick = {
-                    if (error is CloudflareBlockedException) dismissed = false else onRetry()
-                }) {
-                    Text(if (error is CloudflareBlockedException) "Пройти проверку" else "Повторить")
-                }
-                TextButton(onClick = onBack) { Text("Назад") }
-            }
-        }
-    }
-    if (error is CloudflareBlockedException && !dismissed) {
-        NRequestChallengeDialog(challenge = error, onDismiss = { dismissed = true }, onVerified = onRetry)
     }
 }
 

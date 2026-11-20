@@ -402,8 +402,8 @@ class DownloadTask(
                     this@DownloadTask.outputStream = null
                     renameFileName(tempPath, path)
                     removeNoMoreNeededModelFromDatabase()
-                    listener.onCompleted()
                     req.status = Status.COMPLETED
+                    listener.onCompleted()
                     return@withContext
                 } catch (e: CancellationException) {
                     closeAllSafely(this@DownloadTask.outputStream)

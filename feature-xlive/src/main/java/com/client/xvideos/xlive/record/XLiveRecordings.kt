@@ -189,9 +189,7 @@ internal class XLiveRecordingsCore(
     @Suppress("TooGenericExceptionCaught")
     fun finishPending() {
         scope.launch {
-            val pending = store.snapshot().filter {
-                it.status == XLiveRecordStatus.RECORDING || it.status == XLiveRecordStatus.FINISHING
-            }
+            val pending = store.snapshot().filter(::needsFinishing)
             for (record in pending) {
                 if (!synchronized(lock) { busy.add(record.id) }) continue
                 try {
@@ -233,6 +231,15 @@ internal class XLiveRecordingsCore(
                 }
             }
         }
+    }
+
+    private fun needsFinishing(record: XLiveRecord): Boolean = when (record.status) {
+        XLiveRecordStatus.RECORDING, XLiveRecordStatus.FINISHING -> true
+        XLiveRecordStatus.BROKEN -> {
+            val dir = store.dirOf(record.id)
+            File(dir, VIDEO_RAW).length() > 0L || File(dir, VIDEO).length() > 0L
+        }
+        XLiveRecordStatus.READY -> false
     }
 
     /**
@@ -292,9 +299,11 @@ internal class XLiveRecordingsCore(
         val videoRaw = File(dir, VIDEO_RAW)
         val audioRaw = File(dir, AUDIO_RAW)
         val video = File(dir, VIDEO)
-        // Склейка уже прошла, а статус в JSON не успел стать «готова» (процесс
-        // убит между переименованием и записью JSON): готовый файл не трогаем.
-        if (!videoRaw.isFile && video.isFile && video.length() > 0L) {
+        // Переименованный MP4 уже цел. После обрыва или объединения архивов
+        // рядом с ним могут остаться исходные дорожки той же записи.
+        if (video.isFile && video.length() > 0L) {
+            videoRaw.delete()
+            audioRaw.delete()
             store.update(id) {
                 it.copy(status = XLiveRecordStatus.READY, sizeBytes = video.length(), keyFramesVersion = XLIVE_KEY_FRAMES_VERSION)
             }

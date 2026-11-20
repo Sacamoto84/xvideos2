@@ -1,5 +1,8 @@
 package com.client.xvideos.n.net
 
+import com.client.xvideos.common.net.doh.AppDns
+import com.client.xvideos.common.settings.element.NAccessCredentials
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -25,6 +28,7 @@ object NClient {
     private val rateLimit = NRateLimit()
 
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+        .dns(AppDns)
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .callTimeout(40, TimeUnit.SECONDS)
@@ -76,12 +80,12 @@ object NClient {
         val request = Request.Builder().url(url)
             .header("User-Agent", NUserAgent.current)
             .header("Accept", "application/json")
-        request.addCredentials(NRequestCredentials(apiKey = apiKey))?.let { return@withContext it }
+        request.addCredentials(NAccessCredentials(apiKey = apiKey))?.let { return@withContext it }
         if (favorite) request.post("".toRequestBody(null)) else request.delete()
         executeRequest(request.build(), url)
     }
 
-    private fun Request.Builder.addCredentials(credentials: NRequestCredentials): NNetworkResult.Failure? {
+    private fun Request.Builder.addCredentials(credentials: NAccessCredentials): NNetworkResult.Failure? {
         val apiKey = credentials.apiKey
         if (apiKey.isNotBlank()) {
             if (apiKey.any { it !in '!'..'~' }) {

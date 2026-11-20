@@ -48,6 +48,26 @@ class XlrRestorePartialArchiveTest {
         XlrBackupManager.restoreArchive(main, paths, mode) { ZipInputStream(zip.inputStream()) }
 
     @Test
+    fun `объединение сохраняет исходные дорожки местной записи XLive`() {
+        val main = tmp.newFolder("main")
+        val video = "XLive/Records/1/video.part"
+        val audio = "XLive/Records/1/audio.part"
+        main.writeFile(video, "видео")
+        main.writeFile(audio, "звук")
+        main.writeFile("XLive/Records/1/video.mp4.part", "незавершённая склейка")
+        val zip = archive("XLive/Records/2/record.json" to "{}")
+
+        restore(main, zip, setOf("XLive"), XlrRestoreMode.MERGE)
+
+        assertEquals("видео", File(main, video).readText())
+        assertEquals("звук", File(main, audio).readText())
+        assertFalse(File(main, "XLive/Records/1/video.mp4.part").exists())
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry(video, XlrBackupOptions.FULL))
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry(audio, XlrBackupOptions.MINI))
+        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("X/Download/video.part", XlrBackupOptions.FULL))
+    }
+
+    @Test
     fun `замена раздела не трогает папку, которой нет в архиве`() {
         val main = tmp.newFolder("main")
         main.writeFile("X/Download/video.mp4", "видео")

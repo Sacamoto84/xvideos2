@@ -69,14 +69,12 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
             },
             onCompleted = {
                 executeOnMainThread {
-                    request.listener?.onCompleted()
-                    request.listener = null
+                    request.takeListener()?.onCompleted()
                 }
             },
             onError = {
                 executeOnMainThread {
-                    request.listener?.onError(it)
-                    request.listener = null
+                    request.takeListener()?.onError(it)
                 }
             }
         )
@@ -102,37 +100,27 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
      */
     fun cancel(req: DownloadRequest) {
         val wasPaused = req.status == Status.PAUSED
-        val wasQueued = req.status == Status.QUEUED
         val tempPath = if (wasPaused) getTempPath(req.dirPath, req.fileName) else null
         if (wasPaused) {
             req.reset()
         }
 
         req.status = Status.CANCELLED
+        val listener = req.takeListener()
         val job = req.job
         job?.cancel()
 
-        val notRunning = job?.isActive != true
-        if (wasPaused || wasQueued || notRunning) {
-            val listener = req.listener
-            if (listener != null) {
-                req.listener = null
-                executeOnMainThread {
-                    listener.onError(Constants.CANCELLED)
-                }
-            }
-        }
-
         dbScope.launch {
-            if (tempPath != null) {
-                runCatching {
-                    val file = File(tempPath)
-                    if (file.exists()) {
-                        file.delete()
-                    }
+            try {
+                job?.join()
+                if (tempPath != null) {
+                    File(tempPath).delete()
                 }
+                dbHelper.remove(req.downloadId)
+            } finally {
+                // Архивирование может продолжиться сразу после колбэка отмены.
+                if (listener != null) executeOnMainThread { listener.onError(Constants.CANCELLED) }
             }
-            dbHelper.remove(req.downloadId)
         }
     }
 

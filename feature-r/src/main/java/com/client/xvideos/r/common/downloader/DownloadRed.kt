@@ -16,12 +16,15 @@ import androidx.compose.runtime.Immutable
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -274,7 +277,7 @@ class DownloadRed internal constructor(
     }
 
     private var refreshJob: Job? = null
-    private var recoveryJob: Job? = null
+    private val recoveryMutex = Mutex()
 
     /**
      * Сканирует каталог `r_cache_download` одним проходом, считывает все `.info` файлы
@@ -310,24 +313,30 @@ class DownloadRed internal constructor(
     /**
      * Находит все неполные загрузки и докачивает недостающие видео или превью.
      *
-     * @param onComplete Вызывается на главном потоке по завершении с итоговым отчетом.
      * @param onEvent Коллбэк прогресса и текстовых событий.
      */
-    fun recoverIncompleteDownloads(
-        onComplete: (RedDownloadRecoveryReport) -> Unit = {},
+    suspend fun recoverIncompleteDownloads(
         onEvent: (String) -> Unit = {}
-    ) {
-        recoveryJob?.cancel()
-        recoveryJob = scope.launch(Dispatchers.IO) {
-            val scan = scanIncompleteDownloadsInternal()
-            var report = scan.report
-            onEvent("R Download: info ${report.totalInfoFiles}, требуют докачки ${report.incompleteItems}")
+    ): RedDownloadRecoveryReport = withContext(Dispatchers.IO) {
+        recoveryMutex.withLock {
+            // Загрузки принадлежат KDownloader и продолжаются при закрытии экрана.
+            withContext(NonCancellable) { recoverDownloads(onEvent) }
+        }
+    }
 
+    private suspend fun recoverDownloads(onEvent: (String) -> Unit): RedDownloadRecoveryReport {
+        val scan = scanIncompleteDownloadsInternal()
+        var report = scan.report
+        onEvent("R Download: info ${report.totalInfoFiles}, требуют докачки ${report.incompleteItems}")
+
+        val pending = mutableListOf<Deferred<Unit>>()
+        try {
             scan.candidates.forEach { candidate ->
                 val enqueueReport = downloader.downloadMissingFilesForRecovery(
                     item = candidate.item,
                     onComplete = { refreshDownloadList() },
-                    onEvent = onEvent
+                    onEvent = onEvent,
+                    pending = pending
                 )
                 report = report.copy(
                     queuedVideo = report.queuedVideo + enqueueReport.queuedVideo,
@@ -339,15 +348,11 @@ class DownloadRed internal constructor(
                     "R Download: ${candidate.item.id} -> видео ${enqueueReport.queuedVideo}, preview ${enqueueReport.queuedPreview}"
                 )
             }
-
-            if (report.queuedVideo == 0) {
-                refreshDownloadList()
-            }
-
-            withContext(Dispatchers.Main) {
-                onComplete(report)
-            }
+        } finally {
+            pending.joinAll()
+            refreshDownloadList()
         }
+        return report
     }
 
     /**

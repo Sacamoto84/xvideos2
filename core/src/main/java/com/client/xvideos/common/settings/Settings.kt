@@ -3,6 +3,7 @@ package com.client.xvideos.common.settings
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.client.xvideos.common.settings.element.NAccessSettings
 import com.client.xvideos.common.settings.element.SettingElementBoolean
 import com.client.xvideos.common.settings.element.SettingElementInt
 import com.client.xvideos.common.settings.element.SettingElementList
@@ -280,7 +281,6 @@ object Settings {
 
     // Профиль N (логин и пароль в зашифрованном хранилище, кука сессии и API-ключ для повышенных лимитов API)
     val n_profile by lazy { SettingElementSecureCredentials(securePref, "n_login", "n_pass") }
-    val n_session_cookie by lazy { SettingElementString(pref, "n_session_cookie", "") }
-    val n_api_key by lazy { SettingElementString(pref, "n_api_key", "") }
+    val nAccess by lazy { NAccessSettings(pref, securePref) }
 
 }

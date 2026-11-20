@@ -9,7 +9,9 @@ import com.client.xvideos.common.json.AppJson
 import com.client.xvideos.common.kdownloader.KDownloader
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -240,16 +242,17 @@ class Downloader @Inject constructor(
      * Проверяет наличие видео и превью для [item], и докачивает только недостающие файлы.
      *
      * @param item Медиаэлемент.
-     * @param onComplete Коллбэк после завершения скачивания всех недостающих файлов.
+     * @param onComplete Обновление списка после добавления видео.
      * @param onEvent Лог-коллбэк событий.
      * @param showSnackBarErrors Показывать ли сообщения об ошибках в снэкбаре.
      * @return [RedDownloadEnqueueReport] со статистикой постановки в очередь.
      */
-    fun downloadMissingFiles(
+    internal fun downloadMissingFiles(
         item: GifsInfo,
         onComplete: () -> Unit = {},
         onEvent: (String) -> Unit = {},
-        showSnackBarErrors: Boolean = true
+        showSnackBarErrors: Boolean = true,
+        pending: MutableList<Deferred<Unit>>? = null
     ): RedDownloadEnqueueReport {
         if (item.id.isBlank() || item.userName.isBlank()) {
             return RedDownloadEnqueueReport()
@@ -281,7 +284,9 @@ class Downloader @Inject constructor(
             if (item.previewUrl() == null) {
                 skippedNoPreviewUrl++
             } else {
-                enqueuePreview(item, creatorPath, showSnackBarErrors, onEvent)
+                val finished = pending?.let { CompletableDeferred<Unit>() }
+                enqueuePreview(item, creatorPath, showSnackBarErrors, onEvent, finished)
+                if (finished != null) pending?.add(finished)
                 queuedPreview++
             }
         }
@@ -290,7 +295,9 @@ class Downloader @Inject constructor(
             if (item.downloadVideoUrl() == null) {
                 skippedNoVideoUrl++
             } else {
-                enqueueVideo(item, creatorPath, videoFile, showSnackBarErrors, onEvent, onComplete)
+                val finished = pending?.let { CompletableDeferred<Unit>() }
+                enqueueVideo(item, creatorPath, videoFile, showSnackBarErrors, onEvent, onComplete, finished)
+                if (finished != null) pending?.add(finished)
                 queuedVideo++
             }
         }
@@ -312,16 +319,18 @@ class Downloader @Inject constructor(
     /**
      * Вариант [downloadMissingFiles] для фонового восстановления поврежденных или незавершенных загрузок (без всплывающих снэкбаров).
      */
-    fun downloadMissingFilesForRecovery(
+    internal fun downloadMissingFilesForRecovery(
         item: GifsInfo,
         onComplete: () -> Unit = {},
-        onEvent: (String) -> Unit = {}
+        onEvent: (String) -> Unit = {},
+        pending: MutableList<Deferred<Unit>>? = null
     ): RedDownloadEnqueueReport {
         return downloadMissingFiles(
             item = item,
             onComplete = onComplete,
             onEvent = onEvent,
-            showSnackBarErrors = false
+            showSnackBarErrors = false,
+            pending = pending
         )
     }
 
@@ -355,7 +364,8 @@ class Downloader @Inject constructor(
         item: GifsInfo,
         dirPath: String,
         showSnackBarErrors: Boolean,
-        onEvent: (String) -> Unit
+        onEvent: (String) -> Unit,
+        finished: CompletableDeferred<Unit>? = null
     ) {
         val previewUrl = item.previewUrl() ?: return
         val requestImage = kDownloader.newRequestBuilder(previewUrl, dirPath, "${item.id}.jpg").tag(item.id).build()
@@ -367,9 +377,16 @@ class Downloader @Inject constructor(
                 if (showSnackBarErrors) {
                     SnackBar.error("Ошибка загрузки preview: $error")
                 }
+                finished?.complete(Unit)
             },
-            onCompleted = { onEvent("R Download: preview готов ${item.id}") },
-            onCancelled = { onEvent("R Download: preview отменён ${item.id}") },
+            onCompleted = {
+                onEvent("R Download: preview готов ${item.id}")
+                finished?.complete(Unit)
+            },
+            onCancelled = {
+                onEvent("R Download: preview отменён ${item.id}")
+                finished?.complete(Unit)
+            },
         )
     }
 
@@ -382,7 +399,8 @@ class Downloader @Inject constructor(
         videoFile: File,
         showSnackBarErrors: Boolean,
         onEvent: (String) -> Unit,
-        onComplete: () -> Unit
+        onComplete: () -> Unit,
+        finished: CompletableDeferred<Unit>?
     ) {
         val videoUrl = item.downloadVideoUrl() ?: return
         val request = kDownloader.newRequestBuilder(videoUrl, dirPath, "${item.id}.mp4").tag(item.id).build()
@@ -395,10 +413,12 @@ class Downloader @Inject constructor(
                 if (showSnackBarErrors) {
                     SnackBar.error("Ошибка закачки: $it")
                 }
+                finished?.complete(Unit)
             },
             onCancelled = {
                 onVideoFinished(item.id, failed = false)
                 onEvent("R Download: video отменён ${item.id}")
+                finished?.complete(Unit)
             },
             onProgress = { progress -> onVideoProgress(item.id, progress / 100f) },
             onCompleted = {
@@ -427,7 +447,7 @@ class Downloader @Inject constructor(
                     withContext(Dispatchers.Main) {
                         onComplete()
                     }
-                }
+                }.invokeOnCompletion { finished?.complete(Unit) }
             }
         )
     }

@@ -5,6 +5,11 @@ import com.client.xvideos.common.kdownloader.internal.DownloadDispatchers
 import com.client.xvideos.common.kdownloader.internal.DownloadRequest
 import com.client.xvideos.common.kdownloader.internal.DownloadRequestQueue
 import com.client.xvideos.common.kdownloader.utils.renameFileName
+import com.sun.net.httpserver.HttpServer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -13,11 +18,57 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.IOException
+import java.net.InetSocketAddress
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class KDownloaderQueueTest {
 
     @get:Rule
     val tempFolder = TemporaryFolder()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `колбэк ошибки не удаляет повторную загрузку с тем же адресом`() {
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val attempts = AtomicInteger()
+        val retryReceived = CountDownLatch(1)
+        val resumeResponse = CountDownLatch(1)
+        val retryCompleted = CountDownLatch(1)
+        server.createContext("/media") { exchange ->
+            exchange.use {
+                if (attempts.incrementAndGet() == 1) {
+                    exchange.sendResponseHeaders(404, -1)
+                } else {
+                    retryReceived.countDown()
+                    if (resumeResponse.await(5, TimeUnit.SECONDS)) {
+                        exchange.sendResponseHeaders(200, 4)
+                        exchange.responseBody.write(ByteArray(4))
+                    }
+                }
+            }
+        }
+        server.start()
+        Dispatchers.setMain(Dispatchers.Unconfined)
+        try {
+            val downloader = KDownloader.createForTesting()
+            val url = "http://127.0.0.1:${server.address.port}/media"
+            fun request() = downloader.newRequestBuilder(url, tempFolder.root.path, "video.mp4").build()
+            val id = downloader.enqueue(request(), onError = {
+                downloader.enqueue(request(), onCompleted = { retryCompleted.countDown() })
+            })
+
+            assertTrue(retryReceived.await(5, TimeUnit.SECONDS))
+            assertTrue(downloader.status(id) in setOf(Status.QUEUED, Status.RUNNING))
+            resumeResponse.countDown()
+            assertTrue(retryCompleted.await(5, TimeUnit.SECONDS))
+        } finally {
+            resumeResponse.countDown()
+            server.stop(0)
+            Dispatchers.resetMain()
+        }
+    }
 
     @Test
     fun `renameFileName successfully renames source file to destination`() {

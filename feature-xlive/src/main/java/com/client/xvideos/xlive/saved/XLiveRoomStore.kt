@@ -61,7 +61,10 @@ class XLiveRoomStore(
             val old = current.firstOrNull { it.username == room.username }
             val entry = room.copy(age = room.age ?: old?.age, savedAt = now())
             val next = listOf(entry) + current.filter { it.username != room.username }
-            db.insert(entry.username, entry).onFailure { Timber.w("XLive: комната не сохранена — %s", it.javaClass.simpleName) }
+            db.insert(entry.username, entry).onFailure {
+                Timber.w("XLive: комната не сохранена — %s", it.javaClass.simpleName)
+                return@launch
+            }
             next.drop(limit).forEach { db.delete(it.username) }
             _rooms.value = next.take(limit).toImmutableList()
         }
@@ -70,7 +73,8 @@ class XLiveRoomStore(
     fun remove(username: String) {
         scope.launch(diskDispatcher) {
             db.delete(username)
-            _rooms.value = _rooms.value.filter { it.username != username }.toImmutableList()
+                .onSuccess { _rooms.value = _rooms.value.filter { it.username != username }.toImmutableList() }
+                .onFailure { Timber.w("XLive: комната не удалена — %s", it.javaClass.simpleName) }
         }
     }
 

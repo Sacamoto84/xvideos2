@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,11 +46,11 @@ class ScreenNServerFavoritesSM @Inject constructor(
 
     init {
         screenModelScope.launch {
-            combine(Settings.n_api_key.field, Settings.n_session_cookie.field) { key, session -> key to session }
+            Settings.nAccess.field
                 .drop(1)
-                .collect { (key, _) ->
+                .collect { access ->
                     pages.reset()
-                    if (_removalChallenge.value != null && pendingRemovals.firstOrNull()?.apiKey != key) {
+                    if (_removalChallenge.value != null && pendingRemovals.firstOrNull()?.apiKey != access.apiKey) {
                         _removalChallenge.value = null
                         processRemovals()
                     }
@@ -66,7 +65,7 @@ class ScreenNServerFavoritesSM @Inject constructor(
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
 
     val columns = Settings.n_saved_column_current_count.field
-    val apiKey = Settings.n_api_key.field
+    val access = Settings.nAccess.field
 
     /**
      * Импортирует все элементы текущей страницы серверного избранного в локальное избранное.

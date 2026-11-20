@@ -137,6 +137,13 @@ class XLiveRecordingsTest {
         assertEquals(XLiveRecordStatus.BROKEN, record.status)
         assertTrue(File(core.store.dirOf(record.id), XLiveRecordStore.VIDEO_RAW).length() > 0)
         assertEquals(listOf<UiMessage>(UiMessage.Error("Запись не склеилась")), messages)
+
+        muxFails = false
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+
+        assertEquals(XLiveRecordStatus.READY, core.only().status)
+        assertEquals("muxed", File(core.store.dirOf(record.id), XLiveRecordStore.VIDEO).readText())
     }
 
     private fun leftover(id: Long, withMuxTemp: Boolean = false) {
@@ -174,6 +181,20 @@ class XLiveRecordingsTest {
 
         assertEquals("muxed", File(dir, "7/${XLiveRecordStore.VIDEO}").readText())
         assertFalse(File(dir, "7/${XLiveRecordStore.MUX_TEMP}").exists())
+    }
+
+    @Test
+    fun `доклейка сохраняет готовое видео рядом с исходными дорожками`() {
+        leftover(7)
+        val video = File(dir, "7/${XLiveRecordStore.VIDEO}").apply { writeText("готовое видео") }
+        val core = core()
+
+        core.finishPending()
+        scheduler.advanceUntilIdle()
+
+        assertEquals(XLiveRecordStatus.READY, core.only().status)
+        assertEquals("готовое видео", video.readText())
+        assertTrue(muxed.isEmpty())
     }
 
     @Test

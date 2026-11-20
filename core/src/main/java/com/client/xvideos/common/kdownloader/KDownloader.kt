@@ -85,18 +85,12 @@ class KDownloader private constructor(dbHelper: DbHelper, private val config: Do
             override fun onProgress(value: Int) = listener.onProgress(value)
             override fun onPause() = listener.onPause()
             override fun onError(error: String) {
-                try {
-                    listener.onError(error)
-                } finally {
-                    reqQueue.remove(req.downloadId)
-                }
+                reqQueue.remove(req)
+                listener.onError(error)
             }
             override fun onCompleted() {
-                try {
-                    listener.onCompleted()
-                } finally {
-                    reqQueue.remove(req.downloadId)
-                }
+                reqQueue.remove(req)
+                listener.onCompleted()
             }
         }
         req.listener = wrappedListener

@@ -100,11 +100,10 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
      * Отменяет задачу и удаляет её из реестра очереди.
      */
     fun cancel(id: Int) {
-        val req = idRequestMap[id]
+        val req = idRequestMap.remove(id)
         if (req != null && req.status != Status.CANCELLED) {
             downloader.cancel(req)
         }
-        idRequestMap.remove(id)
     }
 
     /**
@@ -112,6 +111,11 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
      */
     fun remove(id: Int) {
         idRequestMap.remove(id)
+    }
+
+    /** Поздний результат завершает только тот экземпляр, к которому привязан слушатель. */
+    internal fun remove(request: DownloadRequest) {
+        idRequestMap.remove(request.downloadId, request)
     }
 
     /**

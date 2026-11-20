@@ -27,12 +27,10 @@ internal object XlrRestoreCleanup {
     fun finishPath(root: File, target: File, aside: File, mode: XlrRestoreMode): Boolean {
         if (!aside.exists()) return true
         val moved = runCatching {
+            val relativeRoot = target.canonicalFile.relativeTo(root).invariantSeparatorsPath
             when (mode) {
-                XlrRestoreMode.MERGE -> keepLocalContent(aside, target)
-                XlrRestoreMode.REPLACE -> {
-                    val relativeRoot = target.canonicalFile.relativeTo(root).invariantSeparatorsPath
-                    carryOverDownloadedMedia(aside, target, relativeRoot)
-                }
+                XlrRestoreMode.MERGE -> keepLocalContent(aside, target, relativeRoot)
+                XlrRestoreMode.REPLACE -> carryOverDownloadedMedia(aside, target, relativeRoot)
             }
         }.onFailure { Timber.e(it, "XlrBackupManager: перенос прежних файлов не удался") }
         if (mode == XlrRestoreMode.MERGE && moved.isFailure) return false
@@ -46,12 +44,13 @@ internal object XlrRestoreCleanup {
      * пустые папки. Данные лежат по файлу на запись, поэтому объединение папок
      * и есть объединение списков. Файл, пришедший из архива, не заменяется.
      */
-    private fun keepLocalContent(aside: File, target: File) {
+    private fun keepLocalContent(aside: File, target: File, relativeRoot: String) {
         aside.walkTopDown().toList().forEach { old ->
-            val restored = File(target, old.relativeTo(aside).path)
+            val relative = old.relativeTo(aside).invariantSeparatorsPath
+            val restored = File(target, relative)
             when {
                 old.isDirectory -> restored.mkdirs()
-                isPartialDownloadName(old.name) || restored.exists() -> Unit
+                isDisposableBackupEntry("$relativeRoot/$relative") || restored.exists() -> Unit
                 else -> {
                     restored.parentFile?.mkdirs()
                     if (!old.renameTo(restored)) old.copyTo(restored, overwrite = false)
@@ -93,6 +92,12 @@ internal object XlrRestoreCleanup {
     /** Остаток прерванной загрузки: ни переносить его, ни класть в архив незачем. */
     fun isPartialDownloadName(name: String): Boolean =
         PARTIAL_DOWNLOAD_SUFFIXES.any { name.endsWith(it, ignoreCase = true) }
+
+    /** XLive собирает MP4 из этих двух дорожек, в том числе после перезапуска. */
+    private val recordingTrack = Regex("""XLive/Records/[0-9]+/(video|audio)\.part""")
+
+    fun isDisposableBackupEntry(path: String): Boolean =
+        isPartialDownloadName(path.substringAfterLast('/')) && !recordingTrack.matches(path)
 
     /**
      * Есть ли в восстановленной папке метаданные элемента, которому принадлежит

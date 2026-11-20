@@ -777,7 +777,7 @@ object XlrBackupManager {
         }
         // Остаток оборванной загрузки: недокачанный ролик нельзя ни открыть, ни
         // докачать на другом устройстве, а восстановление такие файлы отбрасывает.
-        if (XlrRestoreCleanup.isPartialDownloadName(normalized.substringAfterLast('/'))) {
+        if (XlrRestoreCleanup.isDisposableBackupEntry(normalized)) {
             return false
         }
         if (options.rMode == XlrBackupContentMode.MINI && normalized.isInsideBackupPath(R_DOWNLOAD_PATH)) {

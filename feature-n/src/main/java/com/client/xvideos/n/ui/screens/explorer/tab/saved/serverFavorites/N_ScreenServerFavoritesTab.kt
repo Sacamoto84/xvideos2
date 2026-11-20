@@ -45,7 +45,8 @@ object N_ScreenServerFavoritesTab : Screen {
 
         val isImporting by vm.isImporting.collectAsStateWithLifecycle()
         val columns by vm.columns.collectAsStateWithLifecycle()
-        val apiKey by vm.apiKey.collectAsStateWithLifecycle()
+        val access by vm.access.collectAsStateWithLifecycle()
+        val apiKey = access.apiKey
         val localFavorites by vm.localFavorites.collectAsStateWithLifecycle()
         val removalChallenge by vm.removalChallenge.collectAsStateWithLifecycle()
 

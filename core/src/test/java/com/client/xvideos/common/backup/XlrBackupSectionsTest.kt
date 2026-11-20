@@ -70,9 +70,10 @@ class XlrBackupSectionsTest {
     }
 
     @Test
-    fun `недописанные файлы записи в копию не идут`() {
+    fun `исходные дорожки записи идут в копию, временная сборка исключается`() {
         val options = XlrBackupOptions.DEFAULT
-        assertFalse(XlrBackupManager.shouldIncludeBackupEntry("XLive/Records/1/video.part", options))
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry("XLive/Records/1/video.part", options))
+        assertTrue(XlrBackupManager.shouldIncludeBackupEntry("XLive/Records/1/audio.part", options))
         assertFalse(XlrBackupManager.shouldIncludeBackupEntry("XLive/Records/1/video.mp4.part", options))
         assertFalse(XlrBackupManager.shouldIncludeBackupEntry("XLive/Records/1/.storyboard.jpg", options))
         assertTrue(XlrBackupManager.shouldIncludeBackupEntry("XLive/Records/1/video.mp4", options))

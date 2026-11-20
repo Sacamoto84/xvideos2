@@ -28,9 +28,8 @@ import kotlinx.serialization.json.jsonObject
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.get
+import io.ktor.client.request.prepareGet
 import io.ktor.client.request.headers
-import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
@@ -234,29 +233,30 @@ internal suspend fun lDownloadToFile(
 
     val tempFile = File(file.parentFile, "${file.name}$L_PART_FILE_SUFFIX")
     try {
-        val response: HttpResponse = client.get(url)
-        if (!response.status.isSuccess()) {
-            throw IOException("HTTP error: ${response.status.value}")
-        }
-        val totalBytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
-        var downloadedBytes = 0L
-        response.bodyAsChannel().toInputStream().use { input ->
-            FileOutputStream(tempFile).use { output ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    output.write(buffer, 0, count)
-                    downloadedBytes += count
-                    onProgress(downloadedBytes, totalBytes)
+        client.prepareGet(url).execute { response ->
+            if (!response.status.isSuccess()) {
+                throw IOException("HTTP error: ${response.status.value}")
+            }
+            val totalBytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
+            var downloadedBytes = 0L
+            response.bodyAsChannel().toInputStream().use { input ->
+                FileOutputStream(tempFile).use { output ->
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        output.write(buffer, 0, count)
+                        downloadedBytes += count
+                        onProgress(downloadedBytes, totalBytes)
+                    }
                 }
             }
-        }
-        if (totalBytes != null && totalBytes > 0L && downloadedBytes < totalBytes) {
-            throw IOException("Download incomplete: expected $totalBytes bytes, got $downloadedBytes bytes")
-        }
-        if (downloadedBytes == 0L) {
-            throw IOException("Download failed: empty response body (0 bytes) from $url")
+            if (totalBytes != null && totalBytes > 0L && downloadedBytes < totalBytes) {
+                throw IOException("Download incomplete: expected $totalBytes bytes, got $downloadedBytes bytes")
+            }
+            if (downloadedBytes == 0L) {
+                throw IOException("Download failed: empty response body (0 bytes) from $url")
+            }
         }
         if (file.exists() && !file.delete()) {
             throw IOException("Cannot replace file: ${file.absolutePath}")

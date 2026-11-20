@@ -127,7 +127,7 @@ class ScreenNGallerySM @AssistedInject constructor(
             }
         }
         screenModelScope.launch {
-            combine(Settings.n_api_key.field, favoriteStatusRefresh) { key, _ -> key }.collectLatest { key ->
+            combine(Settings.nAccess.field, favoriteStatusRefresh) { access, _ -> access.apiKey }.collectLatest { key ->
                 selectServerFavoriteAccount(key)
                 if (key.isNotBlank()) {
                     serverFavoriteWrite?.join()

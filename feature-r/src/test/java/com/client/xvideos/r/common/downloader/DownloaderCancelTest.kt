@@ -88,6 +88,9 @@ class DownloaderCancelTest {
         // Так отменяет загрузку удаление ролика: по тегу, равному id.
         downloader.kDownloader.cancel(item.id)
 
+        // Колбэк отмены приходит после остановки чтения и файловой уборки.
+        val cancelDeadline = System.currentTimeMillis() + 5_000
+        while (downloader.isDownloading() && System.currentTimeMillis() < cancelDeadline) Thread.sleep(10)
         assertFalse("отмена показана как ошибка загрузки", downloader.hasDownloadError())
         assertTrue(downloader.isIdle())
     }

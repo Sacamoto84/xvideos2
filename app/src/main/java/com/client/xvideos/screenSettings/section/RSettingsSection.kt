@@ -29,6 +29,7 @@ import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.screenSettings.components.WhatsAppGreen
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
@@ -60,19 +61,21 @@ internal fun RSettingsSection(
             if (redDownloader != null) {
                 isRecoveringDownload = true
                 scope.launch {
-                    redDownloader.recoverIncompleteDownloads(onComplete = { report ->
-                        scope.launch {
-                            recoveryReport = report
-                            isRecoveringDownload = false
-                            if (report.incompleteItems == 0) {
-                                SnackBar.success("Download проверен: все файлы на месте")
-                            } else {
-                                SnackBar.success(
-                                    "Запущено: видео ${report.queuedVideo}, превью ${report.queuedPreview}"
-                                )
+                    try {
+                        runCatchingCancellable { redDownloader.recoverIncompleteDownloads() }
+                            .onSuccess { report ->
+                                recoveryReport = report
+                                val message = if (report.incompleteItems == 0) {
+                                    "Download проверен: все файлы на месте"
+                                } else {
+                                    "Докачка завершена. Поставлено в очередь: видео ${report.queuedVideo}, превью ${report.queuedPreview}"
+                                }
+                                SnackBar.info(message)
                             }
-                        }
-                    })
+                            .onFailure { SnackBar.error("Не удалось завершить докачку R") }
+                    } finally {
+                        isRecoveringDownload = false
+                    }
                 }
             }
         }

@@ -54,6 +54,18 @@ class XLiveRoomStoreTest {
     }
 
     @Test
+    fun `ошибка записи комнаты оставляет предыдущую историю на диске`() {
+        val store = testRoomStore(tmp.root, limit = 1, now = tick)
+        store.put(XLiveSavedRoom("first"))
+        tmp.newFolder("second.room").resolve("blocked").writeText("файл")
+
+        store.put(XLiveSavedRoom("second"))
+
+        assertEquals(listOf("first"), store.names())
+        assertEquals(listOf("first"), testRoomStore(tmp.root, limit = 1).names())
+    }
+
+    @Test
     fun `убранная комната уходит из списка и с диска`() {
         val store = testRoomStore(tmp.root, now = tick)
         store.put(XLiveSavedRoom("a"))

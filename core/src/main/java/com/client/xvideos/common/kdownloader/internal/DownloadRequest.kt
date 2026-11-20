@@ -128,11 +128,15 @@ class DownloadRequest private constructor(
      * события. Нужен, когда тот же файл запросили повторно — вторая загрузка не
      * запускается, но запросивший обязан узнать исход.
      */
+    @Synchronized
     internal fun addListener(extra: Listener?) {
         if (extra == null) return
         val current = listener
         listener = if (current == null) extra else ListenerPair(current, extra)
     }
+
+    @Synchronized
+    internal fun takeListener(): Listener? = listener.also { listener = null }
 
     /** Передаёт каждое событие обоим слушателям; сбой первого не лишает события второго. */
     private class ListenerPair(private val first: Listener, private val second: Listener) : Listener {

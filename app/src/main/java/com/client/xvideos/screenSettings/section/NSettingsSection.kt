@@ -44,8 +44,8 @@ internal fun NSettingsSection(
     modifier: Modifier = Modifier
 ) {
     val isVerticalReader by Settings.n_fullscreen_vertical_pager.field.collectAsStateWithLifecycle()
-    val apiKey by Settings.n_api_key.field.collectAsStateWithLifecycle()
-    val hasApiKey = apiKey.isNotBlank()
+    val access by Settings.nAccess.field.collectAsStateWithLifecycle()
+    val hasApiKey = access.apiKey.isNotBlank()
     val isLoggedIn by NAuthState.isLoggedIn.collectAsStateWithLifecycle()
     val username by NAuthState.username.collectAsStateWithLifecycle()
     val challengeUrl by NCloudflareState.challengeUrl.collectAsStateWithLifecycle()

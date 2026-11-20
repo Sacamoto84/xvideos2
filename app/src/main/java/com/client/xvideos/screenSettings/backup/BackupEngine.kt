@@ -148,15 +148,8 @@ class XlrBackupEngine @Inject constructor(
             if (shouldAutoRecoverRedDownload(paths)) {
                 launch {
                     log("R Download: сканирую .info")
-                    awaitRecovery { done ->
-                        downloadRed.recoverIncompleteDownloads(
-                            onEvent = log,
-                            onComplete = { report ->
-                                log(redDownloadRecoveryConsoleText(report))
-                                done()
-                            },
-                        )
-                    }
+                    val report = downloadRed.recoverIncompleteDownloads(onEvent = log)
+                    log(redDownloadRecoveryConsoleText(report))
                 }
             }
         }
