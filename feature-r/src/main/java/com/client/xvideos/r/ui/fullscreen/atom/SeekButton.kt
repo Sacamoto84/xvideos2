@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.feature.r.R
 
 @Composable
@@ -17,12 +18,14 @@ fun SeekButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    IconButton(onClick = onClick, modifier = modifier) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = contentDescription,
-            tint = Color.White
-        )
+    HintTooltip(text = contentDescription, modifier = modifier) {
+        IconButton(onClick = onClick) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = contentDescription,
+                tint = Color.White
+            )
+        }
     }
 }
 

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.HintTooltip
 
 @Composable
 fun MuteButton(
@@ -20,18 +21,21 @@ fun MuteButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .size(46.dp)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        val icon = if (mute) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
-        Icon(
-            icon,
-            contentDescription = if (mute) "Включить звук" else "Выключить звук",
-            tint = if (mute) Color.Gray else Color.White
-        )
+    val hint = if (mute) "Включить звук" else "Выключить звук"
+    HintTooltip(text = hint, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            val icon = if (mute) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp
+            Icon(
+                icon,
+                contentDescription = hint,
+                tint = if (mute) Color.Gray else Color.White
+            )
+        }
     }
 }
 

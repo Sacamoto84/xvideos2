@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.scroll.AlbumPageNavButton
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.ui.screens.screenAlbumList.molecule.PageSelectorDialogContent
@@ -110,17 +111,19 @@ fun AlbumListPageSelector(
             modifier = Modifier.weight(1f)
         )
 
-        Box(
-            modifier = Modifier
-                .weight(2f)
-                .then(centerBoxModifier),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                pageText,
-                color = Theme.L.textColor,
-                style = pageTextStyle
-            )
+        HintTooltip(text = "Ввести номер страницы", modifier = Modifier.weight(2f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(centerBoxModifier),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    pageText,
+                    color = Theme.L.textColor,
+                    style = pageTextStyle
+                )
+            }
         }
 
         AlbumPageNavButton(

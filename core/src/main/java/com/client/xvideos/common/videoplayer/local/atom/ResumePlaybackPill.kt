@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
@@ -56,15 +57,17 @@ fun ResumePlaybackPill(
                 )
             )
             Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = "С начала",
-                style = TextStyle(
-                    color = Color(0xFFFF5252),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                ),
-                modifier = restartModifier
-            )
+            HintTooltip(text = "Начать воспроизведение сначала") {
+                Text(
+                    text = "С начала",
+                    style = TextStyle(
+                        color = Color(0xFFFF5252),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    ),
+                    modifier = restartModifier
+                )
+            }
         }
     }
 }

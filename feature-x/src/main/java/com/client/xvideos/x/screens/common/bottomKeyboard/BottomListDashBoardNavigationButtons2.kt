@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.currentWidthClass
 import com.client.xvideos.common.ui.keyboard.KeyboardNumber
 import com.client.xvideos.common.ui.keyboard.KeyboardNumberTheme
@@ -95,6 +96,7 @@ fun BottomListDashBoardNavigationButtons2(
     ) {
         ArrowNavigationButton(
             arrow = "<",
+            hint = "Предыдущая страница",
             enabled = value > 0,
             onClick = onBackClick
         )
@@ -135,24 +137,27 @@ fun BottomListDashBoardNavigationButtons2(
         }
 
         // Кнопка прямого ввода номера страницы
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 0.5.dp)
-                .size(48.dp)
-                .background(Color(0xFF2C2C2C))
-                .clickable { showKeyboardDialog = true },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Dialpad,
-                contentDescription = "Ввести номер страницы",
-                tint = Color(0xFFFF9900),
-                modifier = Modifier.size(20.dp)
-            )
+        HintTooltip(text = "Ввести номер страницы") {
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 0.5.dp)
+                    .size(48.dp)
+                    .background(Color(0xFF2C2C2C))
+                    .clickable { showKeyboardDialog = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Dialpad,
+                    contentDescription = "Ввести номер страницы",
+                    tint = Color(0xFFFF9900),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
 
         ArrowNavigationButton(
             arrow = ">",
+            hint = "Следующая страница",
             enabled = value < maxPageIndex,
             onClick = onForwardClick
         )

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.scroll.AlbumPageNavButton
 import com.client.xvideos.n.ui.molecule.NPageSelectorDialog
 
@@ -93,35 +94,37 @@ fun NAlbumListPageSelector(
             modifier = Modifier.weight(1f)
         )
 
-        Box(
-            modifier = Modifier
-                .weight(2f)
-                .fillMaxHeight()
-                .drawBehind {
-                    val stroke = 1.dp.toPx()
-                    drawLine(
-                        color = borderLineColor,
-                        start = Offset(0f, 0f),
-                        end = Offset(size.width, 0f),
-                        strokeWidth = stroke
-                    )
-                    drawLine(
-                        color = borderLineColor,
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = stroke
-                    )
-                }
-                .clickable(onClick = onOpenDialog),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = pageText,
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
+        HintTooltip(text = "Ввести номер страницы", modifier = Modifier.weight(2f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .drawBehind {
+                        val stroke = 1.dp.toPx()
+                        drawLine(
+                            color = borderLineColor,
+                            start = Offset(0f, 0f),
+                            end = Offset(size.width, 0f),
+                            strokeWidth = stroke
+                        )
+                        drawLine(
+                            color = borderLineColor,
+                            start = Offset(0f, size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = stroke
+                        )
+                    }
+                    .clickable(onClick = onOpenDialog),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = pageText,
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         AlbumPageNavButton(

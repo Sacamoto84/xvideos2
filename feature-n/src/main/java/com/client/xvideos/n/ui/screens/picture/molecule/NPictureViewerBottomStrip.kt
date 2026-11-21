@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.n.model.NPicture
 
 /**
@@ -69,19 +70,21 @@ fun NPictureViewerBottomStrip(
                     { onPictureSelected(index) }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .height(64.dp)
-                        .aspectRatio(137f / 200f)
-                        .clip(shape)
-                        .border(2.dp, borderColor, shape)
-                        .clickable(onClick = handleClick)
-                ) {
-                    UrlImage(
-                        url = picture.thumbnailUrl,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.matchParentSize()
-                    )
+                HintTooltip(text = "Изображение ${index + 1}") {
+                    Box(
+                        modifier = Modifier
+                            .height(64.dp)
+                            .aspectRatio(137f / 200f)
+                            .clip(shape)
+                            .border(2.dp, borderColor, shape)
+                            .clickable(onClick = handleClick)
+                    ) {
+                        UrlImage(
+                            url = picture.thumbnailUrl,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.matchParentSize()
+                        )
+                    }
                 }
             }
         }

@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 
 /**
@@ -51,7 +52,9 @@ fun PlaybackSpeedMenu(
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
-        trigger { expanded = true }
+        HintTooltip(text = "Скорость воспроизведения · ${currentSpeed.displayName}") {
+            trigger { expanded = true }
+        }
 
         DropdownMenu(
             expanded = expanded,

@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.x.model.XCategory
 import com.client.xvideos.x.feature.category.atom.XCategoryIcon
 
@@ -40,15 +41,17 @@ fun XCategorySwitch(
 
     Box(modifier = modifier.size(48.dp), contentAlignment = Alignment.Center) {
         // Без заливки: значок на фоне вкладок, кнопка не перетягивает внимание.
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .clickable { expanded = true },
-            contentAlignment = Alignment.Center
-        ) {
-            // Приглушён до яркости неактивных вкладок: кнопку жмут редко, белый светился.
-            XCategoryIcon(category = current, modifier = Modifier.alpha(ICON_ALPHA))
+        HintTooltip(text = "Категория видео · ${current.title}") {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable { expanded = true },
+                contentAlignment = Alignment.Center
+            ) {
+                // Приглушён до яркости неактивных вкладок: кнопку жмут редко, белый светился.
+                XCategoryIcon(category = current, modifier = Modifier.alpha(ICON_ALPHA))
+            }
         }
 
         DropdownMenu(

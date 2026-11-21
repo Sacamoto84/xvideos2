@@ -22,6 +22,8 @@ private val EXPLORER_TAB_ICONS = persistentListOf(
     Icons.Outlined.Search
 )
 
+private val EXPLORER_TAB_HINTS = persistentListOf("Лента видео", "Сохранённое", "Каталог групп", "Поиск")
+
 @Composable
 fun ExplorerBottomBar(
     screenType: Int,
@@ -40,6 +42,7 @@ fun ExplorerBottomBar(
             value = screenType,
             onChangeState = onTabChange,
             overlay = renderOverlay,
+            tooltips = EXPLORER_TAB_HINTS,
         )
     }
 }

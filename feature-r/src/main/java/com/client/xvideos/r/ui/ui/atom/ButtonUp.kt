@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 
 @Composable
 fun ButtonUp(
@@ -27,21 +28,23 @@ fun ButtonUp(
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(8.dp)
-    Box(
-        modifier = modifier
-            .height(46.dp)
-            .width(width)
-            .clip(shape)
-            .border(1.dp, Color(0x80757575), shape)
-            .background(Theme.tabLevel0)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Filled.ArrowUpward,
-            contentDescription = "Вверх",
-            tint = Color.LightGray
-        )
+    HintTooltip(text = "В начало списка", modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .height(46.dp)
+                .width(width)
+                .clip(shape)
+                .border(1.dp, Color(0x80757575), shape)
+                .background(Theme.tabLevel0)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.ArrowUpward,
+                contentDescription = "В начало списка",
+                tint = Color.LightGray
+            )
+        }
     }
 }
 

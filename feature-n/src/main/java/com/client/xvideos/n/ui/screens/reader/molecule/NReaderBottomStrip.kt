@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.n.model.NPage
 
 /**
@@ -56,20 +57,22 @@ fun NReaderBottomStrip(
             val isSelected = index == currentPageIndex
             val borderColor = if (isSelected) Color(0xFFED2553) else Color.Transparent
 
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 4.dp)
-                    .width(42.dp)
-                    .height(60.dp)
-                    .clip(thumbShape)
-                    .border(2.dp, borderColor, thumbShape)
-                    .clickable { onPageSelected(index) }
-            ) {
-                UrlImage(
-                    url = page.thumbnailUrl(mediaId),
-                    modifier = Modifier.fillMaxWidth(),
-                    contentScale = ContentScale.Crop
-                )
+            HintTooltip(text = "Страница ${page.pageNumber}") {
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .width(42.dp)
+                        .height(60.dp)
+                        .clip(thumbShape)
+                        .border(2.dp, borderColor, thumbShape)
+                        .clickable { onPageSelected(index) }
+                ) {
+                    UrlImage(
+                        url = page.thumbnailUrl(mediaId),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
         }
     }

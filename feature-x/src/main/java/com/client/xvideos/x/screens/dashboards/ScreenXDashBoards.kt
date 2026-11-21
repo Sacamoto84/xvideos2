@@ -72,6 +72,8 @@ private val mainTabs: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Search,
 )
 
+private val mainTabHints = persistentListOf("Лента видео", "Рубрики", "Сохранённое", "Поиск")
+
 /**
  * Главный экран раздела X с двухуровневой нижней панелью в стиле R/L.
  */
@@ -245,6 +247,7 @@ fun ScreenXDashBoardsContent(
                             value = mainTab,
                             onChangeState = onMainTabChange,
                             containerColor = Theme.tabLevel0,
+                            tooltips = mainTabHints,
                         )
                     }
                     XCategorySwitch(current = category, onSelect = onCategorySelect)

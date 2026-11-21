@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.HintTooltip
 
 /**
  * Звук эфира поверх видео — тот же значок, что у кнопки звука в R.
@@ -29,20 +30,23 @@ fun XLiveMuteButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Color(0x99000000))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = if (muted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
-            contentDescription = if (muted) "Включить звук" else "Выключить звук",
-            tint = Color.White,
-            modifier = Modifier.size(22.dp)
-        )
+    val hint = if (muted) "Включить звук" else "Выключить звук"
+    HintTooltip(text = hint, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color(0x99000000))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (muted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
+                contentDescription = hint,
+                tint = Color.White,
+                modifier = Modifier.size(22.dp)
+            )
+        }
     }
 }
 

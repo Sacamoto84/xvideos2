@@ -41,6 +41,7 @@ fun NichePreview2Content(
     onFollowClick: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    trailingFollowAction: (@Composable (onClick: () -> Unit) -> Unit)? = null,
 ) {
     val subscribersText = remember(niche.subscribers) { niche.subscribers.toNicheCountText() }
     val gifsText = remember(niche.gifs) { niche.gifs.toNicheCountText() }
@@ -80,7 +81,7 @@ fun NichePreview2Content(
         Column(
             modifier = Modifier
                 .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
-                .fillMaxWidth()
+                .weight(1f)
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -142,18 +143,18 @@ fun NichePreview2Content(
                     }
                 }
 
-                Box(
-                    modifier = buttonStyledModifier
-                        .clickable(onClick = onFollowClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = buttonText,
-                        color = buttonTextColor
-                    )
+                if (trailingFollowAction == null) {
+                    Box(
+                        modifier = buttonStyledModifier.clickable(onClick = onFollowClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = buttonText, color = buttonTextColor)
+                    }
                 }
             }
         }
+
+        trailingFollowAction?.invoke(onFollowClick)
     }
 }
 

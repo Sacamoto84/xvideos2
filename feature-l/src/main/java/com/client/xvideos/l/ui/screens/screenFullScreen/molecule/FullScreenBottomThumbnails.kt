@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.screens.screenFullScreen.atom.FullScreenThumbnailItem
 
@@ -41,12 +42,14 @@ fun FullScreenBottomThumbnails(
                         filteredPic,
                         key = { index, item -> "${item.url_to_original}#$index" }
                     ) { index, item ->
-                        FullScreenThumbnailItem(
-                            item = item,
-                            isSelected = index == currentIndex,
-                            albumName = albumName,
-                            onClick = { onThumbnailClick(index) }
-                        )
+                        HintTooltip(text = "Открыть файл ${index + 1}") {
+                            FullScreenThumbnailItem(
+                                item = item,
+                                isSelected = index == currentIndex,
+                                albumName = albumName,
+                                onClick = { onThumbnailClick(index) }
+                            )
+                        }
                     }
                 }
         }

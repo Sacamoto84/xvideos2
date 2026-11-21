@@ -31,6 +31,14 @@ private val savedTabs: ImmutableList<ImageVector> = persistentListOf(
     Icons.Outlined.Person,
 )
 
+private val savedTabHints = persistentListOf(
+    "Избранное",
+    "Загрузки",
+    "История просмотров",
+    "Подписки на каналы",
+    "Подписки на моделей",
+)
+
 @Composable
 fun DashboardSecondaryControls(
     mainTab: Int,
@@ -53,6 +61,7 @@ fun DashboardSecondaryControls(
             value = savedTab,
             onChangeState = onSavedTabChange,
             containerColor = Theme.tabLevel1,
+            tooltips = savedTabHints,
         )
         MAIN_TAB_SEARCH -> {
             if (searchUiMode == SearchUiMode.RESULTS) {

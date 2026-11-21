@@ -27,6 +27,15 @@ private val SAVED_TAB_ICONS = persistentListOf(
     Icons.Outlined.Subscriptions,
 )
 
+private val SAVED_TAB_HINTS = persistentListOf(
+    "Понравившееся",
+    "Сохранённые авторы",
+    "Сохранённые группы",
+    "Загрузки",
+    "Коллекции",
+    "Подписки на авторов",
+)
+
 @Composable
 fun SavedBottomBar(
     currentPage: Int,
@@ -52,6 +61,7 @@ fun SavedBottomBar(
             titlesIcon = SAVED_TAB_ICONS,
             onChangeState = onTabChange,
             overlay = renderOverlay,
+            tooltips = SAVED_TAB_HINTS,
         )
     }
 }

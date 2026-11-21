@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.r.ui.search.atom.HistoryMenuItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,19 +37,21 @@ fun ExpandMenuHistoryContentStateless(
         onExpandedChange = onExpandedChange,
         modifier = modifier
     ) {
-        IconButton(
-            modifier = Modifier
-                .height(46.dp)
-                .width(46.dp)
-                .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
-            onClick = { onExpandedChange(!expanded) }
-        ) {
-            Icon(
-                imageVector = Icons.Default.History,
-                contentDescription = "История поиска",
-                tint = if (expanded) Color.White else Color(0xFF757575),
-                modifier = Modifier.size(30.dp)
-            )
+        HintTooltip(text = "История поиска") {
+            IconButton(
+                modifier = Modifier
+                    .height(46.dp)
+                    .width(46.dp)
+                    .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable),
+                onClick = { onExpandedChange(!expanded) }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = "История поиска",
+                    tint = if (expanded) Color.White else Color(0xFF757575),
+                    modifier = Modifier.size(30.dp)
+                )
+            }
         }
 
         ExposedDropdownMenu(

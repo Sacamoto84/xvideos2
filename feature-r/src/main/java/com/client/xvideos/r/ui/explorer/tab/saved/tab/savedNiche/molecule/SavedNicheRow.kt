@@ -1,5 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -7,6 +9,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NichePreview2Content
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.SavedItemActionsMenu
 
 @Composable
 fun SavedNicheRow(
@@ -31,7 +34,10 @@ fun SavedNicheRow(
         isFollowed = true,
         onFollowClick = onRowDelete,
         onClick = onRowClick,
-        modifier = modifier
+        modifier = modifier,
+        trailingFollowAction = { onLeave ->
+            SavedItemActionsMenu(actionIcon = Icons.AutoMirrored.Filled.ExitToApp, actionLabel = "Выйти", onAction = onLeave)
+        }
     )
 }
 

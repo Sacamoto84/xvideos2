@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.util.toTwoDecimalPlacesWithColon
 
 @Composable
@@ -35,25 +36,27 @@ fun TimeMarkerButton(
             textAlign = TextAlign.Center
         )
     }
-    Column(
-        modifier = modifier
-            .size(46.dp)
-            .clickable(onClick = onClick),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        BasicText(
-            time.toTwoDecimalPlacesWithColon(),
-            style = textStyle,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text(
-            label,
-            color = Color.White,
-            fontSize = 20.sp,
-            fontFamily = Theme.R.fontFamilyPopinsRegular,
-            textAlign = TextAlign.Center
-        )
+    HintTooltip(text = "Установить точку $label для повтора", modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .size(46.dp)
+                .clickable(onClick = onClick),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            BasicText(
+                time.toTwoDecimalPlacesWithColon(),
+                style = textStyle,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                label,
+                color = Color.White,
+                fontSize = 20.sp,
+                fontFamily = Theme.R.fontFamilyPopinsRegular,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

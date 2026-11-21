@@ -54,13 +54,15 @@ fun NSortMenuButton(
     Box(modifier = modifier) {
         if (modeIcon != null) {
             val buttonDescription = "$contentDescription · $selectedTitle"
-            IconButton(
-                onClick = { expanded = true },
-                modifier = Modifier
-                    .size(48.dp)
-                    .semantics { this.contentDescription = buttonDescription }
-            ) {
-                modeIcon(selectedIndex)
+            HintTooltip(text = buttonDescription) {
+                IconButton(
+                    onClick = { expanded = true },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics { this.contentDescription = buttonDescription }
+                ) {
+                    modeIcon(selectedIndex)
+                }
             }
         } else {
             HintTooltip(text = contentDescription) {

@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.nearestIn
 
@@ -119,6 +120,8 @@ fun SortByOrder(
         BorderStroke(1.dp, Theme.R.colorBorderGray)
     }
 
+    val sortHint = if (orderIcon != null) "Сортировка · ${selected.toIconLabel()}" else "Изменить сортировку"
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = onExpandedChange,
@@ -126,38 +129,39 @@ fun SortByOrder(
             .clip(boxShape)
             .background(containerColor)
     ) {
-        if (orderIcon != null) {
-            val selectionDescription = "Сортировка · ${selected.toIconLabel()}"
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .semantics { contentDescription = selectionDescription }
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                    .border(1.dp, Color(0xFF3A3A3A), boxShape),
-                contentAlignment = Alignment.Center
-            ) {
-                orderIcon(selected)
-            }
-        } else {
-            Row(
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(46.dp)
-                    .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable)
-                    .border(1.dp, Color(0xFF3A3A3A), boxShape)
-                    .clickable(onClick = onTriggerClick),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                BasicText(
-                    selected.toDisplayName(),
+        HintTooltip(text = sortHint) {
+            if (orderIcon != null) {
+                Box(
                     modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .weight(1f)
-                        .align(Alignment.CenterVertically),
-                    style = textStyle,
-                    autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
-                    maxLines = 1
-                )
+                        .size(48.dp)
+                        .semantics { contentDescription = sortHint }
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        .border(1.dp, Color(0xFF3A3A3A), boxShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    orderIcon(selected)
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(46.dp)
+                        .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable)
+                        .border(1.dp, Color(0xFF3A3A3A), boxShape)
+                        .clickable(onClick = onTriggerClick),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    BasicText(
+                        selected.toDisplayName(),
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .weight(1f)
+                            .align(Alignment.CenterVertically),
+                        style = textStyle,
+                        autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
+                        maxLines = 1
+                    )
+                }
             }
         }
 

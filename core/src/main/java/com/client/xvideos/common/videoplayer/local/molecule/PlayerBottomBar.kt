@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
@@ -137,14 +138,17 @@ fun PlayerBottomBar(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Play / Pause
-        Icon(
-            imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
-            contentDescription = if (host.isPaused) "Play" else "Pause",
-            tint = Color.White,
-            modifier = Modifier
-                .size(28.dp)
-                .clickable(onClick = onTogglePlayPause)
-        )
+        val playPauseHint = if (host.isPaused) "Воспроизвести" else "Пауза"
+        HintTooltip(text = playPauseHint) {
+            Icon(
+                imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+                contentDescription = playPauseHint,
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable(onClick = onTogglePlayPause)
+            )
+        }
 
         // Текущее время
         Text(
@@ -203,14 +207,17 @@ fun PlayerBottomBar(
 
         // Полный экран (если поддержан экраном)
         if (onFullScreenClick != null) {
-            Icon(
-                imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                contentDescription = if (isFullScreen) "Exit Fullscreen" else "Fullscreen",
-                tint = Color.White,
-                modifier = Modifier
-                    .size(28.dp)
-                    .clickable(onClick = onFullScreenClick)
-            )
+            val fullScreenHint = if (isFullScreen) "Выйти из полного экрана" else "На весь экран"
+            HintTooltip(text = fullScreenHint) {
+                Icon(
+                    imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                    contentDescription = fullScreenHint,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clickable(onClick = onFullScreenClick)
+                )
+            }
         }
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.HintTooltip
 
 /**
  * Кнопка полного экрана поверх живого видео.
@@ -29,20 +30,23 @@ fun XLiveFullScreenButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Color(0x99000000))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-            contentDescription = if (isFullScreen) "Выйти из полного экрана" else "На весь экран",
-            tint = Color.White,
-            modifier = Modifier.size(24.dp),
-        )
+    val hint = if (isFullScreen) "Выйти из полного экрана" else "На весь экран"
+    HintTooltip(text = hint, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color(0x99000000))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                contentDescription = hint,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp),
+            )
+        }
     }
 }
 

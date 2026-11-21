@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 
 @Composable
@@ -22,19 +23,22 @@ fun FitModeToggle(
     onToggleFitMode: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = if (videoFitMode == ScreenResize.FILL) "Fill" else "Fit",
-        style = TextStyle(
-            color = Color.White,
-            fontFamily = FontFamily.SansSerif,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp
-        ),
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .clickable(onClick = onToggleFitMode)
-    )
+    val hint = if (videoFitMode == ScreenResize.FILL) "Вписать видео в экран" else "Заполнить экран видео"
+    HintTooltip(text = hint, modifier = modifier) {
+        Text(
+            text = if (videoFitMode == ScreenResize.FILL) "Fill" else "Fit",
+            style = TextStyle(
+                color = Color.White,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp
+            ),
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .padding(horizontal = 4.dp, vertical = 2.dp)
+                .clickable(onClick = onToggleFitMode)
+        )
+    }
 }
 
 @Preview
