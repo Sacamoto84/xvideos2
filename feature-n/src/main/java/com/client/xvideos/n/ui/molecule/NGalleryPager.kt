@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.TopLoadingBar
@@ -42,7 +43,9 @@ fun NGalleryPager(
     itemMenuActions: (@Composable (NGalleryPreview, dismiss: () -> Unit) -> Unit)? = null,
     onFilterClick: (() -> Unit)? = null,
     hasActiveFilter: Boolean = false,
-    allowChallenge: Boolean = true
+    allowChallenge: Boolean = true,
+    gridTopInset: Dp = 0.dp,
+    leadingContent: @Composable () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val pager = pages.position.rememberState { pages.totalPages }
@@ -75,7 +78,8 @@ fun NGalleryPager(
                                     onItemClick = onGalleryClick,
                                     itemMenuActions = itemMenuActions,
                                     gridState = pages.grid(index).rememberState(),
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
+                                    topInset = gridTopInset
                                 )
                             }
                         }
@@ -89,7 +93,8 @@ fun NGalleryPager(
             totalPages = pages.totalPages,
             onPageChange = { number -> scope.launch { pager.scrollToPage(number - 1) } },
             onFilterClick = onFilterClick,
-            hasActiveFilter = hasActiveFilter
+            hasActiveFilter = hasActiveFilter,
+            leadingContent = leadingContent
         )
     }
 

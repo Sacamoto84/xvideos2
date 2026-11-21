@@ -29,7 +29,8 @@ fun NAlbumListBottomBar(
     onPageChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
     onFilterClick: (() -> Unit)? = null,
-    hasActiveFilter: Boolean = false
+    hasActiveFilter: Boolean = false,
+    leadingContent: @Composable () -> Unit = {}
 ) {
     Column(modifier = modifier) {
         HorizontalDivider()
@@ -42,6 +43,8 @@ fun NAlbumListBottomBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            leadingContent()
+
             if (onFilterClick != null) {
                 NFilterButton(
                     modifier = Modifier.padding(end = 2.dp),

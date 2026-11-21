@@ -1,5 +1,6 @@
 package com.client.xvideos.n.ui.molecule
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -9,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
@@ -25,13 +27,14 @@ fun NGalleryGrid(
     onItemClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     itemMenuActions: (@Composable (NGalleryPreview, dismiss: () -> Unit) -> Unit)? = null,
-    gridState: LazyGridState = rememberLazyGridState()
+    gridState: LazyGridState = rememberLazyGridState(),
+    topInset: Dp = 0.dp
 ) {
     LazyVerticalGrid(
         state = gridState,
         columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
         modifier = modifier,
-        contentPadding = adaptiveListPadding()
+        contentPadding = adaptiveListPadding(PaddingValues(top = topInset))
     ) {
         items(items, key = { it.id }) { item ->
             NGalleryCard(
