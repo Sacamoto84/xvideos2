@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.channel.molecule
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
@@ -137,10 +139,12 @@ fun ChannelVideosPager(
                 }
             } else if (pageVideos != null) {
                 LazyVerticalGrid(
+                    horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                    verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                     columns = GridCells.Fixed(adaptiveGridColumns()),
                     state = gridState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = PaddingValues(start = 2.dp, end = 2.dp, bottom = 16.dp)
                 ) {
                     items(
                         items = pageVideos,

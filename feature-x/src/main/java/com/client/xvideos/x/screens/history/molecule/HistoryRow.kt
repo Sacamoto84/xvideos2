@@ -62,7 +62,6 @@ fun HistoryRow(
 
     val cardModifier = modifier
         .fillMaxWidth()
-        .padding(1.dp)
         .aspectRatio(CARD_ASPECT_RATIO)
         .background(Color.DarkGray)
         .then(

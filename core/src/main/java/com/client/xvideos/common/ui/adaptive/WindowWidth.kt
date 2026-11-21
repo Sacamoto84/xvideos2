@@ -46,13 +46,6 @@ fun adaptiveGridColumns(): Int = gridColumns(currentWidthClass())
 @Composable
 fun adaptiveUserGridColumns(selected: Int): Int = userGridColumns(selected, currentWidthClass())
 
-/** Ширина карточки горизонтального ряда: (окно − [gap]) / видимых карточек. */
-@Composable
-fun rowItemWidth(gap: Dp = 8.dp): Dp {
-    val widthDp = currentWindowWidthDp()
-    return (widthDp.dp - gap) / rowVisibleItems(widthClassOf(widthDp))
-}
-
 /**
  * `contentPadding` списка на всю ширину окна: [base] плюс боковой отступ,
  * который держит строки не шире [CONTENT_MAX_WIDTH_DP]. Список при этом

@@ -1,5 +1,6 @@
 package com.client.xvideos.xlive.ui.feed.molecule
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.xlive.model.XLiveRoomItem
 import com.client.xvideos.xlive.ui.XLiveColors
@@ -87,6 +89,8 @@ fun XLiveRoomsGrid(
                 XLiveMessage(text = feed.error, onRetry = actions.onRetry)
             }
             else -> LazyVerticalGrid(
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 columns = GridCells.Fixed(adaptiveGridColumns()),
                 state = gridState,
                 contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),

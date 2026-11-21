@@ -136,24 +136,7 @@ fun BottomListDashBoardNavigationButtons2(
             }
         }
 
-        // Кнопка прямого ввода номера страницы
-        HintTooltip(text = "Ввести номер страницы") {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 0.5.dp)
-                    .size(48.dp)
-                    .background(Color(0xFF2C2C2C))
-                    .clickable { showKeyboardDialog = true },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Dialpad,
-                    contentDescription = "Ввести номер страницы",
-                    tint = Color(0xFFFF9900),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        PageNumberInputButton { showKeyboardDialog = true }
 
         ArrowNavigationButton(
             arrow = ">",
@@ -190,6 +173,28 @@ fun BottomListDashBoardNavigationButtons2(
                     }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun PageNumberInputButton(onClick: () -> Unit) {
+    val hint = "Ввести номер страницы"
+    HintTooltip(text = hint) {
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 0.5.dp)
+                .size(48.dp)
+                .background(Color(0xFF2C2C2C))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Dialpad,
+                contentDescription = hint,
+                tint = Color(0xFFFF9900),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

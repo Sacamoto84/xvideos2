@@ -24,15 +24,9 @@ fun rowVisibleItems(widthClass: WidthClass): Int = when (widthClass) {
     WidthClass.Expanded -> 5
 }
 
-/**
- * Сколько пустых мест добить в неполной последней строке секции-сетки.
- *
- * Секции — `FlowRow` со `SpaceBetween`: неполная строка разносит свои карточки
- * к краям, и они не встают под колонки. На телефоне (3 в строке) раскладка
- * остаётся прежней — 0.
- */
+/** Пустые места в последней строке [FlowRow][androidx.compose.foundation.layout.FlowRow] с равными весами. */
 fun sectionRowFillers(itemCount: Int, itemsPerRow: Int): Int {
-    if (itemsPerRow <= rowVisibleItems(WidthClass.Compact)) return 0
+    if (itemsPerRow <= 1) return 0
     val tail = itemCount % itemsPerRow
     return if (tail == 0) 0 else itemsPerRow - tail
 }

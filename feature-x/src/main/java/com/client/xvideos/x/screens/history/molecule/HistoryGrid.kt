@@ -1,4 +1,8 @@
 package com.client.xvideos.x.screens.history.molecule
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.x.screens.history.model.HistoryRowActions
 
@@ -32,6 +36,9 @@ fun HistoryGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
+        contentPadding = PaddingValues(horizontal = 1.dp),
+        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+        verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
         columns = GridCells.Fixed(adaptiveGridColumns()),
         state = gridState,
         modifier = modifier,

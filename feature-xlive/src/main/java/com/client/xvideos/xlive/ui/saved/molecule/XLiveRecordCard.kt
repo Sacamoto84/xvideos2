@@ -72,7 +72,6 @@ fun XLiveRecordCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(4.dp)
             .clip(CardShape)
             .background(Color(0xFF141418))
             .border(1.dp, Color(0xFF26262C), CardShape)

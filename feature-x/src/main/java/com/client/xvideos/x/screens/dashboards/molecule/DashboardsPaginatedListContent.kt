@@ -1,6 +1,7 @@
 package com.client.xvideos.x.screens.dashboards.molecule
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -12,7 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
+import com.client.xvideos.common.ui.adaptive.plusSides
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
@@ -39,10 +43,12 @@ fun DashboardsPaginatedListContent(
     val topCutout = getTopInsetDp()
     val actualContentPadding = contentPadding ?: remember(topCutout) { PaddingValues(top = topCutout) }
     LazyVerticalGrid(
+        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+        verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
         columns = GridCells.Fixed(adaptiveGridColumns()),
         modifier = modifier.fillMaxSize(),
         state = gridState,
-        contentPadding = actualContentPadding,
+        contentPadding = actualContentPadding.plusSides(1.dp),
     ) {
         itemsIndexed(
             items = items,

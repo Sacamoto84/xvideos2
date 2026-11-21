@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -27,7 +26,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.currentWidthClass
-import com.client.xvideos.common.ui.adaptive.rowItemWidth
 import com.client.xvideos.common.ui.adaptive.rowVisibleItems
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.ui.screens.albumLandingTag.molecule.LandingTagSectionItem
@@ -49,7 +47,6 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
         val onRetry: () -> Unit = remember(vm) { { vm.retry() } }
         val items = albumTopHits?.sections
         val title = albumTopHits?.title
-        val itemWidth = rowItemWidth()
         val itemsPerRow = rowVisibleItems(currentWidthClass())
 
         val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
@@ -75,7 +72,6 @@ class ScreenLAlbumLandingTag(val tag: String) : Screen {
             sections = items.orEmpty(),
             loadError = loadError,
             state = vm.listPosition.rememberState(),
-            itemWidth = itemWidth,
             itemsPerRow = itemsPerRow,
             onBack = onBack,
             onAlbumClick = onAlbumClick,
@@ -91,7 +87,6 @@ fun ScreenLAlbumLandingTagContent(
     sections: List<Landing_page_albumSection>,
     loadError: String?,
     state: LazyListState,
-    itemWidth: Dp,
     itemsPerRow: Int,
     onBack: () -> Unit,
     onAlbumClick: (Long) -> Unit,
@@ -127,7 +122,6 @@ fun ScreenLAlbumLandingTagContent(
                 ) { _, item ->
                     LandingTagSectionItem(
                         item = item,
-                        itemWidth = itemWidth,
                         itemsPerRow = itemsPerRow,
                         onAlbumClick = onAlbumClick,
                         onSeeAllClick = onSeeAllClick
@@ -150,7 +144,6 @@ private fun ScreenLAlbumLandingTagContentPreview() {
         sections = emptyList(),
         loadError = null,
         state = rememberLazyListState(),
-        itemWidth = 117.dp,
         itemsPerRow = 3,
         onBack = {},
         onAlbumClick = {},

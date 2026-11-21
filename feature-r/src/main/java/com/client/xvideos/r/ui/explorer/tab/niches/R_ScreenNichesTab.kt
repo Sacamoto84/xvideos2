@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -219,6 +220,7 @@ fun R_ScreenNichesTabContent(
                     .fillMaxSize()
             ) {
                 LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = adaptiveListPadding(PaddingValues(top = getTopInsetDp()))
@@ -256,7 +258,7 @@ fun R_ScreenNichesTabContent(
                                     item = item,
                                     savedRed = currentRed,
                                     onNicheClick = actions.onNicheClick,
-                                    modifier = Modifier.padding(vertical = 2.dp)
+                                    modifier = Modifier.padding(vertical = 1.dp)
                                 )
                             } else {
                                 Box(

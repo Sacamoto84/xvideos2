@@ -1,7 +1,9 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.molecule
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,6 +57,9 @@ fun AlbumListPageGrid(
         )
     ) {
         LazyVerticalGrid(
+            contentPadding = PaddingValues(horizontal = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             state = stateGrid,
             modifier = Modifier.fillMaxSize(),
             columns = GridCells.Fixed(adaptiveUserGridColumns(columns))

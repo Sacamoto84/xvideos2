@@ -1,10 +1,11 @@
 package com.client.xvideos.x.screens.saved.molecule
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -55,6 +56,9 @@ fun X_SavedList(
             }
         } else {
             LazyVerticalGrid(
+                contentPadding = PaddingValues(horizontal = 1.dp),
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 columns = GridCells.Fixed(adaptiveGridColumns()),
                 state = gridState,
                 modifier = Modifier.fillMaxSize()
@@ -75,7 +79,6 @@ fun X_SavedList(
                         onDelete = onDeleteItem,
                         onShareP2p = onShareP2pItem,
                         onSaveToGallery = onSaveToGalleryItem,
-                        modifier = Modifier.padding(horizontal = 1.dp),
                     )
                 }
             }

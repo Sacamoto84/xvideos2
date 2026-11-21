@@ -38,7 +38,6 @@ fun FavoriteRow(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 1.dp, horizontal = 1.dp)
             .aspectRatio(352f / 198f)
             .background(Color.DarkGray)
     ) {

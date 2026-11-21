@@ -2,6 +2,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.collection
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -29,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.atom.CollectionGridCell
@@ -60,14 +62,14 @@ fun CollectionsGrid(
         containerColor = style.backgroundColor
     ) { padding ->
         LazyVerticalGrid(
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
             state = gridState,
             columns = GridCells.Fixed(adaptiveGridColumns()),
-            // Сверху у первой строки то же поле, что слева (8dp): 4dp здесь плюс
-            // 4dp поля плитки и кнопки «+».
-            contentPadding = PaddingValues(top = 4.dp)
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
         ) {
             itemsIndexed(
                 items = collections,
@@ -85,7 +87,7 @@ fun CollectionsGrid(
 
             item(key = "add_button", contentType = "add_button") {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    HintTooltip(text = "Новая коллекция", modifier = Modifier.padding(start = 8.dp, top = 4.dp)) {
+                    HintTooltip(text = "Новая коллекция") {
                         Box(
                             modifier = Modifier
                                 .size(72.dp)

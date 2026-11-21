@@ -54,7 +54,7 @@ internal fun NGalleryMetadata(gallery: NGallery, onTagClick: (NTag) -> Unit) {
     val tagsByType = remember(gallery.tags) { gallery.tags.groupBy { it.type.lowercase() } }
     val otherTags = remember(tagsByType) { tagsByType.filterKeys { it !in tagLabels }.values.flatten() }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         for ((type, label) in tagLabels) {
             GalleryTagRow(label, tagsByType[type].orEmpty(), onTagClick)
         }
@@ -62,13 +62,13 @@ internal fun NGalleryMetadata(gallery: NGallery, onTagClick: (NTag) -> Unit) {
         GalleryMetadataRow("Страниц") {
             Text(
                 text = gallery.numPages.toString(),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = Theme.Text.primary,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .background(Theme.tabLevel3, RoundedCornerShape(5.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .padding(horizontal = 6.dp, vertical = 3.dp)
             )
         }
         GalleryUploadDate(gallery.uploadDate)
@@ -91,12 +91,12 @@ private fun GalleryTagRow(label: String, tags: List<NTag>, onTagClick: (NTag) ->
 private fun GalleryMetadataRow(label: String, content: @Composable FlowRowScope.() -> Unit) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = "$label:",
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = Theme.Text.primary,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.align(Alignment.CenterVertically)
@@ -131,7 +131,7 @@ private fun GalleryUploadDate(uploadDate: Long) {
     GalleryMetadataRow("Загружено") {
         Text(
             text = displayDate,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = Theme.Text.primary,
             modifier = Modifier.align(Alignment.CenterVertically)
         )

@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.n.model.NPicture
 
@@ -54,7 +55,7 @@ fun NPictureViewerBottomStrip(
         LazyRow(
             state = listState,
             contentPadding = PaddingValues(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)

@@ -21,6 +21,11 @@ import com.client.xvideos.core.R as Res
  */
 object Theme {
 
+    object Content {
+        /** Расстояние между соседними карточками и строками контента в списках и сетках. */
+        val itemSpacing = 2.dp
+    }
+
     /** Основной фон экранов. */
     val background = Color(0xFF262626)
 

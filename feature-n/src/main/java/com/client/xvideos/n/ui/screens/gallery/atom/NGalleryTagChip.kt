@@ -39,21 +39,21 @@ fun NGalleryTagChip(
     ) {
         Text(
             text = tag.name,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = Theme.Text.primary,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
                 .weight(1f, fill = false)
                 .background(Theme.tabLevel3)
-                .padding(horizontal = 8.dp, vertical = 5.dp)
+                .padding(horizontal = 6.dp, vertical = 3.dp)
         )
         if (tag.count > 0) {
             Text(
                 text = count,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = Theme.Text.secondary,
                 maxLines = 1,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp)
+                modifier = Modifier.padding(horizontal = 5.dp, vertical = 3.dp)
             )
         }
     }

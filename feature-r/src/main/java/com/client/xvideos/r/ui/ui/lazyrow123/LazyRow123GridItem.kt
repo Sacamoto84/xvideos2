@@ -154,7 +154,7 @@ private fun LazyRow123GridItemContentStateless(
     var isVideo by remember(item.id) { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier.padding(1.dp).fillMaxSize().border(1.dp, Color(0xFF555555), RoundedCornerShape(8.dp)).clip(RoundedCornerShape(8.dp)),
+        modifier = Modifier.fillMaxSize().border(1.dp, Color(0xFF555555), RoundedCornerShape(8.dp)).clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     )
     {

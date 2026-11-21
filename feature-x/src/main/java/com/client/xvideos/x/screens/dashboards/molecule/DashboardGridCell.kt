@@ -46,7 +46,6 @@ fun DashboardGridCell(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(352f / 198f)
-            .padding(1.dp)
             .background(Color.DarkGray)
     ) {
         UrlVideoImageAndLongClickX(

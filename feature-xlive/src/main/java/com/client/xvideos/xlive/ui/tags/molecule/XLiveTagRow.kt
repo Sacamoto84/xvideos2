@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.xlive.model.XLiveTag
 import com.client.xvideos.xlive.model.XLiveTagRoom
@@ -53,7 +54,7 @@ fun XLiveTagRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 4.dp)
+            .padding(horizontal = 4.dp)
             .clip(RowShape)
             .background(Color(0xFF141418))
             .border(1.dp, Color(0xFF26262C), RowShape)
@@ -94,7 +95,7 @@ fun XLiveTagRow(
         if (tag.topRooms.isNotEmpty()) {
             LazyRow(
                 contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             ) {
                 items(items = tag.topRooms, key = { it.username }) { room ->
                     XLiveTagThumb(room = room, onClick = { onOpenRoom(room.username) })

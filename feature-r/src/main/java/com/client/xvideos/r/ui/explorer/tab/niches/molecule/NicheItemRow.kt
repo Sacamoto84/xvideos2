@@ -42,7 +42,6 @@ fun NicheItemRow(
 private fun NicheItemRowPreview() {
     Box(
         modifier = Modifier
-            .padding(vertical = 2.dp)
             .padding(horizontal = 8.dp)
             .fillMaxWidth()
             .height(78.dp)

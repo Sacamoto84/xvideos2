@@ -3,6 +3,7 @@ package com.client.xvideos.r.ui.ui.lazyrow123
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -301,7 +302,6 @@ fun LazyRow123Content(
             )
         } ?: Box(
             modifier = Modifier
-                .padding(1.dp)
                 .fillMaxWidth()
                 .aspectRatio(0.7f)
                 .clip(RoundedCornerShape(8.dp))
@@ -333,6 +333,8 @@ private fun LazyRow123ContentStateless(
 
     Box(modifier.fillMaxSize()) {
         LazyVerticalGrid(
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             state = state,
             columns = GridCells.Fixed(columns),
             modifier = Modifier.fillMaxSize(),

@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.subscriptions.molecule
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.x.model.XSubscriptionItem
 import com.client.xvideos.x.screens.subscriptions.XSubscriptionsOrder
@@ -46,6 +48,7 @@ fun X_SubscriptionsList(
         }
     } else {
         LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             state = listState,
             modifier = modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = topCutout, bottom = 24.dp)

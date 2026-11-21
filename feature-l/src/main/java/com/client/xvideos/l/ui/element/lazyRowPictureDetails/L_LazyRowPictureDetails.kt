@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.element.lazyRowPictureDetails
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -115,6 +116,8 @@ fun L_LazyRowPictureDetails(
     Box(modifier = Modifier.fillMaxSize().background(Theme.background)) {
 
         LazyVerticalStaggeredGrid(
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+            verticalItemSpacing = Theme.Content.itemSpacing,
             state = gridState,
             columns = StaggeredGridCells.Fixed(gridColumns),
             modifier = Modifier.fillMaxSize().hazeSource(hazeState).then(if (tag.isNotEmpty()) Modifier.testTag(tag) else Modifier)

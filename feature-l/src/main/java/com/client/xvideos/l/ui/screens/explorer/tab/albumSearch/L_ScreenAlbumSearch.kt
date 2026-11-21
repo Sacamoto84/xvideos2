@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,7 +31,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.currentWidthClass
-import com.client.xvideos.common.ui.adaptive.rowItemWidth
 import com.client.xvideos.common.ui.adaptive.rowVisibleItems
 import com.client.xvideos.l.model.Landing_page_albumSection
 import com.client.xvideos.l.model.Landing_page_albumType
@@ -58,7 +56,6 @@ object L_ScreenAlbumSearch : Screen {
         BackHandler(enabled = searchText.isNotEmpty(), onBack = onClearSearch)
         val result by vm.result.collectAsStateWithLifecycle()
         val isLoading by vm.isLoading.collectAsStateWithLifecycle()
-        val itemWidth = rowItemWidth()
         val itemsPerRow = rowVisibleItems(currentWidthClass())
 
         val onSearchTextChange: (String) -> Unit = remember(vm) { { vm.updateSearchText(it) } }
@@ -82,7 +79,6 @@ object L_ScreenAlbumSearch : Screen {
             isLoading = isLoading,
             result = result,
             state = vm.listPosition.rememberState(),
-            itemWidth = itemWidth,
             itemsPerRow = itemsPerRow,
             onSearchTextChange = onSearchTextChange,
             onSearch = onSearch,
@@ -98,7 +94,6 @@ fun L_ScreenAlbumSearchContent(
     isLoading: Boolean,
     result: Landing_page_albumType?,
     state: LazyListState,
-    itemWidth: Dp,
     itemsPerRow: Int,
     onSearchTextChange: (String) -> Unit,
     onSearch: () -> Unit,
@@ -173,7 +168,6 @@ fun L_ScreenAlbumSearchContent(
             ) { _, section ->
                 AlbumSearchSectionBlock(
                     section = section,
-                    itemWidth = itemWidth,
                     itemsPerRow = itemsPerRow,
                     onAlbumClick = onAlbumClick,
                     onSeeAllClick = onSeeAllClick
@@ -195,7 +189,6 @@ private fun L_ScreenAlbumSearchContentPreview() {
         isLoading = false,
         result = null,
         state = rememberLazyListState(),
-        itemWidth = 117.dp,
         itemsPerRow = 3,
         onSearchTextChange = {},
         onSearch = {},

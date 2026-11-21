@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -14,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
@@ -26,7 +24,6 @@ import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.atom.TopHitsAlb
 @Composable
 fun TopHitsSectionItem(
     item: AlbumListTopHits,
-    itemWidth: Dp,
     itemsPerRow: Int,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (String, String) -> Unit,
@@ -47,20 +44,20 @@ fun TopHitsSectionItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 1.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing)
         ) {
             val albums = remember(item.items, itemsPerRow) { item.items.take(itemsPerRow * 3) }
             albums.forEach { album ->
                 key(album.id) {
                     TopHitsAlbumItem(
                         album = album,
-                        itemWidth = itemWidth,
+                        modifier = Modifier.weight(1f),
                         onAlbumClick = onAlbumClick
                     )
                 }
             }
-            // Пустые места неполной последней строки: иначе SpaceBetween разносит её к краям.
-            repeat(sectionRowFillers(albums.size, itemsPerRow)) { Spacer(Modifier.width(itemWidth)) }
+            repeat(sectionRowFillers(albums.size, itemsPerRow)) { Spacer(Modifier.weight(1f)) }
         }
 
         val onSeeAll = remember(item.url, item.title, onSeeAllClick) {
@@ -79,7 +76,6 @@ private fun TopHitsSectionItemPreview() {
             url = "/albums/list/?album_type=manga",
             items = emptyList()
         ),
-        itemWidth = 120.dp,
         itemsPerRow = 3,
         onAlbumClick = {},
         onSeeAllClick = { _, _ -> }

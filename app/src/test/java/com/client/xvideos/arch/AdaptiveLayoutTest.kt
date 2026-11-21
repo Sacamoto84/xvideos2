@@ -29,7 +29,7 @@ class AdaptiveLayoutTest {
         assertEquals(
             "Сетка или ряд снова завязаны на жёсткое число колонок или на размер экрана. " +
                 "Колонки — adaptiveGridColumns() / adaptiveUserGridColumns(), ширина — " +
-                "currentWindowWidthDp() / rowItemWidth(), полная строка — GridItemSpan(maxLineSpan). " +
+                "currentWindowWidthDp(), полная строка — GridItemSpan(maxLineSpan). " +
                 "Запись, которая больше ничего не разрешает, уберите из ALLOWED.",
             ALLOWED.keys,
             found,

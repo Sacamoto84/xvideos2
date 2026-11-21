@@ -30,6 +30,7 @@ import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.expandmenu.LazyExpandMenuAnchor
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.n.model.NGalleryPreview
+import com.client.xvideos.n.ui.NCardLayout
 
 /**
  * Карточка манги / галереи для сеток и списков.
@@ -47,6 +48,7 @@ fun NGalleryCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .aspectRatio(NCardLayout.aspectRatio)
             .border(1.dp, Theme.tabLevel3, cardShape)
             .clip(cardShape)
             .background(Theme.tabLevel1)
@@ -54,9 +56,7 @@ fun NGalleryCard(
     ) {
         UrlImage(
             item.thumbnailUrl,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(137f / 200f),
+            modifier = Modifier.matchParentSize(),
             contentScale = ContentScale.Crop
         )
 

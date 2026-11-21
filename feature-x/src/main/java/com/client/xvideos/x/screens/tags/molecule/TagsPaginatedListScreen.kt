@@ -1,5 +1,6 @@
 package com.client.xvideos.x.screens.tags.molecule
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.x.model.ItemsX
@@ -130,6 +132,7 @@ fun TagsPaginatedListScreen(
             val chunkedRows = remember(loaded, itemsPerRow) { loaded.chunked(itemsPerRow) }
 
             LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -144,7 +147,10 @@ fun TagsPaginatedListScreen(
                     key = { index, row -> "${index}_${row.first().id}" },
                     contentType = { _, _ -> "tag_row" }
                 ) { _, row ->
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing)
+                    ) {
                         row.forEach { cell ->
                             key(cell.id) {
                                 TagGridCell(

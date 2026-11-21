@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.n.model.NGalleryPreview
+import com.client.xvideos.n.ui.NCardLayout
 
 /**
  * Горизонтальная полоса рекомендаций похожих работ на экране деталей манги.
@@ -59,12 +60,13 @@ fun NGalleryRelatedStrip(
 
         LazyRow(
             contentPadding = PaddingValues(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing)
         ) {
             items(relatedGalleries, key = { it.id }) { item ->
                 Box(
                     modifier = Modifier
                         .width(110.dp)
+                        .aspectRatio(NCardLayout.aspectRatio)
                         .clip(cardShape)
                         .border(1.dp, Theme.tabLevel3, cardShape)
                         .background(Theme.tabLevel1)
@@ -72,9 +74,7 @@ fun NGalleryRelatedStrip(
                 ) {
                     UrlImage(
                         url = item.thumbnailUrl,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(137f / 200f),
+                        modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.Crop
                     )
 

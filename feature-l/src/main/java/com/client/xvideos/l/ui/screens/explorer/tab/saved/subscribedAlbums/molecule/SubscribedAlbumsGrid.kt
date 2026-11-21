@@ -2,6 +2,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.mole
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,10 +35,12 @@ fun SubscribedAlbumsGrid(
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
+        contentPadding = PaddingValues(horizontal = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+        verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
         state = state,
         columns = GridCells.Fixed(adaptiveGridColumns()),
         modifier = modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         item(key = "top_inset", contentType = "top_inset", span = { GridItemSpan(maxLineSpan) }) {
             Box(modifier = Modifier.height(topInset))
@@ -48,7 +51,6 @@ fun SubscribedAlbumsGrid(
                 item = item,
                 onAlbumClick = onAlbumClick,
                 onAlbumLongClick = onAlbumLongClick,
-                modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
             )
         }
 

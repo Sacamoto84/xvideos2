@@ -50,7 +50,6 @@ fun ActressCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(4.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF141418))
             .border(1.dp, Color(0xFF26262C), RoundedCornerShape(8.dp))

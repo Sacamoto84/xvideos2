@@ -176,35 +176,9 @@ fun SortByOrder(
             shadowElevation = if (orderIcon != null) 8.dp else MenuDefaults.ShadowElevation
         ) {
             list.forEach { option ->
-                val isSelected = option == selected
                 DropdownMenuItem(
                     text = {
-                        if (orderIcon != null) {
-                            BasicText(
-                                option.toIconLabel(),
-                                style = textStyle.copy(
-                                    color = if (isSelected) Color(0xFFFF6A87) else Color.White,
-                                    fontSize = 14.sp
-                                )
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(32.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) Color(0xFF222222) else Color.Transparent),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                BasicText(
-                                    option.toDisplayName(),
-                                    modifier = Modifier.padding(horizontal = 8.dp),
-                                    style = textStyle,
-                                    autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
-                                    maxLines = 1
-                                )
-                            }
-                        }
+                        SortOrderOptionLabel(option, option == selected, orderIcon != null, textStyle)
                     },
                     leadingIcon = if (orderIcon == null) null else { { orderIcon(option) } },
                     onClick = {
@@ -214,6 +188,36 @@ fun SortByOrder(
                     },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun SortOrderOptionLabel(order: Order, selected: Boolean, withIcon: Boolean, textStyle: TextStyle) {
+    if (withIcon) {
+        BasicText(
+            order.toIconLabel(),
+            style = textStyle.copy(
+                color = if (selected) Color(0xFFFF6A87) else Color.White,
+                fontSize = 14.sp
+            )
+        )
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (selected) Color(0xFF222222) else Color.Transparent),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            BasicText(
+                order.toDisplayName(),
+                modifier = Modifier.padding(horizontal = 8.dp),
+                style = textStyle,
+                autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
+                maxLines = 1
+            )
         }
     }
 }

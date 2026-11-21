@@ -3,11 +3,11 @@ package com.client.xvideos.n.ui.screens.gallery.molecule
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -29,6 +29,8 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.n.model.NPage
+import com.client.xvideos.n.ui.NCardColumns
+import com.client.xvideos.n.ui.NCardLayout
 
 /**
  * Сетка миниатюр всех страниц манги с поддержкой заголовка (header).
@@ -47,10 +49,12 @@ fun NGalleryPagesGrid(
     val pageShape = RoundedCornerShape(6.dp)
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
+        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+        columns = NCardColumns(adaptiveUserGridColumns(columns)),
         state = gridState,
         modifier = modifier,
-        contentPadding = adaptiveListPadding()
+        contentPadding = adaptiveListPadding(NCardLayout.gridPadding)
     ) {
         if (header != null) {
             item(key = "header", span = { GridItemSpan(maxLineSpan) }) {
@@ -62,8 +66,7 @@ fun NGalleryPagesGrid(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(1.dp)
-                    .aspectRatio(137f / 200f)
+                    .aspectRatio(NCardLayout.aspectRatio)
                     .clip(pageShape)
                     .border(1.dp, Theme.tabLevel3, pageShape)
                     .background(Theme.tabLevel1)
@@ -71,7 +74,7 @@ fun NGalleryPagesGrid(
             ) {
                 UrlImage(
                     url = page.thumbnailUrl(mediaId),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop
                 )
 
@@ -101,13 +104,11 @@ fun NGalleryPagesGrid(
 @Composable
 private fun NGalleryPagesGridPreview() {
     NGalleryPagesGrid(
-        pages = listOf(
-            NPage(pageNumber = 1, ext = "jpg"),
-            NPage(pageNumber = 2, ext = "jpg"),
-            NPage(pageNumber = 3, ext = "jpg")
-        ),
+        pages = List(8) { index ->
+            NPage(pageNumber = index + 1, width = if (index % 2 == 0) 480 else 900, height = 640)
+        },
         mediaId = 12345L,
-        columns = 3,
+        columns = 2,
         onPageClick = {}
     )
 }

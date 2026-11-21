@@ -6,9 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,7 +55,7 @@ fun CreatorListItem(
         modifier = modifier
             .padding(horizontal = 8.dp)
             .fillMaxWidth()
-            .height(78.dp)
+            .heightIn(min = 78.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Theme.tabLevel3)
             .clickable(onClick = handleItemClick),
@@ -86,12 +85,11 @@ fun CreatorListItem(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
                 .padding(start = 8.dp, top = 4.dp, end = 4.dp, bottom = 4.dp)
         ) {
             Text(
                 text = item.displayName,
-                modifier = Modifier.height(23.dp),
+                modifier = Modifier.heightIn(min = 23.dp),
                 color = Color.White,
                 fontSize = 18.sp,
                 fontFamily = Theme.R.fontFamilyDMsanss,
@@ -99,7 +97,7 @@ fun CreatorListItem(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Box(modifier = Modifier.height(23.dp), contentAlignment = Alignment.CenterStart) {
+            Box(modifier = Modifier.heightIn(min = 23.dp), contentAlignment = Alignment.CenterStart) {
                 Text(
                     text = "@${item.username.removePrefix("@")}",
                     color = Color.LightGray,
@@ -111,7 +109,7 @@ fun CreatorListItem(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth().height(23.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 23.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -141,6 +139,7 @@ fun CreatorListItem(
 }
 
 @Preview
+@Preview(name = "Крупный шрифт", widthDp = 360, fontScale = 2f)
 @Composable
 private fun CreatorListItemPreview() {
     val sampleUser = UserInfo(

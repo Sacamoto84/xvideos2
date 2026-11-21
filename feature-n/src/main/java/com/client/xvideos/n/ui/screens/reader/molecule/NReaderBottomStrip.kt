@@ -3,11 +3,11 @@ package com.client.xvideos.n.ui.screens.reader.molecule
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.n.model.NPage
 
@@ -47,6 +48,7 @@ fun NReaderBottomStrip(
     val thumbShape = RoundedCornerShape(4.dp)
 
     LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
         state = listState,
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
         modifier = modifier
@@ -60,7 +62,6 @@ fun NReaderBottomStrip(
             HintTooltip(text = "Страница ${page.pageNumber}") {
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 4.dp)
                         .width(42.dp)
                         .height(60.dp)
                         .clip(thumbShape)

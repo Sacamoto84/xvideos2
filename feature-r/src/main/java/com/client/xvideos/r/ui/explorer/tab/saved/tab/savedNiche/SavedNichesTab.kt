@@ -113,7 +113,7 @@ fun SavedNichesTabContent(
                 .fillMaxSize()
         ) {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
                 modifier = Modifier.fillMaxSize()
             ) {

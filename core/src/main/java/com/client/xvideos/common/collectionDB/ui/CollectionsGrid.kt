@@ -3,7 +3,9 @@ package com.client.xvideos.common.collectionDB.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
@@ -100,47 +103,48 @@ fun CollectionsGrid(
     ) { padding ->
 
         if (selectedCollection == null) {
-            LazyVerticalGrid(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                state = gridState,
-                columns = GridCells.Fixed(adaptiveGridColumns()),
-                // Сверху у первой строки то же поле, что слева (8dp): 4dp здесь или
-                // под шапкой плюс 4dp поля плитки и кнопки «+».
-                contentPadding = PaddingValues(top = if (header == null) 4.dp else 0.dp)
-            ) {
-                // Шапка и «+» без ключей: строка-ключ совпала бы с именем коллекции
-                // («header», «add_new_collection») и уронила бы сетку.
-                if (header != null) {
-                    item(contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
-                        Box(modifier = Modifier.padding(bottom = 4.dp)) { header() }
+            BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
+                val viewportWidth = maxWidth
+                LazyVerticalGrid(
+                    horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                    verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                    modifier = Modifier.fillMaxSize(),
+                    state = gridState,
+                    columns = GridCells.Fixed(adaptiveGridColumns()),
+                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = if (header == null) 8.dp else 0.dp)
+                ) {
+                    // Шапка и «+» без строковых ключей, чтобы избежать совпадения с именем коллекции.
+                    if (header != null) {
+                        item(contentType = "header", span = { GridItemSpan(maxLineSpan) }) {
+                            Box(Modifier.requiredWidth(viewportWidth).padding(bottom = 4.dp)) { header() }
+                        }
                     }
-                }
-                items(collections, key = { it.name }) { collection ->
-                    CollectionGridCard(
-                        collection = collection,
-                        style = style,
-                        onCollectionClick = onCollectionClick,
-                        onCollectionLongClick = onCollectionLongClick,
-                    )
-                }
+                    items(collections, key = { it.name }) { collection ->
+                        CollectionGridCard(
+                            collection = collection,
+                            style = style,
+                            onCollectionClick = onCollectionClick,
+                            onCollectionLongClick = onCollectionLongClick,
+                        )
+                    }
 
-                item {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 8.dp, top = 4.dp)
-                                .size(72.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(style.addButtonBackground)
-                                .clickable(onClick = onCreateNewCollectionClick),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = null,
-                                tint = style.addButtonIconColor,
-                                modifier = Modifier.size(24.dp)
-                            )
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(style.addButtonBackground)
+                                    .clickable(onClick = onCreateNewCollectionClick),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = style.addButtonIconColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -165,8 +169,6 @@ private fun CollectionGridCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .padding(vertical = 4.dp)
             .combinedClickable(
                 onClick = handleClick,
                 onLongClick = handleLongClick,

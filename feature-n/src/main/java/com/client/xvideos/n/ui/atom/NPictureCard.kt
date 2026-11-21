@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.n.model.NPicture
+import com.client.xvideos.n.ui.NCardLayout
 
 /**
  * Карточка сохранённой картинки / страницы манги для сеток лайков и коллекций.
@@ -37,17 +37,10 @@ fun NPictureCard(
     menuContent: (@Composable () -> Unit)? = null
 ) {
     val cardShape = RoundedCornerShape(8.dp)
-    val ratio = remember(picture.width, picture.height) {
-        if (picture.width > 0 && picture.height > 0) {
-            picture.width.toFloat() / picture.height.toFloat()
-        } else {
-            137f / 200f
-        }
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .aspectRatio(NCardLayout.aspectRatio)
             .border(1.dp, Theme.tabLevel3, cardShape)
             .clip(cardShape)
             .background(Theme.tabLevel1)
@@ -55,10 +48,8 @@ fun NPictureCard(
     ) {
         UrlImage(
             picture.thumbnailUrl,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(ratio.coerceIn(0.5f, 1.8f)),
-            contentScale = ContentScale.Crop
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Fit
         )
 
         // Нижняя плашка с названием манги и страницей

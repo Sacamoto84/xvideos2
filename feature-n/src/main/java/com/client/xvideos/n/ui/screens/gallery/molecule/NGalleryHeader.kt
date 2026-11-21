@@ -62,7 +62,7 @@ fun NGalleryHeader(
     onServerFavoriteClick: () -> Unit = {},
     canToggleFavorite: Boolean = true
 ) {
-    BoxWithConstraints(modifier.fillMaxWidth().padding(16.dp)) {
+    BoxWithConstraints(modifier.fillMaxWidth().padding(4.dp)) {
         val wide = maxWidth >= 600.dp
         val gutter = if (wide) 32.dp else 16.dp
         val coverWidth = if (wide) minOf(maxWidth * 0.33f, 360.dp) else minOf(maxWidth * 0.34f, 144.dp)
@@ -77,12 +77,12 @@ fun NGalleryHeader(
             )
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(gutter)) {
                 NGalleryCover(gallery = gallery, modifier = Modifier.width(coverWidth))
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     NGalleryTitles(gallery)
                     if (wide) details()

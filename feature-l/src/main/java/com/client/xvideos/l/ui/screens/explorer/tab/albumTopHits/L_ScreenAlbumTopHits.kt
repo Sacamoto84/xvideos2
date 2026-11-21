@@ -12,8 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -22,7 +20,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.currentWidthClass
-import com.client.xvideos.common.ui.adaptive.rowItemWidth
 import com.client.xvideos.common.ui.adaptive.rowVisibleItems
 import com.client.xvideos.l.model.AlbumListTopHits
 import com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.molecule.TopHitsSectionItem
@@ -44,7 +41,6 @@ object L_ScreenAlbumTopHits : Screen {
         val loadError by vm.loadError.collectAsStateWithLifecycle()
         val items = albumTopHits?.items
         val onRetry: () -> Unit = remember(vm) { { vm.retry() } }
-        val itemWidth = rowItemWidth()
         val itemsPerRow = rowVisibleItems(currentWidthClass())
 
         val onAlbumClick: (Long) -> Unit = remember(navigator) {
@@ -65,7 +61,6 @@ object L_ScreenAlbumTopHits : Screen {
             items = items.orEmpty(),
             loadError = loadError,
             state = vm.listPosition.rememberState(),
-            itemWidth = itemWidth,
             itemsPerRow = itemsPerRow,
             onAlbumClick = onAlbumClick,
             onSeeAllClick = onSeeAllClick,
@@ -79,7 +74,6 @@ fun L_ScreenAlbumTopHitsContent(
     items: List<AlbumListTopHits>,
     loadError: String?,
     state: LazyListState,
-    itemWidth: Dp,
     itemsPerRow: Int,
     onAlbumClick: (Long) -> Unit,
     onSeeAllClick: (String, String) -> Unit,
@@ -104,7 +98,6 @@ fun L_ScreenAlbumTopHitsContent(
             ) { _, item ->
                 TopHitsSectionItem(
                     item = item,
-                    itemWidth = itemWidth,
                     itemsPerRow = itemsPerRow,
                     onAlbumClick = onAlbumClick,
                     onSeeAllClick = onSeeAllClick
@@ -121,7 +114,6 @@ private fun L_ScreenAlbumTopHitsContentPreview() {
         items = emptyList(),
         loadError = null,
         state = rememberLazyListState(),
-        itemWidth = 120.dp,
         itemsPerRow = 3,
         onAlbumClick = {},
         onSeeAllClick = { _, _ -> },

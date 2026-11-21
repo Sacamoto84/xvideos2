@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -137,18 +138,11 @@ fun PlayerBottomBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Play / Pause
-        val playPauseHint = if (host.isPaused) "Воспроизвести" else "Пауза"
-        HintTooltip(text = playPauseHint) {
-            Icon(
-                imageVector = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
-                contentDescription = playPauseHint,
-                tint = Color.White,
-                modifier = Modifier
-                    .size(28.dp)
-                    .clickable(onClick = onTogglePlayPause)
-            )
-        }
+        PlayerControlIcon(
+            icon = if (host.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+            hint = if (host.isPaused) "Воспроизвести" else "Пауза",
+            onClick = onTogglePlayPause
+        )
 
         // Текущее время
         Text(
@@ -207,18 +201,24 @@ fun PlayerBottomBar(
 
         // Полный экран (если поддержан экраном)
         if (onFullScreenClick != null) {
-            val fullScreenHint = if (isFullScreen) "Выйти из полного экрана" else "На весь экран"
-            HintTooltip(text = fullScreenHint) {
-                Icon(
-                    imageVector = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                    contentDescription = fullScreenHint,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable(onClick = onFullScreenClick)
-                )
-            }
+            PlayerControlIcon(
+                icon = if (isFullScreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                hint = if (isFullScreen) "Выйти из полного экрана" else "На весь экран",
+                onClick = onFullScreenClick
+            )
         }
+    }
+}
+
+@Composable
+private fun PlayerControlIcon(icon: ImageVector, hint: String, onClick: () -> Unit) {
+    HintTooltip(text = hint) {
+        Icon(
+            imageVector = icon,
+            contentDescription = hint,
+            tint = Color.White,
+            modifier = Modifier.size(28.dp).clickable(onClick = onClick)
+        )
     }
 }
 

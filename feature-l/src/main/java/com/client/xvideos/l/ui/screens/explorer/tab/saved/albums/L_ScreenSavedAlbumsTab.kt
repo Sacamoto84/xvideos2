@@ -3,6 +3,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.albums
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -139,10 +140,12 @@ fun SavedAlbumsTabContent(
             val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
             LazyVerticalGrid(
+                contentPadding = PaddingValues(horizontal = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
                 columns = GridCells.Fixed(adaptiveGridColumns()),
                 modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 item(
                     key = "top_spacer",
@@ -178,7 +181,6 @@ fun SavedAlbumsTabContent(
                     SavedAlbumGridItem(
                         item = item,
                         onAlbumClick = onAlbumClick,
-                        modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
                     )
                 }
             }

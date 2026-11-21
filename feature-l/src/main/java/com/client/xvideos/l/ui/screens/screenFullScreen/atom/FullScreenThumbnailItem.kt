@@ -36,7 +36,6 @@ fun FullScreenThumbnailItem(
     val thumbShape = RoundedCornerShape(4.dp)
     Box(
         modifier = modifier
-            .padding(horizontal = 1.dp)
             .clip(thumbShape)
             .aspectRatio(item.safeAspectRatio())
             .clickable(onClick = onClick)

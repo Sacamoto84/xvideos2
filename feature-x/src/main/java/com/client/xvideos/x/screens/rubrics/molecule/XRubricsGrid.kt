@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.x.model.XCategory
 import com.client.xvideos.x.model.XRubric
@@ -51,8 +52,8 @@ fun XRubricsGrid(
             state = gridState,
             modifier = modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = topCutout + 8.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
         ) {
             items(state.rubrics, key = { it.id }) { rubric ->
                 XRubricTile(title = rubric.title, onClick = { onOpen(rubric) })

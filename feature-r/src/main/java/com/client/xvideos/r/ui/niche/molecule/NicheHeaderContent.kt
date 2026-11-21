@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.niche.molecule
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -71,6 +72,7 @@ fun NicheHeaderContent(
                 fontFamily = Theme.R.fontFamilyDMsanss
             )
             LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 modifier = Modifier
                     .padding(top = 4.dp)
                     .fillMaxWidth(),
@@ -96,6 +98,7 @@ fun NicheHeaderContent(
                 fontFamily = Theme.R.fontFamilyDMsanss
             )
             LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 modifier = Modifier.padding(vertical = 4.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {

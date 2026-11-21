@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.explorer.tab.search.molecule
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.r.model.search.SearchItemCreatorsResponse
 import com.client.xvideos.r.ui.explorer.tab.search.atom.SearchCreatorItem
@@ -40,6 +42,7 @@ fun SearchCreatorsList(
         }
     } else {
         LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             state = listState,
             modifier = modifier.fillMaxSize(),
             contentPadding = adaptiveListPadding(PaddingValues(vertical = 4.dp))

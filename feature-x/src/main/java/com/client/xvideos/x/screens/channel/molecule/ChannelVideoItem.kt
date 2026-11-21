@@ -51,7 +51,6 @@ fun ChannelVideoItem(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(352f / 198f)
-            .padding(2.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(Color(0xFF141418))
     ) {

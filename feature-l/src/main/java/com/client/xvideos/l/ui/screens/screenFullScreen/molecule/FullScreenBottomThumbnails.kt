@@ -3,6 +3,7 @@ package com.client.xvideos.l.ui.screens.screenFullScreen.molecule
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.screens.screenFullScreen.atom.FullScreenThumbnailItem
@@ -35,6 +37,7 @@ fun FullScreenBottomThumbnails(
             // Ряд на всю высоту панели: щели сверху и снизу одинаковые — рамка
             // выделения превью.
             LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = lazyRowState,
                 modifier = Modifier.fillMaxHeight()
             ) {

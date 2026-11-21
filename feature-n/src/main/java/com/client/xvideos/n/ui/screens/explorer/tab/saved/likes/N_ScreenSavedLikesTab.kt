@@ -124,17 +124,13 @@ fun N_ScreenSavedLikesTabContent(
             Spacer(Modifier.height(topInset))
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             if (likes.isEmpty()) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .padding(24.dp)
+                        .padding(horizontal = 32.dp, vertical = 24.dp)
                 ) {
                     Text(
                         text = "В лайках пока пусто",

@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -33,6 +34,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
@@ -135,6 +137,7 @@ fun SavedDownloadTabContent(
                 .fillMaxSize()
         ) {
             LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 4.dp)

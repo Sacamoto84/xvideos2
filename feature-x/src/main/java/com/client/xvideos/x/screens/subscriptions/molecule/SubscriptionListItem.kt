@@ -81,7 +81,7 @@ fun SubscriptionListItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 3.dp)
+            .padding(horizontal = 10.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF16161C))
             .border(1.dp, Color(0xFF282830), RoundedCornerShape(8.dp))

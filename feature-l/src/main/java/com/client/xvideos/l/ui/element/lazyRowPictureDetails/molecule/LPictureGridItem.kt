@@ -54,7 +54,6 @@ fun LPictureGridItem(
 
         Box(
             modifier = Modifier
-                .padding(1.dp)
                 .aspectRatio(aspect)
                 .border(width = 0.5.dp, color = Theme.tabLevel4, shape = RoundedCornerShape(4.dp))
                 .clip(RoundedCornerShape(4.dp))

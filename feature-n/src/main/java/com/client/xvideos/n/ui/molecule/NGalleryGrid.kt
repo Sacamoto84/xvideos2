@@ -1,20 +1,26 @@
 package com.client.xvideos.n.ui.molecule
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.n.model.NGalleryPreview
+import com.client.xvideos.n.ui.NCardColumns
+import com.client.xvideos.n.ui.NCardLayout
 import com.client.xvideos.n.ui.atom.NGalleryCard
 
 /**
@@ -30,16 +36,26 @@ fun NGalleryGrid(
     gridState: LazyGridState = rememberLazyGridState(),
     topInset: Dp = 0.dp
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+    val basePadding = NCardLayout.gridPadding
     LazyVerticalGrid(
+        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
         state = gridState,
-        columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
+        columns = NCardColumns(adaptiveUserGridColumns(columns)),
         modifier = modifier,
-        contentPadding = adaptiveListPadding(PaddingValues(top = topInset))
+        contentPadding = adaptiveListPadding(
+            PaddingValues(
+                start = basePadding.calculateStartPadding(layoutDirection),
+                top = basePadding.calculateTopPadding() + topInset,
+                end = basePadding.calculateEndPadding(layoutDirection),
+                bottom = basePadding.calculateBottomPadding()
+            )
+        )
     ) {
         items(items, key = { it.id }) { item ->
             NGalleryCard(
                 item = item,
-                modifier = Modifier.padding(2.dp),
                 onClick = { onItemClick(item.id) },
                 menuActions = if (itemMenuActions == null) null else { dismiss -> itemMenuActions(item, dismiss) }
             )

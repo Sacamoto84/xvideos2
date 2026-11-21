@@ -57,11 +57,10 @@ class AdaptiveRulesTest {
     }
 
     @Test
-    fun `пустые места добивают неполную строку секции, но не на телефоне`() {
-        // Телефон, 3 в строке: прежняя раскладка, даже если строка неполная.
+    fun `пустые места добивают неполную строку секции при любой ширине`() {
         assertEquals(0, sectionRowFillers(itemCount = 9, itemsPerRow = 3))
-        assertEquals(0, sectionRowFillers(itemCount = 7, itemsPerRow = 3))
-        // Широкое окно: последняя строка добивается до полной.
+        assertEquals(2, sectionRowFillers(itemCount = 7, itemsPerRow = 3))
+        assertEquals(1, sectionRowFillers(itemCount = 8, itemsPerRow = 3))
         assertEquals(1, sectionRowFillers(itemCount = 9, itemsPerRow = 5))
         assertEquals(3, sectionRowFillers(itemCount = 12, itemsPerRow = 5))
         assertEquals(3, sectionRowFillers(itemCount = 9, itemsPerRow = 4))

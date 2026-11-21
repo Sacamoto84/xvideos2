@@ -73,9 +73,9 @@ fun NichePreview2Content(
         UrlImage(
             niche.thumbnail,
             modifier = Modifier
-                .padding(start = 4.dp)
-                .size(70.dp)
-                .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
+                .padding(start = 3.dp)
+                .size(72.dp)
+                .clip(RoundedCornerShape(topStart = 13.dp, bottomStart = 13.dp))
         )
 
         Column(

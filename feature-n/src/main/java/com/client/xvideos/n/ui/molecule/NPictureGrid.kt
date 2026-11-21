@@ -1,20 +1,21 @@
 package com.client.xvideos.n.ui.molecule
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.n.model.NPicture
+import com.client.xvideos.n.ui.NCardColumns
+import com.client.xvideos.n.ui.NCardLayout
 import com.client.xvideos.n.ui.atom.NPictureCard
 
 /**
@@ -26,17 +27,16 @@ fun NPictureGrid(
     columns: Int,
     onItemClick: (NPicture) -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(8.dp),
     menuContent: (@Composable (NPicture) -> Unit)? = null,
     gridState: LazyGridState = rememberLazyGridState()
 ) {
     LazyVerticalGrid(
         state = gridState,
-        columns = GridCells.Fixed(adaptiveUserGridColumns(columns)),
+        columns = NCardColumns(adaptiveUserGridColumns(columns)),
         modifier = modifier,
-        contentPadding = adaptiveListPadding(contentPadding),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = adaptiveListPadding(NCardLayout.gridPadding),
+        horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing)
     ) {
         items(
             items = items,

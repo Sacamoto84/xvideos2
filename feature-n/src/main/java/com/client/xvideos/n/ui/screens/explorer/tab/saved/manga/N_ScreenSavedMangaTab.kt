@@ -107,11 +107,7 @@ fun N_ScreenSavedMangaTabContent(
             topInset = topInset
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 4.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (favorites.isEmpty()) {

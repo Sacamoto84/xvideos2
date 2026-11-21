@@ -3,14 +3,12 @@ package com.client.xvideos.x.screens.tags.molecule
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.common.UrlVideoImageAndLongClickX
 import com.client.xvideos.x.screens.tags.model.TagCellActions
@@ -34,7 +32,6 @@ fun TagGridCell(
     Box(
         modifier = modifier
             .aspectRatio(352f / 198f)
-            .padding(1.dp)
             .background(Color.DarkGray)
     ) {
         UrlVideoImageAndLongClickX(

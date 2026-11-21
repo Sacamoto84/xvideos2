@@ -67,7 +67,7 @@ fun DownloadListItem(
 
     Box(
         modifier = modifier
-            .padding(2.dp)
+            .padding(horizontal = 2.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .border(
