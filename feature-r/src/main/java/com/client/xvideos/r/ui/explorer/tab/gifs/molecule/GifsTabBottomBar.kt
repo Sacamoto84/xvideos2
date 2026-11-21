@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,8 +48,9 @@ fun GifsTabBottomBar(
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
             modifier = Modifier
-                .padding(top = 1.dp, start = 1.dp)
+                .padding(start = 1.dp, top = 1.dp, end = 1.dp)
                 .background(Theme.tabLevel1),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.Bottom
         ) {
             AnimatedVisibility(
@@ -61,17 +63,12 @@ fun GifsTabBottomBar(
                     containerColor = Theme.tabLevel0,
                     list = orders,
                     selected = sortType,
-                    onSelect = onSortSelect
+                    onSelect = onSortSelect,
+                    orderIcon = { RFeedSortIcon(it) }
                 )
             }
 
-            searchField(
-                Modifier
-                    .padding(start = 4.dp)
-                    .weight(1f)
-            )
-
-            //Spacer(modifier = Modifier.width(4.dp))
+            searchField(Modifier.weight(1f))
         }
         Spacer(modifier = Modifier.height(1.dp))
         HorizontalDivider(color = Theme.R.colorCommonBackground)

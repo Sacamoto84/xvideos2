@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -112,12 +113,12 @@ fun SavedNichesTabContent(
                 .fillMaxSize()
         ) {
             LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
                 state = state,
                 modifier = Modifier.fillMaxSize()
             ) {
                 // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
                 // полосе 640dp по одной, чтобы список свайпался по всей ширине.
-                // 4dp под шапкой плюс 2dp поля строки — сверху 6dp, как слева.
                 // Без ключа: строка "header" совпала бы с id ниши и уронила бы список.
                 item(contentType = "header") {
                     SavedTabHeader(

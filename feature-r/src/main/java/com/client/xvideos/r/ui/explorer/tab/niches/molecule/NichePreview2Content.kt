@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,8 +42,8 @@ fun NichePreview2Content(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val subscribersText = remember(niche.subscribers) { niche.subscribers.toPrettyCountInt() }
-    val gifsText = remember(niche.gifs) { niche.gifs.toPrettyCountInt() }
+    val subscribersText = remember(niche.subscribers) { niche.subscribers.toNicheCountText() }
+    val gifsText = remember(niche.gifs) { niche.gifs.toNicheCountText() }
     val buttonText = if (isFollowed) "Выйти" else "Подписаться"
     val buttonTextColor = if (isFollowed) Color.White else Color.Black
     val buttonBgColor = if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow
@@ -84,13 +85,15 @@ fun NichePreview2Content(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = niche.name,
+                text = niche.displayName,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(23.dp),
                 color = Color.White,
                 fontSize = 18.sp,
-                fontFamily = Theme.R.fontFamilyDMsanss
+                fontFamily = Theme.R.fontFamilyDMsanss,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Row(
@@ -153,6 +156,8 @@ fun NichePreview2Content(
         }
     }
 }
+
+private fun Long.toNicheCountText(): String = if (this >= 0L) toPrettyCountInt() else "—"
 
 @Preview
 @Composable

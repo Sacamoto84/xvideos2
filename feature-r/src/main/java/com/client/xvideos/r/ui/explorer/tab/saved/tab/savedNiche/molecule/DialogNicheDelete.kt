@@ -26,10 +26,11 @@ fun DialogNicheDelete(
         val handleConfirm = remember(pending, onConfirm) {
             { onConfirm(pending) }
         }
-        val dialogBody = remember(pending.name) {
+        val displayName = pending.displayName
+        val dialogBody = remember(displayName) {
             buildAnnotatedString {
                 append("Удалить «")
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(displayName) }
                 append("» из сохранённых?")
             }
         }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -22,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,6 +63,17 @@ private fun Order.toDisplayName(): String = when (this) {
     Order.NICHES_NAME_Z_A -> "Name Z-A"
 }
 
+private fun Order.toIconLabel(): String = when (this) {
+    Order.TOP_WEEK -> "Топ недели"
+    Order.TOP_MONTH, Order.TOP28 -> "Топ месяца"
+    Order.TOP -> "Топ за всё время"
+    Order.TRENDING -> "В тренде"
+    Order.LATEST -> "Новые"
+    Order.OLDEST -> "Старые"
+    Order.RELEVANT -> "По релевантности"
+    else -> toDisplayName()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SortByOrder(
@@ -66,7 +81,8 @@ fun SortByOrder(
     selected: Order,
     onSelect: (Order) -> Unit,
     containerColor: Color = Color.Transparent,
-    circle : Boolean = false
+    circle: Boolean = false,
+    orderIcon: (@Composable (Order) -> Unit)? = null
 ) {
     LaunchedEffect(list, selected) {
         val nearest = selected.nearestIn(list)
@@ -97,7 +113,11 @@ fun SortByOrder(
             fontSize = 18.sp
         )
     }
-    val menuBorder = remember { BorderStroke(1.dp, Theme.R.colorBorderGray) }
+    val menuBorder = if (orderIcon != null) {
+        BorderStroke(1.dp, Color.White.copy(alpha = 0.26f))
+    } else {
+        BorderStroke(1.dp, Theme.R.colorBorderGray)
+    }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -106,56 +126,83 @@ fun SortByOrder(
             .clip(boxShape)
             .background(containerColor)
     ) {
-        Row(
-            modifier = Modifier
-                .width(100.dp)
-                .height(46.dp)
-                .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable)
-                .border(1.dp, Color(0xFF3A3A3A), boxShape)
-                .clickable(onClick = onTriggerClick),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            BasicText(
-                selected.toDisplayName(),
+        if (orderIcon != null) {
+            val selectionDescription = "Сортировка · ${selected.toIconLabel()}"
+            Box(
                 modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .weight(1f)
-                    .align(Alignment.CenterVertically),
-                style = textStyle,
-                autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
-                maxLines = 1
-            )
+                    .size(48.dp)
+                    .semantics { contentDescription = selectionDescription }
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                    .border(1.dp, Color(0xFF3A3A3A), boxShape),
+                contentAlignment = Alignment.Center
+            ) {
+                orderIcon(selected)
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .width(100.dp)
+                    .height(46.dp)
+                    .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable)
+                    .border(1.dp, Color(0xFF3A3A3A), boxShape)
+                    .clickable(onClick = onTriggerClick),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                BasicText(
+                    selected.toDisplayName(),
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .weight(1f)
+                        .align(Alignment.CenterVertically),
+                    style = textStyle,
+                    autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
+                    maxLines = 1
+                )
+            }
         }
 
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = onDismissRequest,
-            modifier = Modifier.width(IntrinsicSize.Min),
-            containerColor = Color(0xFF090909),
+            modifier = if (orderIcon == null) Modifier.width(IntrinsicSize.Min) else Modifier,
+            matchAnchorWidth = orderIcon == null,
+            containerColor = if (orderIcon != null) Theme.tabLevel2 else Color(0xFF090909),
             shape = RoundedCornerShape(16.dp),
-            border = menuBorder
+            border = menuBorder,
+            shadowElevation = if (orderIcon != null) 8.dp else MenuDefaults.ShadowElevation
         ) {
             list.forEach { option ->
                 val isSelected = option == selected
                 DropdownMenuItem(
                     text = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) Color(0xFF222222) else Color.Transparent),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
+                        if (orderIcon != null) {
                             BasicText(
-                                option.toDisplayName(),
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                style = textStyle,
-                                autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
-                                maxLines = 1
+                                option.toIconLabel(),
+                                style = textStyle.copy(
+                                    color = if (isSelected) Color(0xFFFF6A87) else Color.White,
+                                    fontSize = 14.sp
+                                )
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) Color(0xFF222222) else Color.Transparent),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                BasicText(
+                                    option.toDisplayName(),
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    style = textStyle,
+                                    autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
+                                    maxLines = 1
+                                )
+                            }
                         }
                     },
+                    leadingIcon = if (orderIcon == null) null else { { orderIcon(option) } },
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                         onSelect(option)
