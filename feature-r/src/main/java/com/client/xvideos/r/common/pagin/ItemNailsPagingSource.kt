@@ -18,18 +18,26 @@ import timber.log.Timber
  * - Фильтрацию заблокированных материалов ([BlockRed]);
  * - Автоматическое наполнение глобального кэша авторов [UsersRed];
  * - Вычисление ключа следующей страницы по `pages` из метаданных ответа (без лишних пустых запросов);
- * - Сохранение позиции скролла при refresh вокруг anchorPosition.
+ * - Загрузку одной выбранной страницы в страничном режиме.
  *
  * @property order Порядок сортировки в нише.
  * @property nichesName Имя или слаг просматриваемой ниши.
  * @property block Фильтр заблокированных материалов.
  * @property redApi Сетевой клиент R.
+ * @property fixedPage Страница на сервере или null для бесконечной прокрутки.
  */
-class ItemNailsPagingSource (val order : Order, val nichesName : String, val block: BlockRed, val redApi: RedApi): PagingSource<Int, GifsInfo>() {
+class ItemNailsPagingSource(
+    val order: Order,
+    val nichesName: String,
+    val block: BlockRed,
+    val redApi: RedApi,
+    private val fixedPage: Int? = null,
+    private val onPageCount: (Int) -> Unit = {},
+) : PagingSource<Int, GifsInfo>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {
 
-        val page = params.key ?: 1 // API нумерует страницы с 1
+        val page = fixedPage ?: params.key ?: 1
 
         val cleanNichesName = nichesName.trim()
         if (cleanNichesName.isBlank()) {
@@ -46,11 +54,12 @@ class ItemNailsPagingSource (val order : Order, val nichesName : String, val blo
             // getOrThrow: см. ItemTopPagingSource — отказ сети должен стать
             // LoadResult.Error, а не пустой лентой без права на повтор.
             val response = redApi.getNiches(niches = cleanNichesName, page = page, order = order).getOrThrow()
+            onPageCount(response.pages)
 
             val gifs : List<GifsInfo> = response.gifs.sanitizeGifsInfoList()
 
             // G4: конец пагинации по pages из ответа, без лишнего пустого запроса.
-            val nextKey = if (page < response.pages) page + 1 else null
+            val nextKey = if (fixedPage == null && page < response.pages) page + 1 else null
 
             Timber.d("!!! load() a.gif.size = ${gifs.size}")
 
@@ -78,7 +87,7 @@ class ItemNailsPagingSource (val order : Order, val nichesName : String, val blo
     }
 
     /**
-     * Обновление всегда начинается с первой страницы.
+     * Свайп обновляет выбранную страницу, а в бесконечном режиме возвращает первую.
      *
      * Источник отдаёт `prevKey = null`: страниц выше текущей для него нет.
      * Раньше отсюда возвращалась страница у якоря, и обновление не с верха

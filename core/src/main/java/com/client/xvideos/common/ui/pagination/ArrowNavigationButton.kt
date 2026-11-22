@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.common.bottomKeyboard.atom
+package com.client.xvideos.common.ui.pagination
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,7 +22,7 @@ import com.client.xvideos.common.ui.HintTooltip
  * Кнопка-стрелка навигации по страницам («<» или «>»).
  */
 @Composable
-fun ArrowNavigationButton(
+internal fun ArrowNavigationButton(
     arrow: String,
     hint: String,
     enabled: Boolean,

@@ -27,7 +27,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.scroll.LazyListPosition
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.x.model.ItemsX
-import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
+import com.client.xvideos.common.ui.pagination.PageNavigationBar
 import com.client.xvideos.x.screens.common.playerScreenFor
 import com.client.xvideos.x.screens.common.rememberLocalVideoOf
 import com.client.xvideos.x.screens.rubric.molecule.XRubricFilterBar
@@ -141,7 +141,7 @@ fun ScreenXRubricContent(
 ) {
     val bottomBarContent: @Composable () -> Unit = remember(pagerState.currentPage, onPageChange, lastPage) {
         {
-            BottomListDashBoardNavigationButtons2(
+            PageNavigationBar(
                 value = pagerState.currentPage,
                 onChange = onPageChange,
                 max = lastPage,

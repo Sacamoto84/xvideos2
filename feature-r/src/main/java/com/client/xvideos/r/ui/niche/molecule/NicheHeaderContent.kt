@@ -49,6 +49,7 @@ fun NicheHeaderContent(
     onSortChange: (Order) -> Unit,
     columns: Int,
     modifier: Modifier = Modifier,
+    scrollMode: @Composable () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -118,7 +119,8 @@ fun NicheHeaderContent(
             niche = niche,
             currentSort = currentSort,
             onSortChange = onSortChange,
-            columns = columns
+            columns = columns,
+            scrollMode = scrollMode,
         )
     }
 }

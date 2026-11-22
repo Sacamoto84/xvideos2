@@ -7,7 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
+import com.client.xvideos.common.ui.pagination.PageNavigationBar
 import kotlinx.coroutines.launch
 
 /**
@@ -32,7 +32,7 @@ fun ChannelPagerBottomBar(
         }
     }
 
-    BottomListDashBoardNavigationButtons2(
+    PageNavigationBar(
         value = pagerState.currentPage,
         onChange = onPageChange,
         max = maxPages,

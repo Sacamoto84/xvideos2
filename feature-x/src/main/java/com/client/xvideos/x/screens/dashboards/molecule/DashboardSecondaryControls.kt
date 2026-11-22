@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.TabRow
-import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
+import com.client.xvideos.common.ui.pagination.PageNavigationBar
 import com.client.xvideos.x.screens.dashboards.bottomBar.DashboardControlsRow
 import com.client.xvideos.x.screens.search.SearchUiMode
 import kotlinx.collections.immutable.ImmutableList
@@ -65,7 +65,7 @@ fun DashboardSecondaryControls(
         )
         MAIN_TAB_SEARCH -> {
             if (searchUiMode == SearchUiMode.RESULTS) {
-                BottomListDashBoardNavigationButtons2(
+                PageNavigationBar(
                     value = searchPage,
                     onChange = onSearchPageChange,
                     max = searchMaxPages,

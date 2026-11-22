@@ -14,6 +14,7 @@ import androidx.paging.filter
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.common.block.BlockRed
@@ -28,6 +29,7 @@ import com.client.xvideos.r.common.pagin.ItemProfilePagingSource
 import com.client.xvideos.r.common.pagin.ItemSavedLikesPagingSource
 import com.client.xvideos.r.common.pagin.ItemSubscriptionsPagingSource
 import com.client.xvideos.r.common.pagin.ItemTopPagingSource
+import com.client.xvideos.r.common.pagin.NichePageNavigation
 import com.client.xvideos.r.common.pagin.savedLikesPagingFlow
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import kotlinx.coroutines.CoroutineScope
@@ -127,7 +129,9 @@ class LazyRow123Host(
     val savedRed: SavedRed,
     val downloadRed: DownloadRed,
     val search: R_SearchExplorer,
-    val isCollection: Boolean = false
+    val isCollection: Boolean = false,
+    private val fixedNichePage: Int? = null,
+    private val onFixedNichePageCount: (Int) -> Unit = {},
 ) {
     companion object {
         private val nextFeedId = AtomicInteger(0)
@@ -170,9 +174,17 @@ class LazyRow123Host(
     /** Текущий порядок сортировки ленты. */
     val sortType: StateFlow<Order> = _sortType.asStateFlow()
 
+    internal val nichePageNavigation = if (typePager == TypePager.NICHES && fixedNichePage == null) {
+        NichePageNavigation(Settings.r_niche_infinite_scroll.field.value)
+    } else {
+        null
+    }
+
     /** Сменяет сортировку ленты. */
     fun changeSortType(newSort: Order) {
+        val changed = newSort != _sortType.value
         _sortType.value = newSort
+        if (changed) nichePageNavigation?.resetForSort()
         Timber.d("!!! *** Sort тип изменен в $newSort")
     }
 
@@ -187,8 +199,7 @@ class LazyRow123Host(
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     private val cachedPager: Flow<PagingData<GifsInfo>> =
-        combine( search.searchTextDone, sortType, tags )
-        { text, sort, tags ->
+        combine(search.searchTextDone, sortType, tags) { text, sort, tags ->
             SearchParams(pagerSearchQuery(typePager, text), sort, tags.joinToString(","))
         }
             .onStart { if (typePager.appliesBlockList()) block.awaitInitialRefresh() }
@@ -210,6 +221,14 @@ class LazyRow123Host(
                         extraString = extraString, searchText = params.query,
                         tags = tags.value.toList(),
                         block = block, redApi = redApi, savedRed = savedRed,
+                        nichePage = fixedNichePage,
+                        onNichePageCount = { count ->
+                            if (fixedNichePage != null) {
+                                onFixedNichePageCount(count)
+                            } else if (sortType.value == params.sort) {
+                                nichePageNavigation?.updatePageCount(infiniteScroll = true, count = count)
+                            }
+                        },
                     )
                 }
                 if (typePager == TypePager.R_SAVED_LIKES) {
@@ -256,6 +275,9 @@ class LazyRow123Host(
 
     init {
         RFeedSessionStore.register(this)
+        nichePageNavigation?.let { navigation ->
+            scope.launch { Settings.r_niche_infinite_scroll.field.collect(navigation::setInfiniteScroll) }
+        }
     }
 
 }
@@ -272,10 +294,19 @@ fun createPager(
     block: BlockRed,
     redApi: RedApi,
     savedRed: SavedRed,
+    nichePage: Int? = null,
+    onNichePageCount: (Int) -> Unit = {},
 ): PagingSource<Int, GifsInfo> {
     val pagingSourceFactory = when (typePager) {
 
-        TypePager.NICHES -> { ItemNailsPagingSource( order = sort, nichesName = extraString, block = block, redApi = redApi ) }
+        TypePager.NICHES -> ItemNailsPagingSource(
+            order = sort,
+            nichesName = extraString,
+            block = block,
+            redApi = redApi,
+            fixedPage = nichePage,
+            onPageCount = onNichePageCount,
+        )
         TypePager.TOP -> { ItemTopPagingSource( sort = sort, searchText = searchText, block = block, redApi = redApi ) }
         TypePager.R_SAVED_LIKES -> { ItemSavedLikesPagingSource(sort, savedRed.likes.list) }
         TypePager.SUBSCRIPTIONS -> { ItemSubscriptionsPagingSource(savedRed) }

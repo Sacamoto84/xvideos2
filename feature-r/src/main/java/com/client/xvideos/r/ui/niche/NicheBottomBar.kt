@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -37,17 +37,18 @@ fun NicheBottomBar(
     onSortChange: (Order) -> Unit,
     columns: Int,
     modifier: Modifier = Modifier,
+    scrollMode: @Composable () -> Unit = {},
 ) {
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .adaptiveContentWidth()
-                .height(48.dp),
+                .heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 Spacer(modifier = Modifier.width(2.dp))
 
                 SortByOrder(
@@ -63,6 +64,7 @@ fun NicheBottomBar(
                 Spacer(modifier = Modifier.width(4.dp))
             }
             Spacer(modifier = Modifier.width(4.dp))
+            scrollMode()
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(

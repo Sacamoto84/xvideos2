@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.x.feature.country.molecule.ComposeCountry
-import com.client.xvideos.x.screens.common.bottomKeyboard.BottomListDashBoardNavigationButtons2
+import com.client.xvideos.common.ui.pagination.PageNavigationBar
 import kotlinx.coroutines.launch
 
 /**
@@ -35,7 +35,7 @@ fun DashboardControlsRow(
     ) {
         ComposeCountry()
         Box(modifier = Modifier.weight(1f)) {
-            BottomListDashBoardNavigationButtons2(
+            PageNavigationBar(
                 value = isCurrentPage,
                 onChange = handleChange,
                 max = isMax,

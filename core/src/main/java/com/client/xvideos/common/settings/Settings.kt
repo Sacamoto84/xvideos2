@@ -197,6 +197,7 @@ object Settings {
     val r_collectionTab_column_current_count by lazy { SettingElementInt( pref, "r_collectionTab_column_current_count", 2 ) }
 
     val r_current_count_niches by lazy { SettingElementInt(pref, "current_count_niches", 2) }
+    val r_niche_infinite_scroll by lazy { SettingElementBoolean(pref, "r_niche_infinite_scroll", true) }
 
 
     //-- L ---

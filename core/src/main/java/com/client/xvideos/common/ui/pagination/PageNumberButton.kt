@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.common.bottomKeyboard.atom
+package com.client.xvideos.common.ui.pagination
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PageNumberButton(
+internal fun PageNumberButton(
     pageNumber: Int,
     isSelected: Boolean,
     onClick: () -> Unit,

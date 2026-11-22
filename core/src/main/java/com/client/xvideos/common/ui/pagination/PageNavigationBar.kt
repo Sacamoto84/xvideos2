@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.common.bottomKeyboard
+package com.client.xvideos.common.ui.pagination
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -36,11 +36,9 @@ import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.currentWidthClass
 import com.client.xvideos.common.ui.keyboard.KeyboardNumber
 import com.client.xvideos.common.ui.keyboard.KeyboardNumberTheme
-import com.client.xvideos.x.screens.common.bottomKeyboard.atom.ArrowNavigationButton
-import com.client.xvideos.x.screens.common.bottomKeyboard.atom.PageNumberButton
 
 /**
- * Нижняя панель навигации по страницам (`BottomListDashBoardNavigationButtons2`).
+ * Нижняя панель навигации по страницам.
  *
  * Предоставляет:
  * - Кнопки со стрелками «<» и «>» для последовательного перехода.
@@ -54,7 +52,7 @@ import com.client.xvideos.x.screens.common.bottomKeyboard.atom.PageNumberButton
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun BottomListDashBoardNavigationButtons2(
+fun PageNavigationBar(
     value: Int,
     onChange: (Int) -> Unit,
     max: Int,
@@ -200,7 +198,7 @@ private fun PageNumberInputButton(onClick: () -> Unit) {
 }
 
 // Функция для вычисления смещения, чтобы элемент был в центре экрана
-fun calculateCenterOffset(state: LazyListState, index: Int): Int {
+private fun calculateCenterOffset(state: LazyListState, index: Int): Int {
     val layoutInfo = state.layoutInfo
     val viewportWidth = layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset
 
@@ -219,8 +217,8 @@ internal fun calculateCenterOffset(viewportWidth: Int, itemWidth: Int): Int {
 
 @Preview
 @Composable
-private fun BottomListDashBoardNavigationButtons2Preview() {
-    BottomListDashBoardNavigationButtons2(
+private fun PageNavigationBarPreview() {
+    PageNavigationBar(
         value = 0,
         onChange = {},
         max = 10

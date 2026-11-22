@@ -1,4 +1,4 @@
-package com.client.xvideos.x.screens.common.bottomKeyboard
+package com.client.xvideos.common.ui.pagination
 
 import com.client.xvideos.common.ui.adaptive.WidthClass
 

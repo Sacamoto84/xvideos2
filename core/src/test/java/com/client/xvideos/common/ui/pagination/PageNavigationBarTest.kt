@@ -1,12 +1,11 @@
-package com.client.xvideos.x
+package com.client.xvideos.common.ui.pagination
 
-import com.client.xvideos.x.screens.common.bottomKeyboard.calculateCenterOffset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class X_BottomNavigationButtonsTest {
+class PageNavigationBarTest {
 
     private fun computeNavigation(value: Int, max: Int): Pair<Boolean, Boolean> {
         val safeMax = max.coerceAtLeast(1)
