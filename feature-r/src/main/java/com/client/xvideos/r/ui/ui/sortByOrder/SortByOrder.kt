@@ -45,6 +45,7 @@ import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.nearestIn
 
+private val SORT_TRIGGER_HEIGHT = 46.dp
 private val SORT_ORDER_TEXT_AUTO_SIZE = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 18.sp)
 
 private fun Order.toDisplayName(): String = when (this) {
@@ -133,7 +134,7 @@ fun SortByOrder(
             if (orderIcon != null) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(SORT_TRIGGER_HEIGHT)
                         .semantics { contentDescription = sortHint }
                         .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                         .border(1.dp, Color(0xFF3A3A3A), boxShape),
@@ -145,7 +146,7 @@ fun SortByOrder(
                 Row(
                     modifier = Modifier
                         .width(100.dp)
-                        .height(46.dp)
+                        .height(SORT_TRIGGER_HEIGHT)
                         .menuAnchor(ExposedDropdownMenuAnchorType.SecondaryEditable)
                         .border(1.dp, Color(0xFF3A3A3A), boxShape)
                         .clickable(onClick = onTriggerClick),

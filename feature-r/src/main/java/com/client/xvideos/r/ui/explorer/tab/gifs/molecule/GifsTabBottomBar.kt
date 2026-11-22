@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,9 +46,7 @@ fun GifsTabBottomBar(
     Column(modifier.background(Theme.tabLevel1)) {
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
-            modifier = Modifier
-                .padding(start = 1.dp, top = 1.dp, end = 1.dp)
-                .background(Theme.tabLevel1),
+            modifier = Modifier.padding(horizontal = 1.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.Bottom
         ) {
@@ -70,8 +67,6 @@ fun GifsTabBottomBar(
 
             searchField(Modifier.weight(1f))
         }
-        Spacer(modifier = Modifier.height(1.dp))
-        HorizontalDivider(color = Theme.R.colorCommonBackground)
         HorizontalDivider(color = Theme.R.colorBorderGray)
     }
 }
@@ -83,7 +78,7 @@ private fun GifsTabBottomBarPreview() {
         searchField = { modifier ->
             Box(
                 modifier
-                    .height(40.dp)
+                    .height(46.dp)
                     .background(Color.DarkGray, RoundedCornerShape(4.dp)),
                 contentAlignment = Alignment.CenterStart
             ) {
