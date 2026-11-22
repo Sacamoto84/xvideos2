@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.nio.file.Files
 
 private enum class Folder(val value: String) {
     CACHE_DOWNLOAD_RED("Download"),
@@ -126,7 +127,7 @@ object AppPath {
      *
      * Делает только то, что обязано быть готово синхронно: назначает пути и
      * создаёт папки. Всё, что может занять заметное время, — в
-     * [cleanupTransientDirs].
+     * [prepareTransientDirs].
      */
     fun init(context: Context) {
         root = File(context.filesDir, STORE_DIR)
@@ -184,24 +185,37 @@ object AppPath {
         migrateLegacyRNichesCache(rNichesCacheDir)
     }
 
-    /**
-     * Разовая уборка staging-папок при старте процесса.
-     *
-     * Вынесено из [init], потому что `deleteRecursively` по трём папкам — это
-     * обход дерева со всеми принятыми и отданными файлами, а [init] вызывается
-     * из `App.onCreate()` на главном потоке. При крупном inbox это заметная
-     * задержка перед первым кадром.
-     *
-     * Вызывающий обязан дождаться завершения, прежде чем что-либо начнёт
-     * писать в эти папки: `App.awaitStorageCleanup()`. Иначе приём P2P может
-     * стартовать в inbox, который в этот момент удаляется.
-     */
-    suspend fun cleanupTransientDirs() = withContext(Dispatchers.IO) {
-        clearLShareCache()
-        clearP2pInbox()
-        clearP2pOutbox()
-        clearP2pNearbyCache()
+    /** Отделяет старые временные файлы до первого обращения к рабочим папкам. */
+    suspend fun prepareTransientDirs() = withContext(Dispatchers.IO) {
+        for (directory in transientDirs()) {
+            if (!directory.isDirectory) {
+                clearStagingDir(directory)
+                continue
+            }
+            val ready = runCatching {
+                val directoryPath = directory.toPath()
+                if (!Files.newDirectoryStream(directoryPath).use { it.iterator().hasNext() }) return@runCatching true
+                val trash = Files.createTempDirectory(directoryPath.parent, STARTUP_TRASH_PREFIX).toFile()
+                directory.renameTo(File(trash, directory.name)) && directory.mkdirs()
+            }.onFailure { Timber.w(it, "AppPath: не удалось отделить старую временную папку") }
+                .getOrDefault(false)
+            if (!ready) clearStagingDir(directory)
+        }
     }
+
+    /** Удаляет отделённые файлы, в том числе после прерванной фоновой уборки. */
+    fun deleteTransientTrash() {
+        for (parent in transientDirs().mapNotNull { it.parentFile }.distinct()) {
+            parent.listFiles { file -> file.isDirectory && file.name.startsWith(STARTUP_TRASH_PREFIX) }
+                ?.forEach { it.deleteRecursively() }
+        }
+    }
+
+    private const val STARTUP_TRASH_PREFIX = ".startup-trash-"
+
+    private fun transientDirs(): List<File> = listOf(
+        File(l_cacheDownload), File(p2p_inbox), File(p2p_outbox), File(p2p_nearbyCache),
+    )
 
     /**
      * Вытаскивает `niches.json` из старого места внутри [main].

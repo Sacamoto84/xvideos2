@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
@@ -81,7 +82,7 @@ fun R_Screen_RootContent(
         dialogsContent()
 
         Scaffold(
-            modifier = modifier.imePadding(),
+            modifier = modifier.imePadding().testTag("rExplorer"),
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = { DownloadIndicator(percentDownload) }
         ) { padding ->

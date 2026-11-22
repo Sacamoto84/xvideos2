@@ -117,7 +117,7 @@ fun MenuScreenContent(
                 MenuButtonSelect(R.drawable.icon_xvideos_white, onClick = onOpenX)
                 MenuButtonSelect(R.drawable.icon_luscious, tag = "buttonL", onClick = onOpenL)
                 MenuButtonSelect(R.drawable.icon_nhentai, tag = "buttonN", onClick = onOpenN)
-                MenuButtonSelect(R.drawable.icon_red, onClick = onOpenR)
+                MenuButtonSelect(R.drawable.icon_red, tag = "buttonR", onClick = onOpenR)
                 // Картинка вытянутее надписи X: при высоте 80dp не влезла бы в плитку,
                 // а на 58dp она той же ширины, что надпись X.
                 MenuButtonSelect(R.drawable.icon_xlive, iconHeight = 58.dp, onClick = onOpenXLive)

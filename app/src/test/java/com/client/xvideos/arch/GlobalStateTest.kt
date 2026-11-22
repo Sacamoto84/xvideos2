@@ -57,7 +57,7 @@ class GlobalStateTest {
             "Порядок инициализации в App.onCreate значим и переставлен: " +
                 "${order.map { it.first }}. AppPath нужен " +
                 "Hilt-синглтонам, которые читают пути в конструкторе, " +
-                "а Settings.init открывает зашифрованное хранилище уже по готовым путям.",
+                "а Settings.init подготавливает настройки перед запуском Activity.",
             positions.sorted(),
             positions,
         )
@@ -174,7 +174,7 @@ class GlobalStateTest {
          * Вызовы `App.onCreate`, чей относительный порядок значим.
          *
          * `AppPath` нужен Hilt-синглтонам, которые читают пути в конструкторе,
-         * а `Settings.init` открывает зашифрованное хранилище уже по готовым путям.
+         * а `Settings.init` подготавливает настройки перед запуском Activity.
          */
         val REQUIRED_ORDER = listOf(
             "AppBuildInfo.init(",

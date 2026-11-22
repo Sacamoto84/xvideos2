@@ -1,53 +1,40 @@
 package com.client.xvideos
 
+import android.content.Context
+import com.client.xvideos.common.AppPath
+import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
-import com.client.xvideos.r.common.block.BlockRed
-import com.client.xvideos.r.common.saved.SavedRed
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.joinAll
+import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 
-/**
- * Подготавливает данные, которые нужны сразу после старта:
- * списки сохранённого R, блокировки, коллекции и временный cache DAO.
- *
- * Выполняется один раз за время жизни процесса приложения:
- * - при обычном запуске — в [SplashActivity] под заставкой;
- * - при запуске в режиме камуфляжа («Калькулятор») — в фоне из [MainActivity.launchStartupCleanup],
- *   чтобы калькулятор открывался мгновенно и без заставки с анимацией загрузки.
- */
 @Singleton
 class AppStartupInitializer @Inject constructor(
-    private val db: Provider<AppFileDatabase>,
-    private val blockRed: Provider<BlockRed>,
-    private val savedRed: Provider<SavedRed>,
     private val storageCleanupGate: StorageCleanupGate,
+    private val db: Provider<AppFileDatabase>,
+    @ApplicationContext private val context: Context,
+    @ApplicationScope private val scope: CoroutineScope,
 ) {
-    private val initMutex = Mutex()
-    private var initialized = false
+    private val maintenanceStarted = AtomicBoolean()
 
-    suspend fun init() = initMutex.withLock {
-        if (initialized) return@withLock
-        // Хранилища могут начать читать файлы при создании.
-        storageCleanupGate.await()
-        val savedRedInstance = savedRed.get()
-        val blockRedInstance = blockRed.get()
-        db.get().clearVolatileCachesOnProcessStart()
-        coroutineScope {
-            launch { savedRedInstance.collections.refreshCollectionList() }
-            joinAll(
-                blockRedInstance.refresh(),
-                savedRedInstance.likes.refresh(),
-                savedRedInstance.niches.refresh(),
-                savedRedInstance.creators.refresh(),
-            )
+    suspend fun awaitStorage() = storageCleanupGate.await()
+
+    /** Планирует обслуживание после первого рабочего кадра, один раз на процесс. */
+    fun startMaintenance() {
+        if (!maintenanceStarted.compareAndSet(false, true)) return
+        scope.launch {
+            awaitStorage()
+            Settings.migrateLegacyCredentialsIfPresent()
+            AppPath.deleteTransientTrash()
+            db.get().cleanupObsoleteCaches()
+            VideoDiskCacheCleaner.clearLegacyCaches(context)
         }
-        initialized = true
     }
 }

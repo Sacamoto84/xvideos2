@@ -9,7 +9,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import cafe.adriel.voyager.navigator.Navigator
-import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.util.pathForLog
 import com.client.xvideos.x.extractXVideoId
 import com.client.xvideos.x.feature.saved.SavedX
@@ -49,14 +48,14 @@ import timber.log.Timber
  * навигация на теги/полный экран, а также сохранение прогресса и возобновление («Продолжить просмотр»).
  *
  * @property initialItem Исходная карточка ролика (если доступна из ленты).
- * @property db Файловая БД для RAM-кэша страниц.
+ * @property pageCache Кэш страниц в памяти процесса.
  * @property saved Локальные сохранения X (избранное, загрузки, история).
  */
 @Stable
 class ScreenX_VideoPlayerSM @AssistedInject constructor(
     @Assisted("url") url: String,
     @Assisted("initialItem") val initialItem: ItemsX?,
-    val db: AppFileDatabase,
+    private val pageCache: XVideoPageCache,
     val saved: SavedX,
 ) : ScreenModel {
     /** Нормализованный URL страницы видео. */
@@ -236,25 +235,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 // История — до сети: позиция нужна раньше, чем появится поток.
                 checkAndInitResume(currentItem.id.takeIf { it > 0L } ?: (extractXVideoId(url) ?: 0L))
 
-                if (forceReload) {
-                    withContext(Dispatchers.IO) {
-                        db.cacheUrlStringRam.delete(url)
-                    }
-                }
-
-                // RAM-кэш чистится при старте процесса (clearVolatileCachesOnProcessStart),
-                // поэтому HLS-ссылки с истекающим токеном обновятся после перезапуска.
-                val cachedHtml = if (forceReload) null else withContext(Dispatchers.IO) {
-                    db.cacheUrlStringRam.get(url)
-                }
-                val isFromCache = cachedHtml != null
-                val htmlContent = if (cachedHtml == null) {
-                    withContext(Dispatchers.IO) {
-                        readHtmlFromURLDirect(url)
-                    }
-                } else {
-                    cachedHtml.content
-                }
+                if (forceReload) pageCache.remove(url)
+                val cachedHtml = if (forceReload) null else pageCache[url]
+                val htmlContent = cachedHtml ?: withContext(Dispatchers.IO) { readHtmlFromURLDirect(url) }
 
                 val parsedData = withContext(Dispatchers.Default) {
                     parseVideoPageData(htmlContent)
@@ -286,13 +269,9 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 if (parsedData.streamCandidate.isBlank()) {
                     isError = true
                     isFullScreen = false
-                    withContext(Dispatchers.IO) {
-                        db.cacheUrlStringRam.delete(url)
-                    }
-                } else if (!isFromCache && htmlContent.isNotBlank()) {
-                    withContext(Dispatchers.IO) {
-                        db.cacheUrlStringRam.put(url, htmlContent)
-                    }
+                    pageCache.remove(url)
+                } else if (cachedHtml == null && htmlContent.isNotBlank()) {
+                    pageCache.put(url, htmlContent)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -300,9 +279,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
                 Timber.w("Страница видео не загрузилась: %s: %s", url.pathForLog(), e.javaClass.simpleName)
                 isError = true
                 isFullScreen = false
-                withContext(Dispatchers.IO) {
-                    db.cacheUrlStringRam.delete(url)
-                }
+                pageCache.remove(url)
             } finally {
                 if (loadJob === coroutineContext[kotlinx.coroutines.Job]) {
                     isLoading = false
@@ -318,9 +295,7 @@ class ScreenX_VideoPlayerSM @AssistedInject constructor(
         Timber.w("ScreenX_VideoPlayerSM: ошибка воспроизведения для %s, очистка RAM-кэша", url.pathForLog())
         isError = true
         isFullScreen = false
-        screenModelScope.launch(Dispatchers.IO) {
-            db.cacheUrlStringRam.delete(url)
-        }
+        pageCache.remove(url)
     }
 
     /**

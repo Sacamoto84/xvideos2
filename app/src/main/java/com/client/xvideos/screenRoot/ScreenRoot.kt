@@ -29,7 +29,9 @@ import com.client.xvideos.common.navigation.LocalMainNavigator
 import com.client.xvideos.common.snackbar.show
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.featured.saved.SavedL
+import com.client.xvideos.l.ui.screens.explorer.L_ScreenExplorer
 import com.client.xvideos.l.ui.screens.explorer.molecule.LCollectionDialogs
+import dagger.Lazy
 import kotlinx.coroutines.flow.mapNotNull
 import net.engawapg.lib.zoomable.ExperimentalZoomableApi
 
@@ -102,7 +104,7 @@ object ScreenRoot : Screen {
 
 @Composable
 fun ScreenRootContent(
-    savedL: SavedL,
+    savedL: Lazy<SavedL>,
     overlayContent: (@Composable () -> Unit)?,
     snackBarHostState: SnackbarHostState,
     onMainNavigatorAttach: (Navigator) -> Unit,
@@ -131,9 +133,10 @@ fun ScreenRootContent(
                     }
                 }
                 nav.lastItem.Content()
+                if (nav.items.any { it is L_ScreenExplorer }) {
+                    LCollectionDialogs(remember(savedL) { savedL.get() })
+                }
             }
-
-            LCollectionDialogs(savedL)
 
             overlayContent?.let { content ->
                 Box(modifier = Modifier.fillMaxSize()) {

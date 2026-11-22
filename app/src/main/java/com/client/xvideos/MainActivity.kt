@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -36,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +56,6 @@ import com.client.xvideos.common.applock.AppLockRepository
 import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.applock.LocalAppLockActive
 import com.client.xvideos.common.applock.WindowPrivacy
-import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
 import com.client.xvideos.common.rotation.RotationLockKeeper
@@ -62,14 +63,10 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.common.ui.statusbar.LocalStatusBarRequests
 import com.client.xvideos.common.ui.statusbar.StatusBarRequests
-import com.client.xvideos.common.videoplayer.util.VideoDiskCacheCleaner
-import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.screenRoot.ScreenRoot
 import com.client.xvideos.screenRoot.molecule.StatusBarHost
 import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -89,12 +86,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity()//, ImageLoaderFactory
 {
-    @Inject
-    lateinit var savedRed: javax.inject.Provider<SavedRed>
-
-    @Inject
-    lateinit var appFileDatabase: javax.inject.Provider<AppFileDatabase>
-
     @Inject
     lateinit var appStartupInitializer: AppStartupInitializer
 
@@ -265,7 +256,11 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         // запустит экран замка.
         isAppLocked = AppLockRepository.shouldShowLock(this)
 
-        launchStartupCleanup()
+        fullyDrawnReporter.addOnReportDrawnListener(appStartupInitializer::startMaintenance)
+        lifecycleScope.launch {
+            appStartupInitializer.awaitStorage()
+            isStorageReady = true
+        }
 
         setContent {
             val statusBarRequests = remember { StatusBarRequests() }
@@ -303,10 +298,10 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
             // SECURITY: Отключение P2P радиоэфира и приема файлов при активном замке
             val p2pBackgroundReceive by Settings.p2p_background_receive.field.collectAsStateWithLifecycle()
-            LaunchedEffect(isAppLocked, p2pBackgroundReceive) {
+            LaunchedEffect(isAppLocked, p2pBackgroundReceive, isStorageReady) {
                 if (isAppLocked) {
                     toggleP2pService(this@MainActivity, false)
-                } else if (p2pBackgroundReceive && P2pPermissions.allGranted(this@MainActivity)) {
+                } else if (isStorageReady && p2pBackgroundReceive && P2pPermissions.allGranted(this@MainActivity)) {
                     toggleP2pService(this@MainActivity, true)
                 }
             }
@@ -349,7 +344,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                     LocalStatusBarRequests provides statusBarRequests,
                                     LocalAppLockActive provides appLockActive,
                                 ) {
-                                    if (isStorageReady) ScreenRoot.Content()
+                                    MainScreenContent()
                                 }
                                 P2pBackgroundOverlay()
                                 StatusBarHost(
@@ -386,6 +381,17 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         }
     }
 
+    @Composable
+    private fun MainScreenContent() {
+        var contentOpened by remember { mutableStateOf(false) }
+        if (!isStorageReady || (isAppLocked && !contentOpened)) return
+
+        // При повторной блокировке сохраняем открытый стек навигации под заглушкой.
+        SideEffect { contentOpened = true }
+        ScreenRoot.Content()
+        ReportDrawn()
+    }
+
     private fun configureWindow() {
         val currentWindow = this.window ?: return
         currentWindow.applyAppWindowStyle()
@@ -416,23 +422,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             currentWindow.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
         applyRecentsScreenshotPolicy(blurRecentTasksAtStart, lockEnabledAtStart)
-    }
-
-    private fun launchStartupCleanup() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            appStartupInitializer.init()
-            withContext(Dispatchers.Main) { isStorageReady = true }
-            appFileDatabase.get().deleteExpiredCaches()
-            VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
-            savedRed.get().nichesCache.refreshIfStale()
-
-            if (!AppLockRepository.shouldShowLock(applicationContext) &&
-                Settings.p2p_background_receive.field.value &&
-                P2pPermissions.allGranted(applicationContext)
-            ) {
-                toggleP2pService(applicationContext, true)
-            }
-        }
     }
 
     @Composable

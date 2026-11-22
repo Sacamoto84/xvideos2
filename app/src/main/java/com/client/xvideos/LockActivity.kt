@@ -7,6 +7,7 @@ import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -112,6 +113,7 @@ class LockActivity : ComponentActivity() {
                             onUnlockFailed = { AppLockRepository.registerFailedAttempt(this@LockActivity) },
                             onBack = { moveTaskToBack(true) },
                         )
+                        ReportDrawn()
                     }
                 }
             }

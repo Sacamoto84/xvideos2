@@ -62,9 +62,10 @@ class BlockRed internal constructor(
      */
     private val stateMutex = Mutex()
 
-    init {
-        refresh()
-    }
+    private val initialRefresh = refresh()
+
+    /** Лента ждёт чтения блокировок перед запросом своей первой страницы. */
+    internal suspend fun awaitInitialRefresh() = initialRefresh.join()
 
     /**
      * Асинхронно перечитывает все файлы блокировок с диска и обновляет [blockList] и [blockedIds].

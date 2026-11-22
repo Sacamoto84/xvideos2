@@ -94,6 +94,13 @@
         android:theme="@style/Theme.Xvideos"
         tools:targetApi="33">
 
+        <!-- Декларация только удаляет провайдер библиотеки из итогового манифеста. -->
+        <provider
+            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+            android:authorities="${applicationId}.mlkitinitprovider"
+            tools:ignore="MissingClass"
+            tools:node="remove" />
+
         <!--
             taskAffinity пустой у всех Activity. По умолчанию он равен имени
             пакета, и на Android 10 чужое приложение, объявив у своей Activity

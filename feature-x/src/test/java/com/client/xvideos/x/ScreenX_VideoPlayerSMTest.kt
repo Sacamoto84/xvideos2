@@ -2,7 +2,7 @@ package com.client.xvideos.x
 
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
-import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.x.screens.videoplayer.XVideoPageCache
 import com.client.xvideos.x.feature.saved.SavedX
 import com.client.xvideos.x.screens.videoplayer.ScreenX_VideoPlayerSM
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +50,7 @@ class ScreenX_VideoPlayerSMTest {
     private fun newSm(url: String) = ScreenX_VideoPlayerSM(
         url = url,
         initialItem = null,
-        db = AppFileDatabase(),
+        pageCache = XVideoPageCache(),
         saved = SavedX(CoroutineScope(Dispatchers.Unconfined)),
     )
 

@@ -2,97 +2,60 @@ package com.client.xvideos
 
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
-import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.storage.StorageCleanupGate
-import com.client.xvideos.r.common.block.BlockRed
-import com.client.xvideos.r.common.saved.SavedRed
-import com.client.xvideos.r.network.api.RedApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.BeforeClass
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.nio.file.Files
-import java.util.concurrent.atomic.AtomicInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppStartupInitializerTest {
-
-    companion object {
-        @BeforeClass
-        @JvmStatic
-        fun setUpClass() {
-            val tempDir = Files.createTempDirectory("app_path_test").toFile()
-            val context = object : ContextWrapper(null) {
-                override fun getFilesDir(): File = File(tempDir, "files").apply { mkdirs() }
-                override fun getCacheDir(): File = File(tempDir, "cache").apply { mkdirs() }
-            }
-            AppPath.init(context)
-        }
-    }
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(Dispatchers.Unconfined)
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @get:Rule val folder = TemporaryFolder()
 
     @Test
-    fun `init выполняется только один раз`() = runTest {
-        val counter = AtomicInteger(0)
-        val initializer = AppStartupInitializer(
-            db = {
-                counter.incrementAndGet()
-                AppFileDatabase()
-            },
-            blockRed = { BlockRed(this) },
-            savedRed = { SavedRed(RedApi(AppFileDatabase()), this) },
-            storageCleanupGate = StorageCleanupGate(),
-        )
-
-        initializer.init()
-        assertEquals(1, counter.get())
-
-        // Повторный вызов не должен перезапускать инициализацию
-        initializer.init()
-        assertEquals(1, counter.get())
-    }
-
-    @Test
-    fun `хранилища открываются только после отката и только один раз`() = runTest {
+    fun `menu waits for storage recovery without opening the database`() = runTest {
         val rollback = CompletableDeferred<Unit>()
         val gate = StorageCleanupGate().apply { start(this@runTest) { rollback.await() } }
-        val reads = AtomicInteger()
         val initializer = AppStartupInitializer(
-            db = { AppFileDatabase() },
-            blockRed = { BlockRed(this) },
-            savedRed = {
-                reads.incrementAndGet()
-                SavedRed(RedApi(AppFileDatabase()), this)
-            },
             storageCleanupGate = gate,
+            db = { error("The startup gate must not open the database") },
+            context = ContextWrapper(null),
+            scope = this,
         )
-        val first = launch { initializer.init() }
-        val second = launch { initializer.init() }
+
+        val waiting = launch { initializer.awaitStorage() }
         runCurrent()
-        assertEquals(0, reads.get())
+        assertFalse(waiting.isCompleted)
 
         rollback.complete(Unit)
-        first.join()
-        second.join()
-        assertEquals(1, reads.get())
+        runCurrent()
+        assertTrue(waiting.isCompleted)
+    }
+
+    @Test
+    fun `background cleanup keeps new transfers`() = runTest {
+        val files = folder.newFolder("files")
+        val cache = folder.newFolder("cache")
+        AppPath.init(object : ContextWrapper(null) {
+            override fun getFilesDir() = files
+            override fun getCacheDir() = cache
+        })
+        val inbox = File(AppPath.p2p_inbox)
+        val old = File(inbox, "old.zip").apply { writeText("previous transfer") }
+
+        AppPath.prepareTransientDirs()
+        assertFalse(old.exists())
+        val active = File(inbox, "active.zip").apply { writeText("current transfer") }
+
+        AppPath.deleteTransientTrash()
+        assertTrue(active.isFile)
+        assertTrue(inbox.parentFile!!.listFiles().orEmpty().none { it.name.startsWith(".startup-trash-") })
     }
 }

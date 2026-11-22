@@ -10,6 +10,7 @@ import cafe.adriel.voyager.hilt.ScreenModelKey
 import com.client.xvideos.common.navigation.NavigationDepthState
 import com.client.xvideos.l.featured.saved.SavedL
 import dagger.Binds
+import dagger.Lazy
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -34,7 +35,7 @@ val LocalRootScreenModel = staticCompositionLocalOf<ScreenRootSM> { error("No Sc
 @Stable
 class ScreenRootSM @Inject constructor(
     val depthState: NavigationDepthState,
-    val savedL: SavedL
+    val savedL: Lazy<SavedL>
 ) : ScreenModel {
     private val _overlayContent = mutableStateOf<(@Composable () -> Unit)?>(null)
     val overlayContent: State<(@Composable () -> Unit)?> = _overlayContent

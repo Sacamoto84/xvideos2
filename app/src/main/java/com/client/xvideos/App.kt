@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 
@@ -54,22 +55,13 @@ class App : Application(), SingletonImageLoader.Factory {
         return CoilImageLoaderFactory.getImageLoader(this)
     }
 
-    lateinit var networkTrafficMonitor: NetworkTrafficMonitor
-        private set
+    private val networkTrafficMonitor: Lazy<NetworkTrafficMonitor> = lazy {
+        EntryPointAccessors.fromApplication(this, NetworkTrafficMonitorEntryPoint::class.java)
+            .networkTrafficMonitor()
+    }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    /**
-     * Основная точка старта процесса приложения.
-     *
-     * Последовательно:
-     * 1. сохраняет singleton-ссылку на `Application`;
-     * 2. подключает Timber в debug-сборке;
-     * 3. запускает монитор сетевого трафика;
-     * 4. применяет SSL-совместимость для старых Android;
-     * 5. инициализирует настройки из `SharedPreferences`;
-     * 6. подписывается на события логирования из общего event bus.
-     */
     @OptIn(DelicateCoroutinesApi::class, ExperimentalComposeRuntimeApi::class)
     override fun onCreate() {
         super.onCreate()
@@ -94,8 +86,7 @@ class App : Application(), SingletonImageLoader.Factory {
 
         // Строго первым делом: Hilt-синглтоны читают пути прямо в конструкторе.
         // init() только назначает пути и создаёт папки — на главном потоке это
-        // дёшево. Рекурсивная чистка staging-папок уходит в фон, её результата
-        // ждут через awaitStorageCleanup().
+        // дёшево. Временные папки отделяются в фоне до доступа к хранилищу.
         AppPath.init(this)
         // Gate берётся лениво через EntryPoint, а не через `@Inject lateinit`:
         // инъекция в Application происходит внутри super.onCreate(), то есть
@@ -108,28 +99,22 @@ class App : Application(), SingletonImageLoader.Factory {
                 // данные тогда лежат в отодвинутой копии и должны вернуться.
                 runCatching { XlrBackupManager.recoverInterruptedRestore() }
                     .onFailure { Timber.e(it, "App: откат оборванного восстановления не удался") }
-                AppPath.cleanupTransientDirs()
                 DuressWipeIsolation.cleanPendingWipe(this@App)
+                AppPath.prepareTransientDirs()
             }
 
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())
         }
 
-        // Монитор берётся из графа — тем же EntryPoint, что и gate уборки:
-        // здесь мы уже после AppPath.init(), синглтоны создавать можно.
-        networkTrafficMonitor = EntryPointAccessors
-            .fromApplication(this, NetworkTrafficMonitorEntryPoint::class.java)
-            .networkTrafficMonitor()
-        networkTrafficMonitor.startMonitoring()
+        scope.launch { networkTrafficMonitor.value.startMonitoring() }
 
         // Совместимость со старыми корневыми сертификатами обеспечивается через
         // res/xml/network_security_config.xml (доверие к ISRG Root X1), а НЕ через
         // глобальное отключение проверки TLS. Прежний trust-all код удалён.
 
         val prefs = defaultSharedPreferences()
-        // Контекст нужен, чтобы Settings открыл зашифрованное хранилище для
-        // учётных данных L и перенёс туда старые открытые значения.
+        // Обычные настройки нужны экрану замка. Профили открываются при обращении.
         Settings.init(prefs, this)
         AppLockLifecycleObserver.install(this)
 
@@ -148,11 +133,8 @@ class App : Application(), SingletonImageLoader.Factory {
      */
     override fun onTerminate() {
         super.onTerminate()
-        // Проверка инициализации, а не голое обращение: если onCreate упал до
-        // создания монитора, здесь вылетал UninitializedPropertyAccessException
-        // и затирал в логе настоящую причину падения.
-        if (::networkTrafficMonitor.isInitialized) {
-            networkTrafficMonitor.destroy()
+        if (networkTrafficMonitor.isInitialized()) {
+            networkTrafficMonitor.value.destroy()
         }
     }
 

@@ -41,7 +41,7 @@ object Settings {
      * Зашифрованное хранилище для секретов. `null`, если Keystore недоступен
      * (Compose Preview) или [init] вызвали без контекста.
      */
-    private var securePref: SharedPreferences? = null
+    private var securePref: Lazy<SharedPreferences?> = lazyOf(null)
 
     /**
      * @param prefs общий файл настроек.
@@ -51,34 +51,38 @@ object Settings {
      */
     fun init(prefs: SharedPreferences, context: Context? = null) {
         pref = prefs
-        securePref = context?.let { SecureCredentialStore.createOrNull(it) }
-        migrateLusciousCredentials()
+        val appContext = context?.applicationContext
+        securePref = lazy {
+            appContext?.let(SecureCredentialStore::createOrNull)?.also { secure ->
+                migrateLusciousCredentials(prefs, secure)
+            }
+        }
     }
 
-    /**
-     * Переносит логин и пароль L из общего файла настроек в зашифрованный
-     * и вычищает открытые копии.
-     *
-     * Выполняется один раз: после переноса ключей `l_login`/`l_pass` в обычных
-     * настройках не остаётся, и следующий запуск сразу выходит на первой проверке.
-     */
-    private fun migrateLusciousCredentials() {
-        if (securePref == null) return
+    /** Убирает старые открытые данные и у тех, кто больше не открывает раздел L. */
+    fun migrateLegacyCredentialsIfPresent() {
+        if (isInitialized && (pref.contains(KEY_L_LOGIN) || pref.contains(KEY_L_PASS))) {
+            securePref.value
+        }
+    }
 
-        val legacyLogin = pref.getString(KEY_L_LOGIN, null)
-        val legacyPass = pref.getString(KEY_L_PASS, null)
+    private fun migrateLusciousCredentials(prefs: SharedPreferences, secure: SharedPreferences) {
+        val legacyLogin = prefs.getString(KEY_L_LOGIN, null)
+        val legacyPass = prefs.getString(KEY_L_PASS, null)
         if (legacyLogin == null && legacyPass == null) return
 
-        // Пустое старое значение уже сохранённое не затирает.
         if (!legacyLogin.isNullOrEmpty() || !legacyPass.isNullOrEmpty()) {
-            val saved = l_profile.field.value
-            l_profile.save(
-                login = legacyLogin?.takeIf { it.isNotEmpty() } ?: saved.login,
-                password = legacyPass?.takeIf { it.isNotEmpty() } ?: saved.password,
-            )
+            val saved = secure.edit()
+                .putString(KEY_L_LOGIN, legacyLogin?.takeIf { it.isNotEmpty() } ?: secure.getString(KEY_L_LOGIN, ""))
+                .putString(KEY_L_PASS, legacyPass?.takeIf { it.isNotEmpty() } ?: secure.getString(KEY_L_PASS, ""))
+                .commit()
+            if (!saved) {
+                Timber.w("Settings: не удалось записать учётные данные L в зашифрованное хранилище")
+                return
+            }
         }
 
-        pref.edit {
+        prefs.edit {
             remove(KEY_L_LOGIN)
             remove(KEY_L_PASS)
         }
@@ -199,8 +203,8 @@ object Settings {
 
     // Логин и пароль. Лежат в зашифрованном хранилище, а не в общем файле
     // настроек: раньше пароль от стороннего сервиса хранился открытым текстом
-    // рядом с остальными настройками. Миграция старых значений — в [init].
-    val l_profile by lazy { SettingElementSecureCredentials(securePref, KEY_L_LOGIN, KEY_L_PASS) }
+    // рядом с остальными настройками. Старые значения переносятся при открытии хранилища.
+    val l_profile by lazy { SettingElementSecureCredentials(securePref.value, KEY_L_LOGIN, KEY_L_PASS) }
 
     /**
      * Размер миниатюры в галерее
@@ -248,7 +252,7 @@ object Settings {
     // Логин и пароль X — в том же зашифрованном хранилище, что и профиль L.
     // Сохраняются только после удачного входа: по ним раздел X входит заново,
     // когда сессия на сайте закончилась.
-    val x_profile by lazy { SettingElementSecureCredentials(securePref, "x_login", "x_pass") }
+    val x_profile by lazy { SettingElementSecureCredentials(securePref.value, "x_login", "x_pass") }
 
     //Категория X (лента, поиск, теги, рейтинг канала): имя XCategory из feature-x
     val x_category by lazy { SettingElementString(pref, "x_category", "STRAIGHT") }
@@ -258,7 +262,7 @@ object Settings {
     val x_subscriptions_models_order by lazy { SettingElementInt(pref, "x_subscriptions_models_order", 0) }
 
     // Профиль N (логин и пароль в зашифрованном хранилище, кука сессии и API-ключ для повышенных лимитов API)
-    val n_profile by lazy { SettingElementSecureCredentials(securePref, "n_login", "n_pass") }
-    val nAccess by lazy { NAccessSettings(pref, securePref) }
+    val n_profile by lazy { SettingElementSecureCredentials(securePref.value, "n_login", "n_pass") }
+    val nAccess by lazy { NAccessSettings(pref, securePref.value) }
 
 }

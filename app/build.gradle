@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.baselineprofile)
     alias(libs.plugins.kotlin.compose)
 
     alias(libs.plugins.ksp)
@@ -150,7 +151,15 @@ kotlin {
     }
 }
 
+baselineProfile {
+    saveInSrc = true
+    mergeIntoMain = true
+    automaticGenerationDuringBuild = false
+}
+
 dependencies {
+    baselineProfile project(':baselineprofile')
+    implementation libs.androidx.profileinstaller
 
     // Модули проекта. :core приходит транзитивно через разделы, но объявлен
     // явно: :app пользуется базовым слоем напрямую (тема, настройки, P2P).

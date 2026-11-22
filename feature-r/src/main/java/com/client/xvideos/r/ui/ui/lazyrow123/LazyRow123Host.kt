@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -189,6 +190,7 @@ class LazyRow123Host(
         { text, sort, tags ->
             SearchParams(pagerSearchQuery(typePager, text), sort, tags.joinToString(","))
         }
+            .onStart { if (typePager.appliesBlockList()) block.awaitInitialRefresh() }
             //.debounce(2000)                                       // ② ждём паузу ввода
             .distinctUntilChanged()                                 // ③ игнорируем дубли
             .flatMapLatest { params ->                              // ④ НОВЫЙ Pager при каждом изменении
