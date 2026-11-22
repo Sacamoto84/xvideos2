@@ -88,13 +88,11 @@ fun LazyRow123(
     val hazeState = remember { HazeState() }
     val gridState = host.position.rememberState()
     val haptic = LocalHapticFeedback.current
-    // Индикатор жеста обновления держится, пока идёт загрузка. Раньше это был
-    // таймер на полсекунды: на медленной сети он гас раньше данных, а при сбое
-    // показывал «готово».
-    var isRefreshing by remember { mutableStateOf(false) }
     val refreshState = listGifs.loadState.refresh
+    // Локальный источник может завершить refresh до следующего кадра. Отдельный
+    // флаг жеста тогда остался бы включённым. Первую загрузку показывает центр сетки.
+    val isRefreshing = refreshState is LoadState.Loading && listGifs.itemCount > 0
     LaunchedEffect(refreshState) {
-        if (refreshState !is LoadState.Loading) isRefreshing = false
         // Старые ролики остаются на экране, строка ошибки — в конце списка:
         // без сообщения погасший индикатор читался бы как «готово».
         refreshFailureToAnnounce(refreshState, listGifs.itemCount, host.announcedRefreshFailure)?.let { failure ->
@@ -139,7 +137,6 @@ fun LazyRow123(
         isRefreshing = isRefreshing,
         onRefresh = {
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-            isRefreshing = true
             listGifs.refresh()
         },
         state = pullToRefreshState,

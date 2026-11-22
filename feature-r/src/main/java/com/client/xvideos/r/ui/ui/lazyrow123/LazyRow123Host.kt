@@ -28,6 +28,7 @@ import com.client.xvideos.r.common.pagin.ItemProfilePagingSource
 import com.client.xvideos.r.common.pagin.ItemSavedLikesPagingSource
 import com.client.xvideos.r.common.pagin.ItemSubscriptionsPagingSource
 import com.client.xvideos.r.common.pagin.ItemTopPagingSource
+import com.client.xvideos.r.common.pagin.savedLikesPagingFlow
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -197,22 +198,25 @@ class LazyRow123Host(
                 val shouldResetScroll = lastPagerParams?.let { it != params } == true
                 lastPagerParams = params
                 var resetScrollConsumed = false
-                Pager(
-                    config = PagingConfig( pageSize = 100, prefetchDistance = 10, initialLoadSize = 100 ),
-                    pagingSourceFactory = {
-                        Timber.d("!!! >>>pagingSourceFactory{...}")
-                        if (shouldResetScroll && !resetScrollConsumed) {
-                            resetScrollConsumed = true
-                            gotoUp()
-                        }
-                        createPager(
-                            typePager = typePager,  sort = params.sort,
-                            extraString = extraString, searchText = params.query,
-                            tags = tags.value.toList(),
-                            block = block, redApi = redApi, savedRed = savedRed,
-                        )
+                val config = PagingConfig(pageSize = 100, prefetchDistance = 10, initialLoadSize = 100)
+                val pagingSourceFactory = {
+                    Timber.d("!!! >>>pagingSourceFactory{...}")
+                    if (shouldResetScroll && !resetScrollConsumed) {
+                        resetScrollConsumed = true
+                        gotoUp()
                     }
-                ).flow
+                    createPager(
+                        typePager = typePager, sort = params.sort,
+                        extraString = extraString, searchText = params.query,
+                        tags = tags.value.toList(),
+                        block = block, redApi = redApi, savedRed = savedRed,
+                    )
+                }
+                if (typePager == TypePager.R_SAVED_LIKES) {
+                    savedLikesPagingFlow(savedRed.likes.list, config, pagingSourceFactory)
+                } else {
+                    Pager(config, pagingSourceFactory = pagingSourceFactory).flow
+                }
             }
             .cachedIn(scope)
 
@@ -273,7 +277,7 @@ fun createPager(
 
         TypePager.NICHES -> { ItemNailsPagingSource( order = sort, nichesName = extraString, block = block, redApi = redApi ) }
         TypePager.TOP -> { ItemTopPagingSource( sort = sort, searchText = searchText, block = block, redApi = redApi ) }
-        TypePager.R_SAVED_LIKES -> { ItemSavedLikesPagingSource(sort, savedRed) }
+        TypePager.R_SAVED_LIKES -> { ItemSavedLikesPagingSource(sort, savedRed.likes.list) }
         TypePager.SUBSCRIPTIONS -> { ItemSubscriptionsPagingSource(savedRed) }
 
         TypePager.PROFILE -> { ItemProfilePagingSource( profileName = extraString, sort = sort, block = block, redApi = redApi, tags = tags ) }

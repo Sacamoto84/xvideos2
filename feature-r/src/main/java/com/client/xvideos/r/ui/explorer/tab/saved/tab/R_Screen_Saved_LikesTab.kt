@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
@@ -27,7 +26,6 @@ import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.ui.theme.XvideosTheme
-import kotlinx.coroutines.flow.drop
 
 object R_Screen_Saved_LikesTab : Screen {
 
@@ -43,18 +41,8 @@ object R_Screen_Saved_LikesTab : Screen {
         val columnSelectRaw by Settings.r_likesTab_column_current_count.field.collectAsStateWithLifecycle()
         val columnSelect = normalizeRColumnCount(columnSelectRaw)
 
-        val pager = vm.likedHost.pager.collectAsLazyPagingItems()
-
         //Изменение количества отображаемых элементов
         LaunchedEffect(columnSelect) { vm.likedHost.columns = columnSelect }
-
-        // Ключ-ссылка на list никогда не меняется — подписываемся на размер:
-        // добавление (в т.ч. приём по P2P) и удаление лайка перезагружают pager.
-        LaunchedEffect(Unit) {
-            androidx.compose.runtime.snapshotFlow { vm.savedRed.likes.list.size }
-                .drop(1)
-                .collect { pager.refresh() }
-        }
 
         val onClickOpenProfile: (String) -> Unit = remember(vm, navigator) {
             { profileName ->
@@ -91,7 +79,6 @@ fun SavedLikesTabContent(
                 // списком, как в X. Вырез — отступом списка, под ним и индикатор
                 // обновления.
                 contentBeforeList = { SavedTabHeader(title = "Лайки") },
-                isRunLike = true
             )
         }
     }
