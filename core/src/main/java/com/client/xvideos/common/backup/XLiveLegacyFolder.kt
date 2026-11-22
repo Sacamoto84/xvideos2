@@ -22,6 +22,17 @@ object XLiveLegacyFolder {
 
     private val FOLDERS = listOf("Saved", "History")
 
+    internal fun restorePath(path: String): String? {
+        if (path == LEGACY) return null
+        if (!path.startsWith("$LEGACY/")) return path
+        val relative = path.removePrefix("$LEGACY/")
+        return relative.takeIf { it.substringBefore('/') in FOLDERS }?.let { "$CURRENT/$it" }
+    }
+
+    internal fun restoreTargets(paths: List<String>): List<String> = paths.flatMap { path ->
+        if (path == LEGACY) FOLDERS.map { "$CURRENT/$it" } else listOfNotNull(restorePath(path))
+    }
+
     /**
      * Переносит `X/Live/Saved` и `X/Live/History` в `XLive` и удаляет `X/Live`.
      *

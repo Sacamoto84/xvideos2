@@ -92,11 +92,11 @@ class R_Saved_Niches(
     /**
      * Перечитывает список сохраненных ниш с диска.
      */
-    fun refresh() {
+    fun refresh(): Job {
         refreshJob?.cancel()
-        refreshJob = scope.launch(Dispatchers.IO) {
+        return scope.launch(Dispatchers.IO) {
             nichesDb.refresh()
-        }
+        }.also { refreshJob = it }
     }
 
 }

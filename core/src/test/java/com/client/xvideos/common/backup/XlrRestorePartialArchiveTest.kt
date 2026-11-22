@@ -3,13 +3,14 @@ package com.client.xvideos.common.backup
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertThrows
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import java.util.zip.ZipException
 
 /**
  * Восстановление из архива, в котором раздел неполон.
@@ -45,7 +46,26 @@ class XlrRestorePartialArchiveTest {
     }
 
     private fun restore(main: File, zip: File, paths: Set<String>, mode: XlrRestoreMode) =
-        XlrBackupManager.restoreArchive(main, paths, mode) { ZipInputStream(zip.inputStream()) }
+        XlrBackupManager.restoreArchive(main, paths, mode, openArchive = zip::inputStream)
+
+    @Test
+    fun `обрыв между записями ZIP не заменяет локальное избранное`() {
+        val main = tmp.newFolder("main")
+        val local = main.writeFile("X/Favorites/local.json", "локальная запись")
+        val zip = tmp.newFile()
+        val prefix = ZipOutputStream(zip.outputStream()).use { stream ->
+            stream.putNextEntry(ZipEntry("X/Favorites/first.json"))
+            stream.write("первая запись".toByteArray())
+            stream.closeEntry()
+            stream.flush()
+            zip.length().toInt()
+        }
+        zip.writeBytes(zip.readBytes().copyOf(prefix))
+
+        assertThrows(ZipException::class.java) { restore(main, zip, setOf("X"), XlrRestoreMode.REPLACE) }
+        assertEquals("локальная запись", local.readText())
+        assertFalse(File(main, "X/Favorites/first.json").exists())
+    }
 
     @Test
     fun `объединение сохраняет исходные дорожки местной записи XLive`() {
@@ -122,9 +142,10 @@ class XlrRestorePartialArchiveTest {
         val main = tmp.newFolder("main")
         val zip = archive("X/Favorites/a.json" to "12345", "L/Likes/b/metadata.json" to "1")
 
-        val report = restore(main, zip, setOf("X"), XlrRestoreMode.REPLACE)
+        val result = restore(main, zip, setOf("X"), XlrRestoreMode.REPLACE)
 
-        assertEquals(1, report.files)
-        assertEquals(5L, report.bytes)
+        assertEquals(1, result.report.files)
+        assertEquals(5L, result.report.bytes)
+        assertEquals(setOf("X/Favorites"), result.paths)
     }
 }

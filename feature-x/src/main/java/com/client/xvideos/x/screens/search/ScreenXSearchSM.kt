@@ -22,14 +22,15 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -109,25 +110,13 @@ class ScreenXSearchSM @Inject constructor(
 
     init {
         screenModelScope.launch {
-            @OptIn(FlowPreview::class)
-            _query
-                .debounce(350)
-                .collectLatest { rawQuery ->
-                    val text = rawQuery.trim()
-                    if (text.isBlank()) {
-                        _suggestions.value = SearchResult.EMPTY
-                        _isSuggestLoading.value = false
-                        if (_uiMode.value != SearchUiMode.RESULTS) {
-                            _uiMode.value = SearchUiMode.HISTORY
-                        }
-                        return@collectLatest
-                    }
+            combine(_query, _uiMode) { query, mode -> query.trim().takeIf { mode == SearchUiMode.SUGGESTIONS } }
+                .distinctUntilChanged()
+                .collectLatest { text ->
+                    _suggestions.value = SearchResult.EMPTY
+                    if (text.isNullOrEmpty()) return@collectLatest
 
-                    if (_uiMode.value == SearchUiMode.RESULTS) {
-                        return@collectLatest
-                    }
-
-                    _uiMode.value = SearchUiMode.SUGGESTIONS
+                    delay(350)
                     _isSuggestLoading.value = true
                     try {
                         val json = getSearchResults(text)
@@ -150,13 +139,7 @@ class ScreenXSearchSM @Inject constructor(
      */
     fun updateQuery(newQuery: String) {
         _query.value = newQuery
-        if (_uiMode.value == SearchUiMode.RESULTS) {
-            if (newQuery.trim().isEmpty()) {
-                _uiMode.value = SearchUiMode.HISTORY
-            } else {
-                _uiMode.value = SearchUiMode.SUGGESTIONS
-            }
-        }
+        _uiMode.value = if (newQuery.isBlank()) SearchUiMode.HISTORY else SearchUiMode.SUGGESTIONS
     }
 
     /**
@@ -166,8 +149,8 @@ class ScreenXSearchSM @Inject constructor(
         val trimmed = keyword.trim()
         if (trimmed.isEmpty()) return
 
-        _query.value = trimmed
         _uiMode.value = SearchUiMode.RESULTS
+        _query.value = trimmed
         resetResults()
 
         screenModelScope.launch {

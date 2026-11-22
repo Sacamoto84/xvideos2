@@ -3,6 +3,7 @@ package com.client.xvideos.l.net
 import androidx.compose.runtime.Stable
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.model.AlbumDetails
+import com.client.xvideos.l.model.isLFavoriteLikeStatus
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
 import com.client.xvideos.l.repository.Repository
 import com.client.xvideos.l.repository.LusciousEndpoints
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonNull
@@ -26,6 +28,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
+
+internal data class LAlbumServerFavorite(val profileRevision: Int, val selected: Boolean)
 
 /**
  * Менеджер загрузки подробной информации об альбоме (метаданные + список изображений).
@@ -57,6 +61,35 @@ class AlbumInfo(
     /** Метаданные альбома (название, автор, описание, теги, счетчик картинок). */
     @Suppress("MemberNameEqualsClassName")
     val albumInfo: StateFlow<AlbumDetails?> = _albumInfo.asStateFlow()
+
+    private val _serverFavorite = MutableStateFlow<LAlbumServerFavorite?>(null)
+    internal val serverFavorite = _serverFavorite.asStateFlow()
+
+    private val favoriteLock = Any()
+    private var favoriteVersion = 0L
+
+    private fun nextFavoriteVersion(): Long = synchronized(favoriteLock) { ++favoriteVersion }
+
+    internal fun applyServerFavorite(profileRevision: Int, selected: Boolean) {
+        publishFavorite(nextFavoriteVersion(), profileRevision, selected)
+    }
+
+    private fun publishFavorite(version: Long, profileRevision: Int, selected: Boolean) {
+        synchronized(favoriteLock) {
+            if (version == favoriteVersion && repository.profileRevision() == profileRevision) {
+                _serverFavorite.value = LAlbumServerFavorite(profileRevision, selected)
+            }
+        }
+    }
+
+    internal suspend fun fetchServerFavorite(profileRevision: Int): Result<Unit> = withContext(dispatcher) {
+        val version = nextFavoriteVersion()
+        loadNetworkDetails().mapCatching { details ->
+            check(repository.profileRevision() == profileRevision) { "Профиль L изменился" }
+            val status = checkNotNull(details.likeStatus) { "Сервер не сообщил статус избранного" }
+            publishFavorite(version, profileRevision, status.isLFavoriteLikeStatus())
+        }
+    }
 
     private val _loadError = MutableStateFlow<String?>(null)
     /** Текст ошибки загрузки для экрана без альбома: показывается вместо шапки. */
@@ -117,15 +150,17 @@ class AlbumInfo(
                 _isLoading.value = true
             }
             _loadError.value = null
+            val profileRevision = repository.profileRevision()
 
             if (!forceNetwork && restoreBundleIfFresh(repository)) {
                 _isLoading.value = false
+                // Бандл можно открыть офлайн, но статус избранного относится к текущему профилю.
+                fetchServerFavorite(profileRevision)
                 return@launch
             }
 
-            val query = getAlbumInfo(id)
-            val parsed = repository.openURI(query, config = RepositoryUriConfig.DIRECT)
-                .mapCatching { parseAlbumDetails(it).getOrThrow() }
+            val favoriteReadVersion = nextFavoriteVersion()
+            val parsed = loadNetworkDetails()
             if (parsed.isFailure) {
                 val error = parsed.exceptionOrNull()
                 Timber.w("getAlbumInfo $id error: ${error?.javaClass?.simpleName}")
@@ -135,6 +170,9 @@ class AlbumInfo(
             }
 
             val albumDetails = parsed.getOrThrow()
+            albumDetails.likeStatus?.let {
+                publishFavorite(favoriteReadVersion, profileRevision, it.isLFavoriteLikeStatus())
+            }
             _albumInfo.value = albumDetails
             _isLoading.value = false
             Timber.d(
@@ -153,6 +191,10 @@ class AlbumInfo(
         }
         loadJob = job
     }
+
+    private suspend fun loadNetworkDetails(): Result<AlbumDetails> =
+        repository.openURI(getAlbumInfo(id), config = RepositoryUriConfig.DIRECT)
+            .mapCatching { parseAlbumDetails(it).getOrThrow() }
 
     /**
      * Доносит сбой загрузки до пользователя текстом для экрана, а не сырым
@@ -193,7 +235,7 @@ class AlbumInfo(
             items = bundle.pics,
             cachedTotalPages = bundle.totalPages
         )
-        _albumInfo.value = bundle.album
+        _albumInfo.value = bundle.album.copy(likeStatus = null)
         Timber.d("L album bundle cache hit id:$id items:${bundle.pics.size}")
         return true
     }
@@ -209,7 +251,7 @@ class AlbumInfo(
         val bundle = LAlbumBundleCache(
             schemaVersion = L_ALBUM_BUNDLE_CACHE_SCHEMA_VERSION,
             cachedAtMs = System.currentTimeMillis(),
-            album = albumDetails,
+            album = albumDetails.copy(likeStatus = null),
             totalPages = snapshot.totalPages,
             pics = snapshot.pics
         )

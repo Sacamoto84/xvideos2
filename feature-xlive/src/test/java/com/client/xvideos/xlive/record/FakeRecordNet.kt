@@ -21,6 +21,7 @@ class FakeRecordNet(private val clock: () -> Long) : XLiveRecordNet {
 
     /** Адреса поколений меньше этого отвечают 403. */
     var expireBefore = 0
+    var mediaUnavailable = false
 
     /** Сдвиг номеров сегментов для поколения — «нумерация с нуля» на новом адресе. */
     var numberShift: (Int) -> Long = { 0L }
@@ -86,6 +87,7 @@ class FakeRecordNet(private val clock: () -> Long) : XLiveRecordNet {
         val gen = genOf(url)
         if (gen < expireBefore) return XLiveHttp(403, null)
         if ("master.m3u8" in url) return XLiveHttp(200, master())
+        if (mediaUnavailable) return XLiveHttp(403, null)
         val kind = if ("/v.m3u8" in url) "v" else "a"
         val wanted = Regex("_HLS_msn=(\\d+)").find(url)?.groupValues?.get(1)?.toLong()
         if (wanted != null) {

@@ -410,13 +410,14 @@ class BackupController(
 
         isWorking = true
         scope.launch(mainDispatcher) {
-            var restored = false
+            var restoredPaths: Set<String>? = null
             try {
                 val selection = selectionSummaryText(XlrBackupManager.reportForSelection(restoreItems, paths))
                 log("Восстановление backup (${restoreModeTitle(mode)}): $selection")
                 engine.restore(uri, paths, restorePassword, mode)
-                    .onSuccess { report ->
-                        restored = true
+                    .onSuccess { result ->
+                        val report = result.report
+                        restoredPaths = result.paths
                         loadBackupItems()
                         restoreCount++
                         SnackBar.success("Backup восстановлен: ${report.files} файлов")
@@ -427,12 +428,12 @@ class BackupController(
                         SnackBar.error(error.message ?: "Ошибка восстановления backup")
                     }
             } finally {
-                isRecovering = restored
+                isRecovering = restoredPaths != null
                 isWorking = false
             }
-            if (!restored) return@launch
+            val appliedPaths = restoredPaths ?: return@launch
             try {
-                engine.afterRestore(paths, ::logFromAnyThread)
+                engine.afterRestore(appliedPaths, ::logFromAnyThread)
             } finally {
                 isRecovering = false
             }

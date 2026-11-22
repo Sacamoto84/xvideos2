@@ -64,6 +64,11 @@ class AlbumInfoRefreshTest {
     /** Сервер альбома: метаданные и единственная страница картинок отвечают так, как велит тест. */
     private class AlbumRepository(private val albumId: Int) : Repository(AppFileDatabase()) {
         @Volatile
+        var revision = 0
+
+        override fun profileRevision(): Int = revision
+
+        @Volatile
         var albumInfo: Result<String> = Result.success(albumJson(albumId, "Fresh Album"))
 
         /** Сколько раз запрошены метаданные. */
@@ -76,11 +81,11 @@ class AlbumInfoRefreshTest {
         }
     }
 
-    private suspend fun Repository.putCachedAlbum(albumId: Int, title: String) {
+    private suspend fun Repository.putCachedAlbum(albumId: Int, title: String, likeStatus: String? = null) {
         val bundle = LAlbumBundleCache(
             schemaVersion = L_ALBUM_BUNDLE_CACHE_SCHEMA_VERSION,
             cachedAtMs = System.currentTimeMillis(),
-            album = AlbumDetails(id = albumId.toString(), title = title, download_url = ""),
+            album = AlbumDetails(id = albumId.toString(), title = title, download_url = "", likeStatus = likeStatus),
             totalPages = 1,
             pics = listOf(PicsDetails(height = 100, width = 100, url_to_original = "https://example.com/cached.jpg"))
         )
@@ -115,6 +120,24 @@ class AlbumInfoRefreshTest {
         val cached = repository.cachedAlbum(albumId)
         assertEquals("Fresh Album", cached?.album?.title)
         assertEquals(FRESH_PICS, cached?.pics?.size)
+    }
+
+    @Test
+    fun `статус из кэша прежнего профиля заменяется ответом текущего профиля`() = runBlocking {
+        val albumId = 98770
+        val repository = AlbumRepository(albumId).apply {
+            revision = 2
+            albumInfo = Result.success(
+                """{"data":{"album":{"get":{"id":"$albumId","title":"Свежий альбом","like_status":"none"}}}}"""
+            )
+        }
+        repository.putCachedAlbum(albumId, "Альбом в кэше", likeStatus = "like")
+        val album = AlbumInfo(albumId, repository, this)
+
+        val favorite = withTimeout(5_000) { album.serverFavorite.first { it != null } }
+        assertEquals(LAlbumServerFavorite(profileRevision = 2, selected = false), favorite)
+        assertEquals("Альбом в кэше", album.albumInfo.value?.title)
+        assertNull(album.albumInfo.value?.likeStatus)
     }
 
     @Test

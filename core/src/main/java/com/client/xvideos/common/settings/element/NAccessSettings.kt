@@ -18,8 +18,9 @@ class NAccessSettings(
     private val _field = MutableStateFlow(load())
     val field = _field.asStateFlow()
 
+    /** Возвращает `false`, когда новые данные действуют только до перезапуска. */
     @Synchronized
-    fun save(credentials: NAccessCredentials) {
+    fun save(credentials: NAccessCredentials): Boolean {
         _field.value = credentials
         // При временной недоступности Keystore замена или выход не должны
         // вернуть прежнюю сессию при следующем запуске.
@@ -27,13 +28,14 @@ class NAccessSettings(
             try {
                 if (secure.edit().write(credentials).commit()) {
                     if (hasLegacy() || resetRequested()) removeLegacy()
-                    return
+                    return true
                 }
             } catch (failure: SecurityException) {
                 Timber.w("N: зашифрованная запись недоступна (%s)", failure.javaClass.simpleName)
             }
         }
         removeLegacy(reset = true)
+        return false
     }
 
     private fun load(): NAccessCredentials {

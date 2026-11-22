@@ -8,6 +8,7 @@ import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrRestoreMode
+import com.client.xvideos.common.backup.XlrRestoreResult
 import com.client.xvideos.l.featured.saved.SavedL
 import com.client.xvideos.n.saved.NSaved
 import com.client.xvideos.r.common.block.BlockRed
@@ -61,7 +62,7 @@ interface BackupEngine {
         paths: Set<String>,
         password: CharArray?,
         mode: XlrRestoreMode,
-    ): Result<XlrBackupReport>
+    ): Result<XlrRestoreResult>
 
     /**
      * Перечитывает сохранённое в память и докачивает медиа восстановленных
@@ -108,7 +109,7 @@ class XlrBackupEngine @Inject constructor(
         paths: Set<String>,
         password: CharArray?,
         mode: XlrRestoreMode,
-    ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
+    ): Result<XlrRestoreResult> = withContext(Dispatchers.IO) {
         XlrBackupManager.restoreBackup(context, Uri.parse(uri), paths, password, mode)
     }
 
@@ -124,10 +125,10 @@ class XlrBackupEngine @Inject constructor(
             downloadRed.refreshDownloadList()
             savedX.get().refreshAll()
             savedL.refreshAll()
-            // «Мои» и «История» XLive — свой раздел копии; из старого архива их
-            // переносит в XLive само восстановление (XLiveLegacyFolder).
-            XLiveSaved.refreshAll()
-            XLiveRecordings.refresh()
+            if (paths.any { it.startsWith("XLive/") }) {
+                XLiveSaved.refreshAll()
+                XLiveRecordings.refresh()
+            }
             savedN.get().refreshAll()
         }
         coroutineScope {

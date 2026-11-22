@@ -7,7 +7,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 /**
@@ -40,7 +39,7 @@ class XlrRestoreXLiveTest {
     }
 
     private fun restore(main: File, zip: File, mode: XlrRestoreMode) =
-        XlrBackupManager.restoreArchive(main, setOf("X"), mode) { ZipInputStream(zip.inputStream()) }
+        XlrBackupManager.restoreArchive(main, setOf("X"), mode, openArchive = zip::inputStream)
 
     private fun File.names(relative: String): List<String> =
         File(this, relative).list()?.sorted().orEmpty()
@@ -68,5 +67,41 @@ class XlrRestoreXLiveTest {
 
         assertEquals(listOf("a.room", "b.room"), main.names("XLive/Saved"))
         assertFalse(File(main, "X/Live").exists())
+    }
+
+    @Test
+    fun `замена R сохраняет обе локальные папки XLive`() {
+        val main = tmp.newFolder("main")
+        val current = main.writeFile("XLive/Saved/current.room", "текущая")
+        val legacy = main.writeFile("X/Live/Saved/legacy.room", "старая")
+        val zip = archive("R/Likes/new.json" to "из архива")
+
+        val result = XlrBackupManager.restoreArchive(
+            main, setOf("R"), XlrRestoreMode.REPLACE, openArchive = zip::inputStream
+        )
+
+        assertEquals(setOf("R/Likes"), result.paths)
+        assertEquals("текущая", current.readText())
+        assertEquals("старая", legacy.readText())
+        assertEquals("из архива", File(main, "R/Likes/new.json").readText())
+    }
+
+    @Test
+    fun `новые пути XLive имеют приоритет в смешанном архиве`() {
+        val main = tmp.newFolder("main")
+        val zip = archive(
+            "XLive/Saved/same.room" to "новая версия",
+            "X/Live/Saved/same.room" to "старая версия",
+            "X/Live/Saved/extra.room" to "другая комната",
+        )
+
+        val result = XlrBackupManager.restoreArchive(
+            main, setOf("X", "XLive"), XlrRestoreMode.REPLACE, openArchive = zip::inputStream
+        )
+
+        assertEquals(setOf("XLive/Saved"), result.paths)
+        assertEquals(2, result.report.files)
+        assertEquals("новая версия", File(main, "XLive/Saved/same.room").readText())
+        assertEquals("другая комната", File(main, "XLive/Saved/extra.room").readText())
     }
 }

@@ -59,7 +59,6 @@ import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.toggleP2pService
 import com.client.xvideos.common.rotation.RotationLockKeeper
 import com.client.xvideos.common.settings.Settings
-import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.common.ui.statusbar.LocalStatusBarRequests
 import com.client.xvideos.common.ui.statusbar.StatusBarRequests
@@ -70,6 +69,7 @@ import com.client.xvideos.screenRoot.molecule.StatusBarHost
 import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -90,17 +90,15 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity()//, ImageLoaderFactory
 {
     @Inject
-    lateinit var savedRed: SavedRed
+    lateinit var savedRed: javax.inject.Provider<SavedRed>
 
     @Inject
     lateinit var appFileDatabase: javax.inject.Provider<AppFileDatabase>
 
     @Inject
-    lateinit var storageCleanupGate: StorageCleanupGate
-
-    @Inject
     lateinit var appStartupInitializer: AppStartupInitializer
 
+    private var isStorageReady by mutableStateOf(false)
     private var isAppMinimized by mutableStateOf(false)
 
     /**
@@ -351,7 +349,7 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                     LocalStatusBarRequests provides statusBarRequests,
                                     LocalAppLockActive provides appLockActive,
                                 ) {
-                                    ScreenRoot.Content()
+                                    if (isStorageReady) ScreenRoot.Content()
                                 }
                                 P2pBackgroundOverlay()
                                 StatusBarHost(
@@ -422,12 +420,11 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
 
     private fun launchStartupCleanup() {
         lifecycleScope.launch(Dispatchers.IO) {
-            storageCleanupGate.await()
             appStartupInitializer.init()
-            appFileDatabase.get().clearVolatileCachesOnProcessStart()
+            withContext(Dispatchers.Main) { isStorageReady = true }
             appFileDatabase.get().deleteExpiredCaches()
             VideoDiskCacheCleaner.clearLegacyCaches(applicationContext)
-            savedRed.nichesCache.refreshIfStale()
+            savedRed.get().nichesCache.refreshIfStale()
 
             if (!AppLockRepository.shouldShowLock(applicationContext) &&
                 Settings.p2p_background_receive.field.value &&

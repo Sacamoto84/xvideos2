@@ -1,12 +1,14 @@
 package com.client.xvideos
 
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -25,25 +27,27 @@ class AppStartupInitializer @Inject constructor(
     private val db: Provider<AppFileDatabase>,
     private val blockRed: Provider<BlockRed>,
     private val savedRed: Provider<SavedRed>,
+    private val storageCleanupGate: StorageCleanupGate,
 ) {
-    private val initialized = AtomicBoolean(false)
+    private val initMutex = Mutex()
+    private var initialized = false
 
-    suspend fun init() = coroutineScope {
-        if (!initialized.compareAndSet(false, true)) return@coroutineScope
+    suspend fun init() = initMutex.withLock {
+        if (initialized) return@withLock
+        // Хранилища могут начать читать файлы при создании.
+        storageCleanupGate.await()
         val savedRedInstance = savedRed.get()
         val blockRedInstance = blockRed.get()
-        val dbInstance = db.get()
-
-        dbInstance.clearVolatileCachesOnProcessStart()
-
-        val jobs = listOf(
-            async { blockRedInstance.refresh() },
-            async { savedRedInstance.likes.refresh() },
-            async { savedRedInstance.niches.refresh() },
-            async { savedRedInstance.creators.refresh() },
-            async { savedRedInstance.collections.refreshCollectionList() },
-        )
-
-        jobs.awaitAll()
+        db.get().clearVolatileCachesOnProcessStart()
+        coroutineScope {
+            launch { savedRedInstance.collections.refreshCollectionList() }
+            joinAll(
+                blockRedInstance.refresh(),
+                savedRedInstance.likes.refresh(),
+                savedRedInstance.niches.refresh(),
+                savedRedInstance.creators.refresh(),
+            )
+        }
+        initialized = true
     }
 }

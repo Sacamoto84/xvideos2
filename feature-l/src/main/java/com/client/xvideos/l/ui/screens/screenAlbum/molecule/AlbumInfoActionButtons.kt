@@ -23,28 +23,35 @@ import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoButtonShareAlbu
 @Composable
 fun AlbumInfoActionButtons(
     saved: Boolean,
-    isFavorite: Boolean,
+    isFavorite: Boolean?,
     isFavoriteLoading: Boolean,
     onSaveClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     onShareClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val favoriteLabel = if (isFavorite == null) "Проверить избранное" else null
     if (currentWidthClass() == WidthClass.Expanded) {
         Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AlbumInfoButtonSaveAlbum(saved = saved, onClick = onSaveClick, modifier = Modifier.weight(1f))
             AlbumInfoButtonServerFavorite(
-                isFavorite = isFavorite,
+                isFavorite = isFavorite == true,
                 isLoading = isFavoriteLoading,
                 onClick = onFavoriteClick,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                label = favoriteLabel
             )
             AlbumInfoButtonShareAlbum(onClick = onShareClick, modifier = Modifier.weight(1f))
         }
     } else {
         Column(modifier = modifier) {
             AlbumInfoButtonSaveAlbum(saved = saved, onClick = onSaveClick)
-            AlbumInfoButtonServerFavorite(isFavorite = isFavorite, isLoading = isFavoriteLoading, onClick = onFavoriteClick)
+            AlbumInfoButtonServerFavorite(
+                isFavorite = isFavorite == true,
+                isLoading = isFavoriteLoading,
+                onClick = onFavoriteClick,
+                label = favoriteLabel
+            )
             AlbumInfoButtonShareAlbum(onClick = onShareClick)
         }
     }

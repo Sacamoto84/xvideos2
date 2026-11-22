@@ -24,7 +24,6 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.Audience
 import com.client.xvideos.l.model.Genre
-import com.client.xvideos.l.model.isLFavoriteLikeStatus
 import com.client.xvideos.l.net.AlbumPicsDetails
 import com.client.xvideos.l.ui.screens.screenAlbum.LAlbumNetworkIssuePanel
 import com.client.xvideos.l.ui.screens.screenAlbum.atom.AlbumInfoAudiences
@@ -115,7 +114,7 @@ fun ScreenLAlbumDetailsHeader(
         AlbumInfoDescription(parsed.description)
         AlbumInfoActionButtons(
             saved = saved,
-            isFavorite = state.isServerFavorite ?: parsed.likeStatus.isLFavoriteLikeStatus(),
+            isFavorite = state.isServerFavorite,
             isFavoriteLoading = state.isServerFavoriteLoading,
             onSaveClick = {
                 if (!saved) {
@@ -124,7 +123,7 @@ fun ScreenLAlbumDetailsHeader(
                     onRequestDelete(parsed)
                 }
             },
-            onFavoriteClick = { actions.onToggleServerFavorite(parsed) },
+            onFavoriteClick = { actions.onToggleServerFavorite(parsed, state.isServerFavorite) },
             onShareClick = { actions.onShareAlbum(parsed) }
         )
         AlbumInfoFilterButton(

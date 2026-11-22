@@ -46,7 +46,7 @@ data class XLiveRecordStats(
  *
  * @param usableBytes свободное место на томе записи.
  * @param nowMs монотонные часы, мс.
- * @param stallTimeoutMs сколько ждать без единого записанного сегмента, прежде чем решить «нет сети».
+ * @param stallTimeoutMs сколько ждать без нового видеосегмента, прежде чем решить «нет сети».
  * @param reserveBytes запас места: склейке нужно ещё столько же, сколько записано.
  */
 class XLiveRecorder(
@@ -76,7 +76,9 @@ class XLiveRecorder(
     private var generation = 0
 
     @Volatile
-    private var lastProgressMs = 0L
+    private var lastVideoProgressMs = 0L
+
+    private var lastAddressRequestMs: Long? = null
 
     /** Закончить запись с причиной [reason]; первая причина побеждает. */
     fun requestStop(reason: XLiveRecordStop) {
@@ -85,17 +87,19 @@ class XLiveRecorder(
 
     /** Пишет до остановки — своей или [requestStop]. Возвращает причину. */
     suspend fun run(): XLiveRecordStop = coroutineScope {
-        lastProgressMs = nowMs()
+        lastVideoProgressMs = nowMs()
+        val watchdog = launch { watchVideoProgress() }
         val work = launch {
             while (variant == null && !stop.isCompleted) {
                 refreshAddress(seen = 0)
-                if (variant == null) waitRetry()
+                if (variant == null) delay(RETRY_MS)
             }
             val first = variant ?: return@launch
             launch { Track(isVideo = true, videoOut).run() }
             if (first.audioUrl != null) launch { Track(isVideo = false, audioOut).run() }
         }
         val reason = stop.await()
+        watchdog.cancel()
         work.cancelAndJoin()
         val stats = _stats.value
         Timber.i("XLive: запись — %s, сегментов %d, пропусков %d", reason, stats.videoSegments, stats.gaps)
@@ -106,15 +110,23 @@ class XLiveRecorder(
         stop.complete(reason)
     }
 
-    /** Пауза перед повтором; без единого сегмента дольше предела — «нет сети». */
-    private suspend fun waitRetry() {
-        if (nowMs() - lastProgressMs > stallTimeoutMs) finish(XLiveRecordStop.NO_NETWORK)
-        delay(RETRY_MS)
+    private suspend fun watchVideoProgress() {
+        while (!stop.isCompleted) {
+            val remaining = stallTimeoutMs - (nowMs() - lastVideoProgressMs)
+            if (remaining <= 0L) {
+                finish(XLiveRecordStop.NO_NETWORK)
+                return
+            }
+            delay(remaining)
+        }
     }
 
     /** Свежий адрес, если его ещё не взяла другая дорожка после поколения [seen]. */
     private suspend fun refreshAddress(seen: Int) = addressLock.withLock {
         if (generation != seen) return@withLock
+        // Новый master может постоянно отдавать недоступные медиаплейлисты.
+        lastAddressRequestMs?.let { previous -> delay(RETRY_MS - (nowMs() - previous)) }
+        lastAddressRequestMs = nowMs()
         val room = try {
             net.room(username)
         } catch (e: IOException) {
@@ -137,14 +149,14 @@ class XLiveRecorder(
         block()
     } catch (e: IOException) {
         Timber.w("XLive: запись — сбой сети, %s", e.javaClass.simpleName)
-        waitRetry()
+        delay(RETRY_MS)
         null
     }
 
     private fun hasSpace(): Boolean = usableBytes() >= _stats.value.bytes + reserveBytes
 
     private fun written(isVideo: Boolean, size: Int) {
-        lastProgressMs = nowMs()
+        if (isVideo) lastVideoProgressMs = nowMs()
         _stats.update {
             if (isVideo) {
                 it.copy(videoSegments = it.videoSegments + 1, bytes = it.bytes + size)
@@ -201,7 +213,7 @@ class XLiveRecorder(
             val gen = generation
             noteGeneration(gen)
             val playlist = readPlaylist(gen) ?: return
-            val last = playlist.lastMsn ?: return waitRetry()
+            val last = playlist.lastMsn ?: return delay(RETRY_MS)
             if (!initWritten && !writeInit(stream, playlist.initUrl, gen)) return
             var expected = next ?: last
             if (afterRefresh && last < expected) {
@@ -211,7 +223,7 @@ class XLiveRecorder(
             afterRefresh = false
             next = expected
             val fresh = playlist.segments.filter { it.msn >= expected }
-            if (fresh.isEmpty()) return waitRetry()
+            if (fresh.isEmpty()) return delay(RETRY_MS)
             if (fresh.first().msn > expected) gap(isVideo)
             writeSegments(stream, fresh, gen)
         }
@@ -238,16 +250,14 @@ class XLiveRecorder(
                 return null
             }
             val playlist = response.body?.takeIf { response.isSuccess }?.let { parseMediaPlaylist(it, url) }
-            if (playlist == null) waitRetry()
+            if (playlist == null) delay(RETRY_MS)
             return playlist
         }
 
         private suspend fun renew(gen: Int) {
             refreshAddress(gen)
             afterRefresh = true
-            // Свежий адрес не получен (сайт комнаты не ответил): пауза и предел
-            // «нет сети», а не шквал запросов, который сам вызвал бы 429.
-            if (generation == gen) waitRetry()
+            if (generation == gen) delay(RETRY_MS)
         }
 
         /** `false` — init не записан, шаг повторится. */
@@ -269,7 +279,7 @@ class XLiveRecorder(
                     false
                 }
                 else -> {
-                    waitRetry()
+                    delay(RETRY_MS)
                     false
                 }
             }
@@ -291,7 +301,7 @@ class XLiveRecorder(
                         next = segment.msn + 1
                     }
                     response.code in NEW_ADDRESS -> return renew(gen)
-                    else -> return waitRetry()
+                    else -> return delay(RETRY_MS)
                 }
             }
         }

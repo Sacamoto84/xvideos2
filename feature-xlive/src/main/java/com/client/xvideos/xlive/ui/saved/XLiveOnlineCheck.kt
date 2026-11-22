@@ -53,12 +53,14 @@ class XLiveOnlineCheck(
     val isChecking: StateFlow<Boolean> = _isChecking.asStateFlow()
 
     private var job: Job? = null
-    private var queued: List<String>? = null
+    private data class CheckRequest(val names: List<String>, val force: Boolean)
+
+    private var queued: CheckRequest? = null
 
     /** Проверить [names]; уже известные — только при [force]: свайп вниз. */
     fun check(names: List<String>, force: Boolean = false) {
         if (job?.isActive == true) {
-            queued = names
+            queued = CheckRequest(names, force)
             return
         }
         val known = _online.value
@@ -80,7 +82,7 @@ class XLiveOnlineCheck(
             job = null
             queued?.let { next ->
                 queued = null
-                check(next)
+                check(next.names, next.force)
             }
         }
     }

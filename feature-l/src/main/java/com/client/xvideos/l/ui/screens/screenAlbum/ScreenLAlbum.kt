@@ -24,6 +24,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.navigation.rememberNavigationDepth
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.model.AlbumDetails
@@ -116,17 +117,18 @@ fun ScreenLAlbumContent(
                 onToggleServerFavorite = vm::toggleServerFavorite,
                 onShareAlbum = vm::shareAlbumP2p,
                 onShowOnlyAnimatedChange = { vm.showOnlyAnimated = it },
-                onSyncServerFavoriteStatus = vm::syncServerFavoriteStatus,
                 onRetryFailedPages = vm::retryFailedAlbumPages,
                 onRefresh = vm::refresh,
             )
         }
+        val favorite by album.serverFavorite.collectAsStateWithLifecycle()
+        val profile by Settings.l_profile.field.collectAsStateWithLifecycle()
         ScreenLAlbumBody(
             album = album,
             host = vm.host,
             savedAlbums = vm.saved.albums.list,
             state = LAlbumHeaderState(
-                isServerFavorite = vm.isServerFavorite,
+                isServerFavorite = favorite?.takeIf { it.profileRevision == profile.revision }?.selected,
                 isServerFavoriteLoading = vm.isServerFavoriteLoading,
                 showOnlyAnimated = vm.showOnlyAnimated,
             ),

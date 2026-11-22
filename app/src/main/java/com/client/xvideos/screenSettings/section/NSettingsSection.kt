@@ -134,9 +134,10 @@ internal fun NSettingsSection(
         NLoginDialog(
             onDismiss = { loginDialogVisible = false },
             onSuccess = { name, sessionId ->
-                NAuthState.onLoginSuccess(name, sessionId)
+                val persisted = NAuthState.onLoginSuccess(name, sessionId)
                 loginDialogVisible = false
-                SnackBar.success("Вход выполнен: $name. Лимиты API повышены!")
+                if (persisted) SnackBar.success("Вход выполнен: $name. Лимиты API повышены!")
+                else SnackBar.info("Вход выполнен до перезапуска. Защищённое хранилище недоступно.")
             }
         )
     }
@@ -181,7 +182,9 @@ private fun NApiKeyDialog(hasApiKey: Boolean, onDismiss: () -> Unit) {
         },
         confirmButton = {
             TextButton(enabled = validKey, onClick = {
-                NAuthState.setApiKey(trimmedKey)
+                if (!NAuthState.setApiKey(trimmedKey)) {
+                    SnackBar.info("Ключ действует до перезапуска. Защищённое хранилище недоступно.")
+                }
                 onDismiss()
             }) { Text("Сохранить") }
         },

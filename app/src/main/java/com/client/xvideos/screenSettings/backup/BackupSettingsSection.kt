@@ -32,6 +32,7 @@ import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrRestoreMode
+import com.client.xvideos.common.backup.XlrRestoreResult
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -387,7 +388,7 @@ private object PreviewBackupEngine : BackupEngine {
         paths: Set<String>,
         password: CharArray?,
         mode: XlrRestoreMode,
-    ): Result<XlrBackupReport> = Result.success(XlrBackupReport.EMPTY)
+    ): Result<XlrRestoreResult> = Result.success(XlrRestoreResult(XlrBackupReport.EMPTY, emptySet()))
 
     override suspend fun afterRestore(paths: Set<String>, log: (String) -> Unit) = Unit
 }

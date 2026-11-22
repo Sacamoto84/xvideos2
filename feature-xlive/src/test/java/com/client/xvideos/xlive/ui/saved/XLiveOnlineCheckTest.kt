@@ -85,4 +85,20 @@ class XLiveOnlineCheckTest {
         assertEquals(listOf("a", "c"), asked)
         assertEquals(mapOf("a" to true, "c" to true), check.online.value)
     }
+
+    @Test
+    fun `отложенное ручное обновление перепроверяет известную комнату`() {
+        val gate = CompletableDeferred<Unit>()
+        val check = check { name ->
+            if (name == "b") gate.await()
+            true
+        }
+        check.check(listOf("a"))
+        check.check(listOf("b"))
+        check.check(listOf("a"), force = true)
+
+        gate.complete(Unit)
+
+        assertEquals(listOf("a", "b", "a"), asked)
+    }
 }

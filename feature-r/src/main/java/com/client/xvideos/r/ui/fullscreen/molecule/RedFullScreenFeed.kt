@@ -29,9 +29,11 @@ import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.videoplayer.feed.rememberFeedPlayerState
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.model.GifsInfo
+import com.client.xvideos.r.network.toRUserMessage
 import com.client.xvideos.r.ui.fullscreen.model.RedFullScreenPlayerState
 import com.client.xvideos.r.ui.fullscreen.peekUrl
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
+import com.client.xvideos.r.ui.ui.lazyrow123.molecule.RListLoadError
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.max
 
@@ -49,7 +51,8 @@ fun RedFullScreenFeed(
 ) {
     val listGifs = host.pager.collectAsLazyPagingItems()
     val downloadedKeys by downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
-    val appendExtra = if (listGifs.loadState.append is LoadState.Loading && listGifs.itemCount > 0) 1 else 0
+    val append = listGifs.loadState.append
+    val appendExtra = if (append !is LoadState.NotLoading && listGifs.itemCount > 0) 1 else 0
     val pagerCount = max(startIndex + 1, listGifs.itemCount + appendExtra)
     val pagerState = rememberPagerState(initialPage = startIndex.coerceAtLeast(0)) { pagerCount.coerceAtLeast(1) }
     var isVideoBuffering by remember { mutableStateOf(false) }
@@ -109,6 +112,7 @@ fun RedFullScreenFeed(
                 isCurrentPageZoomed = false
                 feedState.updateCurrentPage(page)
                 feedState.retryPending { i -> listGifs.peekUrl(i, downloadedKeys) }
+                if (page >= listGifs.itemCount) isVideoBuffering = false
                 host.currentIndex = page
                 host.returnToIndex = page
                 player.play = true
@@ -155,7 +159,9 @@ fun RedFullScreenFeed(
                 )
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (index == startIndex) {
+                    if (append is LoadState.Error && index == listGifs.itemCount && appendExtra != 0) {
+                        RListLoadError(message = append.error.toRUserMessage(), onRetry = listGifs::retry)
+                    } else if (index == startIndex) {
                         RedFullScreenPage(
                             item = fallbackItem,
                             player = player,

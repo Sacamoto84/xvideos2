@@ -13,6 +13,7 @@ import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.mirrorRoot
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.l.featured.saved.LAlbumExporter
 import com.client.xvideos.l.featured.saved.SavedL
@@ -21,7 +22,6 @@ import java.io.File
 import com.client.xvideos.l.featured.share.lDownloadMediaToShareCache
 import com.client.xvideos.common.share.useCaseShareFile
 import com.client.xvideos.l.model.PicsDetails
-import com.client.xvideos.l.model.isLFavoriteLikeStatus
 import com.client.xvideos.l.net.AlbumInfo
 import com.client.xvideos.l.net.Luscious
 import com.client.xvideos.l.repository.LusciousServerFavoritesRepository
@@ -40,6 +40,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -89,64 +91,50 @@ class ScreenLAlbumSM @AssistedInject constructor(
      */
     var showOnlyAnimated by mutableStateOf(false)
 
-    /**
-     * Статус нахождения альбома в избранном на сервере L.
-     */
-    var isServerFavorite by mutableStateOf<Boolean?>(null)
     /** Флаг выполнения запроса добавления/удаления избранного на сервере. */
     var isServerFavoriteLoading by mutableStateOf(false)
 
-    /**
-     * Синхронизирует начальный статус серверного избранного по значению [likeStatus] из ответа API.
-     */
-    fun syncServerFavoriteStatus(likeStatus: String?) {
-        if (isServerFavorite == null && likeStatus != null) {
-            isServerFavorite = likeStatus.isLFavoriteLikeStatus()
+    init {
+        screenModelScope.launch {
+            Settings.l_profile.field.drop(1).collectLatest { profile ->
+                albumInfo.value?.fetchServerFavorite(profile.revision)
+            }
         }
     }
 
     /**
      * Переключает состояние лайка/избранного альбома [album] на сервере L.
      */
-    fun toggleServerFavorite(album: AlbumDetails) {
+    fun toggleServerFavorite(album: AlbumDetails, expectedFavorite: Boolean?) {
         if (isServerFavoriteLoading) return
+        val info = albumInfo.value ?: return
         val albumId = album.id.ifBlank { idAlbum.toString() }
-        val currentlyFavorite = isServerFavorite ?: album.likeStatus.isLFavoriteLikeStatus()
+        val revision = Settings.l_profile.field.value.revision
 
         isServerFavoriteLoading = true
-        scope.launch {
+        screenModelScope.launch {
             try {
-                if (currentlyFavorite) {
-                    val result = serverFavorites.unlikeAlbum(albumId)
-                    withContext(Dispatchers.Main) {
-                        result
-                            .onSuccess {
-                                isServerFavorite = false
-                                SnackBar.info("Альбом удалён с сервера")
-                            }
-                            .onFailure { e ->
-                                Timber.e("Failed to unlike album on server: ${e.javaClass.simpleName}")
-                                SnackBar.error("Не удалось удалить альбом с сервера: ${e.toLUserMessage()}")
-                            }
+                val currentlyFavorite = info.serverFavorite.value?.takeIf { it.profileRevision == revision }?.selected
+                if (currentlyFavorite == null) {
+                    info.fetchServerFavorite(revision).onFailure { error ->
+                        SnackBar.error("Не удалось проверить избранное: ${error.toLUserMessage()}")
                     }
-                } else {
-                    val result = serverFavorites.likeAlbum(albumId)
-                    withContext(Dispatchers.Main) {
-                        result
-                            .onSuccess {
-                                isServerFavorite = true
-                                SnackBar.success("Альбом добавлен на сервер")
-                            }
-                            .onFailure { e ->
-                                Timber.e("Failed to like album on server: ${e.javaClass.simpleName}")
-                                SnackBar.error("Не удалось добавить альбом на сервер: ${e.toLUserMessage()}")
-                            }
-                    }
+                    return@launch
+                }
+                if (currentlyFavorite != expectedFavorite) return@launch
+                if (Settings.l_profile.field.value.revision != revision) return@launch
+                val result =
+                    if (currentlyFavorite) serverFavorites.unlikeAlbum(albumId) else serverFavorites.likeAlbum(albumId)
+                if (Settings.l_profile.field.value.revision != revision) return@launch
+                result.onSuccess {
+                    info.applyServerFavorite(revision, !currentlyFavorite)
+                    if (currentlyFavorite) SnackBar.info("Альбом удалён с сервера")
+                    else SnackBar.success("Альбом добавлен на сервер")
+                }.onFailure { error ->
+                    SnackBar.error("Не удалось изменить избранное: ${error.toLUserMessage()}")
                 }
             } finally {
-                withContext(Dispatchers.Main) {
-                    isServerFavoriteLoading = false
-                }
+                isServerFavoriteLoading = false
             }
         }
     }

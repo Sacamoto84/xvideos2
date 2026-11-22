@@ -102,9 +102,9 @@ class R_Saved_Likes(
     /**
      * Перечитывает все сохраненные лайки с диска с автоматической очисткой поврежденных записей.
      */
-    fun refresh() {
+    fun refresh(): Job {
         refreshJob?.cancel()
-        refreshJob = scope.launch(Dispatchers.IO) {
+        return scope.launch(Dispatchers.IO) {
             likesDb.refresh()
             // Снимок, очистка и замена — одним заходом на главный поток. Раньше
             // очистка шла в фоне между снимком и заменой, и лайк, добавленный в
@@ -118,6 +118,6 @@ class R_Saved_Likes(
                     list.replaceWith(sanitized)
                 }
             }
-        }
+        }.also { refreshJob = it }
     }
 }

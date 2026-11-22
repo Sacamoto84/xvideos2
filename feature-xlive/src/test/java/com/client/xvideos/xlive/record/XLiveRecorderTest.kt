@@ -174,6 +174,18 @@ class XLiveRecorderTest {
     }
 
     @Test
+    fun `недоступное видео на каждом свежем адресе останавливает запись`() {
+        net.mediaUnavailable = true
+        val recorder = recorder()
+        val result = recorder.start()
+        advance(26_000)
+
+        assertEquals(XLiveRecordStop.NO_NETWORK, result.getCompleted())
+        assertEquals(0, recorder.stats.value.videoSegments)
+        assertTrue("запросов комнаты: ${net.roomCalls}", net.roomCalls in 2..26)
+    }
+
+    @Test
     fun `перенумерация на новом адресе — обе дорожки продолжают с края`() {
         net.recheckAfterWait = false
         val recorder = recorder()

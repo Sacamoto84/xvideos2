@@ -17,7 +17,7 @@ class NAccessSettingsTest {
         assertEquals("test-key", secure.getString("n_api_key", null))
 
         val settings = NAccessSettings(legacy, secure)
-        settings.save(NAccessCredentials(sessionCookie = "test-session"))
+        assertTrue(settings.save(NAccessCredentials(sessionCookie = "test-session")))
         assertEquals(NAccessCredentials(sessionCookie = "test-session"), NAccessSettings(legacy, secure).field.value)
         assertTrue(legacy.all.isEmpty())
     }
@@ -36,7 +36,7 @@ class NAccessSettingsTest {
         val legacy = InMemorySharedPreferences().apply { map["n_session_cookie"] = "old-session" }
         val settings = NAccessSettings(legacy, null)
 
-        settings.save(NAccessCredentials(apiKey = "test-key"))
+        assertFalse(settings.save(NAccessCredentials(apiKey = "test-key")))
 
         assertEquals("test-key", settings.field.value.apiKey)
         assertFalse(legacy.contains("n_api_key"))

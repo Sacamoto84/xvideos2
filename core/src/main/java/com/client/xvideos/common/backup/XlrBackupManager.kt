@@ -23,7 +23,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.zip.CRC32
+import java.util.zip.CheckedInputStream
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
@@ -145,7 +148,7 @@ object XlrBackupManager {
     ): Result<List<XlrBackupItem>> = withContext(Dispatchers.IO) {
         runCatching {
             val stats = linkedMapOf<String, MutableReport>()
-            openZipInputStream(context, uri, password).use { zip ->
+            ZipInputStream(BufferedInputStream(openBackupInputStream(context, uri, password))).use { zip ->
                 val buffer = ByteArray(8 * 1024)
                 while (true) {
                     val entry = zip.nextEntry ?: break
@@ -285,25 +288,27 @@ object XlrBackupManager {
         selectedPaths: Set<String>,
         password: CharArray? = null,
         mode: XlrRestoreMode = XlrRestoreMode.REPLACE,
-    ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
+    ): Result<XlrRestoreResult> = withContext(Dispatchers.IO) {
         runCatching {
-            restoreArchive(File(AppPath.main), selectedPaths, mode) { openZipInputStream(context, uri, password) }
+            restoreArchive(File(AppPath.main), selectedPaths, mode, { ensureActive() }) {
+                openBackupInputStream(context, uri, password)
+            }
         }
     }
 
     /**
-     * Восстановление из архива, который открывает [openZip]: проверка,
-     * распаковка во временную папку, перенос. Отделено от [restoreBackup],
-     * чтобы проверяться без Android — на обычном ZIP-файле.
-     *
-     * @param openZip Открывает архив заново: он читается дважды, при проверке и при распаковке.
+     * Читает поток до конца, проверяет центральный каталог ZIP и распаковывает
+     * выбранные данные. До этого библиотека не меняется. Один снимок архива
+     * используется и для проверки, и для распаковки.
      */
+    @Synchronized
     internal fun restoreArchive(
         mainRoot: File,
         selectedPaths: Set<String>,
         mode: XlrRestoreMode,
-        openZip: () -> ZipInputStream,
-    ): XlrBackupReport {
+        checkActive: () -> Unit = {},
+        openArchive: () -> InputStream,
+    ): XlrRestoreResult {
         val safePaths = normalizeSelectedPaths(selectedPaths)
         if (safePaths.isEmpty()) error("Select at least one folder")
         // Прошлое восстановление могло оборваться: пока его след не убран,
@@ -311,20 +316,28 @@ object XlrBackupManager {
         check(recoverInterruptedRestore(mainRoot)) {
             "Не удалось завершить откат прошлого восстановления"
         }
-        // Раздел восстанавливается папками, которые есть в архиве: остальные
-        // его папки не трогаются — см. [XlrRestorePaths].
-        val restorePaths = XlrRestorePaths.expandSections(safePaths, validateBackup(openZip))
-        if (restorePaths.isEmpty()) error("В архиве нет данных для выбранных папок")
         val tempRoot = File(mainRoot, RESTORE_TEMP_DIR_NAME).apply {
-            deleteRecursively()
-            mkdirs()
+            check(mkdirs()) { "Не удалось создать временную папку восстановления" }
         }
         try {
-            val report = extractBackup(openZip, tempRoot, restorePaths)
-            applyRestoredPaths(mainRoot, tempRoot, restorePaths, mode)
-            // Старый архив кладёт сохранённое XLive в X/Live — переносим в XLive.
-            XLiveLegacyFolder.move(mainRoot, mode)
-            return report
+            val archive = File(tempRoot, "backup.zip")
+            openArchive().use { input ->
+                archive.outputStream().use { output -> input.copyArchiveTo(output, checkActive) }
+            }
+            val unpacked = File(tempRoot, "files")
+            val (paths, report) = ZipFile(archive).use { zip ->
+                val sourcePaths = XlrRestorePaths.expandSections(safePaths, validateBackup(zip, checkActive))
+                check(sourcePaths.isNotEmpty()) { "В архиве нет данных для выбранных папок" }
+                val report = extractBackup(zip, unpacked, sourcePaths, checkActive)
+                val paths = normalizeSelectedPaths(XLiveLegacyFolder.restoreTargets(sourcePaths).toSet())
+                    .filter { File(unpacked, it).exists() }
+                check(paths.isNotEmpty()) { "В архиве нет данных для выбранных папок" }
+                paths to report
+            }
+            check(archive.delete()) { "Не удалось удалить временную копию архива" }
+            checkActive()
+            applyRestoredPaths(mainRoot, unpacked, paths, mode)
+            return XlrRestoreResult(report, paths.toSet())
         } finally {
             tempRoot.deleteRecursively()
         }
@@ -464,9 +477,11 @@ object XlrBackupManager {
      *
      * @return `true`, если незавершённого восстановления не осталось.
      */
+    @Synchronized
     internal fun recoverInterruptedRestore(mainRoot: File): Boolean {
         val journalFile = restoreJournalFile(mainRoot)
-        if (!journalFile.exists()) return true
+        val tempRoot = File(mainRoot, RESTORE_TEMP_DIR_NAME)
+        if (!journalFile.exists()) return tempRoot.deleteRecursively()
         val journal = runCatching {
             AppJson.decodeFromString(RestoreJournal.serializer(), journalFile.readText(Charsets.UTF_8))
         }.getOrElse {
@@ -491,8 +506,7 @@ object XlrBackupManager {
             }
         }
         if (clean) {
-            journalFile.delete()
-            File(mainRoot, RESTORE_TEMP_DIR_NAME).deleteRecursively()
+            return tempRoot.deleteRecursively() && journalFile.delete()
         }
         return clean
     }
@@ -623,85 +637,67 @@ object XlrBackupManager {
      * по ним восстановление узнаёт, какие папки раздела в архиве есть.
      * Записи со скрытыми сегментами в список не входят — распаковка их пропускает.
      */
-    private fun validateBackup(openZip: () -> ZipInputStream): Set<String> {
+    private fun validateBackup(zip: ZipFile, checkActive: () -> Unit): Set<String> {
         val folders = sortedSetOf<String>()
-        openZip().use { zip ->
-            var hasDataEntry = false
-            while (true) {
-                val entry = zip.nextEntry ?: break
-                val name = normalizeRelativePath(entry.name)
-                if (name == MANIFEST_ENTRY) {
-                    zip.closeEntry()
-                    continue
-                }
-                val top = name.substringBefore("/")
-                if (top !in sections) {
-                    error("Backup contains unsupported entry: $name")
-                }
-                if (name == top && !entry.isDirectory) {
-                    error("Backup contains invalid section entry: $name")
-                }
-                hasDataEntry = true
-                if (name.split('/').none { it.startsWith(".") }) {
-                    childPathOrNull(name)?.let(folders::add)
-                }
-                zip.closeEntry()
+        for (entry in zip.entries()) {
+            checkActive()
+            val name = normalizeRelativePath(entry.name)
+            if (name == MANIFEST_ENTRY) continue
+            val top = name.substringBefore("/")
+            check(top in sections) { "Backup contains unsupported entry: $name" }
+            check(name != top || entry.isDirectory) { "Backup contains invalid section entry: $name" }
+            if (name.split('/').none { it.startsWith(".") }) {
+                childPathOrNull(name)?.let(folders::add)
             }
-            if (!hasDataEntry) error("Backup does not contain X/L/R data")
         }
         return folders
     }
 
     private fun extractBackup(
-        openZip: () -> ZipInputStream,
+        zip: ZipFile,
         destinationRoot: File,
         selectedPaths: List<String>,
+        checkActive: () -> Unit,
     ): XlrBackupReport {
         var files = 0
         var bytes = 0L
         val root = destinationRoot.canonicalFile
 
-        openZip().use { zip ->
-            while (true) {
-                val entry = zip.nextEntry ?: break
-                val name = normalizeRelativePath(entry.name)
-                if (name == MANIFEST_ENTRY) {
-                    zip.closeEntry()
-                    continue
-                }
-                if (name.split('/').any { it.startsWith(".") }) {
-                    zip.closeEntry()
-                    continue
-                }
-                if (!selectedPaths.any { name == it || name.startsWith("$it/") }) {
-                    zip.closeEntry()
-                    continue
-                }
+        // Если в архиве есть обе структуры, запись из новой папки имеет приоритет.
+        val entries = zip.entries().asSequence()
+            .map { it to normalizeRelativePath(it.name) }
+            .sortedBy { (_, name) -> !name.isInsideBackupPath(XLiveLegacyFolder.LEGACY) }
+        for ((entry, name) in entries) {
+            checkActive()
+            if (name.split('/').any { it.startsWith(".") }) continue
+            if (selectedPaths.none { name.isInsideBackupPath(it) }) continue
+            val restoreName = XLiveLegacyFolder.restorePath(name) ?: continue
+            val target = File(root, restoreName).canonicalFile
+            requireInside(root, target)
 
-                val target = File(root, name).canonicalFile
-                requireInside(root, target)
-
-                if (entry.isDirectory || name.endsWith("/")) {
-                    target.mkdirs()
-                    zip.closeEntry()
-                    continue
-                }
-
-                target.parentFile?.mkdirs()
-                BufferedOutputStream(target.outputStream()).use { output ->
-                    zip.copyTo(output)
-                }
-                if (entry.time > 0L) target.setLastModified(entry.time)
-                files++
-                bytes += target.length()
-                zip.closeEntry()
+            if (entry.isDirectory || entry.name.endsWith('/') || entry.name.endsWith('\\')) {
+                check(target.isDirectory || target.mkdirs()) { "Не удалось создать папку восстановления" }
+                continue
             }
+
+            target.parentFile?.mkdirs()
+            val previousSize = if (target.isFile) target.length() else {
+                files++
+                0L
+            }
+            val crc = CRC32()
+            val size = CheckedInputStream(zip.getInputStream(entry), crc).use { input ->
+                BufferedOutputStream(target.outputStream()).use { output -> input.copyArchiveTo(output, checkActive) }
+            }
+            check(size == entry.size && crc.value == entry.crc) { "Повреждён файл в архиве: $name" }
+            if (entry.time > 0L) target.setLastModified(entry.time)
+            bytes += size - previousSize
         }
 
         return XlrBackupReport(files = files, bytes = bytes)
     }
 
-    private fun openZipInputStream(context: Context, uri: Uri, password: CharArray?): ZipInputStream {
+    private fun openBackupInputStream(context: Context, uri: Uri, password: CharArray?): InputStream {
         val rawInput = context.contentResolver.openInputStream(uri)
             ?: error("Cannot open backup file")
         try {
@@ -713,7 +709,7 @@ object XlrBackupManager {
             if (read < 4) error("Backup file is empty or corrupted")
 
             val type = XlrChunkedCrypto.detectType(header)
-            val decodedStream: InputStream = when (type) {
+            return when (type) {
                 XlrBackupType.ENCRYPTED_XLR -> {
                     if (password == null || password.isEmpty()) {
                         throw XlrInvalidPasswordException("Архив зашифрован. Требуется ввод пароля.")
@@ -727,7 +723,6 @@ object XlrBackupManager {
                     throw XlrCorruptedBackupException("Неподдерживаемый формат файла бэкапа")
                 }
             }
-            return ZipInputStream(BufferedInputStream(decodedStream))
         } catch (e: Throwable) {
             runCatching { rawInput.close() }
             throw e

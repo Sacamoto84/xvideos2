@@ -124,11 +124,11 @@ class R_Saved_Creator(
     /**
      * Перечитывает список сохраненных авторов с диска.
      */
-    fun refresh() {
+    fun refresh(): Job {
         refreshJob?.cancel()
-        refreshJob = scope.launch(Dispatchers.IO) {
+        return scope.launch(Dispatchers.IO) {
             creatorDb.refresh()
-        }
+        }.also { refreshJob = it }
     }
 
 }

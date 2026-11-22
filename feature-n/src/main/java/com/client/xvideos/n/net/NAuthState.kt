@@ -46,15 +46,16 @@ object NAuthState {
     /**
      * Вызывается при успешном входе через WebView или форму.
      */
-    fun onLoginSuccess(login: String, sessionCookie: String, password: String = "") {
+    fun onLoginSuccess(login: String, sessionCookie: String, password: String = ""): Boolean {
         Timber.i("NAuthState: успешный вход пользователя $login")
-        saveAccess(NAccessCredentials(sessionCookie = sessionCookie))
+        val persisted = saveAccess(NAccessCredentials(sessionCookie = sessionCookie))
         _username.value = login
         _isLoggedIn.value = true
 
         runCatching {
             Settings.n_profile.save(login, password)
         }
+        return persisted
     }
 
     /**
@@ -77,14 +78,15 @@ object NAuthState {
         }
     }
 
-    fun setApiKey(key: String, displayName: String = "API Key") {
+    fun setApiKey(key: String, displayName: String = "API Key"): Boolean {
         val apiKey = key.trim()
-        saveAccess(NAccessCredentials(apiKey = apiKey))
+        val persisted = saveAccess(NAccessCredentials(apiKey = apiKey))
         _username.value = displayName
         _isLoggedIn.value = true
         runCatching {
             Settings.n_profile.save(displayName, "")
         }
+        return persisted
     }
 
     /**
@@ -117,12 +119,13 @@ object NAuthState {
         }
     }
 
-    private fun saveAccess(credentials: NAccessCredentials) {
+    private fun saveAccess(credentials: NAccessCredentials): Boolean {
         if (!Settings.isInitialized) {
             processCredentials.set(credentials)
-            return
+            return false
         }
-        runCatching { Settings.nAccess.save(credentials) }
+        return runCatching { Settings.nAccess.save(credentials) }
             .onFailure { Timber.w("N: не удалось сохранить авторизацию (%s)", it.javaClass.simpleName) }
+            .getOrDefault(false)
     }
 }

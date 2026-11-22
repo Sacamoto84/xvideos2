@@ -3,13 +3,17 @@ package com.client.xvideos
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.common.storage.StorageCleanupGate
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.network.api.RedApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -56,6 +60,7 @@ class AppStartupInitializerTest {
             },
             blockRed = { BlockRed(this) },
             savedRed = { SavedRed(RedApi(AppFileDatabase()), this) },
+            storageCleanupGate = StorageCleanupGate(),
         )
 
         initializer.init()
@@ -64,5 +69,30 @@ class AppStartupInitializerTest {
         // Повторный вызов не должен перезапускать инициализацию
         initializer.init()
         assertEquals(1, counter.get())
+    }
+
+    @Test
+    fun `хранилища открываются только после отката и только один раз`() = runTest {
+        val rollback = CompletableDeferred<Unit>()
+        val gate = StorageCleanupGate().apply { start(this@runTest) { rollback.await() } }
+        val reads = AtomicInteger()
+        val initializer = AppStartupInitializer(
+            db = { AppFileDatabase() },
+            blockRed = { BlockRed(this) },
+            savedRed = {
+                reads.incrementAndGet()
+                SavedRed(RedApi(AppFileDatabase()), this)
+            },
+            storageCleanupGate = gate,
+        )
+        val first = launch { initializer.init() }
+        val second = launch { initializer.init() }
+        runCurrent()
+        assertEquals(0, reads.get())
+
+        rollback.complete(Unit)
+        first.join()
+        second.join()
+        assertEquals(1, reads.get())
     }
 }

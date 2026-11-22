@@ -32,6 +32,9 @@ data class XlrBackupReport(
     }
 }
 
+/** Перечень фактически восстановленных папок с итоговым объёмом. */
+data class XlrRestoreResult(val report: XlrBackupReport, val paths: Set<String>)
+
 /**
  * Описание элемента дерева архива бэкапа для отображения в UI и калькуляции объема.
  *

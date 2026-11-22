@@ -98,10 +98,6 @@ fun ScreenLAlbumBody(
         }
     }
 
-    LaunchedEffect(parsed?.likeStatus) {
-        actions.onSyncServerFavoriteStatus(parsed?.likeStatus)
-    }
-
     val onGenreClick = remember(navigator) {
         { genre: Genre ->
             navigator.push(

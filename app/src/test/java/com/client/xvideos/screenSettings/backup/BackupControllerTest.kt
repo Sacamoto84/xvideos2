@@ -6,6 +6,7 @@ import com.client.xvideos.common.backup.XlrBackupOptions
 import com.client.xvideos.common.backup.XlrBackupReport
 import com.client.xvideos.common.backup.XlrBackupType
 import com.client.xvideos.common.backup.XlrRestoreMode
+import com.client.xvideos.common.backup.XlrRestoreResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -75,13 +76,13 @@ class BackupControllerTest {
             paths: Set<String>,
             password: CharArray?,
             mode: XlrRestoreMode,
-        ): Result<XlrBackupReport> {
+        ): Result<XlrRestoreResult> {
             restoredWith += password?.concatToString()
             restoredModes += mode
             return if (password == null && archiveType == XlrBackupType.ENCRYPTED_XLR) {
                 Result.failure(IllegalStateException("Password required"))
             } else {
-                Result.success(XlrBackupReport(files = 3, bytes = 30))
+                Result.success(XlrRestoreResult(XlrBackupReport(files = 3, bytes = 30), paths))
             }
         }
 

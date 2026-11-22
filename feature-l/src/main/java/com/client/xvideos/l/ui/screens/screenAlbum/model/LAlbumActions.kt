@@ -10,10 +10,9 @@ import com.client.xvideos.l.model.AlbumDetails
 @Immutable
 data class LAlbumActions(
     val onSaveAlbum: () -> Unit = {},
-    val onToggleServerFavorite: (AlbumDetails) -> Unit = {},
+    val onToggleServerFavorite: (AlbumDetails, Boolean?) -> Unit = { _, _ -> },
     val onShareAlbum: (AlbumDetails) -> Unit = {},
     val onShowOnlyAnimatedChange: (Boolean) -> Unit = {},
-    val onSyncServerFavoriteStatus: (String?) -> Unit = {},
     val onRetryFailedPages: () -> Unit = {},
     val onRefresh: () -> Unit = {},
 )
