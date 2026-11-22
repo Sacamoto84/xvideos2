@@ -32,6 +32,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +45,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
+import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
@@ -55,6 +58,8 @@ import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NichesBottomBar
 import com.client.xvideos.r.ui.explorer.tab.niches.molecule.Refresh
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
 import com.client.xvideos.r.ui.search.RSearchTextField
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -200,6 +205,10 @@ fun R_ScreenNichesTabContent(
             modifier = modifier,
         )
     } else {
+        val scope = rememberCoroutineScope()
+        val haptic = LocalHapticFeedback.current
+        val hazeState = remember { HazeState() }
+
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
@@ -222,7 +231,9 @@ fun R_ScreenNichesTabContent(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                     state = listState,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .hazeSource(hazeState),
                     contentPadding = adaptiveListPadding(PaddingValues(top = getTopInsetDp()))
                 ) {
                     item(key = "refresh_mini", contentType = "refresh_mini") {
@@ -290,6 +301,28 @@ fun R_ScreenNichesTabContent(
                 ) {
                     VerticalScrollbar(scrollPercentProvider)
                 }
+
+                FloatingScrollButtons(
+                    visible = niches.isNotEmpty() && !isSearchFocused,
+                    showScrollToTop = listState.canScrollBackward,
+                    showScrollToBottom = listState.canScrollForward,
+                    hazeState = hazeState,
+                    contentColor = Theme.ScrollFab.contentColorR,
+                    onScrollToTop = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        actions.onUpClick()
+                    },
+                    onScrollToBottom = {
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        scope.launch {
+                            val lastIndex = listState.layoutInfo.totalItemsCount - 1
+                            if (lastIndex >= 0) listState.scrollToItem(lastIndex)
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                )
             }
         }
     }

@@ -21,15 +21,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.r.model.NICHE_VIDEO_ORDERS
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.atom.TabBarPoints
+import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
-import kotlinx.collections.immutable.persistentListOf
-
-private val NICHE_SORT_ORDERS = persistentListOf(Order.TRENDING, Order.TOP, Order.LATEST)
 
 @Composable
 fun NicheBottomBar(
@@ -52,11 +51,13 @@ fun NicheBottomBar(
                 Spacer(modifier = Modifier.width(2.dp))
 
                 SortByOrder(
-                    NICHE_SORT_ORDERS,
-                    currentSort,
+                    list = NICHE_VIDEO_ORDERS,
+                    selected = currentSort,
                     onSelect = onSortChange,
                     containerColor = Theme.tabLevel0,
-                    circle = true
+                    circle = true,
+                    orderIcon = { RSortOrderIcon(it) },
+                    showSelectedLabel = true,
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -87,7 +88,7 @@ fun NicheBottomBarPreview() {
     XvideosTheme {
         NicheBottomBar(
             niche = NichesInfo(id = "id", name = "Sample Niche", thumbnail = ""),
-            currentSort = Order.TRENDING,
+            currentSort = Order.HOT,
             onSortChange = {},
             columns = 2,
         )

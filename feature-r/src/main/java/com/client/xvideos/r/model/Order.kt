@@ -1,5 +1,7 @@
 package com.client.xvideos.r.model
 
+import kotlinx.collections.immutable.persistentListOf
+
 /**
  * Варианты сортировки контента в API R (для лент, поиска, профилей и ниш).
  *
@@ -64,7 +66,10 @@ enum class Order(val value: String) {
     NICHES_NAME_A_Z("name"),
 
     /** Сортировка ниш: по имени от Я до А (клиентская). */
-    NICHES_NAME_Z_A("name");
+    NICHES_NAME_Z_A("name"),
+
+    /** Горячие публикации в ленте отдельной ниши. */
+    HOT("hot");
 
     /** Проверяет, относится ли данная сортировка к каталогу ниш. */
     val isNichesOrder: Boolean get() = this.name.startsWith("NICHES_")
@@ -136,6 +141,9 @@ enum class Order(val value: String) {
             if (value != null) fromValue(value) ?: fromNameOrNull(value) else null
     }
 }
+
+/** Порядок пунктов сортировки ленты отдельной ниши. */
+internal val NICHE_VIDEO_ORDERS = persistentListOf(Order.HOT, Order.LATEST, Order.TOP)
 
 /**
  * Тип медиаконтента для фильтрации запросов в R.

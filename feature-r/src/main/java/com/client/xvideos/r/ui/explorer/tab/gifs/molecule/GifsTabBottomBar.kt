@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.r.model.Order
+import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import kotlinx.collections.immutable.persistentListOf
 
@@ -61,7 +62,7 @@ fun GifsTabBottomBar(
                     list = orders,
                     selected = sortType,
                     onSelect = onSortSelect,
-                    orderIcon = { RFeedSortIcon(it) }
+                    orderIcon = { RSortOrderIcon(it) }
                 )
             }
 

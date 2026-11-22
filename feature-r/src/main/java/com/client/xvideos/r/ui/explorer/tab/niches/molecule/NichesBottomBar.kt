@@ -20,6 +20,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.atom.ButtonUp
+import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -65,7 +66,8 @@ fun NichesBottomBar(
                     list = NICHE_SORT_ORDERS,
                     selected = sortType,
                     onSelect = onSortTypeChange,
-                    containerColor = Theme.tabLevel0
+                    containerColor = Theme.tabLevel0,
+                    orderIcon = { RSortOrderIcon(it) },
                 )
             }
 

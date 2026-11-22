@@ -54,4 +54,9 @@ class OrderWireValuesTest {
         assertEquals("oldest", Order.OLDEST.value)
         assertEquals("top28", Order.TOP28.value)
     }
+
+    @Test
+    fun `сортировки ленты ниши соответствуют меню сайта`() {
+        assertEquals(listOf("hot", "latest", "top"), NICHE_VIDEO_ORDERS.map { it.value })
+    }
 }

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -39,6 +38,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.ui.HintTooltip
@@ -52,6 +52,7 @@ private fun Order.toDisplayName(): String = when (this) {
     Order.TOP -> "Top"
     Order.LATEST -> "Latest"
     Order.TRENDING -> "Trending"
+    Order.HOT -> "Hot"
     Order.OLDEST -> "Oldest"
     Order.TOP28 -> "Top28"
     Order.RELEVANT -> "Relevant"
@@ -70,10 +71,16 @@ private fun Order.toIconLabel(): String = when (this) {
     Order.TOP_MONTH, Order.TOP28 -> "Топ месяца"
     Order.TOP -> "Топ за всё время"
     Order.TRENDING -> "В тренде"
+    Order.HOT -> "Горячее"
     Order.LATEST -> "Новые"
     Order.OLDEST -> "Старые"
     Order.RELEVANT -> "По релевантности"
-    else -> toDisplayName()
+    Order.NICHES_SUBSCRIBERS_D -> "Больше подписчиков"
+    Order.NICHES_SUBSCRIBERS_A -> "Меньше подписчиков"
+    Order.NICHES_POST_D -> "Больше публикаций"
+    Order.NICHES_POST_A -> "Меньше публикаций"
+    Order.NICHES_NAME_A_Z -> "Название A–Z"
+    Order.NICHES_NAME_Z_A -> "Название Z–A"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +91,8 @@ fun SortByOrder(
     onSelect: (Order) -> Unit,
     containerColor: Color = Color.Transparent,
     circle: Boolean = false,
-    orderIcon: (@Composable (Order) -> Unit)? = null
+    orderIcon: (@Composable (Order) -> Unit)? = null,
+    showSelectedLabel: Boolean = false,
 ) {
     LaunchedEffect(list, selected) {
         val nearest = selected.nearestIn(list)
@@ -132,15 +140,29 @@ fun SortByOrder(
     ) {
         HintTooltip(text = sortHint) {
             if (orderIcon != null) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .size(SORT_TRIGGER_HEIGHT)
-                        .semantics { contentDescription = sortHint }
+                        .height(SORT_TRIGGER_HEIGHT)
+                        .then(
+                            if (showSelectedLabel) Modifier else Modifier
+                                .width(SORT_TRIGGER_HEIGHT)
+                                .semantics { contentDescription = sortHint }
+                        )
                         .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                        .border(1.dp, Color(0xFF3A3A3A), boxShape),
-                    contentAlignment = Alignment.Center
+                        .border(1.dp, Color(0xFF3A3A3A), boxShape)
+                        .padding(horizontal = if (showSelectedLabel) 12.dp else 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     orderIcon(selected)
+                    if (showSelectedLabel) {
+                        BasicText(
+                            selected.toIconLabel(),
+                            style = textStyle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             } else {
                 Row(
