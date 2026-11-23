@@ -7,6 +7,16 @@ import org.junit.Test
 class NichePageNavigationTest {
 
     @Test
+    fun `пейджер учитывает ограничение API даже когда сервер сообщает больше страниц`() {
+        val navigation = NichePageNavigation(infiniteScroll = false)
+        navigation.updatePageCount(infiniteScroll = false, count = 9684)
+        navigation.selectPage(100)
+
+        assertEquals(100, navigation.state.value.pageCount)
+        assertEquals(99, navigation.state.value.pageIndex)
+    }
+
+    @Test
     fun `выбор страницы сохраняется при переключении режимов`() {
         val navigation = NichePageNavigation(infiniteScroll = true)
         navigation.updatePageCount(infiniteScroll = true, count = 45)

@@ -4,6 +4,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+// Сервер считает pages по всей группе, но отклоняет любой page выше 100.
+internal fun availableNichePageCount(reportedPages: Int): Int = reportedPages.coerceIn(1, 100)
+
 internal data class NichePageState(
     val infiniteScroll: Boolean,
     val pageIndex: Int = 0,
@@ -31,7 +34,7 @@ internal class NichePageNavigation(infiniteScroll: Boolean) {
     fun updatePageCount(infiniteScroll: Boolean, count: Int) {
         mutableState.update {
             if (it.infiniteScroll != infiniteScroll) return@update it
-            val pageCount = count.coerceAtLeast(1)
+            val pageCount = availableNichePageCount(count)
             it.copy(pageCount = pageCount, pageIndex = it.pageIndex.coerceAtMost(pageCount - 1))
         }
     }

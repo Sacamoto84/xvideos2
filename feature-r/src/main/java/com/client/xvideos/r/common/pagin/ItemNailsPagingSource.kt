@@ -17,7 +17,7 @@ import timber.log.Timber
  * Инкапсулирует:
  * - Фильтрацию заблокированных материалов ([BlockRed]);
  * - Автоматическое наполнение глобального кэша авторов [UsersRed];
- * - Вычисление ключа следующей страницы по `pages` из метаданных ответа (без лишних пустых запросов);
+ * - Вычисление ключа следующей страницы по метаданным ответа и пределу API;
  * - Загрузку одной выбранной страницы в страничном режиме.
  *
  * @property order Порядок сортировки в нише.
@@ -58,8 +58,7 @@ class ItemNailsPagingSource(
 
             val gifs : List<GifsInfo> = response.gifs.sanitizeGifsInfoList()
 
-            // G4: конец пагинации по pages из ответа, без лишнего пустого запроса.
-            val nextKey = if (fixedPage == null && page < response.pages) page + 1 else null
+            val nextKey = if (fixedPage == null && page < availableNichePageCount(response.pages)) page + 1 else null
 
             Timber.d("!!! load() a.gif.size = ${gifs.size}")
 
