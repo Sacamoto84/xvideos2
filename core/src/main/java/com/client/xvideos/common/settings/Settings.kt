@@ -193,6 +193,8 @@ object Settings {
      * Текущее количество столбиков в R Saved Likes Tab: 2, 3 или 4.
      */
     val r_likesTab_column_current_count by lazy { SettingElementInt(pref, "r_likesTab_column_current_count", 2) }
+    val r_download_view by lazy { SettingElementString(pref, "r_download_view", "DETAILS") }
+    val r_download_sort by lazy { SettingElementString(pref, "r_download_sort", "DATE") }
 
 
 

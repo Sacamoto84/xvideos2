@@ -114,6 +114,9 @@ class DownloadRed internal constructor(
     /** Реактивный список всех сохраненных роликов (сортировка по убыванию даты изменения). */
     val downloadList: StateFlow<List<GifsInfo>> = _downloadList.asStateFlow()
 
+    private val _downloads = MutableStateFlow(RedDownloadsScan(emptyList(), emptyMap()))
+    internal val downloads = _downloads.asStateFlow()
+
     /**
      * Ключи роликов, у которых на диске лежит готовый `.mp4`.
      *
@@ -281,13 +284,14 @@ class DownloadRed internal constructor(
 
     /**
      * Сканирует каталог `r_cache_download` одним проходом, считывает все `.info` файлы
-     * и обновляет [downloadList] и [downloadedVideoKeys].
+     * и обновляет данные загрузок, включая размеры видео.
      */
     fun refreshDownloadList() {
         refreshJob?.cancel()
         refreshJob = scope.launch(Dispatchers.IO) {
             refreshMutex.withLock {
                 val scan = readDownloads()
+                _downloads.emit(scan)
                 _downloadList.emit(scan.list)
                 _downloadedVideoKeys.emit(scan.videoKeys)
             }
@@ -482,45 +486,38 @@ internal fun downloadedItemFiles(userDir: File, id: String): List<File> {
 /**
  * Ключ скачанного ролика: креатор + id. Формат совпадает с раскладкой кеша
  * `<r_cache_download>/<userName>/<id>.mp4`, поэтому набор ключей строится
- * прямо из списка файлов, без повторного обхода диска.
+ * прямо из файлов при обходе диска.
  */
 internal fun downloadedVideoKey(userName: String, id: String): String = "$userName/$id"
 
-/**
- * Набор ключей скачанных видео по списку `.mp4`-файлов кеша.
- *
- * Отдельная функция, а не лямбда внутри обхода: это единственная арифметика в
- * этом пути, и она проверяется обычным JVM-тестом.
- */
-internal fun downloadedVideoKeys(videoFiles: List<File>): Set<String> {
-    if (videoFiles.isEmpty()) return emptySet()
-    return videoFiles.mapTo(HashSet(videoFiles.size)) {
-        downloadedVideoKey(it.parentFile?.name.orEmpty(), it.nameWithoutExtension)
-    }
+internal fun downloadedVideoKey(file: File): String =
+    downloadedVideoKey(file.parentFile?.name.orEmpty(), file.nameWithoutExtension)
+
+/** Ролики по `.info` и размеры готовых `.mp4` из одного обхода каталога. */
+internal data class RedDownloadsScan(val list: List<GifsInfo>, val videoSizes: Map<String, Long>) {
+    val videoKeys: Set<String> get() = videoSizes.keys
+
+    fun videoSize(item: GifsInfo): Long? = videoSizes[downloadedVideoKey(item.userName, item.id)]
 }
 
-/** Результат одного обхода каталога загрузок R: ролики по `.info` и ключи готовых `.mp4`. */
-internal class RedDownloadsScan(val list: List<GifsInfo>, val videoKeys: Set<String>)
-
 /**
- * Обходит [rootDir] одним проходом: собирает `.info` и `.mp4` сразу, без
- * промежуточного списка всех файлов и двойной фильтрации. Список — по убыванию
- * даты изменения `.info`; битый `.info` пропускается.
+ * Собирает `.info` и размеры `.mp4` за один обход [rootDir].
+ * Список упорядочен по дате изменения `.info`, повреждённые записи пропускаются.
  */
 internal fun readRedDownloads(rootDir: File): RedDownloadsScan {
-    if (!rootDir.exists() || !rootDir.isDirectory) return RedDownloadsScan(emptyList(), emptySet())
+    if (!rootDir.isDirectory) return RedDownloadsScan(emptyList(), emptyMap())
 
     val infoFiles = ArrayList<File>()
-    val mp4Files = ArrayList<File>()
+    val videoSizes = HashMap<String, Long>()
     for (f in rootDir.walkTopDown()) {
-        if (!f.isFile || f.length() <= 0L) continue
+        if (!f.isFile) continue
+        val size = f.length()
+        if (size <= 0L) continue
         when (f.extension) {
             "info" -> infoFiles.add(f)
-            "mp4" -> mp4Files.add(f)
+            "mp4" -> videoSizes[downloadedVideoKey(f)] = size
         }
     }
-
-    if (infoFiles.isEmpty() && mp4Files.isEmpty()) return RedDownloadsScan(emptyList(), emptySet())
 
     if (infoFiles.size > 1) {
         infoFiles.sortByDescending { it.lastModified() }
@@ -537,5 +534,5 @@ internal fun readRedDownloads(rootDir: File): RedDownloadsScan {
         }
     }
 
-    return RedDownloadsScan(result, downloadedVideoKeys(mp4Files))
+    return RedDownloadsScan(result, videoSizes)
 }

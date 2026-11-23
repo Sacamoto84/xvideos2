@@ -37,12 +37,18 @@ internal fun SavedItemActionsMenu(
 internal fun SavedItemActionsMenu(
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
+    iconModifier: Modifier = Modifier,
     onAction: @Composable ColumnScope.(dismiss: () -> Unit) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = modifier.padding(end = 4.dp)) {
         IconButton(enabled = enabled, onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
-            Icon(Icons.Filled.MoreVert, contentDescription = "Действия", tint = Color.LightGray)
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = "Действия",
+                tint = Color.LightGray,
+                modifier = iconModifier,
+            )
         }
         DropdownMenu(
             expanded = expanded,

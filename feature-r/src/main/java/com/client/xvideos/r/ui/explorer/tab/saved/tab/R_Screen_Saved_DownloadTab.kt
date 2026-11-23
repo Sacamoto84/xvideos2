@@ -9,10 +9,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,15 +35,24 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.p2p.P2pSendSource
 import com.client.xvideos.common.p2p.ui.P2pSendChooserDialog
 import com.client.xvideos.common.p2p.ui.ScreenP2pSend
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
-import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.r.common.downloader.DownloadSort
+import com.client.xvideos.r.common.downloader.RedDownloadsScan
+import com.client.xvideos.r.common.downloader.downloadedVideoKey
+import com.client.xvideos.r.common.downloader.sortedItems
 import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadListItem
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadSortMenu
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadView
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadViewMenu
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -58,12 +68,11 @@ object R_Screen_Saved_DownloadTab : Screen {
         val vm = getScreenModel<ScreenSavedDownloadSM>()
         val context = LocalContext.current
 
-        val downloadRed by vm.downloadRed.downloadList.collectAsStateWithLifecycle()
-        val state = rememberLazyListState()
-
-        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(
-            gridState = state, itemsToIgnore = 1
-        )
+        val downloads by vm.downloadRed.downloads.collectAsStateWithLifecycle()
+        val savedView by Settings.r_download_view.field.collectAsStateWithLifecycle()
+        val view = DownloadView.entries.firstOrNull { it.name == savedView } ?: DownloadView.DETAILS
+        val savedSort by Settings.r_download_sort.field.collectAsStateWithLifecycle()
+        val sort = DownloadSort.entries.firstOrNull { it.name == savedSort } ?: DownloadSort.DATE
 
         val onItemClickHandler = remember(navigator) {
             { item: GifsInfo -> navigator.push(ScreenRedFullScreen(item)) }
@@ -100,15 +109,15 @@ object R_Screen_Saved_DownloadTab : Screen {
             { item: GifsInfo -> vm.delete(item) }
         }
 
-        val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
-
         SavedDownloadTabContent(
-            downloadList = downloadRed,
-            state = state,
+            downloads = downloads,
+            view = view,
+            onViewChange = { Settings.r_download_view.setValue(it.name) },
+            sort = sort,
+            onSortChange = { Settings.r_download_sort.setValue(it.name) },
+            state = rememberLazyGridState(),
             topInset = getTopInsetDp(),
-            scrollPercentProvider = scrollPercentProvider,
             onItemClick = onItemClickHandler,
-            onFullScreenClick = onItemClickHandler,
             onShareClick = onShareClickHandler,
             onDeleteClick = onDeleteClickHandler
         )
@@ -116,19 +125,42 @@ object R_Screen_Saved_DownloadTab : Screen {
 }
 
 @Composable
-fun SavedDownloadTabContent(
-    downloadList: List<GifsInfo>,
-    state: LazyListState,
+private fun SavedDownloadTabContent(
+    downloads: RedDownloadsScan,
+    view: DownloadView,
+    onViewChange: (DownloadView) -> Unit,
+    sort: DownloadSort,
+    onSortChange: (DownloadSort) -> Unit,
+    state: LazyGridState,
     topInset: Dp,
-    scrollPercentProvider: () -> Pair<Float, Float>,
     onItemClick: (GifsInfo) -> Unit,
-    onFullScreenClick: (GifsInfo) -> Unit,
     onShareClick: (GifsInfo) -> Unit,
     onDeleteClick: (GifsInfo) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val items = remember(downloads, sort) { downloads.sortedItems(sort) }
+    val showGrid = view == DownloadView.GRID
+    val columns = if (showGrid) adaptiveUserGridColumns(3) else 1
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(state, numberOfColumns = columns)
+    val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            SavedTabHeader(
+                title = "Загрузки",
+                topCutout = topInset,
+                trailing = {
+                    DownloadSortMenu(sort) { selected ->
+                        if (selected != sort) {
+                            onSortChange(selected)
+                            state.requestScrollToItem(0)
+                        }
+                    }
+                    DownloadViewMenu(view, onViewChange)
+                },
+            )
+        },
         modifier = modifier
     ) { padding ->
         Box(
@@ -136,33 +168,27 @@ fun SavedDownloadTabContent(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columns),
                 verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 4.dp)
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
             ) {
-                // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
-                // полосе 640dp по одной, с прежним полем 4dp, чтобы список
-                // свайпался по всей ширине.
-                // Без ключа: строка "header" совпала бы с id ролика и уронила бы список.
-                item(contentType = "header") {
-                    SavedTabHeader(
-                        title = "Загрузки",
-                        topCutout = topInset,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                }
-                items(downloadList, key = { it.id }, contentType = { "download_item" }) { item ->
+                items(
+                    items = items,
+                    key = { downloadedVideoKey(it.userName, it.id) },
+                    contentType = { view },
+                ) { item ->
                     DownloadListItem(
                         item = item,
+                        view = view,
+                        videoSize = downloads.videoSize(item),
                         onItemClick = onItemClick,
-                        onFullScreenClick = onFullScreenClick,
                         onShareClick = onShareClick,
                         onDeleteClick = onDeleteClick,
-                        modifier = Modifier
-                            .adaptiveContentWidth()
-                            .padding(horizontal = 4.dp)
+                        modifier = if (showGrid) Modifier else Modifier.adaptiveContentWidth(),
                     )
                 }
             }
@@ -183,13 +209,20 @@ fun SavedDownloadTabContent(
 @Composable
 private fun SavedDownloadTabPreview() {
     XvideosTheme(darkTheme = true) {
+        val items = List(8) { GifsInfo(id = "sample_${it + 1}", userName = "author") }
+        var view by remember { mutableStateOf(DownloadView.DETAILS) }
+        var sort by remember { mutableStateOf(DownloadSort.DATE) }
         SavedDownloadTabContent(
-            downloadList = emptyList(),
-            state = rememberLazyListState(),
+            downloads = RedDownloadsScan(items, items.mapIndexed { index, item ->
+                downloadedVideoKey(item.userName, item.id) to (index + 1) * 1_500_000L
+            }.toMap()),
+            view = view,
+            onViewChange = { view = it },
+            sort = sort,
+            onSortChange = { sort = it },
+            state = rememberLazyGridState(),
             topInset = 24.dp,
-            scrollPercentProvider = { 0f to 1f },
             onItemClick = {},
-            onFullScreenClick = {},
             onShareClick = {},
             onDeleteClick = {}
         )

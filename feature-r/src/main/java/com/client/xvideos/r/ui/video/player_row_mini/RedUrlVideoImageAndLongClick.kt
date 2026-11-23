@@ -37,6 +37,8 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.video.player_row_mini.atom.Red_Video_Lite_Row2
 import java.io.File
 
+internal const val RED_VIDEO_PREVIEW_ASPECT_RATIO = 9f / 16f
+
 @OptIn(ExperimentalFoundationApi::class)
 @Suppress("LongMethod")
 @Composable
@@ -138,7 +140,7 @@ fun RedUrlVideoImageAndLongClick(
 
     val rootModifier = modifier
         .fillMaxSize()
-        .aspectRatio(1080f / 1920f)
+        .aspectRatio(RED_VIDEO_PREVIEW_ASPECT_RATIO)
         .combinedClickable(
             indication = null,
             interactionSource = interactionSource,

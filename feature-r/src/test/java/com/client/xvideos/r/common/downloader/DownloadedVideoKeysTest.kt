@@ -1,12 +1,16 @@
 package com.client.xvideos.r.common.downloader
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class DownloadedVideoKeysTest {
+
+    @get:Rule
+    val tempDir = TemporaryFolder()
 
     @Test
     fun `ключ собирается из креатора и id`() {
@@ -15,51 +19,39 @@ class DownloadedVideoKeysTest {
 
     @Test
     fun `ключи файлов берут креатора из имени папки`() {
-        val files = listOf(
-            File("/cache/r/Creator/AbcDef.mp4"),
-            File("/cache/r/Other/Xyz.mp4"),
-        )
-        assertEquals(setOf("Creator/AbcDef", "Other/Xyz"), downloadedVideoKeys(files))
+        assertEquals("Creator/AbcDef", downloadedVideoKey(File("Creator/AbcDef.mp4")))
+        assertEquals("Other/Xyz", downloadedVideoKey(File("Other/Xyz.mp4")))
     }
 
     @Test
     fun `файл без родительской папки не роняет разбор`() {
-        assertEquals(setOf("/AbcDef"), downloadedVideoKeys(listOf(File("AbcDef.mp4"))))
+        assertEquals("/AbcDef", downloadedVideoKey(File("AbcDef.mp4")))
     }
 
     @Test
-    fun `набор ключей отвечает на проверку скачанности`() {
-        val keys = downloadedVideoKeys(listOf(File("/cache/r/Creator/AbcDef.mp4")))
-        assertTrue(downloadedVideoKey("Creator", "AbcDef") in keys)
-        assertFalse(downloadedVideoKey("Creator", "Missing") in keys)
+    fun `размеры готовы только для непустых видео и учитывают автора`() {
+        val creator = tempDir.newFolder("Creator")
+        val other = tempDir.newFolder("Other")
+        File(creator, "abc.mp4").writeBytes(ByteArray(20))
+        File(other, "abc.mp4").writeBytes(ByteArray(30))
+        File(creator, "pending.mp4").createNewFile()
+        File(creator, "pending.info").writeText("""{"userName":"Creator","id":"pending"}""")
+        File(creator, "pending.mp4.temp").writeBytes(ByteArray(40))
+
+        val scan = readRedDownloads(tempDir.root)
+
+        assertEquals(mapOf("Creator/abc" to 20L, "Other/abc" to 30L), scan.videoSizes)
+        assertEquals(scan.videoSizes.keys, scan.videoKeys)
+        assertEquals("pending", scan.list.single().id)
     }
 
     @Test
-    fun `фильтрация отсекает пустые 0-байтовые файлы видео`() {
-        val validFile = File.createTempFile("valid_vid", ".mp4").apply {
-            writeText("video data")
-            deleteOnExit()
-        }
-        val emptyFile = File.createTempFile("empty_vid", ".mp4").apply {
-            deleteOnExit()
-        }
-
-        val allFiles = listOf(validFile, emptyFile)
-        val validFiles = allFiles.filter { it.extension == "mp4" && it.length() > 0L }
-
-        assertEquals(1, validFiles.size)
-        assertEquals(validFile.name, validFiles.first().name)
-    }
-
-    @Test
-    fun `пустой список файлов возвращает пустое множество ключей`() {
-        assertTrue(downloadedVideoKeys(emptyList()).isEmpty())
+    fun `пустой каталог возвращает пустое множество ключей`() {
+        assertTrue(readRedDownloads(tempDir.root).videoKeys.isEmpty())
     }
 
     @Test
     fun `файлы ролика для удаления включают остатки оборванной загрузки`() {
-        // Удаление убирало mp4, info и jpg, а временные файлы загрузчика рядом
-        // оставались: в списке их нет, убрать из приложения было нечем.
         val userDir = File("downloads", "author")
 
         val names = downloadedItemFiles(userDir, "abc").map { it.name }.sorted()
