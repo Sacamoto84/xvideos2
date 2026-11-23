@@ -1,20 +1,15 @@
 package com.client.xvideos.r.ui.profile
 
-import com.client.xvideos.common.theme.Theme
-
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -24,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
@@ -31,10 +27,12 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.translation.TranslationEngine
 import com.client.xvideos.common.translation.rememberEnglishToRussianTranslation
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.molecule.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.molecule.TagsBlock
-import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
+import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
+import com.client.xvideos.r.ui.ui.lazyrow123.PageableFeed
 import com.client.xvideos.common.util.getTopInsetDp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -67,7 +65,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
         val tagsSelectList = remember(tagsSelect) { tagsSelect.toImmutableList() }
 
         val onTagClick: (String) -> Unit = remember(vm) { { vm.toggleSelectTag(it) } }
-        val onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit = remember(vm) {
+        val onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = remember(vm) {
             { pager ->
                 pager.itemSnapshotList.items.forEach { gifItem ->
                     vm.tagsAdd(gifItem.tags)
@@ -110,9 +108,9 @@ fun ScreenRedProfileContent(
     tags: ImmutableList<String>,
     tagsSelect: ImmutableList<String>,
     isLoading: Boolean,
-    likedHost: com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host,
+    likedHost: LazyRow123Host,
     onTagClick: (String) -> Unit,
-    onAppendLoaded: (androidx.paging.compose.LazyPagingItems<com.client.xvideos.r.model.GifsInfo>) -> Unit,
+    onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit,
     isFollow: Boolean,
     onFollowClick: () -> Unit,
     translationEngine: TranslationEngine = TranslationEngine.NONE
@@ -123,17 +121,10 @@ fun ScreenRedProfileContent(
     }
     val about = originalAbout?.let { rememberEnglishToRussianTranslation(it, translationEngine) }
 
-    val renderContentBeforeList: @Composable () -> Unit = remember(
-        topInset,
-        creator,
-        about,
-        tags,
-        tagsSelect,
-        onTagClick,
-        isFollow,
-        onFollowClick
-    ) {
-        {
+    PageableFeed(
+        host = likedHost,
+        onAppendLoaded = onAppendLoaded,
+        header = { scrollMode ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.fillMaxWidth().height(topInset))
 
@@ -141,32 +132,17 @@ fun ScreenRedProfileContent(
                     RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick, about = about)
                 }
 
-                if ((creator != null) && (tags.isNotEmpty())) {
+                Box(Modifier.adaptiveContentWidth().padding(horizontal = 4.dp, vertical = 4.dp)) {
+                    scrollMode()
+                }
+
+                if (creator != null && tags.isNotEmpty()) {
                     TagsBlock(tags = tags, tagsSelect = tagsSelect, modifier = Modifier.adaptiveContentWidth(), onClick = onTagClick)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }
-        }
-    }
-
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        containerColor = Theme.background
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Theme.background)
-        ) {
-            LazyRow123(
-                host = likedHost,
-                modifier = Modifier.fillMaxSize(),
-                contentBeforeList = renderContentBeforeList,
-                onAppendLoaded = onAppendLoaded,
-            )
-
-            // Индикатор загрузки
+        },
+        overlay = {
             if (isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
@@ -175,8 +151,8 @@ fun ScreenRedProfileContent(
                     )
                 }
             }
-        }
-    }
+        },
+    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF303030)

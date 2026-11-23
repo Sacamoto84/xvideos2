@@ -15,6 +15,8 @@ import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.lazy.viewportFractionCacheWindow
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.r.common.pagin.FeedPageNavigation
+import com.client.xvideos.r.common.pagin.FeedPageQuery
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.common.block.BlockRed
@@ -29,12 +31,13 @@ import com.client.xvideos.r.common.pagin.ItemProfilePagingSource
 import com.client.xvideos.r.common.pagin.ItemSavedLikesPagingSource
 import com.client.xvideos.r.common.pagin.ItemSubscriptionsPagingSource
 import com.client.xvideos.r.common.pagin.ItemTopPagingSource
-import com.client.xvideos.r.common.pagin.NichePageNavigation
 import com.client.xvideos.r.common.pagin.savedLikesPagingFlow
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -55,7 +58,7 @@ import java.util.concurrent.atomic.AtomicInteger
 private data class SearchParams(
     val query: String,
     val sort: Order,
-    val tags: String,
+    val tags: Set<String>,
 )
 
 /**
@@ -130,8 +133,8 @@ class LazyRow123Host(
     val downloadRed: DownloadRed,
     val search: R_SearchExplorer,
     val isCollection: Boolean = false,
-    private val fixedNichePage: Int? = null,
-    private val onFixedNichePageCount: (Int) -> Unit = {},
+    private val fixedPage: Int? = null,
+    private val onFixedPageCount: (Int) -> Unit = {},
 ) {
     companion object {
         private val nextFeedId = AtomicInteger(0)
@@ -174,17 +177,72 @@ class LazyRow123Host(
     /** Текущий порядок сортировки ленты. */
     val sortType: StateFlow<Order> = _sortType.asStateFlow()
 
-    internal val nichePageNavigation = if (typePager == TypePager.NICHES && fixedNichePage == null) {
-        NichePageNavigation(Settings.r_niche_infinite_scroll.field.value)
-    } else {
-        null
+    private val infiniteScrollSetting = if (fixedPage == null) {
+        when (typePager) {
+            TypePager.NICHES -> Settings.r_niche_infinite_scroll
+            TypePager.PROFILE -> Settings.r_profile_infinite_scroll
+            else -> null
+        }
+    } else null
+
+    internal val pageNavigation = infiniteScrollSetting?.let {
+        FeedPageNavigation(FeedPageQuery(startOrder, tags.value), it.field.value)
+    }
+
+    private data class NumberedPageKey(val query: FeedPageQuery, val index: Int)
+    private data class NumberedPage(val host: LazyRow123Host, val job: Job)
+
+    private val numberedPages = mutableMapOf<NumberedPageKey, NumberedPage>()
+
+    internal fun setInfiniteScroll(enabled: Boolean) {
+        infiniteScrollSetting?.setValue(enabled)
+    }
+
+    internal fun numberedPageHost(query: FeedPageQuery, index: Int): LazyRow123Host =
+        numberedPages.getOrPut(NumberedPageKey(query, index)) {
+            val job = SupervisorJob(scope.coroutineContext[Job])
+            val host = LazyRow123Host(
+                connectivityObserver = connectivityObserver,
+                scope = CoroutineScope(scope.coroutineContext + job),
+                typePager = typePager,
+                extraString = extraString,
+                startOrder = query.order,
+                startColumns = columns,
+                visibleProfileInfo = visibleProfileInfo,
+                tags = MutableStateFlow(query.tags),
+                block = block,
+                redApi = redApi,
+                savedRed = savedRed,
+                downloadRed = downloadRed,
+                search = search,
+                fixedPage = index + 1,
+                onFixedPageCount = { count ->
+                    if (job.isActive) pageNavigation?.updatePageCount(query, infiniteScroll = false, count)
+                },
+            )
+            NumberedPage(host, job)
+        }.host
+
+    internal fun onNumberedPageSettled(query: FeedPageQuery, index: Int) {
+        val navigation = pageNavigation ?: return
+        val state = navigation.state.value
+        if (state.infiniteScroll || state.query != query) return
+        navigation.selectPage(query, index)
+        // Текущая и соседние сетки остаются доступны полноэкранному плееру.
+        trimNumberedPages(query, index)
+    }
+
+    private fun trimNumberedPages(query: FeedPageQuery, index: Int) {
+        numberedPages.entries.removeAll { (key, page) ->
+            val outdated = key.query != query || key.index !in (index - 1)..(index + 1)
+            if (outdated) page.job.cancel()
+            outdated
+        }
     }
 
     /** Сменяет сортировку ленты. */
     fun changeSortType(newSort: Order) {
-        val changed = newSort != _sortType.value
         _sortType.value = newSort
-        if (changed) nichePageNavigation?.resetForSort()
         Timber.d("!!! *** Sort тип изменен в $newSort")
     }
 
@@ -200,12 +258,13 @@ class LazyRow123Host(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val cachedPager: Flow<PagingData<GifsInfo>> =
         combine(search.searchTextDone, sortType, tags) { text, sort, tags ->
-            SearchParams(pagerSearchQuery(typePager, text), sort, tags.joinToString(","))
+            SearchParams(pagerSearchQuery(typePager, text), sort, tags)
         }
             .onStart { if (typePager.appliesBlockList()) block.awaitInitialRefresh() }
             //.debounce(2000)                                       // ② ждём паузу ввода
             .distinctUntilChanged()                                 // ③ игнорируем дубли
             .flatMapLatest { params ->                              // ④ НОВЫЙ Pager при каждом изменении
+                val pageQuery = FeedPageQuery(params.sort, params.tags)
                 val shouldResetScroll = lastPagerParams?.let { it != params } == true
                 lastPagerParams = params
                 var resetScrollConsumed = false
@@ -219,14 +278,14 @@ class LazyRow123Host(
                     createPager(
                         typePager = typePager, sort = params.sort,
                         extraString = extraString, searchText = params.query,
-                        tags = tags.value.toList(),
+                        tags = params.tags.toList(),
                         block = block, redApi = redApi, savedRed = savedRed,
-                        nichePage = fixedNichePage,
-                        onNichePageCount = { count ->
-                            if (fixedNichePage != null) {
-                                onFixedNichePageCount(count)
-                            } else if (sortType.value == params.sort) {
-                                nichePageNavigation?.updatePageCount(infiniteScroll = true, count = count)
+                        fixedPage = fixedPage,
+                        onPageCount = { count ->
+                            if (fixedPage != null) {
+                                onFixedPageCount(count)
+                            } else {
+                                pageNavigation?.updatePageCount(pageQuery, infiniteScroll = true, count)
                             }
                         },
                     )
@@ -275,8 +334,14 @@ class LazyRow123Host(
 
     init {
         RFeedSessionStore.register(this)
-        nichePageNavigation?.let { navigation ->
-            scope.launch { Settings.r_niche_infinite_scroll.field.collect(navigation::setInfiniteScroll) }
+        if (infiniteScrollSetting != null && pageNavigation != null) {
+            scope.launch { infiniteScrollSetting.field.collect(pageNavigation::setInfiniteScroll) }
+            scope.launch {
+                combine(sortType, tags, ::FeedPageQuery).collect { query ->
+                    pageNavigation.updateQuery(query)
+                    trimNumberedPages(query, pageNavigation.state.value.pageIndex)
+                }
+            }
         }
     }
 
@@ -294,8 +359,8 @@ fun createPager(
     block: BlockRed,
     redApi: RedApi,
     savedRed: SavedRed,
-    nichePage: Int? = null,
-    onNichePageCount: (Int) -> Unit = {},
+    fixedPage: Int? = null,
+    onPageCount: (Int) -> Unit = {},
 ): PagingSource<Int, GifsInfo> {
     val pagingSourceFactory = when (typePager) {
 
@@ -304,14 +369,22 @@ fun createPager(
             nichesName = extraString,
             block = block,
             redApi = redApi,
-            fixedPage = nichePage,
-            onPageCount = onNichePageCount,
+            fixedPage = fixedPage,
+            onPageCount = onPageCount,
         )
         TypePager.TOP -> { ItemTopPagingSource( sort = sort, searchText = searchText, block = block, redApi = redApi ) }
         TypePager.R_SAVED_LIKES -> { ItemSavedLikesPagingSource(sort, savedRed.likes.list) }
         TypePager.SUBSCRIPTIONS -> { ItemSubscriptionsPagingSource(savedRed) }
 
-        TypePager.PROFILE -> { ItemProfilePagingSource( profileName = extraString, sort = sort, block = block, redApi = redApi, tags = tags ) }
+        TypePager.PROFILE -> ItemProfilePagingSource(
+            profileName = extraString,
+            sort = sort,
+            block = block,
+            redApi = redApi,
+            tags = tags,
+            fixedPage = fixedPage,
+            onPageCount = onPageCount,
+        )
         TypePager.EMPTY -> { ItemEmptyPagingSource() }
         TypePager.SAVED_COLLECTION -> { ItemCollectionPagingSource( collection = extraString, savedRed = savedRed ) }
 

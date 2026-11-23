@@ -198,6 +198,7 @@ object Settings {
 
     val r_current_count_niches by lazy { SettingElementInt(pref, "current_count_niches", 2) }
     val r_niche_infinite_scroll by lazy { SettingElementBoolean(pref, "r_niche_infinite_scroll", true) }
+    val r_profile_infinite_scroll by lazy { SettingElementBoolean(pref, "r_profile_infinite_scroll", true) }
 
 
     //-- L ---

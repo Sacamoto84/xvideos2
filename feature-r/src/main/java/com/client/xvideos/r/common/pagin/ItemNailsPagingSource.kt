@@ -58,7 +58,7 @@ class ItemNailsPagingSource(
 
             val gifs : List<GifsInfo> = response.gifs.sanitizeGifsInfoList()
 
-            val nextKey = if (fixedPage == null && page < availableNichePageCount(response.pages)) page + 1 else null
+            val nextKey = if (fixedPage == null && page < availableFeedPageCount(response.pages)) page + 1 else null
 
             Timber.d("!!! load() a.gif.size = ${gifs.size}")
 

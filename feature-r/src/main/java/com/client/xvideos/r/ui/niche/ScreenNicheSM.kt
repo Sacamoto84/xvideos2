@@ -12,7 +12,6 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.NichesResponse
-import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.TopCreatorsResponse
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.common.block.BlockRed
@@ -31,9 +30,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -51,7 +47,7 @@ import timber.log.Timber
 @Stable
 class ScreenNicheSM @AssistedInject constructor(
     @Assisted val nicheName: String,
-    private val connectivityObserver: ConnectivityObserver,
+    connectivityObserver: ConnectivityObserver,
     val block: BlockRed,
     val redApi: RedApi,
     val savedRed: SavedRed,
@@ -87,51 +83,6 @@ class ScreenNicheSM @AssistedInject constructor(
             downloadRed = downloadRed,
             search = search
         )
-
-    private data class PageKey(val order: Order, val index: Int)
-    private data class PageHost(val host: LazyRow123Host, val job: Job)
-
-    private val numberedPages = mutableMapOf<PageKey, PageHost>()
-
-    internal fun numberedPageHost(order: Order, index: Int): LazyRow123Host =
-        numberedPages.getOrPut(PageKey(order, index)) {
-            val job = SupervisorJob(screenModelScope.coroutineContext[Job])
-            val host = LazyRow123Host(
-                connectivityObserver = connectivityObserver,
-                scope = CoroutineScope(screenModelScope.coroutineContext + job),
-                typePager = TypePager.NICHES,
-                extraString = cleanNicheName,
-                startOrder = order,
-                startColumns = lazyHost.columns,
-                block = block,
-                redApi = redApi,
-                savedRed = savedRed,
-                downloadRed = downloadRed,
-                search = search,
-                fixedNichePage = index + 1,
-                onFixedNichePageCount = { count ->
-                    if (job.isActive && lazyHost.sortType.value == order) {
-                        lazyHost.nichePageNavigation?.updatePageCount(infiniteScroll = false, count = count)
-                    }
-                },
-            )
-            PageHost(host, job)
-        }.host
-
-    internal fun onNumberedPageSettled(order: Order, index: Int) {
-        if (order != lazyHost.sortType.value) return
-        lazyHost.nichePageNavigation?.selectPage(index)
-        // Хост нужен и полноэкранному плееру. Храним текущую и соседние страницы
-        // до следующего перелистывания, даже когда сетка ушла из композиции.
-        val iterator = numberedPages.iterator()
-        while (iterator.hasNext()) {
-            val (key, page) = iterator.next()
-            if (key.order != order || key.index !in (index - 1)..(index + 1)) {
-                page.job.cancel()
-                iterator.remove()
-            }
-        }
-    }
 
     init {
         Timber.d("ScreenNicheSM init")

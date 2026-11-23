@@ -5,7 +5,6 @@ import androidx.paging.PagingState
 import com.client.xvideos.r.common.UsersRed
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.model.MediaType
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.model.sanitizeGifsInfoList
@@ -26,12 +25,21 @@ import timber.log.Timber
  * @property block Менеджер блокировок.
  * @property redApi Сетевой клиент.
  * @property tags Список тегов для фильтрации (по умолчанию пуст).
+ * @property fixedPage Страница на сервере или null для бесконечной прокрутки.
  */
-class ItemProfilePagingSource (val profileName : String, val sort : Order, val block: BlockRed, val redApi: RedApi, val tags : List<String> = emptyList()): PagingSource<Int, GifsInfo>() {
+class ItemProfilePagingSource(
+    val profileName: String,
+    val sort: Order,
+    val block: BlockRed,
+    val redApi: RedApi,
+    val tags: List<String> = emptyList(),
+    private val fixedPage: Int? = null,
+    private val onPageCount: (Int) -> Unit = {},
+) : PagingSource<Int, GifsInfo>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int,  GifsInfo> {
 
-        val page = params.key ?: 1 // API нумерует страницы с 1
+        val page = fixedPage ?: params.key ?: 1
 
         val cleanProfileName = profileName.trim()
         if (cleanProfileName.isBlank()) {
@@ -45,17 +53,16 @@ class ItemProfilePagingSource (val profileName : String, val sort : Order, val b
         return try {
             Timber.d("!!! ItemProfilePagingSource::load() page = $page profileName:$cleanProfileName sortTop:$sort")
 
-            val response = if (tags.isEmpty())
-                redApi.searchCreator(userName = cleanProfileName, page = page,  count = 100, type = MediaType.GIF,  order = sort)
-            else
-                redApi.searchCreator(userName = cleanProfileName, page = page,  count = 100, type = MediaType.GIF,  order = sort , tags = tags)
-
-            val responseBody = response.getOrThrow()
+            val responseBody = redApi.searchCreator(
+                userName = cleanProfileName,
+                page = page,
+                order = sort,
+                tags = tags,
+            ).getOrThrow()
+            onPageCount(responseBody.pages)
             val gifs : List<GifsInfo> = responseBody.gifs.sanitizeGifsInfoList()
 
-            // G4: конец пагинации определяем по метаданным ответа (pages),
-            // без лишнего «пустого» запроса в конце ленты.
-            val nextKey = if (page < responseBody.pages) page + 1 else null
+            val nextKey = if (fixedPage == null && page < availableFeedPageCount(responseBody.pages)) page + 1 else null
 
             Timber.d("!!! load() a.gif.size = ${gifs.size}")
 
@@ -83,9 +90,8 @@ class ItemProfilePagingSource (val profileName : String, val sort : Order, val b
         }
     }
 
-    // G3: при refresh сохраняем позицию вокруг anchorPosition вместо рестарта с 1-й страницы.
     /**
-     * Обновление всегда начинается с первой страницы.
+     * Свайп обновляет выбранную страницу, а в бесконечном режиме возвращает первую.
      *
      * Источник отдаёт `prevKey = null`: страниц выше текущей для него нет.
      * Раньше отсюда возвращалась страница у якоря, и обновление не с верха

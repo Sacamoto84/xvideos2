@@ -1,4 +1,4 @@
-package com.client.xvideos.r.ui.niche.molecule
+package com.client.xvideos.r.ui.ui.lazyrow123
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.rememberScrollableState
@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
 
 /** Одна шапка над пейджером. Вертикальная сетка двигает её в пределах своего скролла. */
 @Composable
-internal fun NichePagedContent(
+internal fun PagedFeedContent(
     header: @Composable () -> Unit,
     pages: @Composable (gridModifier: Modifier) -> Unit,
 ) {
