@@ -20,6 +20,8 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.TopCreatorsResponse
 import com.client.xvideos.r.ui.niche.molecule.NicheHeaderContent
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
+import com.client.xvideos.r.ui.ui.MetadataLoadState
+import com.client.xvideos.r.ui.ui.MetadataLoadingContent
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.PageableFeed
 import timber.log.Timber
@@ -36,33 +38,41 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
             navigator.pop()
         }
         val columnSelect by Settings.r_current_count_niches.field.collectAsStateWithLifecycle()
+        LaunchedEffect(columnSelect) {
+            vm.lazyHost.columns = columnSelect
+        }
+
+        val metadata = vm.metadata
+        if (metadata !is MetadataLoadState.Ready) {
+            MetadataLoadingContent(
+                errorMessage = (metadata as? MetadataLoadState.Failed)?.message,
+                onRetry = vm::retryMetadata,
+            )
+            return
+        }
+
+        val niche = metadata.value
         val sort by vm.lazyHost.sortType.collectAsStateWithLifecycle()
         val savedRed = vm.savedRed
 
         val followedList = savedRed.niches.list
 
-        val isFollowed by remember(vm.niche.id, followedList) {
+        val isFollowed by remember(niche.id, followedList) {
             derivedStateOf {
-                followedList.any { it.id == vm.niche.id }
+                followedList.any { it.id == niche.id }
             }
-        }
-
-        LaunchedEffect(columnSelect) {
-            vm.lazyHost.columns = columnSelect
         }
 
         val onNicheClick: (String) -> Unit = remember(navigator) { { id -> navigator.push(R_ScreenNiche(id)) } }
         val onCreatorClick: (String) -> Unit = remember(navigator) { { username -> navigator.push(ScreenRedProfile(username)) } }
 
-        val onFollowClick: () -> Unit = remember(isFollowed, vm.niche) {
+        val onFollowClick: () -> Unit = remember(isFollowed, niche) {
             {
-                val nicheInfo = vm.niche
-                if (nicheInfo.id.isBlank()) return@remember
-                Timber.d("onFollowClick isFollowed: $isFollowed ${nicheInfo.id}")
+                Timber.d("onFollowClick isFollowed: $isFollowed ${niche.id}")
                 if (isFollowed)
-                    savedRed.niches.remove(nicheInfo)
+                    savedRed.niches.remove(niche)
                 else
-                    savedRed.niches.add(nicheInfo)
+                    savedRed.niches.add(niche)
             }
         }
 
@@ -71,7 +81,7 @@ class R_ScreenNiche(val nicheName: String = "pumped-pussy") : Screen {
         val onSortChange: (Order) -> Unit = remember(vm) { { vm.lazyHost.changeSortType(it) } }
 
         ScreenNicheContent(
-            niche = vm.niche,
+            niche = niche,
             relatedNiches = relatedNichesProvider,
             topCreators = topCreatorsProvider,
             lazyHost = vm.lazyHost,

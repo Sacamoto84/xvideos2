@@ -45,7 +45,7 @@ internal class ScreenAccountSavedMedia(
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 when (val content = state) {
                     AccountSavedContent.Loading -> CircularProgressIndicator()
-                    AccountSavedContent.SignedOut -> AccountSavedMessage("Войдите в RedGIFs в настройках R")
+                    AccountSavedContent.SignedOut -> AccountSignInPrompt()
                     is AccountSavedContent.Ready -> {
                         val host = content.value
                         LaunchedEffect(host, columns) { host.columns = normalizeRColumnCount(columns) }

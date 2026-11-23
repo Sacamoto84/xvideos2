@@ -79,7 +79,7 @@ internal object ScreenAccountCollections : Screen {
             )
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 when {
-                    state == AccountSavedContent.SignedOut -> AccountSavedMessage("Войдите в RedGIFs в настройках R")
+                    state == AccountSavedContent.SignedOut -> AccountSignInPrompt()
                     collections == null -> CircularProgressIndicator()
                     else -> key(ready) {
                         AccountCollectionsGrid(collections, account) { collection ->

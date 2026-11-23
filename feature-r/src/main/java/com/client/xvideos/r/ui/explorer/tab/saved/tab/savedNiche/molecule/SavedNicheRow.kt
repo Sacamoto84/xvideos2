@@ -10,6 +10,7 @@ import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NichePreview2Content
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.SavedItemActionsMenu
+import com.client.xvideos.r.ui.niche.atom.NICHE_LEAVE_LABEL
 
 @Composable
 fun SavedNicheRow(
@@ -36,7 +37,11 @@ fun SavedNicheRow(
         onClick = onRowClick,
         modifier = modifier,
         trailingFollowAction = { onLeave ->
-            SavedItemActionsMenu(actionIcon = Icons.AutoMirrored.Filled.ExitToApp, actionLabel = "Выйти", onAction = onLeave)
+            SavedItemActionsMenu(
+                actionIcon = Icons.AutoMirrored.Filled.ExitToApp,
+                actionLabel = NICHE_LEAVE_LABEL,
+                onAction = onLeave,
+            )
         }
     )
 }

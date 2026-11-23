@@ -40,10 +40,10 @@ class R_Saved_Niches(
                     withContext(Dispatchers.Main) {
                         list.putFirst(item) { it.id == item.id }
                     }
-                    SnackBar.info("Группа добавлена")
+                    SnackBar.info("Вы вступили в группу")
                 }
                 .onFailure { e ->
-                    SnackBar.error("Ошибка добавления группы ${e.message}")
+                    SnackBar.error("Не удалось вступить в группу. ${e.message}")
                 }
         }
     }
@@ -62,9 +62,9 @@ class R_Saved_Niches(
                             list.removeAt(existingIndex)
                         }
                     }
-                    SnackBar.info("Группа удалена")
+                    SnackBar.info("Вы вышли из группы")
                 }
-                .onFailure { e -> SnackBar.error("Ошибка удаления группы ${e.message}") }
+                .onFailure { e -> SnackBar.error("Не удалось выйти из группы. ${e.message}") }
         }
     }
 

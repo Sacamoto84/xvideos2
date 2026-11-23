@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.niche.atom
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,8 +31,6 @@ import com.client.xvideos.core.R
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.ui.theme.XvideosTheme
 
-private const val DEFAULT_PLACEHOLDER_ID = "id"
-
 /**
  * Блок информации о профиле ниши (обложка, название, счетчики и кнопка подписки).
  */
@@ -44,8 +43,6 @@ fun NicheProfileContent(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val currentNiche = niche()
-    val subscribersText = remember(currentNiche.subscribers) { currentNiche.subscribers.toPrettyCount() }
-    val gifsText = remember(currentNiche.gifs) { currentNiche.gifs.toPrettyCount() }
 
     Row(
         modifier = modifier
@@ -68,56 +65,36 @@ fun NicheProfileContent(
                 .weight(1f),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            if (currentNiche.id != DEFAULT_PLACEHOLDER_ID) {
-                Text(currentNiche.name, color = Color.White, fontFamily = Theme.R.fontFamilyDMsanss)
+            Text(currentNiche.displayName, color = Color.White, fontFamily = Theme.R.fontFamilyDMsanss)
+            if (currentNiche.subscribers >= 0) {
+                NicheCounter(currentNiche.subscribers, R.drawable.members, "Подписчики")
             }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(R.drawable.members),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = subscribersText,
-                    modifier = Modifier
-                        .padding(start = 4.dp, end = 4.dp)
-                        .wrapContentWidth(Alignment.CenterHorizontally),
-                    style = TextStyle(
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        fontSize = 16.sp,
-                    )
-                )
+            if (currentNiche.gifs >= 0) {
+                NicheCounter(currentNiche.gifs, R.drawable.posts, "Публикации")
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(R.drawable.posts),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = gifsText,
-                    modifier = Modifier
-                        .padding(start = 4.dp, end = 4.dp)
-                        .wrapContentWidth(Alignment.CenterHorizontally),
-                    style = TextStyle(
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        fontSize = 16.sp,
-                    )
-                )
-            }
-
-            if (currentNiche.id != DEFAULT_PLACEHOLDER_ID) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    ButtonFollowContent(isFollowed = isFollowed, onClick = onFollowClick)
-                    trailing?.invoke()
-                }
+            Row(verticalAlignment = Alignment.Bottom) {
+                ButtonFollowContent(isFollowed = isFollowed, onClick = onFollowClick)
+                trailing?.invoke()
             }
         }
+    }
+}
+
+@Composable
+private fun NicheCounter(count: Long, @DrawableRes icon: Int, label: String) {
+    val countText = remember(count) { count.toPrettyCount() }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = label,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = countText,
+            modifier = Modifier.padding(horizontal = 4.dp).wrapContentWidth(Alignment.CenterHorizontally),
+            style = TextStyle(color = Color.White, textAlign = TextAlign.Center, fontSize = 16.sp),
+        )
     }
 }
 

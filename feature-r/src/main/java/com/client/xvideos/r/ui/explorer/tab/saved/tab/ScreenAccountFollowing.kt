@@ -42,6 +42,7 @@ import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.network.toRUserMessage
 import com.client.xvideos.r.network.api.AccountMembership
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSignInPrompt
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.CreatorListItem
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.listLoadError
@@ -81,7 +82,7 @@ internal object ScreenAccountFollowing : Screen {
 
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 when {
-                    state == AccountFollowingState.SignedOut -> FollowingMessage("Войдите в RedGIFs в настройках R")
+                    state == AccountFollowingState.SignedOut -> AccountSignInPrompt()
                     creators == null -> CircularProgressIndicator()
                     else -> key(ready) { AccountFollowingList(creators, onOpenProfile) }
                 }

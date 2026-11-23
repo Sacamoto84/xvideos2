@@ -40,6 +40,7 @@ import com.client.xvideos.r.network.api.AccountNicheList
 import com.client.xvideos.r.network.api.AccountMembership
 import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NichePreview2Content
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSignInPrompt
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
 import com.client.xvideos.r.ui.ui.lazyrow123.molecule.RListLoadError
 
@@ -78,7 +79,7 @@ internal object ScreenAccountNiches : Screen {
                         Tab(
                             selected = list == state.list,
                             onClick = { vm.select(list) },
-                            text = { Text(if (list == AccountNicheList.FOLLOWING) "Подписки" else "Созданные") },
+                            text = { Text(if (list == AccountNicheList.FOLLOWING) "Участвую" else "Созданные") },
                         )
                     }
                 }
@@ -87,11 +88,11 @@ internal object ScreenAccountNiches : Screen {
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                 when (val content = state.content) {
                     AccountNichesContent.Loading -> CircularProgressIndicator()
-                    AccountNichesContent.SignedOut -> AccountNichesMessage("Войдите в RedGIFs в настройках R")
+                    AccountNichesContent.SignedOut -> AccountSignInPrompt()
                     is AccountNichesContent.Failed -> RListLoadError(message = content.message, onRetry = vm::refresh)
                     is AccountNichesContent.Loaded -> if (content.niches.isEmpty()) {
                         AccountNichesMessage(
-                            if (state.list == AccountNicheList.FOLLOWING) "У вас пока нет подписок на группы RedGIFs"
+                            if (state.list == AccountNicheList.FOLLOWING) "Вы пока не вступили ни в одну группу RedGIFs"
                             else "У вас пока нет созданных групп RedGIFs"
                         )
                     } else {

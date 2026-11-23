@@ -27,7 +27,7 @@ fun DeleteCreatorDialog(
             { onConfirm(pending) }
         }
         LavenderDialog(
-            title = "Удалить автора?",
+            title = "Отписаться от автора?",
             onDismiss = onDismiss,
             icon = {
                 pending.profileImageUrl?.let {
@@ -35,11 +35,11 @@ fun DeleteCreatorDialog(
                 }
             },
             body = buildAnnotatedString {
-                append("Удалить «")
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                append("» из сохранённых?")
+                append("Локальная подписка на «")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.displayName) }
+                append("» будет отменена.")
             },
-            confirmText = "Удалить",
+            confirmText = "Отписаться",
             onConfirm = handleConfirm,
             destructive = true,
         )

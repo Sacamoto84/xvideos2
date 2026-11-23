@@ -32,6 +32,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.toPrettyCountInt
 import com.client.xvideos.core.R
 import com.client.xvideos.r.model.Niche
+import com.client.xvideos.r.ui.niche.atom.NicheMembershipButtonLabel
 import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
@@ -46,7 +47,6 @@ fun NichePreview2Content(
 ) {
     val subscribersText = remember(niche.subscribers) { niche.subscribers.toNicheCountText() }
     val gifsText = remember(niche.gifs) { niche.gifs.toNicheCountText() }
-    val buttonText = if (isFollowed) "Выйти" else "Подписаться"
     val buttonTextColor = if (isFollowed) Color.White else Color.Black
     val buttonBgColor = if (isFollowed) Theme.tabLevel0 else Theme.R.colorYellow
     val buttonShape = RoundedCornerShape(10.dp)
@@ -149,7 +149,7 @@ fun NichePreview2Content(
                         modifier = buttonStyledModifier.clickable(onClick = onFollowClick),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = buttonText, color = buttonTextColor)
+                        NicheMembershipButtonLabel(isMember = isFollowed, color = buttonTextColor)
                     }
                 }
             }

@@ -20,6 +20,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.network.toRUserMessage
+import com.client.xvideos.r.ui.ui.MetadataLoadState
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import dagger.Binds
 import dagger.Module
@@ -39,7 +40,7 @@ import timber.log.Timber
  * [ScreenModel] экрана отдельной ниши (категории) в R.
  *
  * Инкапсулирует:
- * - Загрузку метаданных ниши [niche], похожих ниш [related] и топовых авторов [topCreator];
+ * - Загрузку метаданных ниши [metadata], похожих ниш [related] и топовых авторов [topCreator];
  * - Управление хостом пагинации и сетки контента [lazyHost] ([LazyRow123Host]).
  *
  * @param nicheName Название ниши (передается через Assisted Injection).
@@ -65,7 +66,8 @@ class ScreenNicheSM @AssistedInject constructor(
     val cleanNicheName = nicheName.trim()
 
     /** Метаданные текущей ниши. */
-    var niche: NichesInfo by mutableStateOf(NichesInfo())
+    internal var metadata: MetadataLoadState<NichesInfo> by mutableStateOf(MetadataLoadState.Loading)
+        private set
     /** Список похожих ниш. */
     var related by mutableStateOf(NichesResponse(emptyList(), 0, 0, 0))
     /** Топовые авторы данной ниши. */
@@ -85,28 +87,49 @@ class ScreenNicheSM @AssistedInject constructor(
         )
 
     init {
-        Timber.d("ScreenNicheSM init")
-
         lazyHost.columns = 2
+        loadMetadata()
+    }
 
-        if (cleanNicheName.isNotBlank()) {
-            // Три независимых запроса идут разом, и сбой одного не отменяет
-            // остальные. Раньше они шли подряд в одном блоке: первый упал —
-            // второй и третий не выполнялись, а о сбое не узнавал никто.
-            screenModelScope.launch {
-                val failures = listOf(
-                    async { runCatchingCancellable { niche = redApi.getNiche(cleanNicheName).getOrThrow().niche } },
-                    async { runCatchingCancellable { related = redApi.getNichesRelated(cleanNicheName).getOrThrow() } },
-                    async { runCatchingCancellable { topCreator = redApi.getNichesTopCreators(cleanNicheName).getOrThrow() } },
-                ).awaitAll().mapNotNull { it.exceptionOrNull() }
+    internal fun retryMetadata() {
+        if (metadata is MetadataLoadState.Failed) loadMetadata()
+    }
 
-                failures.forEach { Timber.w("ScreenNicheSM: часть данных ниши не загрузилась: ${it.javaClass.simpleName}") }
-                failures.firstOrNull()?.let {
-                    SnackBar.error("Ниша загрузилась не полностью: ${it.toRUserMessage()}")
+    private fun loadMetadata() {
+        if (cleanNicheName.isBlank()) {
+            metadata = MetadataLoadState.Failed("Не указана группа RedGIFs")
+            return
+        }
+
+        metadata = MetadataLoadState.Loading
+        screenModelScope.launch {
+            val metadataLoad = async {
+                runCatchingCancellable {
+                    val response = redApi.getNiche(cleanNicheName).getOrThrow()
+                    check(response.isValid) { "RedGIFs вернул пустые данные группы" }
+                    response.niche
                 }
             }
-        } else {
-            Timber.w("ScreenNicheSM init: пустое имя ниши")
+            val relatedLoad = async {
+                runCatchingCancellable { related = redApi.getNichesRelated(cleanNicheName).getOrThrow() }
+            }
+            val creatorsLoad = async {
+                runCatchingCancellable { topCreator = redApi.getNichesTopCreators(cleanNicheName).getOrThrow() }
+            }
+            val niche = metadataLoad.await().getOrElse { error ->
+                relatedLoad.cancel()
+                creatorsLoad.cancel()
+                metadata = MetadataLoadState.Failed(error.toRUserMessage())
+                return@launch
+            }
+
+            // Похожие группы и авторы могут догрузиться после открытия ленты.
+            metadata = MetadataLoadState.Ready(niche)
+            val failures = awaitAll(relatedLoad, creatorsLoad).mapNotNull { it.exceptionOrNull() }
+            failures.forEach { Timber.w("ScreenNicheSM: часть данных ниши не загрузилась: ${it.javaClass.simpleName}") }
+            failures.firstOrNull()?.let {
+                SnackBar.error("Ниша загрузилась не полностью: ${it.toRUserMessage()}")
+            }
         }
     }
 }

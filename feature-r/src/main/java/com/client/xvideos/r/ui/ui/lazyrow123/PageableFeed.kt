@@ -3,7 +3,6 @@ package com.client.xvideos.r.ui.ui.lazyrow123
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,7 +38,6 @@ internal fun PageableFeed(
     modifier: Modifier = Modifier,
     onClickOpenProfile: (String) -> Unit = {},
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
-    overlay: @Composable BoxScope.() -> Unit = {},
 ) {
     val navigation = checkNotNull(host.pageNavigation)
     val state by navigation.state.collectAsStateWithLifecycle()
@@ -101,7 +99,6 @@ internal fun PageableFeed(
                     }
                 }
             }
-            overlay()
         }
     }
 }

@@ -101,7 +101,7 @@ internal object AccountSavedActions {
 
 internal fun Throwable.accountActionMessage(): String =
     if (this is ResponseException && response.status == HttpStatusCode.Unauthorized) {
-        "Войдите в RedGIFs повторно в настройках R"
+        "Войдите в RedGIFs повторно"
     } else {
         toRUserMessage()
     }

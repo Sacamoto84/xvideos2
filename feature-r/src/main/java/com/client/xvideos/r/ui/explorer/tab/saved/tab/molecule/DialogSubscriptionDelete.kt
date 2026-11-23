@@ -37,9 +37,9 @@ fun DialogSubscriptionDelete(
         }
         val dialogBody = remember(pending.name) {
             buildAnnotatedString {
-                append("Удалить автора «")
+                append("Локальная подписка на «")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(pending.name) }
-                append("» из подписок?")
+                append("» будет отменена.")
             }
         }
         val iconContent: @Composable () -> Unit = remember(pending.urlProfile) {
@@ -67,11 +67,11 @@ fun DialogSubscriptionDelete(
         }
 
         LavenderDialog(
-            title = "Удалить подписку?",
+            title = "Отписаться от автора?",
             onDismiss = onDismiss,
             icon = iconContent,
             body = dialogBody,
-            confirmText = "Удалить",
+            confirmText = "Отписаться",
             onConfirm = handleConfirm,
             destructive = true,
         )

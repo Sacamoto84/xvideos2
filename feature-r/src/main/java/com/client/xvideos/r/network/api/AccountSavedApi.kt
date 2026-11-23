@@ -36,15 +36,21 @@ internal enum class AccountMembership {
             AUTHOR -> "/v1/me/follows/{id}"
             NICHE -> "/v2/niches/{id}/subscription"
         }
-        val payload = when {
-            this == LIKE -> buildJsonObject {
-                put("context", JsonNull)
-                if (enabled) put("source", "other")
-            }
-            this == AUTHOR && enabled -> buildJsonObject { put("source", "other") }
-            else -> null
+        return ApiClient.requestAsAccount(Route(method, path, "id" to id), account, requestBody(enabled)) {}
+    }
+
+    internal fun requestBody(enabled: Boolean) = when {
+        this == LIKE -> buildJsonObject {
+            put("context", JsonNull)
+            if (enabled) put("source", "other")
         }
-        return ApiClient.requestAsAccount(Route(method, path, "id" to id), account, payload) {}
+        this == AUTHOR && enabled -> buildJsonObject {
+            // Тот же контекст, который сайт отправляет при подписке из профиля автора.
+            put("source", "profile")
+            put("source_id", JsonNull)
+            put("position", 1)
+        }
+        else -> null
     }
 }
 

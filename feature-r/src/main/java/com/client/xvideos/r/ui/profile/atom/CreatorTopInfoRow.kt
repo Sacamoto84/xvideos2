@@ -49,7 +49,7 @@ fun CreatorTopInfoRow(
     onFollowClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val followButtonText = if (isFollow) "Unfollow" else "Follow"
+    val followButtonText = if (isFollow) "Отписаться" else "Подписаться"
     val followButtonTextColor = if (isFollow) Color.White else Color.Black
     val followButtonBgColor = if (isFollow) Theme.tabLevel1 else Theme.R.colorYellow
     val followButtonShape = RoundedCornerShape(8.dp)

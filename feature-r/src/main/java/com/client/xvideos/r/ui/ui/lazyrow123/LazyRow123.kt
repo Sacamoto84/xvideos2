@@ -27,6 +27,7 @@ import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.r.network.toRUserMessage
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.ui.ui.lazyrow123.molecule.RListLoadError
+import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import androidx.compose.material3.Text
@@ -92,7 +93,7 @@ fun LazyRow123(
     val haptic = LocalHapticFeedback.current
     val refreshState = listGifs.loadState.refresh
     // Локальный источник может завершить refresh до следующего кадра. Отдельный
-    // флаг жеста тогда остался бы включённым. Первую загрузку показывает центр сетки.
+    // флаг жеста тогда остался бы включённым.
     val isRefreshing = refreshState is LoadState.Loading && listGifs.itemCount > 0
     LaunchedEffect(refreshState) {
         // Старые ролики остаются на экране, строка ошибки — в конце списка:
@@ -283,6 +284,10 @@ fun LazyRow123Content(
         contentPadding = contentPadding,
         contentBeforeList = contentBeforeList,
         onRetry = { listGifs.retry() },
+        showLoadingWhenEmpty = when (host.typePager) {
+            TypePager.NICHES, TypePager.PROFILE -> false
+            else -> true
+        },
     ) { index ->
         // Та же защита границы, что и для itemKey (см. выше).
         if (index >= listGifs.itemCount) return@LazyRow123ContentStateless
@@ -336,8 +341,10 @@ private fun LazyRow123ContentStateless(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     contentBeforeList: (@Composable () -> Unit)? = null,
     onRetry: () -> Unit = {},
+    showLoadingWhenEmpty: Boolean = true,
     itemContent: @Composable (Int) -> Unit
 ) {
+    val showLoadingIndicators = showLoadingWhenEmpty || itemCount > 0
     val isAnyLoading = loadState.refresh is LoadState.Loading ||
             loadState.append is LoadState.Loading ||
             loadState.prepend is LoadState.Loading
@@ -363,7 +370,7 @@ private fun LazyRow123ContentStateless(
                 itemContent(index)
             }
 
-            if (loadState.append is LoadState.Loading) {
+            if (showLoadingIndicators && loadState.append is LoadState.Loading) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Box(
                         Modifier
@@ -384,13 +391,13 @@ private fun LazyRow123ContentStateless(
             }
         }
 
-        if (loadState.refresh is LoadState.Loading && itemCount == 0) {
+        if (showLoadingWhenEmpty && loadState.refresh is LoadState.Loading && itemCount == 0) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
 
-        if (isAnyLoading) {
+        if (showLoadingIndicators && isAnyLoading) {
             TopLoadingBar(modifier = Modifier.align(Alignment.TopCenter))
         }
     }

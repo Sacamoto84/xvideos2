@@ -43,6 +43,7 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedKey
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedList
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedOperation
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AddToAccountCollectionDialog
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.accountMenuItemColors
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.collectionItems
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.signedInRedgifsAccount
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -116,6 +117,7 @@ fun ExpandMenuVideo(
             DropdownMenuItem(
                 text = { Text("В коллекцию RedGIFs…") },
                 leadingIcon = { Icon(Icons.Default.CreateNewFolder, contentDescription = null) },
+                colors = accountMenuItemColors(),
                 onClick = {
                     expanded = false
                     choosingAccountCollection = true
@@ -128,6 +130,7 @@ fun ExpandMenuVideo(
                 DropdownMenuItem(
                     text = { Text("Убрать из коллекции") },
                     leadingIcon = { Icon(Icons.Default.RemoveCircleOutline, contentDescription = null) },
+                    colors = accountMenuItemColors(),
                     enabled = operation !in pending,
                     onClick = {
                         expanded = false
@@ -212,7 +215,7 @@ private fun ExpandMenuVideoPreview() {
                 onClick = {}
             )
             DropdownMenuItem(
-                text = { Text("Follow") },
+                text = { Text("Подписаться") },
                 onClick = {}
             )
             DropdownMenuItem(

@@ -132,6 +132,8 @@ object ApiClient {
             if ((result.exceptionOrNull() as? ClientRequestException)?.response?.status != HttpStatusCode.Unauthorized) {
                 return result
             }
+            // Публичную выдачу можно загрузить гостем. Отказ отдельного эндпоинта
+            // сам по себе не должен сбрасывать вход в аккаунт.
         }
         return getAsGuest(url, params, read)
     }
@@ -141,13 +143,7 @@ object ApiClient {
         params: List<Pair<String, Any>>,
         token: String,
         read: suspend (HttpResponse) -> T,
-    ): Result<T> {
-        val result = runCatchingCancellable { performGet(url, params, token, read) }
-        if ((result.exceptionOrNull() as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized) {
-            RAccountSession.reject(token)
-        }
-        return result
-    }
+    ): Result<T> = runCatchingCancellable { performGet(url, params, token, read) }
 
     private suspend fun <T> getAsGuest(
         url: String,
@@ -180,20 +176,23 @@ object ApiClient {
         val url = route.url
         require(url.toHttpUrlOrNull()?.isRedgifsApi() == true)
         val token = RAccountSession.activeToken(account)
-            ?: return Result.failure(IllegalStateException("Войдите в RedGIFs в настройках R"))
-        if (route.isGet) return getAsAccount(url, emptyList(), token, read)
-
-        return runCatchingCancellable {
-            val response = client.request(url) {
-                method = HttpMethod.parse(route.method)
-                headers.append(HttpHeaders.Authorization, "Bearer $token")
-                if (body != null) {
-                    contentType(ContentType.Application.Json)
-                    setBody(body)
+            ?: return Result.failure(IllegalStateException("Войдите в RedGIFs"))
+        val result = if (route.isGet) {
+            getAsAccount(url, emptyList(), token, read)
+        } else {
+            runCatchingCancellable {
+                val response = client.request(url) {
+                    method = HttpMethod.parse(route.method)
+                    headers.append(HttpHeaders.Authorization, "Bearer $token")
+                    if (body != null) {
+                        contentType(ContentType.Application.Json)
+                        setBody(body)
+                    }
                 }
+                read(response)
             }
-            read(response)
-        }.onFailure { error ->
+        }
+        return result.onFailure { error ->
             if ((error as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized) {
                 RAccountSession.reject(token)
             }

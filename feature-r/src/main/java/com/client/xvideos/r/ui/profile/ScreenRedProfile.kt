@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -35,6 +33,8 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.molecule.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.molecule.TagsBlock
+import com.client.xvideos.r.ui.ui.MetadataLoadState
+import com.client.xvideos.r.ui.ui.MetadataLoadingContent
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.PageableFeed
 import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
@@ -53,8 +53,16 @@ class ScreenRedProfile(val profileName: String) : Screen {
             factory.create(profileName)
         }
 
-        val isLoading by vm.isLoading.collectAsStateWithLifecycle()
+        val metadata = vm.metadata
+        if (metadata !is MetadataLoadState.Ready) {
+            MetadataLoadingContent(
+                errorMessage = (metadata as? MetadataLoadState.Failed)?.message,
+                onRetry = vm::retryMetadata,
+            )
+            return
+        }
 
+        val creator = metadata.value
         val tags by vm.tags.collectAsStateWithLifecycle()
 
         val tagsSelect by vm.tagsSelect.collectAsStateWithLifecycle()
@@ -80,23 +88,19 @@ class ScreenRedProfile(val profileName: String) : Screen {
         }
         // creators.list — SnapshotStateList: ключом remember не годится (сравнение по ссылке),
         // подписку на изменения списка даёт только derivedStateOf.
-        val isFollow by remember(vm.creator?.username) {
-            derivedStateOf { vm.savedRed.creators.list.any { it.username == vm.creator?.username } }
+        val isFollow by remember(vm, creator.username) {
+            derivedStateOf { vm.savedRed.creators.contains(creator.username) }
         }
-        val onFollowClick: () -> Unit = remember(isFollow, vm) {
+        val onFollowClick: () -> Unit = remember(isFollow, creator, vm) {
             {
-                val c = vm.creator
-                if (c != null) {
-                    if (isFollow) vm.savedRed.creators.remove(c.username) else vm.savedRed.creators.add(c)
-                }
+                if (isFollow) vm.savedRed.creators.remove(creator.username) else vm.savedRed.creators.add(creator)
             }
         }
 
         ScreenRedProfileContent(
-            creator = vm.creator,
+            creator = creator,
             tags = tagsList,
             tagsSelect = tagsSelectList,
-            isLoading = isLoading,
             likedHost = vm.likedHost,
             sortOrders = vm.orderList,
             onTagClick = onTagClick,
@@ -111,10 +115,9 @@ class ScreenRedProfile(val profileName: String) : Screen {
 
 @Composable
 fun ScreenRedProfileContent(
-    creator: UserInfo?,
+    creator: UserInfo,
     tags: ImmutableList<String>,
     tagsSelect: ImmutableList<String>,
-    isLoading: Boolean,
     likedHost: LazyRow123Host,
     sortOrders: List<Order>,
     onTagClick: (String) -> Unit,
@@ -125,8 +128,8 @@ fun ScreenRedProfileContent(
 ) {
     val currentSort by likedHost.sortType.collectAsStateWithLifecycle()
     val topInset = getTopInsetDp()
-    val originalAbout = remember(creator?.description) {
-        creator?.description?.trimMargin()?.takeIf { it.isNotBlank() }
+    val originalAbout = remember(creator.description) {
+        creator.description?.trimMargin()?.takeIf { it.isNotBlank() }
     }
     val about = originalAbout?.let { rememberEnglishToRussianTranslation(it, translationEngine) }
 
@@ -137,9 +140,7 @@ fun ScreenRedProfileContent(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.fillMaxWidth().height(topInset))
 
-                if (creator != null) {
-                    RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick, about = about)
-                }
+                RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick, about = about)
 
                 Row(
                     modifier = Modifier
@@ -162,19 +163,9 @@ fun ScreenRedProfileContent(
                     scrollMode()
                 }
 
-                if (creator != null && tags.isNotEmpty()) {
+                if (tags.isNotEmpty()) {
                     TagsBlock(tags = tags, tagsSelect = tagsSelect, modifier = Modifier.adaptiveContentWidth(), onClick = onTagClick)
                     Spacer(modifier = Modifier.height(4.dp))
-                }
-            }
-        },
-        overlay = {
-            if (isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(56.dp),
-                        strokeWidth = 8.dp
-                    )
                 }
             }
         },
@@ -206,11 +197,5 @@ fun ScreenRedProfilePreview() {
             tagsSelect = listOf("Verified"),
             onClick = {}
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(modifier = Modifier.size(32.dp))
-        }
     }
 }

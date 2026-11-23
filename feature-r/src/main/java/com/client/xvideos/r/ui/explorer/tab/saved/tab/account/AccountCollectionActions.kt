@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -55,11 +56,13 @@ internal fun AccountCollectionMenu(account: RAccountStatus.SignedIn, collection:
         DropdownMenuItem(
             text = { Text("Переименовать") },
             leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+            colors = accountMenuItemColors(),
             onClick = { dismiss(); rename = true },
         )
         DropdownMenuItem(
             text = { Text("Удалить коллекцию") },
             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+            colors = accountMenuItemColors(),
             onClick = { dismiss(); delete = true },
         )
     }
@@ -166,6 +169,7 @@ internal fun AddToAccountCollectionDialog(
     var creating by remember { mutableStateOf(false) }
     var selection by remember { mutableStateOf<AccountCollection?>(null) }
     val busy = selection != null
+    val menuColors = accountMenuItemColors(AlertDialogDefaults.containerColor)
 
     fun add(collection: AccountCollection) {
         selection = collection
@@ -198,6 +202,7 @@ internal fun AddToAccountCollectionDialog(
                     DropdownMenuItem(
                         text = { Text("Новая коллекция") },
                         leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                        colors = menuColors,
                         enabled = !busy,
                         onClick = { creating = true },
                     )
@@ -208,6 +213,7 @@ internal fun AddToAccountCollectionDialog(
                         DropdownMenuItem(
                             text = { Text(collection.folderName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
                             leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
+                            colors = menuColors,
                             enabled = !busy && operation !in pending,
                             onClick = { add(collection) },
                         )

@@ -61,7 +61,7 @@ fun DropdownMenuItem_FollowContent(
 ) {
     ExpandMenuActionItem(
         icon = if (isFollowed) Icons.Default.Person else Icons.Default.PermIdentity,
-        text = if (isFollowed) "Unfollow" else "Follow",
+        text = if (isFollowed) "Отписаться" else "Подписаться",
         onClick = onClick
     )
 }

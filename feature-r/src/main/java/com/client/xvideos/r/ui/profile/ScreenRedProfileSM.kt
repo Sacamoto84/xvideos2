@@ -9,7 +9,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.hilt.ScreenModelFactory
 import cafe.adriel.voyager.hilt.ScreenModelFactoryKey
 import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
-import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.common.block.BlockRed
@@ -18,6 +18,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.common.search.R_SearchExplorer
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.network.toRUserMessage
+import com.client.xvideos.r.ui.ui.MetadataLoadState
 import dagger.Binds
 import dagger.Module
 import dagger.assisted.Assisted
@@ -26,7 +27,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,9 +40,9 @@ import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
  * [ScreenModel] экрана профиля автора (создателя контента) в R.
  *
  * Управляет:
- * - Загрузкой информации о профиле автора [creator];
+ * - Загрузкой информации о профиле автора [metadata];
  * - Мультивыбором тегов автора для фильтрации его ленты ([tags], [tagsSelect]);
- * - Порядком сортировки [order];
+ * - Параметрами сортировки [orderList];
  * - Состоянием хоста сетки контента [likedHost].
  *
  * @param profileName Никнейм автора.
@@ -68,7 +68,8 @@ class ScreenRedProfileSM @AssistedInject constructor(
     val cleanProfileName = profileName.trim()
 
     /** Данные профиля автора. */
-    var creator: UserInfo? by mutableStateOf(null)
+    internal var metadata: MetadataLoadState<UserInfo> by mutableStateOf(MetadataLoadState.Loading)
+        private set
 
     private val _tags = MutableStateFlow<Set<String>>(emptySet())
     /** Доступные теги из публикаций автора. */
@@ -98,10 +99,6 @@ class ScreenRedProfileSM @AssistedInject constructor(
     /** Доступные варианты сортировки на экране профиля. */
     val orderList = listOf(Order.LATEST, Order.OLDEST, Order.TOP, Order.TOP_WEEK, Order.TOP28, Order.TRENDING)
 
-    private val _isLoading = MutableStateFlow(false)
-    /** Флаг выполнения сетевой загрузки данных профиля. */
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
     /** Хост сетки видеороликов автора. */
     val likedHost = LazyRow123Host(
         connectivityObserver = connectivityObserver,
@@ -118,36 +115,34 @@ class ScreenRedProfileSM @AssistedInject constructor(
     )
 
     init {
-        screenModelScope.launch {
-            clear()
-
-            if (cleanProfileName.isNotBlank()) {
-                _isLoading.value = true
-                try {
-                    // getOrThrow, а не getOrNull: отказ сети приходит отказом в
-                    // Result, и раньше он молча становился пустой шапкой автора.
-                    val loadedCreator = redApi.readCreator(cleanProfileName).getOrThrow()
-                    creator = loadedCreator
-                    savedRed.creators.updateIfSaved(loadedCreator)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    creator = null
-                    Timber.e("ScreenRedProfileSM: профиль автора не загрузился: ${e.javaClass.simpleName}")
-                    SnackBar.error("Профиль автора не загрузился: ${e.toRUserMessage()}")
-                } finally {
-                    _isLoading.value = false
-                }
-            } else {
-                Timber.w("ScreenRedProfileSM init: пустое имя профиля")
-            }
-        }
+        loadMetadata()
     }
 
-    /** Сбрасывает состояние экрана. */
-    fun clear() {
-        _isLoading.value = false
-        _tags.update { emptySet() }
+    internal fun retryMetadata() {
+        if (metadata is MetadataLoadState.Failed) loadMetadata()
+    }
+
+    private fun loadMetadata() {
+        if (cleanProfileName.isBlank()) {
+            metadata = MetadataLoadState.Failed("Не указан автор RedGIFs")
+            return
+        }
+
+        metadata = MetadataLoadState.Loading
+        screenModelScope.launch {
+            val creator = runCatchingCancellable {
+                redApi.readCreator(cleanProfileName).getOrThrow().also {
+                    check(it.isValid) { "RedGIFs вернул пустой профиль автора" }
+                }
+            }.getOrElse { error ->
+                Timber.w("ScreenRedProfileSM: профиль автора не загрузился: ${error.javaClass.simpleName}")
+                metadata = MetadataLoadState.Failed(error.toRUserMessage())
+                return@launch
+            }
+
+            metadata = MetadataLoadState.Ready(creator)
+            savedRed.creators.updateIfSaved(creator)
+        }
     }
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.model.NichesInfo
+import com.client.xvideos.r.ui.niche.atom.NICHE_LEAVE_LABEL
 
 @Composable
 fun DialogNicheDelete(
@@ -29,9 +30,9 @@ fun DialogNicheDelete(
         val displayName = pending.displayName
         val dialogBody = remember(displayName) {
             buildAnnotatedString {
-                append("Удалить «")
+                append("Вы выйдете из группы «")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(displayName) }
-                append("» из сохранённых?")
+                append("» на этом устройстве.")
             }
         }
         val iconContent: @Composable () -> Unit = remember(pending.thumbnail) {
@@ -45,11 +46,11 @@ fun DialogNicheDelete(
             }
         }
         LavenderDialog(
-            title = "Удалить группу?",
+            title = "$NICHE_LEAVE_LABEL?",
             onDismiss = onDismiss,
             icon = iconContent,
             body = dialogBody,
-            confirmText = "Удалить",
+            confirmText = NICHE_LEAVE_LABEL,
             onConfirm = handleConfirm,
             destructive = true,
         )

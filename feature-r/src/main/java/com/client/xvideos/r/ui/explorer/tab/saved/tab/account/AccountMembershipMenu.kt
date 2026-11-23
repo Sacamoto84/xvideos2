@@ -23,6 +23,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.r.auth.RAccountStatus
 import com.client.xvideos.r.network.api.AccountMembership
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.SavedItemActionsMenu
+import com.client.xvideos.r.ui.niche.atom.NICHE_JOIN_LABEL
+import com.client.xvideos.r.ui.niche.atom.NICHE_LEAVE_LABEL
 
 @Composable
 internal fun AccountMembershipMenu(
@@ -68,10 +70,11 @@ internal fun AccountMembershipMenuItem(
         val action = when (kind) {
             AccountMembership.LIKE -> "Лайк на RedGIFs"
             AccountMembership.AUTHOR -> "Подписка на RedGIFs"
-            AccountMembership.NICHE -> "Группа на RedGIFs"
+            AccountMembership.NICHE -> "Участие в группе RedGIFs"
         }
         DropdownMenuItem(
             text = { Text(if (result == null) "$action · Загрузка…" else "$action · Повторить") },
+            colors = accountMenuItemColors(),
             enabled = result != null,
             onClick = { retry++ },
         )
@@ -84,12 +87,14 @@ internal fun AccountMembershipMenuItem(
         AccountMembership.AUTHOR -> if (member) Icons.Filled.PersonRemove to
             (if (knownMember == true) "Отписаться" else "Отписаться на RedGIFs")
         else Icons.Filled.PersonAdd to "Подписаться на RedGIFs"
-        AccountMembership.NICHE -> if (member) Icons.AutoMirrored.Filled.ExitToApp to "Выйти из группы"
-        else Icons.Filled.GroupAdd to "Вступить на RedGIFs"
+        AccountMembership.NICHE -> if (member) Icons.AutoMirrored.Filled.ExitToApp to
+            (if (knownMember == true) NICHE_LEAVE_LABEL else "$NICHE_LEAVE_LABEL RedGIFs")
+        else Icons.Filled.GroupAdd to "$NICHE_JOIN_LABEL RedGIFs"
     }
     DropdownMenuItem(
         text = { Text(if (knownMember == true && kind == AccountMembership.LIKE) "Убрать лайк" else label) },
         leadingIcon = { Icon(icon, contentDescription = null) },
+        colors = accountMenuItemColors(),
         enabled = operation !in pending,
         onClick = {
             dismiss()

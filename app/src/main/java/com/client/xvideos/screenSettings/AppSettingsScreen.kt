@@ -40,7 +40,7 @@ import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.StorageStat
 import com.client.xvideos.screenSettings.components.loadStorageStats
 import com.client.xvideos.screenSettings.molecule.AppSettingsScreenBody
-import com.client.xvideos.screenSettings.molecule.SettingsRLoginScreen
+import com.client.xvideos.r.auth.RedgifsLoginContent
 import com.client.xvideos.screenSettings.molecule.SettingsXLoginForm
 import com.client.xvideos.screenSettings.model.SettingsDetailParams
 import com.client.xvideos.screenSettings.model.SettingsLoginForms
@@ -293,7 +293,7 @@ internal fun AppSettingsScreenContent(
             modifier = modifier
         )
     } else if (rLoginVisible) {
-        SettingsRLoginScreen(onClose = onCloseRLogin, modifier = modifier)
+        RedgifsLoginContent(onClose = onCloseRLogin, modifier = modifier)
     } else {
         Scaffold(
             modifier = modifier,
