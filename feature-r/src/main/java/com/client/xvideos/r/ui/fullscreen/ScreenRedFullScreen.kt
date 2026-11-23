@@ -84,7 +84,9 @@ fun ScreenRedFullScreenContent(
             redApi = vm.redApi,
             search = vm.search,
             navigator = navigator,
-            onBack = onBack
+            onBack = onBack,
+            accountLikes = host?.isAccountLikes == true,
+            accountCollectionId = host?.accountCollectionId,
         )
     }
 

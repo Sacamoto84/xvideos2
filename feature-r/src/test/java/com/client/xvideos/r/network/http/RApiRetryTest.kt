@@ -6,6 +6,7 @@ import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpResponseData
 import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
@@ -73,6 +74,15 @@ class RApiRetryTest {
     @Test
     fun `отказ шлюза повторяется ограниченное число раз`() {
         assertEquals(1 + R_MAX_RETRIES, attemptsOf { respond("", HttpStatusCode.BadGateway) })
+    }
+
+    @Test
+    fun `создание коллекции не отправляется повторно при отказе шлюза`() = runBlocking {
+        client { respond("", HttpStatusCode.BadGateway) }.use { client ->
+            val result = runCatching { client.post("https://api.redgifs.com/v2/me/collections") }
+            assertTrue(result.isFailure)
+            assertEquals(1, requests)
+        }
     }
 
     @Test

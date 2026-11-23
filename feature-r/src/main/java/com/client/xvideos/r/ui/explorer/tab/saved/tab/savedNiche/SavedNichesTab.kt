@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -87,7 +89,8 @@ object SavedNichesTab : Screen {
             topInset = getTopInsetDp(),
             scrollPercentProvider = scrollPercentProvider,
             onNicheClick = onNicheClick,
-            onDeleteClick = onDeleteClick
+            onDeleteClick = onDeleteClick,
+            onOpenAccountNiches = { navigator.push(ScreenAccountNiches) },
         )
     }
 }
@@ -101,6 +104,7 @@ fun SavedNichesTabContent(
     onNicheClick: (NichesInfo) -> Unit,
     onDeleteClick: (NichesInfo) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenAccountNiches: () -> Unit = {},
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -124,7 +128,10 @@ fun SavedNichesTabContent(
                     SavedTabHeader(
                         title = "Группы",
                         topCutout = topInset,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 4.dp),
+                        trailing = {
+                            TextButton(onClick = onOpenAccountNiches) { Text("Группы RedGIFs") }
+                        },
                     )
                 }
                 items(niches, key = { it.id }, contentType = { "saved_niche" }) { item ->

@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -37,7 +38,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
@@ -45,6 +49,10 @@ import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
+import com.client.xvideos.common.ui.atom.SavedTabHeader
+
+val COLLECTION_GRID_ROW_SPACING = 8.dp
+val COLLECTION_GRID_VERTICAL_PADDING = 12.dp
 
 /**
  * Универсальная сетка коллекций c заголовком и кнопкой «+».
@@ -107,11 +115,16 @@ fun CollectionsGrid(
                 val viewportWidth = maxWidth
                 LazyVerticalGrid(
                     horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
-                    verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+                    verticalArrangement = Arrangement.spacedBy(COLLECTION_GRID_ROW_SPACING),
                     modifier = Modifier.fillMaxSize(),
                     state = gridState,
                     columns = GridCells.Fixed(adaptiveGridColumns()),
-                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = if (header == null) 8.dp else 0.dp)
+                    contentPadding = PaddingValues(
+                        start = 8.dp,
+                        end = 8.dp,
+                        top = if (header == null) COLLECTION_GRID_VERTICAL_PADDING else 0.dp,
+                        bottom = COLLECTION_GRID_VERTICAL_PADDING,
+                    ),
                 ) {
                     // Шапка и «+» без строковых ключей, чтобы избежать совпадения с именем коллекции.
                     if (header != null) {
@@ -156,15 +169,18 @@ fun CollectionsGrid(
 }
 
 @Composable
-private fun CollectionGridCard(
+fun CollectionGridCard(
     collection: CollectionGridItem,
     style: CollectionsGridStyle,
     onCollectionClick: (String) -> Unit,
-    onCollectionLongClick: (String) -> Unit,
+    onCollectionLongClick: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val handleClick = remember(collection.name, onCollectionClick) { { onCollectionClick(collection.name) } }
-    val handleLongClick = remember(collection.name, onCollectionLongClick) { { onCollectionLongClick(collection.name) } }
+    val handleLongClick = remember(collection.name, onCollectionLongClick) {
+        onCollectionLongClick?.let { action -> { action(collection.name) } }
+    }
 
     Row(
         modifier = modifier
@@ -191,7 +207,7 @@ private fun CollectionGridCard(
             )
         }
         Spacer(Modifier.width(8.dp))
-        Column {
+        Column(if (trailing == null) Modifier else Modifier.weight(1f)) {
             Text(
                 collection.name,
                 color = style.itemNameColor,
@@ -206,5 +222,35 @@ private fun CollectionGridCard(
                 )
             }
         }
+        trailing?.invoke()
     }
+}
+
+@Preview(name = "Коллекции", widthDp = 393, heightDp = 360, showBackground = true)
+@Composable
+private fun CollectionsGridPreview() {
+    CollectionsGrid(
+        selectedCollection = null,
+        collections = listOf(
+            CollectionGridItem("Избранное", previewUrl = null, itemsCount = 24),
+            CollectionGridItem("Сборник", previewUrl = null, itemsCount = 8),
+            CollectionGridItem("Архив", previewUrl = null, itemsCount = null),
+            CollectionGridItem("Посмотреть позже", previewUrl = null, itemsCount = 3),
+        ),
+        gridState = rememberLazyGridState(),
+        style = CollectionsGridStyle(
+            backgroundColor = Theme.background,
+            titleColor = Color.White,
+            titleFontFamily = FontFamily.Default,
+            itemNameColor = Color.White,
+            itemSecondaryColor = Color.LightGray,
+            itemFontFamily = FontFamily.Default,
+            addButtonBackground = Theme.R.colorYellow,
+        ),
+        onCollectionClick = {},
+        onCollectionLongClick = {},
+        onCreateNewCollectionClick = {},
+        header = { SavedTabHeader(title = "Коллекции") },
+        navigationContent = {},
+    )
 }

@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -33,12 +35,23 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.model.GifsInfo
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.ScreenAccountCollections
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.collection.ScreenCollectionName
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogActions
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogData
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.R_CollectionDialogsHost
 import com.client.xvideos.ui.theme.XvideosTheme
 import timber.log.Timber
+
+internal val redCollectionsGridStyle = CollectionsGridStyle(
+    backgroundColor = Color.Transparent,
+    titleColor = Theme.R.colorYellow,
+    titleFontFamily = Theme.R.fontFamilyPopinsRegular,
+    itemNameColor = Color.White,
+    itemSecondaryColor = Color.LightGray,
+    itemFontFamily = Theme.R.fontFamilyDMsanss,
+    addButtonBackground = Theme.R.colorYellow,
+)
 
 object R_Screen_CollectionTab : Screen {
 
@@ -155,7 +168,8 @@ object R_Screen_CollectionTab : Screen {
             onCollectionClick = onCollectionClick,
             onCollectionLongClick = onCollectionLongClick,
             onCreateNewCollectionClick = onCreateNewCollectionClick,
-            navigationContent = navigationContent
+            navigationContent = navigationContent,
+            onOpenAccountCollections = { navigator.push(ScreenAccountCollections) },
         )
     }
 }
@@ -171,6 +185,7 @@ fun R_SavedCollectionTabContent(
     onCreateNewCollectionClick: () -> Unit,
     navigationContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenAccountCollections: () -> Unit = {},
 ) {
     // Сюда приходит SnapshotStateList хранилища: ссылка у него одна на все
     // изменения, и как ключ remember он их не видит — сетка не замечала ни
@@ -187,27 +202,20 @@ fun R_SavedCollectionTabContent(
             }
         }
     }
-    val gridStyle = remember {
-        CollectionsGridStyle(
-            backgroundColor = Color.Transparent,
-            titleColor = Theme.R.colorYellow,
-            titleFontFamily = Theme.R.fontFamilyPopinsRegular,
-            itemNameColor = Color.White,
-            itemSecondaryColor = Color.LightGray,
-            itemFontFamily = Theme.R.fontFamilyDMsanss,
-            addButtonBackground = Theme.R.colorYellow
-        )
-    }
     // Шапка — первым элементом сетки: на всю ширину и уезжает с ней, как в X.
-    val header: @Composable () -> Unit = remember(topInset) {
-        { SavedTabHeader(title = "Коллекции", topCutout = topInset) }
+    val header: @Composable () -> Unit = remember(topInset, onOpenAccountCollections) {
+        {
+            SavedTabHeader(title = "Коллекции", topCutout = topInset) {
+                TextButton(onClick = onOpenAccountCollections) { Text("Коллекции RedGIFs") }
+            }
+        }
     }
     Box(modifier = modifier) {
         CollectionsGrid(
             selectedCollection = selectedCollection,
             collections = gridItems,
             gridState = gridState,
-            style = gridStyle,
+            style = redCollectionsGridStyle,
             onCollectionClick = onCollectionClick,
             onCollectionLongClick = onCollectionLongClick,
             onCreateNewCollectionClick = onCreateNewCollectionClick,

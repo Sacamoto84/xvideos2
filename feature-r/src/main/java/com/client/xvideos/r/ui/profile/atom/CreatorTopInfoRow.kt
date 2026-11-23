@@ -35,6 +35,8 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.feature.r.R
 import com.client.xvideos.r.model.UserInfo
+import com.client.xvideos.r.network.api.AccountMembership
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
@@ -119,19 +121,23 @@ fun CreatorTopInfoRow(
                 }
             }
 
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .then(followButtonStyledModifier)
-                    .clickable(onClick = onFollowClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    followButtonText,
-                    color = followButtonTextColor,
-                    fontFamily = Theme.R.fontFamilyDMsanss,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+            Box(Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = followButtonStyledModifier.clickable(onClick = onFollowClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        followButtonText,
+                        color = followButtonTextColor,
+                        fontFamily = Theme.R.fontFamilyDMsanss,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                AccountMembershipMenu(
+                    AccountMembership.AUTHOR,
+                    item.username,
+                    modifier = Modifier.align(Alignment.CenterEnd),
                 )
             }
         }

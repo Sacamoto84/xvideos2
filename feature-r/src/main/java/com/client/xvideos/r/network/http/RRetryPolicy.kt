@@ -5,6 +5,7 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.net.ConnectException
@@ -33,8 +34,10 @@ private val R_RETRY_STATUS_CODES = setOf(429, 502, 503, 504)
 internal fun HttpClientConfig<*>.installRRetry(retryDelayMs: Long? = null) {
     install(HttpRequestRetry) {
         maxRetries = R_MAX_RETRIES
-        retryIf { _, response -> response.status.value in R_RETRY_STATUS_CODES }
-        retryOnExceptionIf { _, cause -> cause.isWorthRetrying() }
+        retryIf { request, response ->
+            request.method == HttpMethod.Get && response.status.value in R_RETRY_STATUS_CODES
+        }
+        retryOnExceptionIf { request, cause -> request.method == HttpMethod.Get && cause.isWorthRetrying() }
         if (retryDelayMs == null) exponentialDelay() else constantDelay(millis = retryDelayMs, randomizationMs = 0)
         modifyRequest { if (it.url.pathSegments.contains("auth")) it.headers.remove(HttpHeaders.Authorization) }
     }

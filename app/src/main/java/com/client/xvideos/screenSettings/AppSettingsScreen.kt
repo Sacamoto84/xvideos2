@@ -40,6 +40,7 @@ import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.StorageStat
 import com.client.xvideos.screenSettings.components.loadStorageStats
 import com.client.xvideos.screenSettings.molecule.AppSettingsScreenBody
+import com.client.xvideos.screenSettings.molecule.SettingsRLoginScreen
 import com.client.xvideos.screenSettings.molecule.SettingsXLoginForm
 import com.client.xvideos.screenSettings.model.SettingsDetailParams
 import com.client.xvideos.screenSettings.model.SettingsLoginForms
@@ -176,6 +177,7 @@ internal fun AppSettingsScreenContent(
     var lLoginVisible by rememberSaveable { mutableStateOf(false) }
     // Форма входа в X — так же, по кнопке «Войти» на странице X.
     var xLoginVisible by rememberSaveable { mutableStateOf(false) }
+    var rLoginVisible by rememberSaveable { mutableStateOf(false) }
     val lLoginForm = loginForms.l
     val xLoginForm = loginForms.x
     val scrollState = rememberScrollState()
@@ -216,11 +218,14 @@ internal fun AppSettingsScreenContent(
             xLoginForm.clear()
         }
     }
+    val onOpenRLogin: () -> Unit = remember { { rLoginVisible = true } }
+    val onCloseRLogin: () -> Unit = remember { { rLoginVisible = false } }
     BackHandler(enabled = currentPage != SettingsPage.Main, onBack = onMainBack)
     BackHandler(enabled = currentPage == SettingsPage.Main, onBack = onBack)
     // Объявлены последними: пока форма открыта, «назад» закрывает её, а не страницу.
     BackHandler(enabled = lLoginVisible, onBack = onCloseLLogin)
     BackHandler(enabled = xLoginVisible, onBack = onCloseXLogin)
+    BackHandler(enabled = rLoginVisible, onBack = onCloseRLogin)
 
     LaunchedEffect(currentPage) {
         if (currentPage == SettingsPage.Storage) {
@@ -247,7 +252,8 @@ internal fun AppSettingsScreenContent(
         context,
         onRefreshFileStats,
         onOpenLLogin,
-        onOpenXLogin
+        onOpenXLogin,
+        onOpenRLogin,
     ) {
         SettingsDetailParams(
             currentPage = currentPage,
@@ -261,7 +267,8 @@ internal fun AppSettingsScreenContent(
             context = context,
             onBackupDataChanged = onRefreshFileStats,
             onOpenLLogin = onOpenLLogin,
-            onOpenXLogin = onOpenXLogin
+            onOpenXLogin = onOpenXLogin,
+            onOpenRLogin = onOpenRLogin,
         )
     }
 
@@ -285,6 +292,8 @@ internal fun AppSettingsScreenContent(
             onClose = onCloseXLogin,
             modifier = modifier
         )
+    } else if (rLoginVisible) {
+        SettingsRLoginScreen(onClose = onCloseRLogin, modifier = modifier)
     } else {
         Scaffold(
             modifier = modifier,

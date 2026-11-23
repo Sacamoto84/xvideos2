@@ -41,11 +41,11 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.SavedItemActionsMenu
 fun CreatorListItem(
     item: UserInfo,
     onClick: (String) -> Unit,
-    onDelete: (UserInfo) -> Unit,
+    onDelete: ((UserInfo) -> Unit)? = null,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val handleItemClick = remember(item.username, onClick) { { onClick(item.username) } }
-    val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
     val avatarModifier = Modifier
         .padding(start = 3.dp)
         .size(72.dp)
@@ -134,7 +134,11 @@ fun CreatorListItem(
             }
         }
 
-        SavedItemActionsMenu(actionIcon = Icons.Filled.Delete, actionLabel = "Удалить", onAction = handleDeleteClick)
+        if (onDelete != null) {
+            val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
+            SavedItemActionsMenu(actionIcon = Icons.Filled.Delete, actionLabel = "Удалить", onAction = handleDeleteClick)
+        }
+        trailing?.invoke()
     }
 }
 

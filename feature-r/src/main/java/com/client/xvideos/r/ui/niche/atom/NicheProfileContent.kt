@@ -41,6 +41,7 @@ fun NicheProfileContent(
     isFollowed: Boolean,
     onFollowClick: () -> Unit,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val currentNiche = niche()
     val subscribersText = remember(currentNiche.subscribers) { currentNiche.subscribers.toPrettyCount() }
@@ -111,7 +112,10 @@ fun NicheProfileContent(
             }
 
             if (currentNiche.id != DEFAULT_PLACEHOLDER_ID) {
-                ButtonFollowContent(isFollowed = isFollowed, onClick = onFollowClick)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ButtonFollowContent(isFollowed = isFollowed, onClick = onFollowClick)
+                    trailing?.invoke()
+                }
             }
         }
     }

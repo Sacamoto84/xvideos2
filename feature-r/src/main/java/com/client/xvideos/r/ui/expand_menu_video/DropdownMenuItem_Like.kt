@@ -50,7 +50,7 @@ private fun DropdownMenuItem_LikeContent(
 ) {
     ExpandMenuActionItem(
         icon = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-        text = if (isLiked) "Unlike" else "Like",
+        text = if (isLiked) "Убрать локальный лайк" else "Лайк на устройстве",
         onClick = onClick
     )
 }

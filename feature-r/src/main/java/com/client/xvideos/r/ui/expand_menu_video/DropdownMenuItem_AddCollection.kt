@@ -25,7 +25,7 @@ fun DropdownMenuItem_AddCollection(item: GifsInfo? = null, savedRed: ()->SavedRe
 private fun DropdownMenuItem_AddCollectionContent(
     onClick: () -> Unit
 ) {
-    ExpandMenuActionItem(Icons.Default.AddCircleOutline, "Add to Collection", onClick = onClick)
+    ExpandMenuActionItem(Icons.Default.AddCircleOutline, "В локальную коллекцию", onClick = onClick)
 }
 
 @Preview(showBackground = true)

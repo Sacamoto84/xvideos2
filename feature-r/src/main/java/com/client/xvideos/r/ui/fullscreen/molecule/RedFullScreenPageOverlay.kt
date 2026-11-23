@@ -35,6 +35,8 @@ fun RedFullScreenPageOverlay(
     search: R_SearchExplorer,
     navigator: Navigator,
     onBack: () -> Unit,
+    accountLikes: Boolean = false,
+    accountCollectionId: String? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     val downloadList by downloadRed.downloadList.collectAsStateWithLifecycle()
@@ -88,7 +90,9 @@ fun RedFullScreenPageOverlay(
                 block = { block },
                 redApi = { redApi },
                 savedRed = { savedRed },
-                downloadRed = { downloadRed }
+                downloadRed = { downloadRed },
+                accountLikes = accountLikes,
+                accountCollectionId = accountCollectionId,
             )
         }
     )

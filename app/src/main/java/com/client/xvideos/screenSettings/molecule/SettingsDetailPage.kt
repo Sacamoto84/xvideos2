@@ -105,6 +105,7 @@ internal fun SettingsDetailPage(
             nichesCacheProgress = nichesCacheProgress,
             nichesCacheSize = nichesCacheSize,
             nichesCacheLastModifiedHour = nichesCacheLastModifiedHour,
+            onOpenLogin = params.onOpenRLogin,
             modifier = modifier
         )
         SettingsPage.Appearance -> AppearanceSettingsSection(modifier = modifier)

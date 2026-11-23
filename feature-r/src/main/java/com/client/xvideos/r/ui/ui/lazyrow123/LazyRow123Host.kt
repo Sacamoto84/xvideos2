@@ -17,6 +17,7 @@ import com.client.xvideos.common.connectivityObserver.ConnectivityObserver
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.r.common.pagin.FeedPageNavigation
 import com.client.xvideos.r.common.pagin.FeedPageQuery
+import com.client.xvideos.r.common.pagin.ItemAccountSavedMediaPagingSource
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.common.block.BlockRed
@@ -32,6 +33,10 @@ import com.client.xvideos.r.common.pagin.ItemSavedLikesPagingSource
 import com.client.xvideos.r.common.pagin.ItemSubscriptionsPagingSource
 import com.client.xvideos.r.common.pagin.ItemTopPagingSource
 import com.client.xvideos.r.common.pagin.savedLikesPagingFlow
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedActions
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedKey
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedList
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.collectionItems
 import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -74,7 +79,7 @@ internal fun pagerSearchQuery(typePager: TypePager, searchText: String): String 
  */
 internal fun TypePager.appliesBlockList(): Boolean = when (this) {
     TypePager.TOP, TypePager.NICHES, TypePager.PROFILE, TypePager.SUBSCRIPTIONS -> true
-    TypePager.R_SAVED_LIKES, TypePager.SAVED_COLLECTION, TypePager.EMPTY -> false
+    TypePager.R_SAVED_LIKES, TypePager.SAVED_COLLECTION, TypePager.ACCOUNT_SAVED_MEDIA, TypePager.EMPTY -> false
 }
 
 /**
@@ -290,10 +295,14 @@ class LazyRow123Host(
                         },
                     )
                 }
-                if (typePager == TypePager.R_SAVED_LIKES) {
-                    savedLikesPagingFlow(savedRed.likes.list, config, pagingSourceFactory)
-                } else {
-                    Pager(config, pagingSourceFactory = pagingSourceFactory).flow
+                when (typePager) {
+                    TypePager.R_SAVED_LIKES -> savedLikesPagingFlow(savedRed.likes.list, config, pagingSourceFactory)
+                    TypePager.ACCOUNT_SAVED_MEDIA -> {
+                        val list = accountCollectionId?.let(::collectionItems) ?: AccountSavedKey(AccountSavedList.LIKES)
+                        AccountSavedActions.revision(list)
+                            .flatMapLatest { Pager(config, pagingSourceFactory = pagingSourceFactory).flow }
+                    }
+                    else -> Pager(config, pagingSourceFactory = pagingSourceFactory).flow
                 }
             }
             .cachedIn(scope)
@@ -309,6 +318,12 @@ class LazyRow123Host(
      */
     val pager: Flow<PagingData<GifsInfo>> =
         if (typePager.appliesBlockList()) cachedPager.withoutBlocked(block.blockedIds, scope) else cachedPager
+
+    internal val isAccountLikes: Boolean
+        get() = typePager == TypePager.ACCOUNT_SAVED_MEDIA && extraString.isEmpty()
+
+    internal val accountCollectionId: String?
+        get() = extraString.takeIf { typePager == TypePager.ACCOUNT_SAVED_MEDIA && it.isNotEmpty() }
 
 
     private var _columns by mutableIntStateOf(normalizeColumns(startColumns))
@@ -387,6 +402,7 @@ fun createPager(
         )
         TypePager.EMPTY -> { ItemEmptyPagingSource() }
         TypePager.SAVED_COLLECTION -> { ItemCollectionPagingSource( collection = extraString, savedRed = savedRed ) }
+        TypePager.ACCOUNT_SAVED_MEDIA -> ItemAccountSavedMediaPagingSource(redApi, extraString.takeIf { it.isNotEmpty() })
 
     }
     return pagingSourceFactory

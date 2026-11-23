@@ -17,5 +17,7 @@ enum class TypePager {
     /** Пустая лента. */
     EMPTY,
     /** Лента публикаций по подпискам на авторов. */
-    SUBSCRIPTIONS
+    SUBSCRIPTIONS,
+    /** Понравившееся или публикации серверной коллекции аккаунта RedGIFs. */
+    ACCOUNT_SAVED_MEDIA,
 }

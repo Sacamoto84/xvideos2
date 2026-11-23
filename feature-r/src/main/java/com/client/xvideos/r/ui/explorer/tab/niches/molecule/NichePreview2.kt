@@ -9,6 +9,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
+import com.client.xvideos.r.network.api.AccountMembership
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
 
 @Composable
 fun NichePreview2(
@@ -46,6 +48,7 @@ fun NichePreview2(
         onFollowClick = onFollowClick,
         onClick = onClick,
         modifier = modifier,
+        trailing = { AccountMembershipMenu(AccountMembership.NICHE, niche.id) },
     )
 }
 

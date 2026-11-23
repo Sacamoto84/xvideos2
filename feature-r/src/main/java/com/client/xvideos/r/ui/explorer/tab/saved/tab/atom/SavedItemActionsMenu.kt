@@ -1,6 +1,7 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.atom
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -24,11 +25,23 @@ import com.client.xvideos.common.theme.Theme
 internal fun SavedItemActionsMenu(
     actionIcon: ImageVector,
     actionLabel: String,
-    onAction: () -> Unit
+    onAction: () -> Unit,
+) = SavedItemActionsMenu { dismiss ->
+    ExpandMenuActionItem(icon = actionIcon, text = actionLabel) {
+        dismiss()
+        onAction()
+    }
+}
+
+@Composable
+internal fun SavedItemActionsMenu(
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    onAction: @Composable ColumnScope.(dismiss: () -> Unit) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Box(modifier = Modifier.padding(end = 4.dp)) {
-        IconButton(onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
+    Box(modifier = modifier.padding(end = 4.dp)) {
+        IconButton(enabled = enabled, onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Filled.MoreVert, contentDescription = "Действия", tint = Color.LightGray)
         }
         DropdownMenu(
@@ -36,10 +49,7 @@ internal fun SavedItemActionsMenu(
             onDismissRequest = { expanded = false },
             containerColor = Theme.ExpandMenu.backgroundColor
         ) {
-            ExpandMenuActionItem(icon = actionIcon, text = actionLabel) {
-                expanded = false
-                onAction()
-            }
+            onAction { expanded = false }
         }
     }
 }

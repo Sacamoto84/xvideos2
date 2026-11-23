@@ -38,10 +38,11 @@ import com.client.xvideos.ui.theme.XvideosTheme
 fun NichePreview2Content(
     niche: Niche,
     isFollowed: Boolean,
-    onFollowClick: () -> Unit,
+    onFollowClick: (() -> Unit)? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     trailingFollowAction: (@Composable (onClick: () -> Unit) -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val subscribersText = remember(niche.subscribers) { niche.subscribers.toNicheCountText() }
     val gifsText = remember(niche.gifs) { niche.gifs.toNicheCountText() }
@@ -143,7 +144,7 @@ fun NichePreview2Content(
                     }
                 }
 
-                if (trailingFollowAction == null) {
+                if (onFollowClick != null && trailingFollowAction == null) {
                     Box(
                         modifier = buttonStyledModifier.clickable(onClick = onFollowClick),
                         contentAlignment = Alignment.Center
@@ -154,7 +155,8 @@ fun NichePreview2Content(
             }
         }
 
-        trailingFollowAction?.invoke(onFollowClick)
+        if (onFollowClick != null) trailingFollowAction?.invoke(onFollowClick)
+        trailing?.invoke()
     }
 }
 

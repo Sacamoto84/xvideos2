@@ -1,8 +1,10 @@
 package com.client.xvideos.r.ui.profile
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,15 +26,19 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import com.client.xvideos.common.settings.Settings
+import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.translation.TranslationEngine
 import com.client.xvideos.common.translation.rememberEnglishToRussianTranslation
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.GifsInfo
+import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.molecule.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.molecule.TagsBlock
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.PageableFeed
+import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
+import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.common.util.getTopInsetDp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -92,6 +98,7 @@ class ScreenRedProfile(val profileName: String) : Screen {
             tagsSelect = tagsSelectList,
             isLoading = isLoading,
             likedHost = vm.likedHost,
+            sortOrders = vm.orderList,
             onTagClick = onTagClick,
             onAppendLoaded = onAppendLoaded,
             isFollow = isFollow,
@@ -109,12 +116,14 @@ fun ScreenRedProfileContent(
     tagsSelect: ImmutableList<String>,
     isLoading: Boolean,
     likedHost: LazyRow123Host,
+    sortOrders: List<Order>,
     onTagClick: (String) -> Unit,
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit,
     isFollow: Boolean,
     onFollowClick: () -> Unit,
     translationEngine: TranslationEngine = TranslationEngine.NONE
 ) {
+    val currentSort by likedHost.sortType.collectAsStateWithLifecycle()
     val topInset = getTopInsetDp()
     val originalAbout = remember(creator?.description) {
         creator?.description?.trimMargin()?.takeIf { it.isNotBlank() }
@@ -132,7 +141,24 @@ fun ScreenRedProfileContent(
                     RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick, about = about)
                 }
 
-                Box(Modifier.adaptiveContentWidth().padding(horizontal = 4.dp, vertical = 4.dp)) {
+                Row(
+                    modifier = Modifier
+                        .adaptiveContentWidth()
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.weight(1f)) {
+                        SortByOrder(
+                            list = sortOrders,
+                            selected = currentSort,
+                            onSelect = likedHost::changeSortType,
+                            containerColor = Theme.tabLevel0,
+                            orderIcon = { RSortOrderIcon(it) },
+                            showSelectedLabel = true,
+                        )
+                    }
                     scrollMode()
                 }
 

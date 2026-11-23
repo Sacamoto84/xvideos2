@@ -1,5 +1,8 @@
 package com.client.xvideos.r.ui.niche.molecule
 
+import com.client.xvideos.r.network.api.AccountMembership
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -61,7 +64,8 @@ fun NicheHeaderContent(
         NicheProfileContent(
             niche = { niche },
             isFollowed = isFollowed,
-            onFollowClick = onFollowClick
+            onFollowClick = onFollowClick,
+            trailing = { AccountMembershipMenu(AccountMembership.NICHE, niche.id) },
         )
 
         val related = relatedNiches().niches

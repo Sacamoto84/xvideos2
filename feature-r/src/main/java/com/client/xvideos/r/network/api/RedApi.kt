@@ -2,9 +2,12 @@ package com.client.xvideos.r.network.api
 
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.fileDB.folder.FileStringCacheTable
+import com.client.xvideos.r.auth.RAccountSession
+import com.client.xvideos.r.auth.RAccountStatus
 import com.client.xvideos.r.model.CreatorResponse
 import com.client.xvideos.r.model.MediaResponse
 import com.client.xvideos.r.model.MediaType
+import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NicheResponse
 import com.client.xvideos.r.model.NichesResponse
 import com.client.xvideos.r.model.Order
@@ -16,6 +19,7 @@ import com.client.xvideos.r.model.tag.TagSuggestion
 import com.client.xvideos.r.network.http.ApiClient
 import com.client.xvideos.r.network.http.Route
 import com.client.xvideos.r.network.json.RJson
+import io.ktor.client.call.body
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -312,6 +316,38 @@ class RedApi @Inject constructor(
         return api.request<NicheResponse>(route)
     }
 
+    internal suspend fun getAccountNiches(list: AccountNicheList): Result<List<Niche>> {
+        val route = Route(method = "GET", path = "/v2/niches/${list.path}")
+        return api.requestAsAccount(route) { it.body<AccountNichesResponse>() }
+            .map { response -> response.niches.filter { it.isValid }.distinctBy { it.id } }
+    }
+
+    internal suspend fun getAccountFollowing(page: Int, count: Int): Result<AccountFollowingResponse> {
+        val route = Route("GET", "/v2/me/following?page={page}&count={count}", "page" to page, "count" to count)
+        return api.requestAsAccount(route) { it.body<AccountFollowingResponse>() }
+    }
+
+    internal suspend fun getAccountCollections(
+        page: Int,
+        count: Int,
+        account: RAccountStatus.SignedIn? = null,
+    ): Result<AccountCollectionsResponse> {
+        val route = Route("GET", "/v2/me/collections?page={page}&count={count}", "page" to page, "count" to count)
+        return api.requestAsAccount(route, account = account) { it.body<AccountCollectionsResponse>() }
+    }
+
+    internal suspend fun getAccountSavedMedia(collectionId: String?, page: Int, count: Int): Result<MediaResponse> {
+        val route = if (collectionId == null) {
+            Route("GET", "/v2/feeds/liked?page={page}&count={count}", "page" to page, "count" to count)
+        } else {
+            Route(
+                "GET", "/v2/me/collections/{id}/gifs?page={page}&count={count}",
+                "id" to collectionId, "page" to page, "count" to count,
+            )
+        }
+        return api.requestAsAccount(route) { it.body<MediaResponse>() }
+    }
+
     /**
      * Загрузить страницу гифок, входящих в указанную нишу.
      * Ответ кэшируется через [cacheMediaResponse].
@@ -440,6 +476,31 @@ class RedApi @Inject constructor(
 
 }
 
+internal enum class AccountNicheList(val path: String) {
+    FOLLOWING("following"),
+    CREATED("my"),
+}
+
+@Serializable
+internal data class AccountNichesResponse(val niches: List<Niche>)
+
+@Serializable
+internal data class AccountFollowingResponse(val items: List<UserInfo>, val pages: Int)
+
+@Serializable
+internal data class AccountCollectionsResponse(val collections: List<AccountCollection>, val pages: Int)
+
+@Serializable
+internal data class AccountCollection(
+    val folderId: String,
+    val folderName: String,
+    val contentCount: Int? = null,
+    val thumb: String? = null,
+    val thumbs: String? = null,
+) {
+    val previewUrl: String? get() = thumbs?.takeIf { it.isNotBlank() } ?: thumb?.takeIf { it.isNotBlank() }
+}
+
 /**
  * Ответ из файлового кеша, а если там пусто — из сети, с сохранением в кеш.
  *
@@ -460,6 +521,8 @@ private suspend fun cacheMediaResponse(
     redApi: RedApi,
     cache: FileStringCacheTable
 ): Result<MediaResponse> {
+    // Дисковый кэш общий для всех профилей, поэтому в него попадают только гостевые ответы.
+    if (RAccountSession.activeToken() != null) return redApi.api.request(route)
 
     // Битая запись — не повод показывать ошибку: выкидываем её и идём дальше,
     // как будто кеша не было.
@@ -481,7 +544,7 @@ private suspend fun cacheMediaResponse(
     }
 
     Timber.d("Fetching from network: ${route.path}")
-    return redApi.api.request<MediaResponse>(route)
+    return redApi.api.requestAsGuest(route) { it.body<MediaResponse>() }
         .onSuccess {
             runCatching {
                 cache.put(route.url, RJson.encodeToString(it))

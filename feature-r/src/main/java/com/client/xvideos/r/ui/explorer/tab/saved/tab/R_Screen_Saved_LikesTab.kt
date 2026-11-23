@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,6 +24,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.ScreenAccountSavedMedia
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
@@ -54,7 +57,8 @@ object R_Screen_Saved_LikesTab : Screen {
         SavedLikesTabContent(
             host = vm.likedHost,
             topInset = getTopInsetDp(),
-            onClickOpenProfile = onClickOpenProfile
+            onClickOpenProfile = onClickOpenProfile,
+            onOpenAccountLikes = { navigator.push(ScreenAccountSavedMedia()) },
         )
     }
 }
@@ -65,6 +69,7 @@ fun SavedLikesTabContent(
     topInset: Dp,
     onClickOpenProfile: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenAccountLikes: () -> Unit = {},
 ) {
     val contentPadding = remember(topInset) { PaddingValues(top = topInset) }
 
@@ -78,7 +83,11 @@ fun SavedLikesTabContent(
                 // Шапка — первым элементом сетки: на всю ширину и уезжает со
                 // списком, как в X. Вырез — отступом списка, под ним и индикатор
                 // обновления.
-                contentBeforeList = { SavedTabHeader(title = "Лайки") },
+                contentBeforeList = {
+                    SavedTabHeader(title = "Лайки") {
+                        TextButton(onClick = onOpenAccountLikes) { Text("Лайки RedGIFs") }
+                    }
+                },
             )
         }
     }

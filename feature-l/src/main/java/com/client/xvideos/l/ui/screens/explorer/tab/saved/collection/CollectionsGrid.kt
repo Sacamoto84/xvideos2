@@ -30,6 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.collectionDB.model.CollectionGridItem
 import com.client.xvideos.common.collectionDB.model.CollectionsGridStyle
+import com.client.xvideos.common.collectionDB.ui.COLLECTION_GRID_ROW_SPACING
+import com.client.xvideos.common.collectionDB.ui.COLLECTION_GRID_VERTICAL_PADDING
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
@@ -63,13 +65,13 @@ fun CollectionsGrid(
     ) { padding ->
         LazyVerticalGrid(
             horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
-            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
+            verticalArrangement = Arrangement.spacedBy(COLLECTION_GRID_ROW_SPACING),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
             state = gridState,
             columns = GridCells.Fixed(adaptiveGridColumns()),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = COLLECTION_GRID_VERTICAL_PADDING),
         ) {
             itemsIndexed(
                 items = collections,

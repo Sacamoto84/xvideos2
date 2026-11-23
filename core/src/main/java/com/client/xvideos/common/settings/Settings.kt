@@ -66,6 +66,13 @@ object Settings {
         }
     }
 
+    fun readRedgifsSession(): String? = securePref.value?.getString(KEY_R_SESSION, null)
+
+    fun writeRedgifsSession(value: String?): Boolean = securePref.value
+        ?.edit()
+        ?.putString(KEY_R_SESSION, value)
+        ?.commit() == true
+
     private fun migrateLusciousCredentials(prefs: SharedPreferences, secure: SharedPreferences) {
         val legacyLogin = prefs.getString(KEY_L_LOGIN, null)
         val legacyPass = prefs.getString(KEY_L_PASS, null)
@@ -91,6 +98,7 @@ object Settings {
 
     private const val KEY_L_LOGIN = "l_login"
     private const val KEY_L_PASS = "l_pass"
+    private const val KEY_R_SESSION = "r_account_session"
 
     //-- app ---
 

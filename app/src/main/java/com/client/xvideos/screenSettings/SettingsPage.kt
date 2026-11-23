@@ -53,7 +53,7 @@ internal enum class SettingsPage(
     Red(
         title = "R",
         icon = R.drawable.icon_red,
-        subtitle = "Размеры папок, Downloads и Niches cache"
+        subtitle = "Профиль, загрузки и кэш групп"
     ),
     X(
         title = "X",

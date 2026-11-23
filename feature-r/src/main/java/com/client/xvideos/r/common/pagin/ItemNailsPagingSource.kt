@@ -2,13 +2,20 @@ package com.client.xvideos.r.common.pagin
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.common.UsersRed
 import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.common.block.BlockRed
 import com.client.xvideos.r.model.sanitizeGifsInfoList
+import com.client.xvideos.r.network.json.RJson
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 
 /**
@@ -81,6 +88,15 @@ class ItemNailsPagingSource(
             throw e // G1
         } catch (e: Exception) {
             Timber.e("!!! ItemNailsPagingSource load() page = $page nichesName:$nichesName: ${e.javaClass.simpleName}")
+            if (e is ClientRequestException && e.response.status == HttpStatusCode.BadRequest) {
+                val code = runCatchingCancellable {
+                    RJson.parseToJsonElement(e.response.bodyAsText()).jsonObject["error"]
+                        ?.jsonObject?.get("code")?.jsonPrimitive?.content
+                }.getOrNull()
+                if (code == "BadPageNumber") {
+                    return LoadResult.Error(IllegalStateException("RedGIFs не выдаёт страницу $page этой группы", e))
+                }
+            }
             LoadResult.Error(e)
         }
     }

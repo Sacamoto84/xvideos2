@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material3.Icon
@@ -46,6 +47,7 @@ internal fun RSortOrderIcon(order: Order) {
                 Order.TOP -> Icons.Filled.EmojiEvents
                 Order.HOT, Order.TRENDING -> Icons.Filled.LocalFireDepartment
                 Order.LATEST -> Icons.Filled.AutoAwesome
+                Order.OLDEST -> Icons.Filled.History
                 Order.RELEVANT -> Icons.AutoMirrored.Filled.ManageSearch
                 else -> Icons.AutoMirrored.Filled.Sort
             },

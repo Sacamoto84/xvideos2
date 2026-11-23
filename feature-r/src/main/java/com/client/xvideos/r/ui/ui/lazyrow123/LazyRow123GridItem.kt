@@ -65,6 +65,8 @@ fun LazyRow123GridItem(
         isDownloaded = isDownloaded,
         isRunLike = isRunLike,
         isCollection = host.isCollection,
+        accountLikes = host.isAccountLikes,
+        accountCollectionId = host.accountCollectionId,
         visibleProfileInfo = host.visibleProfileInfo,
         columns = host.columns,
         block = { host.block },
@@ -95,7 +97,9 @@ private fun LazyRow123GridItemContent(
     onItemClick: () -> Unit,
     onRefresh: () -> Unit,
     onClickOpenProfile: (String) -> Unit,
-    onTagClick: (String) -> Unit
+    onTagClick: (String) -> Unit,
+    accountLikes: Boolean = false,
+    accountCollectionId: String? = null,
 ) {
     LazyRow123GridItemContentStateless(
         item = item,
@@ -126,7 +130,9 @@ private fun LazyRow123GridItemContent(
                 block = block,
                 redApi = redApi,
                 savedRed = savedRed,
-                downloadRed = downloadRed
+                downloadRed = downloadRed,
+                accountLikes = accountLikes,
+                accountCollectionId = accountCollectionId,
             )
         },
         icons = {

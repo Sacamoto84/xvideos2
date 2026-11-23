@@ -96,9 +96,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
     }
 
     /** Доступные варианты сортировки на экране профиля. */
-    val orderList = listOf(Order.TOP, Order.LATEST, Order.OLDEST, Order.TOP28, Order.TRENDING)
-    /** Текущий порядок сортировки. */
-    var order by mutableStateOf(Order.LATEST)
+    val orderList = listOf(Order.LATEST, Order.OLDEST, Order.TOP, Order.TOP_WEEK, Order.TOP28, Order.TRENDING)
 
     private val _isLoading = MutableStateFlow(false)
     /** Флаг выполнения сетевой загрузки данных профиля. */

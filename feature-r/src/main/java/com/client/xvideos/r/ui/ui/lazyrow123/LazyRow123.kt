@@ -49,6 +49,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -80,6 +81,7 @@ fun LazyRow123(
     isRunLike: Boolean = false,
     showScrollButtons: Boolean = true,
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
+    emptyMessage: String? = null,
 ) {
 
     val listGifs = host.pager.collectAsLazyPagingItems()
@@ -165,6 +167,18 @@ fun LazyRow123(
             isRunLike = isRunLike,
             onAppendLoaded = onAppendLoaded
         )
+
+        val appendState = listGifs.loadState.append
+        if (emptyMessage != null && listGifs.itemCount == 0 && refreshState is LoadState.NotLoading &&
+            appendState is LoadState.NotLoading && appendState.endOfPaginationReached
+        ) {
+            Text(
+                emptyMessage,
+                modifier = Modifier.align(Alignment.Center).padding(horizontal = 20.dp),
+                color = Color.White,
+                textAlign = TextAlign.Center,
+            )
+        }
 
         //---- Скролл ----
         Box(

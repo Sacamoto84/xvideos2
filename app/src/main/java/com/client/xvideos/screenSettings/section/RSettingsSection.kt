@@ -28,6 +28,7 @@ import com.client.xvideos.screenSettings.components.SettingsListItem
 import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.screenSettings.components.WhatsAppGreen
+import com.client.xvideos.screenSettings.molecule.RProfileRow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.common.util.formatBytes
@@ -50,6 +51,7 @@ internal fun RSettingsSection(
     nichesCacheSize: Int,
     nichesCacheLastModifiedHour: Long,
     modifier: Modifier = Modifier,
+    onOpenLogin: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     var isRecoveringDownload by remember { mutableStateOf(false) }
@@ -112,6 +114,8 @@ internal fun RSettingsSection(
     }
 
     SettingsGroup(modifier = modifier) {
+        RProfileRow(onLogin = onOpenLogin)
+        SettingsDivider()
         SettingsValueRow(
             icon = ICON_RED,
             text = "Размер всех папок Red",

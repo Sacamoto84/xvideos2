@@ -19,5 +19,6 @@ internal data class SettingsDetailParams(
     val context: Context,
     val onBackupDataChanged: () -> Unit,
     val onOpenLLogin: () -> Unit,
-    val onOpenXLogin: () -> Unit
+    val onOpenXLogin: () -> Unit,
+    val onOpenRLogin: () -> Unit = {},
 )

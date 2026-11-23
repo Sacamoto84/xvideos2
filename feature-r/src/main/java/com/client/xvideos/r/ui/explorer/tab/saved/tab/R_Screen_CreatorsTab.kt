@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,7 +90,8 @@ object R_Screen_CreatorsTab : Screen {
             topInset = getTopInsetDp(),
             scrollPercentProvider = scrollPercentProvider,
             onCreatorClick = onCreatorClick,
-            onDeleteRequest = onDeleteRequest
+            onDeleteRequest = onDeleteRequest,
+            onOpenAccountFollowing = { navigator.push(ScreenAccountFollowing) },
         )
     }
 }
@@ -102,6 +105,7 @@ fun CreatorsTabContent(
     onCreatorClick: (String) -> Unit,
     onDeleteRequest: (UserInfo) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenAccountFollowing: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier,
@@ -125,8 +129,10 @@ fun CreatorsTabContent(
                     SavedTabHeader(
                         title = "Авторы",
                         topCutout = topInset,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    ) {
+                        TextButton(onClick = onOpenAccountFollowing) { Text("Подписки RedGIFs") }
+                    }
                 }
                 items(
                     items = creators,

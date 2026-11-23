@@ -20,6 +20,7 @@ android {
 dependencies {
 
     api project(':core')
+    implementation libs.androidx.webkit
 
     coreLibraryDesugaring libs.desugar.jdk.libs
 

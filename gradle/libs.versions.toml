@@ -42,6 +42,7 @@ material3 = "1.5.0-beta02"
 media3 = "1.11.1"
 pagingRuntime = "3.5.3"
 securityCrypto = "1.1.0"
+webkit = "1.15.0"
 slf4jAndroid = "1.7.36"
 timber = "5.0.1"
 googleGmsGoogleServices = "4.5.0"
@@ -74,6 +75,7 @@ androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.r
 androidx-runtime = { module = "androidx.compose.runtime:runtime" }
 
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }

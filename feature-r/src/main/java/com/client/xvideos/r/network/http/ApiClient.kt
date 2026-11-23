@@ -4,29 +4,42 @@ import com.client.xvideos.common.net.SiteMaintenanceInterceptor
 import com.client.xvideos.common.net.SiteMaintenanceReporter
 import com.client.xvideos.common.net.UserAgentProvider
 import com.client.xvideos.common.net.doh.AppDns
+import com.client.xvideos.common.util.runCatchingCancellable
+import com.client.xvideos.r.auth.RAccountSession
+import com.client.xvideos.r.auth.RAccountStatus
 import com.client.xvideos.r.network.json.RJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.request
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import okhttp3.ConnectionSpec
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.util.concurrent.TimeUnit
 
 /**
  * HTTP-клиент модуля R на базе Ktor и движка OkHttp.
  *
  * Инкапсулирует:
- * - Управление временным анонимным Bearer-токеном через [BearerAuth] (получение, кэширование, обновление при 401);
+ * - Использование сессии [RAccountSession] и гостевого токена [BearerAuth];
  * - DNS-over-HTTPS резолвинг через [AppDns];
  * - Настройку таймаутов, ретраев и стандартных HTTP-заголовков (Referer, Origin, UserAgent).
  */
@@ -59,6 +72,13 @@ object ApiClient {
                 writeTimeout(30, TimeUnit.SECONDS)
                 followRedirects(true)
                 connectionSpecs(listOf(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+                addNetworkInterceptor { chain ->
+                    val request = chain.request()
+                    val scopedRequest = if (request.url.isRedgifsApi()) request else {
+                        request.newBuilder().removeHeader(HttpHeaders.Authorization).build()
+                    }
+                    chain.proceed(scopedRequest)
+                }
                 // Сайт на техобслуживании отвечает 503 — плашка вместо безликой ошибки.
                 addInterceptor(SiteMaintenanceInterceptor { SiteMaintenanceReporter.report("R") })
             }
@@ -100,21 +120,84 @@ object ApiClient {
     /** Принудительно получает новый токен. Безопасен для параллельных вызовов. */
     suspend fun login(): Result<Boolean> = auth.login()
 
-    /**
-     * GET-запрос под анонимным токеном: [read] разбирает ответ. Одна на все
-     * четыре публичные функции ниже — раньше каждая повторяла её целиком.
-     */
     @PublishedApi
     internal suspend fun <T> get(
         url: String,
         params: List<Pair<String, Any>>,
         read: suspend (HttpResponse) -> T,
-    ): Result<T> = auth.withAuth { token ->
+    ): Result<T> {
+        val token = if (url.toHttpUrlOrNull()?.isRedgifsApi() == true) RAccountSession.activeToken() else null
+        if (token != null) {
+            val result = getAsAccount(url, params, token, read)
+            if ((result.exceptionOrNull() as? ClientRequestException)?.response?.status != HttpStatusCode.Unauthorized) {
+                return result
+            }
+        }
+        return getAsGuest(url, params, read)
+    }
+
+    private suspend fun <T> getAsAccount(
+        url: String,
+        params: List<Pair<String, Any>>,
+        token: String,
+        read: suspend (HttpResponse) -> T,
+    ): Result<T> {
+        val result = runCatchingCancellable { performGet(url, params, token, read) }
+        if ((result.exceptionOrNull() as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized) {
+            RAccountSession.reject(token)
+        }
+        return result
+    }
+
+    private suspend fun <T> getAsGuest(
+        url: String,
+        params: List<Pair<String, Any>>,
+        read: suspend (HttpResponse) -> T,
+    ): Result<T> = auth.withAuth { token -> performGet(url, params, token, read) }
+
+    private suspend fun <T> performGet(
+        url: String,
+        params: List<Pair<String, Any>>,
+        token: String?,
+        read: suspend (HttpResponse) -> T,
+    ): T {
         val response = client.get(url) {
             if (token != null) headers.append(HttpHeaders.Authorization, "Bearer $token")
             for ((key, value) in params) parameter(key, value)
         }
-        read(response)
+        return read(response)
+    }
+
+    internal suspend fun <T> requestAsGuest(route: Route, read: suspend (HttpResponse) -> T): Result<T> =
+        getAsGuest(route.url, emptyList(), read)
+
+    internal suspend fun <T> requestAsAccount(
+        route: Route,
+        account: RAccountStatus.SignedIn? = null,
+        body: JsonElement? = null,
+        read: suspend (HttpResponse) -> T,
+    ): Result<T> {
+        val url = route.url
+        require(url.toHttpUrlOrNull()?.isRedgifsApi() == true)
+        val token = RAccountSession.activeToken(account)
+            ?: return Result.failure(IllegalStateException("Войдите в RedGIFs в настройках R"))
+        if (route.isGet) return getAsAccount(url, emptyList(), token, read)
+
+        return runCatchingCancellable {
+            val response = client.request(url) {
+                method = HttpMethod.parse(route.method)
+                headers.append(HttpHeaders.Authorization, "Bearer $token")
+                if (body != null) {
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
+            }
+            read(response)
+        }.onFailure { error ->
+            if ((error as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized) {
+                RAccountSession.reject(token)
+            }
+        }
     }
 
     /**
@@ -163,3 +246,6 @@ object ApiClient {
         vararg params: Pair<String, Any> = emptyArray(),
     ): Result<String> = get(url, params.toList()) { it.bodyAsText() }
 }
+
+internal fun HttpUrl.isRedgifsApi(): Boolean =
+    isHttps && host == "api.redgifs.com" && port == 443 && username.isEmpty() && password.isEmpty()
