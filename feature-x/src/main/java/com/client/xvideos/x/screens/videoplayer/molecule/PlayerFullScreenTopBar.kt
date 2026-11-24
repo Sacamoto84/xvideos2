@@ -2,7 +2,6 @@ package com.client.xvideos.x.screens.videoplayer.molecule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -98,20 +97,14 @@ fun PlayerFullScreenTopBar(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Box(
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(Color(0x66000000))
-        ) {
-            X_DashboardExpandMenu(
-                isFavorite = isFavorite,
-                onFavoriteAdd = onFavoriteAdd,
-                onFavoriteRemove = onFavoriteRemove,
-                onDownload = onDownload,
-                onSaveToGallery = onSaveToGallery,
-                onExpandedChange = onExpandedChange,
-            )
-        }
+        X_DashboardExpandMenu(
+            isFavorite = isFavorite,
+            onFavoriteAdd = onFavoriteAdd,
+            onFavoriteRemove = onFavoriteRemove,
+            onDownload = onDownload,
+            onSaveToGallery = onSaveToGallery,
+            onExpandedChange = onExpandedChange,
+        )
     }
 }
 

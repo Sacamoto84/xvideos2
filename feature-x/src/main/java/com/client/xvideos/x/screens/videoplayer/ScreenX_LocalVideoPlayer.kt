@@ -110,6 +110,7 @@ fun ScreenX_LocalVideoPlayerContent(
             title = resolvedItem.title,
             onToggleFullScreen = sm::toggleFullScreen,
             onExitFullScreen = sm::exitFullScreen,
+            enablePlayPauseFeedback = true,
         )
     }
 }

@@ -48,6 +48,8 @@ import com.client.xvideos.common.videoplayer.local.molecule.PlayerBottomBar
 import com.client.xvideos.common.videoplayer.local.molecule.SeekPreviewOverlay
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
+import com.client.xvideos.common.videoplayer.ui.component.PlayPauseFeedback
+import com.client.xvideos.common.videoplayer.ui.component.PlayPauseFeedbackState
 import com.client.xvideos.x.model.TagsMainUploaderPornstar
 import com.client.xvideos.x.model.TagsModel
 import com.client.xvideos.x.screens.ui.expandMenu.X_DashboardExpandMenu
@@ -257,16 +259,13 @@ fun VideoPlayerContentView(
 
     val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
 
-    // Обработка одиночного тапа по видео:
-    // - В полноэкранном режиме: показать / скрыть контроллеры
-    // - В портретном режиме: переключить воспроизведение / паузу
-    val onTap: () -> Unit = remember(isFullScreen, host) {
+    val playbackFeedback = remember(host, isFullScreen) {
+        PlayPauseFeedbackState(host, enabled = true)
+    }
+    val onTap: () -> Unit = remember(playbackFeedback) {
         {
-            if (isFullScreen) {
-                areControlsVisible = !areControlsVisible
-            } else {
-                host.togglePlayPause()
-            }
+            playbackFeedback.togglePlayback()
+            if (isFullScreen) areControlsVisible = true
         }
     }
 
@@ -312,6 +311,8 @@ fun VideoPlayerContentView(
             // Свайп по видео влево-вправо — ±5 с.
             swipeSeekSeconds = 5,
             overlay = {
+                PlayPauseFeedback(playbackFeedback, Modifier.align(Alignment.Center))
+
                 // Верхняя панель:
                 // В полноэкранном режиме: Back, Название ролика, Кнопка 3-точки с выпадающим меню.
                 // В портретном режиме: теги/каналы слева и кнопка 3-точки справа.
@@ -411,7 +412,8 @@ fun VideoPlayerContentView(
                         host = host,
                         isFullScreen = isFullScreen,
                         onFullScreen = onToggleFullScreen,
-                        onScrub = onScrub
+                        onScrub = onScrub,
+                        onTogglePlayPause = playbackFeedback::togglePlayback,
                     )
                 }
             }

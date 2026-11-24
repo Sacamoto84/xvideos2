@@ -33,6 +33,8 @@ import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
+import com.client.xvideos.common.videoplayer.ui.component.PlayPauseFeedback
+import com.client.xvideos.common.videoplayer.ui.component.PlayPauseFeedbackState
 import com.client.xvideos.common.videoplayer.local.atom.ResumePlaybackPill
 import com.client.xvideos.common.videoplayer.local.model.SeekScrub
 import com.client.xvideos.common.videoplayer.local.model.rememberStoryboardImage
@@ -56,6 +58,7 @@ import java.io.File
  * @param onExitFullScreen Выход из полного экрана («назад» сверху и системный «Назад»).
  * @param muted Звук выключен. Ролики X всегда без звука; у записи эфира звук включает кнопка.
  * @param onToggleMute Кнопка звука в нижней панели; `null` — кнопки нет.
+ * @param enablePlayPauseFeedback Показывает значок при переключении воспроизведения в обоих режимах экрана.
  */
 @OptIn(UnstableApi::class)
 @Suppress("LongMethod", "LongParameterList")
@@ -74,6 +77,7 @@ fun LocalVideoPlayerContent(
     muted: Boolean = true,
     onToggleMute: (() -> Unit)? = null,
     showResumeNotice: Boolean = true,
+    enablePlayPauseFeedback: Boolean = false,
 ) {
     if (LocalInspectionMode.current) {
         Box(
@@ -193,13 +197,16 @@ fun LocalVideoPlayerContent(
     BackHandler(enabled = !isZoomed && !isFullScreen, onBack = onPopBack)
 
     val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
-    // Тап по видео: на весь экран — показать или спрятать панели, в портрете — пауза.
-    val onTap: () -> Unit = remember(isFullScreen, host) {
+    val playbackFeedback = remember(host, isFullScreen, enablePlayPauseFeedback) {
+        PlayPauseFeedbackState(host, enablePlayPauseFeedback)
+    }
+    val onTap: () -> Unit = remember(isFullScreen, playbackFeedback) {
         {
-            if (isFullScreen) {
+            if (isFullScreen && !enablePlayPauseFeedback) {
                 areControlsVisible = !areControlsVisible
             } else {
-                host.togglePlayPause()
+                playbackFeedback.togglePlayback()
+                if (isFullScreen) areControlsVisible = true
             }
         }
     }
@@ -220,6 +227,8 @@ fun LocalVideoPlayerContent(
             // Свайп по видео влево-вправо — ±5 с.
             swipeSeekSeconds = 5,
             overlay = {
+                PlayPauseFeedback(playbackFeedback, Modifier.align(Alignment.Center))
+
                 // На весь экран сверху — «назад» (выход из полного экрана) и название.
                 if (isFullScreen) {
                     AnimatedVisibility(
@@ -272,6 +281,7 @@ fun LocalVideoPlayerContent(
                         onScrub = onScrub,
                         muted = muted,
                         onToggleMute = onToggleMute,
+                        onTogglePlayPause = playbackFeedback::togglePlayback,
                     )
                 }
             }

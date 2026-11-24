@@ -63,6 +63,7 @@ import java.util.Locale
  * `null` — палец отпущен.
  * @param muted звук выключен — для кнопки звука.
  * @param onToggleMute кнопка звука; `null` — кнопки нет (ролики X всегда без звука).
+ * @param onTogglePlayPause обработчик кнопки воспроизведения и паузы.
  */
 @Composable
 fun PlayerBottomBar(
@@ -73,6 +74,7 @@ fun PlayerBottomBar(
     modifier: Modifier = Modifier,
     muted: Boolean = true,
     onToggleMute: (() -> Unit)? = null,
+    onTogglePlayPause: () -> Unit = host::togglePlayPause,
 ) {
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
     var sliderValue by remember(host) { mutableFloatStateOf(0f) }
@@ -82,7 +84,6 @@ fun PlayerBottomBar(
 
     val currentOnScrub by rememberUpdatedState(onScrub)
 
-    val onTogglePlayPause = remember(host) { { host.togglePlayPause() } }
     val onSeekBarValueChange: (Float) -> Unit = remember(host) {
         { v ->
             sliderValue = v
