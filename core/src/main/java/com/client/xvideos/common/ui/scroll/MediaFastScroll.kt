@@ -10,9 +10,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -104,7 +109,8 @@ fun MediaFastScroll(
             .collect { invalidated -> if (invalidated) activeRange = null }
     }
 
-    if (enabled && showHandle) BoxWithConstraints(modifier) {
+    val rail = modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+    if (enabled && showHandle) BoxWithConstraints(rail) {
         val travel = (maxHeight - bottomClearance - handleHitSize).coerceAtLeast(0.dp)
         if (maxWidth < handleHitSize || travel == 0.dp) return@BoxWithConstraints
         val travelPx = with(LocalDensity.current) { travel.toPx() }
