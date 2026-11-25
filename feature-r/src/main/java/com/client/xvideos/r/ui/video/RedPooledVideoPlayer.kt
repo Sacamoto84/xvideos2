@@ -105,9 +105,6 @@ internal suspend fun Player.awaitPlayWhenReady() {
     }
 }
 
-private fun ExoPlayer.clampSeekPositionMs(positionMs: Long): Long =
-    com.client.xvideos.r.ui.video.clampSeekPositionMs(positionMs, duration)
-
 /**
  * Тик времени плеера ленты.
  *
@@ -165,6 +162,11 @@ fun RedPooledVideoPlayer(
             exo.prepare()
         },
     )
+    val abPlayback = remember(player, mediaItem) {
+        player?.let { exo ->
+            RedAbPlayback(exo, mediaItem) { feedState.mediaSourceFor(mediaItem, index) }
+        }
+    }
 
     var isBuffering by remember(player) { mutableStateOf(true) }
     LaunchedEffect(isBuffering) { onBufferingChanged(isBuffering) }
@@ -230,22 +232,18 @@ fun RedPooledVideoPlayer(
         }
     }
 
-    // Включили A-B — сразу встаём на точку A, как делал прежний плеер
-    // (`LaunchedEffect(enableAB) { playerHost.seekTo(timeA) }`). Без этого первый
-    // проход шёл бы от текущей позиции, а не от начала петли.
-    LaunchedEffect(player, enableAB, timeA, timeB) {
-        if (isValidABRange(enableAB, timeA, timeB)) {
-            player?.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
-        }
+    LaunchedEffect(abPlayback, isCurrentPage, enableAB, timeA, timeB) {
+        if (isCurrentPage) abPlayback?.setRange(enableAB, timeA, timeB)
     }
 
-    // Время/длительность и петля A-B. Шаг 50 мс — как в прежнем CMPPlayer2,
-    // чтобы поведение полосы времени и A-B не изменилось.
+    // Время/длительность и резервный повтор A-B для сетевых роликов. Шаг 50 мс
+    // оставляем для полосы времени. Локальный отрезок повторяет сам плеер.
     // mediaItem в ключах: ролик под страницей может смениться на том же экземпляре
     // плеера (см. эффект playWhenReady выше), и цикл начинается заново — первым
     // проходом отдаёт время уже нового ролика.
-    LaunchedEffect(player, mediaItem, isCurrentPage, enableAB, timeA, timeB, play) {
+    LaunchedEffect(abPlayback, isCurrentPage, enableAB, timeA, timeB, play) {
         val exo = player ?: return@LaunchedEffect
+        val playback = abPlayback ?: return@LaunchedEffect
         // Нетекущие страницы не играют (playWhenReady = play && isCurrentPage), время на них
         // не движется — крутить на них опрос смысла нет. Без этого выхода при трёх живых
         // страницах работали бы три корутины по 20 Гц.
@@ -257,17 +255,15 @@ fun RedPooledVideoPlayer(
         var lastPosition = Float.NaN
         var lastDuration = -1
         while (isActive) {
-            val position = (exo.currentPosition / 1000f).coerceAtLeast(0f)
-            val durationMs = exo.duration.takeIf { it != C.TIME_UNSET && it > 0L } ?: 0L
-            val duration = (durationMs / 1000).toInt().coerceAtLeast(0)
+            val positionMs = playback.positionMs.coerceAtLeast(0L)
+            val position = positionMs / 1000f
+            val duration = (playback.durationMs.coerceAtLeast(0L) / 1000).toInt()
             if (position != lastPosition || duration != lastDuration) {
                 lastPosition = position
                 lastDuration = duration
                 onTimeChanged.onTime(position, duration)
             }
-            if (isValidABRange(enableAB, timeA, timeB) && position >= timeB) {
-                exo.seekTo((timeA * 1000).toLong().coerceAtLeast(0L))
-            }
+            playback.repeatIfNeeded(positionMs)
             // Выходим только по `play` — паузе с экрана: её снятие меняет ключ, и цикл
             // запустится заново. Снятый `playWhenReady` (уход в фон, замок) цикл
             // пережидает без опроса: при возврате его ставят обратно, ключи не
@@ -280,27 +276,28 @@ fun RedPooledVideoPlayer(
     // DisposableEffect, а не LaunchedEffect: страница обязана отозвать свои controls
     // при уходе из композиции. PlayerPool.yield() к этому моменту уже сделал плееру
     // stop() и clearMediaItems(), и оставленная снаружи ссылка дёргала бы пустой плеер.
-    DisposableEffect(player, isCurrentPage) {
+    DisposableEffect(player, abPlayback, isCurrentPage) {
         val exo = player
-        if (exo == null || !isCurrentPage) {
+        val playback = abPlayback
+        if (exo == null || playback == null || !isCurrentPage) {
             onDispose { }
         } else {
             val controls = object : PlayerControls {
                 override fun forward(seconds: Float) {
-                    exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + (seconds * 1000).toLong()))
+                    playback.seekTo(playback.positionMs + (seconds * 1000).toLong())
                 }
 
                 override fun rewind(seconds: Float) {
-                    exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition - (seconds * 1000).toLong()))
+                    playback.seekTo(playback.positionMs - (seconds * 1000).toLong())
                 }
 
                 override fun seekTo(positionSeconds: Float) {
-                    exo.seekTo(exo.clampSeekPositionMs((positionSeconds * 1000).toLong()))
+                    playback.seekTo((positionSeconds * 1000).toLong())
                 }
 
                 override fun stop() {
                     exo.playWhenReady = false
-                    exo.seekTo(0L)
+                    playback.seekTo(0L)
                 }
 
                 override fun pause() {
@@ -348,15 +345,15 @@ fun RedPooledVideoPlayer(
     // на секунду, короткий — на кадр (1/30 c), направление задаёт знак смещения.
     // Детектор горизонтальный, поэтому вертикальный свайп страницы уходит пейджеру.
     var seekDragAmount by remember { mutableFloatStateOf(0f) }
-    val seekDragModifier = Modifier.pointerInput(player, isCurrentPage) {
-        val exo = player ?: return@pointerInput
+    val seekDragModifier = Modifier.pointerInput(abPlayback, isCurrentPage) {
+        val playback = abPlayback ?: return@pointerInput
         if (!isCurrentPage) return@pointerInput
         detectHorizontalDragGestures(
             onDragStart = { seekDragAmount = 0f },
             onDragEnd = {
                 val deltaMs = calculateDragDeltaMs(seekDragAmount)
                 if (deltaMs != 0L) {
-                    exo.seekTo(exo.clampSeekPositionMs(exo.currentPosition + deltaMs))
+                    playback.seekTo(playback.positionMs + deltaMs)
                 }
             },
             onDragCancel = { seekDragAmount = 0f },

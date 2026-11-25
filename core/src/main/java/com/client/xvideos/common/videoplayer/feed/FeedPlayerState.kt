@@ -14,10 +14,12 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.PlayerPool
+import androidx.media3.common.util.ExperimentalApi
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
@@ -40,7 +42,7 @@ import java.util.WeakHashMap
  * Все методы — только с главного потока (требование `PlayerPool`).
  */
 @MainThread
-@OptIn(UnstableApi::class)
+@OptIn(UnstableApi::class, ExperimentalApi::class)
 class FeedPlayerState(
     context: Context,
     private val poolCapacity: Int = DEFAULT_POOL_CAPACITY,
@@ -75,6 +77,10 @@ class FeedPlayerState(
 
     private val builder: DefaultPreloadManager.Builder =
         DefaultPreloadManager.Builder(appContext, statusControl)
+            .setRenderersFactory(
+                DefaultRenderersFactory(appContext)
+                    .experimentalSetEnableMediaCodecVideoRendererPrewarming(true)
+            )
             .setLoadControl(
                 DefaultLoadControl.Builder()
                     .setBufferDurationsMs(
