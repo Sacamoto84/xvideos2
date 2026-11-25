@@ -194,6 +194,7 @@ fun LazyRow123(
 
         if (enableFastScroll) {
             LazyGridFastScroll(
+                hazeState = hazeState,
                 state = gridState,
                 modifier = Modifier.matchParentSize(),
                 sessionKey = fastScrollSessionKey ?: gridState,

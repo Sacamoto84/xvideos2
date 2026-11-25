@@ -208,6 +208,7 @@ fun L_LazyRowPictureDetails(
         */
 
         MediaFastScroll(
+            hazeState = hazeState,
             modifier = Modifier.matchParentSize(),
             sessionKey = fastScrollSessionKey ?: gridState,
             canScrollBackward = { gridState.canScrollBackward },

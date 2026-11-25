@@ -303,6 +303,7 @@ fun R_ScreenNichesTabContent(
                 }
                 */
                 LazyListFastScroll(
+                    hazeState = hazeState,
                     state = listState,
                     modifier = Modifier.matchParentSize(),
                     itemCount = { niches.size },

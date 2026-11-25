@@ -43,8 +43,7 @@ fun FloatingScrollButtons(
     contentColor: Color = Theme.ScrollFab.contentColor,
     effect: ScrollButtonEffect? = null,
 ) {
-    val effectName by Settings.scroll_buttons_effect.field.collectAsStateWithLifecycle()
-    val resolvedEffect = effect ?: remember(effectName) { ScrollButtonEffect.fromNameOrDefault(effectName) }
+    val resolvedEffect = effect ?: rememberScrollButtonEffect()
 
     AnimatedVisibility(
         visible = visible && (showScrollToTop || showScrollToBottom),
@@ -77,6 +76,12 @@ fun FloatingScrollButtons(
             )
         }
     }
+}
+
+@Composable
+internal fun rememberScrollButtonEffect(): ScrollButtonEffect {
+    val effectName by Settings.scroll_buttons_effect.field.collectAsStateWithLifecycle()
+    return remember(effectName) { ScrollButtonEffect.fromNameOrDefault(effectName) }
 }
 
 @Preview

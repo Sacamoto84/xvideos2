@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +34,8 @@ import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumGridItem
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 // import my.nanihadesuka.compose.LazyVerticalGridScrollbar
 // import my.nanihadesuka.compose.ScrollbarSettings
 
@@ -48,6 +51,7 @@ fun AlbumListPageGrid(
     modifier: Modifier = Modifier,
     enableFastScroll: Boolean = true,
 ) {
+    val hazeState = remember { HazeState() }
     val gridColumns = adaptiveUserGridColumns(columns)
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
         stateGrid,
@@ -73,7 +77,7 @@ fun AlbumListPageGrid(
             horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             state = stateGrid,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().hazeSource(hazeState),
             columns = GridCells.Fixed(gridColumns)
         ) {
             item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
@@ -116,6 +120,7 @@ fun AlbumListPageGrid(
 
         if (enableFastScroll) {
             LazyGridFastScroll(
+                hazeState = hazeState,
                 state = stateGrid,
                 modifier = Modifier.matchParentSize(),
                 itemCount = { pageItems.size },

@@ -8,11 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeState
 
 @Composable
 fun LazyListFastScroll(
     state: LazyListState,
     modifier: Modifier,
+    hazeState: HazeState,
     itemCount: () -> Int,
     visibleRange: () -> Pair<Float, Float>,
     firstItemIndex: Int = 0,
@@ -21,6 +23,7 @@ fun LazyListFastScroll(
 ) {
     MediaFastScroll(
         modifier = modifier,
+        hazeState = hazeState,
         sessionKey = sessionKey,
         canScrollBackward = { state.canScrollBackward },
         canScrollForward = { state.canScrollForward },
@@ -46,6 +49,7 @@ fun LazyListFastScroll(
 fun LazyGridFastScroll(
     state: LazyGridState,
     modifier: Modifier,
+    hazeState: HazeState,
     itemCount: () -> Int,
     visibleRange: () -> Pair<Float, Float>,
     firstItemIndex: Int = 0,
@@ -54,6 +58,7 @@ fun LazyGridFastScroll(
 ) {
     MediaFastScroll(
         modifier = modifier,
+        hazeState = hazeState,
         sessionKey = sessionKey,
         canScrollBackward = { state.canScrollBackward },
         canScrollForward = { state.canScrollForward },

@@ -39,6 +39,8 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.CreatorListItem
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DeleteCreatorDialog
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.ui.theme.XvideosTheme
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 object R_Screen_CreatorsTab : Screen {
 
@@ -105,6 +107,7 @@ fun CreatorsTabContent(
     modifier: Modifier = Modifier,
     onOpenAccountFollowing: () -> Unit = {},
 ) {
+    val hazeState = remember { HazeState() }
     Scaffold(
         modifier = modifier,
         containerColor = Theme.background,
@@ -118,7 +121,7 @@ fun CreatorsTabContent(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().hazeSource(hazeState)
             ) {
                 // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
                 // полосе 640dp по одной, чтобы список свайпался по всей ширине.
@@ -157,6 +160,7 @@ fun CreatorsTabContent(
             }
             */
             LazyListFastScroll(
+                hazeState = hazeState,
                 state = state,
                 modifier = Modifier.matchParentSize(),
                 itemCount = { creators.size },

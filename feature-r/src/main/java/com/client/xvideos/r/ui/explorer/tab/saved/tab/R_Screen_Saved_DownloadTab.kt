@@ -53,6 +53,8 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadView
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadViewMenu
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
 import com.client.xvideos.ui.theme.XvideosTheme
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 object R_Screen_Saved_DownloadTab : Screen {
 
@@ -136,6 +138,7 @@ private fun SavedDownloadTabContent(
     onDeleteClick: (GifsInfo) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val hazeState = remember { HazeState() }
     val items = remember(downloads, sort) { downloads.sortedItems(sort) }
     val showGrid = view == DownloadView.GRID
     val columns = if (showGrid) adaptiveUserGridColumns(3) else 1
@@ -171,7 +174,7 @@ private fun SavedDownloadTabContent(
                 verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().hazeSource(hazeState),
                 contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
             ) {
                 items(
@@ -202,6 +205,7 @@ private fun SavedDownloadTabContent(
             }
             */
             LazyGridFastScroll(
+                hazeState = hazeState,
                 state = state,
                 modifier = Modifier.matchParentSize(),
                 itemCount = { items.size },

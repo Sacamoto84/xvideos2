@@ -47,6 +47,8 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molec
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.model.SubscribedAlbumsUiState
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.ui.theme.XvideosTheme
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 /**
  * Экран подписанных альбомов пользователя с сервера L.
@@ -184,6 +186,7 @@ fun SubscribedAlbumsTabContent(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hazeState = remember { HazeState() }
     PullToRefreshBox(
         isRefreshing = uiState.isRefreshing,
         onRefresh = onRefresh,
@@ -218,7 +221,8 @@ fun SubscribedAlbumsTabContent(
                     topInset = topInset,
                     isLoading = uiState.isLoading,
                     onAlbumClick = onAlbumClick,
-                    onAlbumLongClick = onAlbumLongClick
+                    onAlbumLongClick = onAlbumLongClick,
+                    modifier = Modifier.hazeSource(hazeState),
                 )
 
                 /*
@@ -233,6 +237,7 @@ fun SubscribedAlbumsTabContent(
                 }
                 */
                 LazyGridFastScroll(
+                    hazeState = hazeState,
                     state = state,
                     modifier = Modifier.matchParentSize(),
                     itemCount = { uiState.albums.size },

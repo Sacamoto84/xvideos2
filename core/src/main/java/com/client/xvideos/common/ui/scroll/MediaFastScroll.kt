@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitDragOrCancellation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -22,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -53,7 +50,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.settings.ScrollButtonEffect
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.atom.rememberScrollButtonEffect
+import com.client.xvideos.common.ui.atom.scrollFabSurface
 import com.client.xvideos.common.ui.composition.LocalScrollbarAlpha
+import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -72,6 +74,7 @@ private const val POSITION_LABEL_FADE_MILLIS = 150
 @Composable
 fun MediaFastScroll(
     modifier: Modifier,
+    hazeState: HazeState,
     sessionKey: Any?,
     canScrollBackward: () -> Boolean,
     canScrollForward: () -> Boolean,
@@ -129,6 +132,7 @@ fun MediaFastScroll(
         val travel = (maxHeight - bottomClearance - handleHitSize).coerceAtLeast(0.dp)
         if (maxWidth < handleHitSize || travel == 0.dp) return@BoxWithConstraints
         val travelPx = with(LocalDensity.current) { travel.toPx() }
+        val effect = rememberScrollButtonEffect()
 
         Row(
             modifier = Modifier
@@ -171,9 +175,9 @@ fun MediaFastScroll(
                         text = text,
                         modifier = Modifier
                             .padding(end = 4.dp)
-                            .background(MaterialTheme.colorScheme.inverseSurface, CircleShape)
+                            .scrollFabSurface(effect = effect, hazeState = hazeState)
                             .padding(horizontal = 12.dp, vertical = 6.dp),
-                        color = MaterialTheme.colorScheme.inverseOnSurface,
+                        color = Theme.ScrollFab.contentColor,
                         style = MaterialTheme.typography.labelLarge,
                         maxLines = 1,
                     )
@@ -220,26 +224,29 @@ fun MediaFastScroll(
                             }
                         }
                     },
-                isDragging = frozenRange != null,
+                effect = effect,
+                hazeState = hazeState,
             )
         }
     }
 }
 
 @Composable
-private fun FastScrollHandle(modifier: Modifier, isDragging: Boolean) {
-    val colors = MaterialTheme.colorScheme
+private fun FastScrollHandle(
+    modifier: Modifier,
+    effect: ScrollButtonEffect,
+    hazeState: HazeState,
+) {
     Box(modifier, contentAlignment = Alignment.CenterEnd) {
         Column(
             modifier = Modifier
                 .padding(end = 2.dp)
                 .size(width = 30.dp, height = 38.dp)
-                .background(if (isDragging) colors.inverseSurface else colors.surfaceContainerHigh, CircleShape)
-                .border(1.dp, colors.outlineVariant, CircleShape),
+                .scrollFabSurface(effect = effect, hazeState = hazeState),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            val tint = if (isDragging) colors.inverseOnSurface else colors.onSurface
+            val tint = Theme.ScrollFab.contentColor
             Icon(Icons.Default.KeyboardArrowUp, null, Modifier.size(16.dp), tint)
             Icon(Icons.Default.KeyboardArrowDown, null, Modifier.size(16.dp), tint)
         }

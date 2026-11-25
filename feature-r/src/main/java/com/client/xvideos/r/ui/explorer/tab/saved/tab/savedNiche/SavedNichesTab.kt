@@ -39,6 +39,8 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule.Dialog
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule.SavedNicheRow
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
 import com.client.xvideos.ui.theme.XvideosTheme
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 object SavedNichesTab : Screen {
 
@@ -104,6 +106,7 @@ fun SavedNichesTabContent(
     modifier: Modifier = Modifier,
     onOpenAccountNiches: () -> Unit = {},
 ) {
+    val hazeState = remember { HazeState() }
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = Theme.background,
@@ -117,7 +120,7 @@ fun SavedNichesTabContent(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().hazeSource(hazeState)
             ) {
                 // Шапка — на всю ширину и уезжает со списком, как в X; строки — в
                 // полосе 640dp по одной, чтобы список свайпался по всей ширине.
@@ -153,6 +156,7 @@ fun SavedNichesTabContent(
             }
             */
             LazyListFastScroll(
+                hazeState = hazeState,
                 state = state,
                 modifier = Modifier.matchParentSize(),
                 itemCount = { niches.size },

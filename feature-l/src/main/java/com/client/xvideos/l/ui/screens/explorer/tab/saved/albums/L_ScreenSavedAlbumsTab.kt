@@ -46,6 +46,8 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.atom.SavedAlbum
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.LSortMenuButton
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
 import com.client.xvideos.ui.theme.XvideosTheme
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
@@ -135,6 +137,7 @@ fun SavedAlbumsTabContent(
                 )
             }
         } else {
+            val hazeState = remember { HazeState() }
             val columns = adaptiveGridColumns()
             val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
                 state,
@@ -149,7 +152,7 @@ fun SavedAlbumsTabContent(
                 verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
                 columns = GridCells.Fixed(columns),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().hazeSource(hazeState),
             ) {
                 item(
                     key = "top_spacer",
@@ -196,6 +199,7 @@ fun SavedAlbumsTabContent(
             }
             */
             LazyGridFastScroll(
+                hazeState = hazeState,
                 state = state,
                 modifier = Modifier.matchParentSize(),
                 itemCount = { albums.size },

@@ -65,14 +65,7 @@ fun ScrollFabSlot(
                     focusedElevation = 0.dp,
                     hoveredElevation = 0.dp
                 ),
-                modifier = Modifier
-                    .clip(Theme.ScrollFab.shape)
-                    .scrollFabVisualEffect(effect = effect, hazeState = hazeState)
-                    .border(
-                        width = Theme.ScrollFab.borderWidth,
-                        brush = Theme.ScrollFab.glassBorder,
-                        shape = Theme.ScrollFab.shape
-                    )
+                modifier = Modifier.scrollFabSurface(effect = effect, hazeState = hazeState)
             ) {
                 Icon(
                     imageVector = icon,
@@ -106,22 +99,25 @@ private val scrollFabGlassStyle: GlassStyle by lazy {
 }
 
 @OptIn(ExperimentalHazeApi::class)
-internal fun Modifier.scrollFabVisualEffect(
+internal fun Modifier.scrollFabSurface(
     effect: ScrollButtonEffect,
-    hazeState: HazeState
-): Modifier = when (effect) {
-    ScrollButtonEffect.FLAT -> this.background(
-        color = Theme.ScrollFab.backgroundColor,
-        shape = Theme.ScrollFab.shape
-    )
-    ScrollButtonEffect.BLUR -> this.hazeBlur(
-        input = HazeInput.Sources(hazeState),
-        style = scrollFabBlurStyle
-    )
-    ScrollButtonEffect.GLASS -> this.hazeGlass(
-        input = HazeInput.Sources(hazeState),
-        style = scrollFabGlassStyle
-    )
+    hazeState: HazeState,
+): Modifier {
+    val shape = Theme.ScrollFab.shape
+    val surface = when (effect) {
+        ScrollButtonEffect.FLAT -> Modifier.background(Theme.ScrollFab.backgroundColor, shape)
+        ScrollButtonEffect.BLUR -> Modifier.hazeBlur(
+            input = HazeInput.Sources(hazeState),
+            style = scrollFabBlurStyle,
+        )
+        ScrollButtonEffect.GLASS -> Modifier.hazeGlass(
+            input = HazeInput.Sources(hazeState),
+            style = scrollFabGlassStyle,
+        )
+    }
+    return clip(shape)
+        .then(surface)
+        .border(Theme.ScrollFab.borderWidth, Theme.ScrollFab.glassBorder, shape)
 }
 
 @Preview
