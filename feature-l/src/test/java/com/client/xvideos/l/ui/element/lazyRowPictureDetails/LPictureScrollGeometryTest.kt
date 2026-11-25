@@ -41,32 +41,24 @@ class LPictureScrollGeometryTest {
     }
 
     @Test
-    fun aTallCardDoesNotHoldTheNumberWhileLaterCardsCrossTheViewportEdge() {
-        val pictures = listOf(
-            VisiblePicture(index = 2, top = -690, height = 1200),
-            VisiblePicture(index = 6, top = -35, height = 240),
-            VisiblePicture(index = 7, top = 70, height = 180),
-        )
-        fun numberAt(edge: Int) = pictureNumberAtViewportStart(
-            pictures.asSequence(), 2..9, viewportStart = edge, viewportEnd = edge + 300,
+    fun numbersBetweenSimultaneousCardStartsAreSpreadAcrossUnequalRowDistances() {
+        val geometry = LPictureScrollGeometry(
+            firstItemIndex = 2,
+            itemTops = longArrayOf(60, 60, 60, 60, 160, 160, 160, 400),
+            contentHeight = 500,
         )
 
-        assertEquals(5, numberAt(0))
-        assertEquals(6, numberAt(64))
+        val positions = listOf(0L, 60L, 85L, 110L, 135L, 160L, 240L, 320L, 400L, 500L)
+        assertEquals(listOf(1, 1, 2, 3, 4, 5, 6, 7, 8, 8), positions.map(geometry::numberAt))
     }
 
     @Test
-    fun theNextVisibleRowWinsInAGapAndTiesFollowTheListOrder() {
-        val pictures = sequenceOf(
-            VisiblePicture(index = 0, top = -20, height = 100),
-            VisiblePicture(index = 1, top = -250, height = 400),
-            VisiblePicture(index = 5, top = 8, height = 120),
-            VisiblePicture(index = 4, top = 8, height = 85),
-            VisiblePicture(index = 3, top = -34, height = 20),
-        )
+    fun emptyGridHasNoNumberAndOneRowStaysAtOne() {
+        val empty = LPictureScrollGeometry(1, longArrayOf(), 60)
+        val singleRow = LPictureScrollGeometry(1, longArrayOf(60, 60), 560)
 
-        assertEquals(4, pictureNumberAtViewportStart(pictures, 1..7, 0, 200))
-        assertEquals(4, pictureNumberAtViewportStart(pictures, 1..7, 8, 208))
-        assertEquals(null, pictureNumberAtViewportStart(pictures, 1..7, 200, 400))
+        assertEquals(null, empty.numberAt(0))
+        assertEquals(1, singleRow.numberAt(0))
+        assertEquals(1, singleRow.numberAt(200))
     }
 }

@@ -21,17 +21,38 @@ internal class LPictureScrollGeometry(
             return LPictureScrollTarget(0, position.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
         }
 
+        val item = firstAtSameHeight(nextStartAfter(position) - 1)
+        val offset = (position - itemTops[item]).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        return LPictureScrollTarget(firstItemIndex + item, offset)
+    }
+
+    fun numberAt(position: Long): Int? {
+        if (itemTops.isEmpty()) return null
+        val next = nextStartAfter(position)
+        if (next == 0) return 1
+        val current = firstAtSameHeight(next - 1)
+        if (next == itemTops.size) return current + 1
+
+        // Spread the ordinals that share a row across the distance to the next row.
+        val fraction = (position - itemTops[current]).toDouble() / (itemTops[next] - itemTops[current])
+        return (current + 1 + fraction * (next - current)).roundToInt()
+    }
+
+    private fun nextStartAfter(position: Long): Int {
         var low = 0
         var high = itemTops.size
         while (low < high) {
             val middle = (low + high) ushr 1
             if (itemTops[middle] <= position) low = middle + 1 else high = middle
         }
-        var item = low - 1
+        return low
+    }
+
+    private fun firstAtSameHeight(index: Int): Int {
+        var item = index
         // Cards that start at the same height form one anchor across the columns.
         while (item > 0 && itemTops[item - 1] == itemTops[item]) item--
-        val offset = (position - itemTops[item]).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        return LPictureScrollTarget(firstItemIndex + item, offset)
+        return item
     }
 }
 

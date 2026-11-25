@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.scroll.MediaFastScroll
+import com.client.xvideos.common.ui.scroll.MediaFastScrollDrag
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.model.safeAspectRatio
 import dev.chrisbanes.haze.HazeState
@@ -98,22 +99,12 @@ internal fun LPictureFastScroll(
             }
         },
         mediaRange = { firstItemIndex until firstItemIndex + pictures.size },
-        topVisibleMediaNumber = { range ->
-            val layout = gridState.layoutInfo
-            pictureNumberAtViewportStart(
-                pictures = layout.visibleItemsInfo.asSequence().map {
-                    VisiblePicture(index = it.index, top = it.offset.y, height = it.size.height)
-                },
-                mediaRange = range,
-                viewportStart = layout.viewportStartOffset,
-                viewportEnd = layout.viewportEndOffset,
-            )
-        },
         beginDrag = { range ->
             val frozenGeometry = geometry
             val extent = frozenGeometry.maxScroll(viewport.height)
+            val positionAt: (Float) -> Long = { (extent * it.toDouble()).roundToLong() }
             val move: (Float) -> Unit = { fraction ->
-                val target = (extent * fraction.toDouble()).roundToLong()
+                val target = positionAt(fraction)
                 val layout = gridState.layoutInfo
                 when {
                     fraction <= 0f -> if (gridState.canScrollBackward) gridState.requestScrollToItem(0)
@@ -135,7 +126,10 @@ internal fun LPictureFastScroll(
                     }
                 }
             }
-            move
+            MediaFastScrollDrag(
+                moveTo = move,
+                positionNumber = { frozenGeometry.numberAt(positionAt(it)) },
+            )
         },
         stopScroll = { gridState.stopScroll(MutatePriority.UserInput) },
         bottomClearance = bottomClearance,
@@ -192,16 +186,3 @@ private fun LazyStaggeredGridState.pixelPosition(
 
 private fun ScrollAnchor.matches(item: LazyStaggeredGridItemInfo): Boolean =
     key == item.key && lane == item.lane && height == item.size.height
-
-internal data class VisiblePicture(val index: Int, val top: Int, val height: Int)
-
-internal fun pictureNumberAtViewportStart(
-    pictures: Sequence<VisiblePicture>,
-    mediaRange: IntRange,
-    viewportStart: Int,
-    viewportEnd: Int,
-): Int? = pictures
-    .filter { it.index in mediaRange && it.top < viewportEnd && it.top + it.height > viewportStart }
-    // Compare the real tops so a card crossing the edge cannot mask a closer one.
-    .minWithOrNull(compareBy({ abs(it.top - viewportStart) }, { it.index }))
-    ?.let { it.index - mediaRange.first + 1 }

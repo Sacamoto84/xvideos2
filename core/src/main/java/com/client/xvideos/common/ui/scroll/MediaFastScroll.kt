@@ -67,9 +67,16 @@ private val handleHitSize = 48.dp
 private const val HANDLE_HIDE_DELAY_MILLIS = 1_500L
 private const val POSITION_LABEL_FADE_MILLIS = 150
 
+class MediaFastScrollDrag(
+    val moveTo: (Float) -> Unit,
+    val positionNumber: (Float) -> Int?,
+)
+
+private data class ActiveDrag(val range: IntRange, val callbacks: MediaFastScrollDrag)
+
 /**
- * A draggable thumb over a lazy grid. [mediaRange] excludes auxiliary rows, and
- * [topVisibleMediaNumber] returns a one-based ordinal within the supplied range.
+ * A draggable thumb over a lazy layout. [mediaRange] excludes auxiliary rows.
+ * [beginDrag] receives the range used for the duration of the gesture.
  */
 @Composable
 fun MediaFastScroll(
@@ -81,8 +88,7 @@ fun MediaFastScroll(
     isScrollInProgress: () -> Boolean,
     positionFraction: () -> Float,
     mediaRange: () -> IntRange,
-    topVisibleMediaNumber: (IntRange) -> Int?,
-    beginDrag: (IntRange) -> (Float) -> Unit,
+    beginDrag: (IntRange) -> MediaFastScrollDrag,
     stopScroll: suspend () -> Unit,
     bottomClearance: Dp = 0.dp,
 ) = key(sessionKey) {
@@ -92,10 +98,9 @@ fun MediaFastScroll(
     val scrolling by rememberUpdatedState(isScrollInProgress)
     val currentFraction by rememberUpdatedState(positionFraction)
     val availableMedia by rememberUpdatedState(mediaRange)
-    val visibleMediaNumber by rememberUpdatedState(topVisibleMediaNumber)
     val startDrag by rememberUpdatedState(beginDrag)
     val stopInertia by rememberUpdatedState(stopScroll)
-    var activeRange by remember { mutableStateOf<IntRange?>(null) }
+    var activeDrag by remember { mutableStateOf<ActiveDrag?>(null) }
     var dragFraction by remember { mutableFloatStateOf(0f) }
     var showHandle by remember { mutableStateOf(false) }
 
@@ -103,7 +108,7 @@ fun MediaFastScroll(
         derivedStateOf { pagerAlpha() > 0f && (canScrollBack() || canScrollAhead()) && !availableMedia().isEmpty() }
     }
     LaunchedEffect(Unit) {
-        snapshotFlow { enabled && (scrolling() || activeRange != null) }.collectLatest { active ->
+        snapshotFlow { enabled && (scrolling() || activeDrag != null) }.collectLatest { active ->
             if (active) {
                 showHandle = true
             } else if (showHandle) {
@@ -113,8 +118,8 @@ fun MediaFastScroll(
         }
     }
     LaunchedEffect(Unit) {
-        snapshotFlow { activeRange?.let { !availableMedia().preserves(it) } == true }
-            .collect { invalidated -> if (invalidated) activeRange = null }
+        snapshotFlow { activeDrag?.let { !availableMedia().preserves(it.range) } == true }
+            .collect { invalidated -> if (invalidated) activeDrag = null }
     }
 
     val rail = modifier
@@ -133,15 +138,15 @@ fun MediaFastScroll(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .offset {
-                    val fraction = if (activeRange == null) currentFraction() else dragFraction
+                    val fraction = if (activeDrag == null) currentFraction() else dragFraction
                     IntOffset(0, (fraction * travelPx).roundToInt())
                 },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val frozenRange = activeRange
-            val positionLabel = if (frozenRange != null) {
-                val number by remember(frozenRange) { derivedStateOf { visibleMediaNumber(frozenRange) } }
-                number?.let { "$it / ${frozenRange.last - frozenRange.first + 1}" }
+            val drag = activeDrag
+            val positionLabel = if (drag != null) {
+                val number by remember(drag) { derivedStateOf { drag.callbacks.positionNumber(dragFraction) } }
+                number?.let { "$it / ${drag.range.last - drag.range.first + 1}" }
             } else {
                 null
             }
@@ -153,7 +158,7 @@ fun MediaFastScroll(
                 visible = positionLabel != null,
                 modifier = Modifier.offset {
                     // Keep the fading label at the last drag position as the handle reanchors.
-                    val offsetY = if (activeRange == null) {
+                    val offsetY = if (activeDrag == null) {
                         ((dragFraction - currentFraction()) * travelPx).roundToInt()
                     } else {
                         0
@@ -192,17 +197,17 @@ fun MediaFastScroll(
                                 down.consume()
                                 val stop = launch(start = CoroutineStart.UNDISPATCHED) { stopInertia() }
                                 dragFraction = currentFraction()
-                                activeRange = range
                                 try {
-                                    val moveTo = startDrag(range)
+                                    val callbacks = startDrag(range)
+                                    activeDrag = ActiveDrag(range, callbacks)
                                     var pointer = down.id
                                     while (true) {
                                         val change = awaitDragOrCancellation(pointer) ?: break
                                         val next = (dragFraction + change.positionChange().y / travelPx)
                                             .coerceIn(0f, 1f)
-                                        if (activeRange != null && availableMedia().preserves(range) && next != dragFraction) {
+                                        if (activeDrag != null && availableMedia().preserves(range) && next != dragFraction) {
                                             dragFraction = next
-                                            moveTo(next)
+                                            callbacks.moveTo(next)
                                         }
                                         change.consume()
                                         if (!change.pressed) break
@@ -210,7 +215,7 @@ fun MediaFastScroll(
                                     }
                                 } finally {
                                     stop.cancel()
-                                    activeRange = null
+                                    activeDrag = null
                                 }
                             }
                         }

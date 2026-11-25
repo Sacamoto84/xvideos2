@@ -33,16 +33,20 @@ fun LazyListFastScroll(
             fastScrollFraction(start, end - start, state.canScrollBackward, state.canScrollForward)
         },
         mediaRange = { firstItemIndex until firstItemIndex + itemCount() },
-        topVisibleMediaNumber = { items ->
-            val layout = state.layoutInfo
-            layout.visibleItemsInfo.asSequence()
-                .filter {
-                    it.index in items && it.offset < layout.viewportEndOffset &&
-                        it.offset + it.size > layout.viewportStartOffset
-                }
-                .minOfOrNull { it.index - items.first + 1 }
+        beginDrag = { items ->
+            MediaFastScrollDrag(
+                moveTo = indexedDrag(items) { state.requestScrollToItem(it) },
+                positionNumber = {
+                    val layout = state.layoutInfo
+                    layout.visibleItemsInfo.asSequence()
+                        .filter {
+                            it.index in items && it.offset < layout.viewportEndOffset &&
+                                it.offset + it.size > layout.viewportStartOffset
+                        }
+                        .minOfOrNull { it.index - items.first + 1 }
+                },
+            )
         },
-        beginDrag = { range -> indexedDrag(range) { state.requestScrollToItem(it) } },
         stopScroll = { state.stopScroll(MutatePriority.UserInput) },
         bottomClearance = bottomClearance,
     )
@@ -71,16 +75,20 @@ fun LazyGridFastScroll(
             fastScrollFraction(start, end - start, state.canScrollBackward, state.canScrollForward)
         },
         mediaRange = { firstItemIndex until firstItemIndex + itemCount() },
-        topVisibleMediaNumber = { items ->
-            val layout = state.layoutInfo
-            layout.visibleItemsInfo.asSequence()
-                .filter {
-                    it.index in items && it.offset.y < layout.viewportEndOffset &&
-                        it.offset.y + it.size.height > layout.viewportStartOffset
-                }
-                .minOfOrNull { it.index - items.first + 1 }
+        beginDrag = { items ->
+            MediaFastScrollDrag(
+                moveTo = indexedDrag(items) { state.requestScrollToItem(it) },
+                positionNumber = {
+                    val layout = state.layoutInfo
+                    layout.visibleItemsInfo.asSequence()
+                        .filter {
+                            it.index in items && it.offset.y < layout.viewportEndOffset &&
+                                it.offset.y + it.size.height > layout.viewportStartOffset
+                        }
+                        .minOfOrNull { it.index - items.first + 1 }
+                },
+            )
         },
-        beginDrag = { range -> indexedDrag(range) { state.requestScrollToItem(it) } },
         stopScroll = { state.stopScroll(MutatePriority.UserInput) },
         bottomClearance = bottomClearance,
     )
