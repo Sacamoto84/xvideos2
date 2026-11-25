@@ -114,6 +114,7 @@ fun ScreenNicheContent(
 ) {
     PageableFeed(
         host = lazyHost,
+        enableFastScroll = true,
         modifier = modifier,
         onClickOpenProfile = onCreatorClick,
         header = { scrollMode ->
