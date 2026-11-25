@@ -1,0 +1,218 @@
+package com.client.xvideos.common.ui.scroll
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+
+private val handleHitSize = 48.dp
+private const val HANDLE_HIDE_DELAY_MILLIS = 1_500L
+
+/**
+ * A draggable thumb over a lazy grid. [mediaRange] excludes auxiliary rows, and
+ * [topVisibleMediaNumber] returns a one-based ordinal within the supplied range.
+ */
+@Composable
+fun MediaFastScroll(
+    modifier: Modifier,
+    sessionKey: Any?,
+    canScrollBackward: () -> Boolean,
+    canScrollForward: () -> Boolean,
+    isScrollInProgress: () -> Boolean,
+    visibleRange: () -> Pair<Float, Float>,
+    mediaRange: () -> IntRange,
+    topVisibleMediaNumber: (IntRange) -> Int?,
+    requestScrollToItem: (Int) -> Unit,
+    stopScroll: suspend () -> Unit,
+    bottomClearance: Dp = 0.dp,
+) = key(sessionKey) {
+    val canScrollBack by rememberUpdatedState(canScrollBackward)
+    val canScrollAhead by rememberUpdatedState(canScrollForward)
+    val scrolling by rememberUpdatedState(isScrollInProgress)
+    val displayedRange by rememberUpdatedState(visibleRange)
+    val availableMedia by rememberUpdatedState(mediaRange)
+    val visibleMediaNumber by rememberUpdatedState(topVisibleMediaNumber)
+    val requestPosition by rememberUpdatedState(requestScrollToItem)
+    val stopInertia by rememberUpdatedState(stopScroll)
+    var activeRange by remember { mutableStateOf<IntRange?>(null) }
+    var dragFraction by remember { mutableFloatStateOf(0f) }
+    var showHandle by remember { mutableStateOf(false) }
+
+    fun currentFraction(): Float {
+        val (start, end) = displayedRange()
+        return fastScrollFraction(start, end - start, canScrollBack(), canScrollAhead())
+    }
+
+    val enabled by remember {
+        derivedStateOf { (canScrollBack() || canScrollAhead()) && !availableMedia().isEmpty() }
+    }
+    LaunchedEffect(Unit) {
+        snapshotFlow { enabled && (scrolling() || activeRange != null) }.collectLatest { active ->
+            if (active) {
+                showHandle = true
+            } else if (showHandle) {
+                delay(HANDLE_HIDE_DELAY_MILLIS)
+                showHandle = false
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        snapshotFlow { activeRange?.let { !availableMedia().preserves(it) } == true }
+            .collect { invalidated -> if (invalidated) activeRange = null }
+    }
+
+    if (enabled && showHandle) BoxWithConstraints(modifier) {
+        val travel = (maxHeight - bottomClearance - handleHitSize).coerceAtLeast(0.dp)
+        if (maxWidth < handleHitSize || travel == 0.dp) return@BoxWithConstraints
+        val travelPx = with(LocalDensity.current) { travel.toPx() }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset {
+                    val fraction = if (activeRange == null) currentFraction() else dragFraction
+                    IntOffset(0, (fraction * travelPx).roundToInt())
+                },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val frozenRange = activeRange
+            if (frozenRange != null) {
+                val number by remember(frozenRange) { derivedStateOf { visibleMediaNumber(frozenRange) } }
+                number?.let {
+                    Text(
+                        text = "$it / ${frozenRange.last - frozenRange.first + 1}",
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .background(MaterialTheme.colorScheme.inverseSurface, CircleShape)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                    )
+                }
+            }
+            FastScrollHandle(
+                modifier = Modifier
+                    .size(handleHitSize)
+                    .semantics { contentDescription = "Быстрая прокрутка" }
+                    .pointerInput(travelPx) {
+                        coroutineScope {
+                            awaitEachGesture {
+                                val down = awaitFirstDown()
+                                val range = availableMedia()
+                                if (!enabled || range.isEmpty()) return@awaitEachGesture
+
+                                down.consume()
+                                val stop = launch(start = CoroutineStart.UNDISPATCHED) { stopInertia() }
+                                dragFraction = currentFraction()
+                                activeRange = range
+                                try {
+                                    var lastTarget: Int? = null
+                                    drag(down.id) { change ->
+                                        val next = (dragFraction + change.positionChange().y / travelPx)
+                                            .coerceIn(0f, 1f)
+                                        if (activeRange != null && availableMedia().preserves(range) && next != dragFraction) {
+                                            dragFraction = next
+                                            val target = fastScrollTarget(next, range)
+                                            if (target != null && target != lastTarget) {
+                                                requestPosition(target)
+                                                lastTarget = target
+                                            }
+                                        }
+                                        change.consume()
+                                    }
+                                } finally {
+                                    stop.cancel()
+                                    activeRange = null
+                                }
+                            }
+                        }
+                    },
+                isDragging = frozenRange != null,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FastScrollHandle(modifier: Modifier, isDragging: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    Box(modifier, contentAlignment = Alignment.CenterEnd) {
+        Column(
+            modifier = Modifier
+                .padding(end = 2.dp)
+                .size(width = 30.dp, height = 38.dp)
+                .background(if (isDragging) colors.inverseSurface else colors.surfaceContainerHigh, CircleShape)
+                .border(1.dp, colors.outlineVariant, CircleShape),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            val tint = if (isDragging) colors.inverseOnSurface else colors.onSurface
+            Icon(Icons.Default.KeyboardArrowUp, null, Modifier.size(16.dp), tint)
+            Icon(Icons.Default.KeyboardArrowDown, null, Modifier.size(16.dp), tint)
+        }
+    }
+}
+
+private fun IntRange.preserves(frozen: IntRange): Boolean = first == frozen.first && last >= frozen.last
+
+internal fun fastScrollTarget(fraction: Float, mediaRange: IntRange): Int? {
+    if (mediaRange.isEmpty()) return null
+    if (fraction <= 0f) return 0
+    return mediaRange.first + ((mediaRange.last - mediaRange.first) * fraction.coerceAtMost(1f)).roundToInt()
+}
+
+internal fun fastScrollFraction(
+    trackStart: Float,
+    visibleSpan: Float,
+    canScrollBackward: Boolean,
+    canScrollForward: Boolean,
+): Float = when {
+    !canScrollBackward -> 0f
+    !canScrollForward -> 1f
+    visibleSpan >= 1f -> trackStart.coerceIn(0f, 1f)
+    else -> (trackStart / (1f - visibleSpan)).coerceIn(0f, 1f)
+}
