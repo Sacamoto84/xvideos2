@@ -38,7 +38,6 @@ internal fun PageableFeed(
     modifier: Modifier = Modifier,
     onClickOpenProfile: (String) -> Unit = {},
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
-    enableFastScroll: Boolean = false,
 ) {
     val navigation = checkNotNull(host.pageNavigation)
     val state by navigation.state.collectAsStateWithLifecycle()
@@ -83,7 +82,6 @@ internal fun PageableFeed(
                     onClickOpenProfile = onClickOpenProfile,
                     contentBeforeList = renderHeader,
                     onAppendLoaded = onAppendLoaded,
-                    enableFastScroll = enableFastScroll,
                     fastScrollSessionKey = query,
                 )
             } else {
@@ -98,7 +96,7 @@ internal fun PageableFeed(
                             onClickOpenProfile = onClickOpenProfile,
                             showScrollButtons = false,
                             onAppendLoaded = onAppendLoaded,
-                            enableFastScroll = enableFastScroll && pagerState.currentPage == index,
+                            enableFastScroll = pagerState.currentPage == index,
                             fastScrollSessionKey = pageHost,
                         )
                     }

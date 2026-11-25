@@ -4,10 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -20,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -33,7 +30,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.atom.SavedTabHeader
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
+// import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.LazyListFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.model.NichesInfo
@@ -144,6 +142,7 @@ fun SavedNichesTabContent(
                 }
             }
 
+            /*
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -152,6 +151,14 @@ fun SavedNichesTabContent(
             ) {
                 VerticalScrollbar(scrollPercentProvider)
             }
+            */
+            LazyListFastScroll(
+                state = state,
+                modifier = Modifier.matchParentSize(),
+                itemCount = { niches.size },
+                visibleRange = scrollPercentProvider,
+                firstItemIndex = 1,
+            )
         }
     }
 }

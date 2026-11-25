@@ -5,10 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -20,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,7 +37,8 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.SavedTabHeader
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
+// import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.common.downloader.DownloadSort
@@ -193,6 +191,7 @@ private fun SavedDownloadTabContent(
                 }
             }
 
+            /*
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -201,6 +200,14 @@ private fun SavedDownloadTabContent(
             ) {
                 VerticalScrollbar(scrollPercentProvider)
             }
+            */
+            LazyGridFastScroll(
+                state = state,
+                modifier = Modifier.matchParentSize(),
+                itemCount = { items.size },
+                visibleRange = scrollPercentProvider,
+                sessionKey = sort to view,
+            )
         }
     }
 }

@@ -37,7 +37,8 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
+// import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.model.AlbumDetails
@@ -134,9 +135,12 @@ fun SavedAlbumsTabContent(
                 )
             }
         } else {
-            // itemsToIgnore = 1: нулевой item грида — full-span шапка (вырез и
-            // сортировка), без него индикатор считает её контентом и врёт по позиции и длине.
-            val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(state, itemsToIgnore = 1)
+            val columns = adaptiveGridColumns()
+            val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
+                state,
+                itemsToIgnore = 1,
+                numberOfColumns = columns,
+            )
             val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
             LazyVerticalGrid(
@@ -144,7 +148,7 @@ fun SavedAlbumsTabContent(
                 horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 state = state,
-                columns = GridCells.Fixed(adaptiveGridColumns()),
+                columns = GridCells.Fixed(columns),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 item(
@@ -185,10 +189,20 @@ fun SavedAlbumsTabContent(
                 }
             }
 
+            /*
             /** Вертикальный индикатор прокрутки */
             Box(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp)) {
                 VerticalScrollbar(scrollPercentProvider)
             }
+            */
+            LazyGridFastScroll(
+                state = state,
+                modifier = Modifier.matchParentSize(),
+                itemCount = { albums.size },
+                visibleRange = scrollPercentProvider,
+                firstItemIndex = 1,
+                sessionKey = order,
+            )
         }
     }
 }

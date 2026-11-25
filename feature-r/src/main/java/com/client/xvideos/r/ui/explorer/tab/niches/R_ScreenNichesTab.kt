@@ -8,12 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -46,7 +44,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
 import com.client.xvideos.common.ui.atom.FloatingScrollButtons
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
+// import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.LazyListFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.common.saved.SavedRed
@@ -195,7 +194,7 @@ fun R_ScreenNichesTabContent(
     actions: com.client.xvideos.r.ui.explorer.tab.niches.model.NichesTabActions,
     modifier: Modifier = Modifier,
 ) {
-    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(gridState = listState)
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(listState, itemsToIgnore = 1)
     val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
 
     if (cacheState.count == 0) {
@@ -293,6 +292,7 @@ fun R_ScreenNichesTabContent(
                     }
                 }
 
+                /*
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -301,6 +301,20 @@ fun R_ScreenNichesTabContent(
                 ) {
                     VerticalScrollbar(scrollPercentProvider)
                 }
+                */
+                LazyListFastScroll(
+                    state = listState,
+                    modifier = Modifier.matchParentSize(),
+                    itemCount = { niches.size },
+                    visibleRange = scrollPercentProvider,
+                    firstItemIndex = 1,
+                    sessionKey = sortType,
+                    bottomClearance = if (isSearchFocused) {
+                        0.dp
+                    } else {
+                        Theme.ScrollFab.size * 2 + Theme.ScrollFab.spacing + 16.dp
+                    },
+                )
 
                 FloatingScrollButtons(
                     visible = niches.isNotEmpty() && !isSearchFocused,

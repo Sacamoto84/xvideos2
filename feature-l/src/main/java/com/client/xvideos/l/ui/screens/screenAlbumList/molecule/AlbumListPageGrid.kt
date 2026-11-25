@@ -29,10 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
+import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.l.model.Album
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumGridItem
-import my.nanihadesuka.compose.LazyVerticalGridScrollbar
-import my.nanihadesuka.compose.ScrollbarSettings
+// import my.nanihadesuka.compose.LazyVerticalGridScrollbar
+// import my.nanihadesuka.compose.ScrollbarSettings
 
 @Composable
 fun AlbumListPageGrid(
@@ -43,8 +45,16 @@ fun AlbumListPageGrid(
     haptic: HapticFeedback,
     onAlbumClick: (Long) -> Unit,
     columns: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enableFastScroll: Boolean = true,
 ) {
+    val gridColumns = adaptiveUserGridColumns(columns)
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
+        stateGrid,
+        itemsToIgnore = 1,
+        numberOfColumns = gridColumns,
+    )
+    /*
     LazyVerticalGridScrollbar(
         state = stateGrid,
         modifier = modifier,
@@ -56,13 +66,15 @@ fun AlbumListPageGrid(
             alwaysShowScrollbar = false
         )
     ) {
+    */
+    Box(modifier) {
         LazyVerticalGrid(
             contentPadding = PaddingValues(horizontal = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             state = stateGrid,
             modifier = Modifier.fillMaxSize(),
-            columns = GridCells.Fixed(adaptiveUserGridColumns(columns))
+            columns = GridCells.Fixed(gridColumns)
         ) {
             item(key = "dummy", span = { GridItemSpan(maxLineSpan) }) {
                 if (title.isNotEmpty()) {
@@ -100,6 +112,16 @@ fun AlbumListPageGrid(
                     onAlbumClick = onAlbumClick
                 )
             }
+        }
+
+        if (enableFastScroll) {
+            LazyGridFastScroll(
+                state = stateGrid,
+                modifier = Modifier.matchParentSize(),
+                itemCount = { pageItems.size },
+                visibleRange = { scrollPercent.value },
+                firstItemIndex = 1,
+            )
         }
     }
 }

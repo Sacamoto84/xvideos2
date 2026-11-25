@@ -3,10 +3,8 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,7 +35,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
+// import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.model.AlbumDetails
@@ -75,7 +75,11 @@ object L_ScreenSubscribedAlbumsTab : Screen {
         val topInset = getTopInsetDp()
         val pullToRefreshState = rememberPullToRefreshState()
 
-        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(state, itemsToIgnore = 1)
+        val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
+            state,
+            itemsToIgnore = 1,
+            numberOfColumns = adaptiveGridColumns(),
+        )
 
         // Пагинация: автоматическая подгрузка следующей страницы при приближении к концу списка
         val shouldLoadMore by remember(state) {
@@ -217,6 +221,7 @@ fun SubscribedAlbumsTabContent(
                     onAlbumLongClick = onAlbumLongClick
                 )
 
+                /*
                 // Скроллбар
                 Box(
                     modifier = Modifier
@@ -226,6 +231,14 @@ fun SubscribedAlbumsTabContent(
                 ) {
                     VerticalScrollbar(scrollPercentProvider)
                 }
+                */
+                LazyGridFastScroll(
+                    state = state,
+                    modifier = Modifier.matchParentSize(),
+                    itemCount = { uiState.albums.size },
+                    visibleRange = scrollPercentProvider,
+                    firstItemIndex = 1,
+                )
             }
 
             if (uiState.isLoading && uiState.albums.isEmpty() && !uiState.isRefreshing) {

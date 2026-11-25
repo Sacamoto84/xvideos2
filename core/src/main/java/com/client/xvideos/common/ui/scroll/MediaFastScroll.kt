@@ -43,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
@@ -51,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.common.ui.composition.LocalScrollbarAlpha
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -80,6 +83,7 @@ fun MediaFastScroll(
     stopScroll: suspend () -> Unit,
     bottomClearance: Dp = 0.dp,
 ) = key(sessionKey) {
+    val pagerAlpha = LocalScrollbarAlpha.current
     val canScrollBack by rememberUpdatedState(canScrollBackward)
     val canScrollAhead by rememberUpdatedState(canScrollForward)
     val scrolling by rememberUpdatedState(isScrollInProgress)
@@ -97,8 +101,8 @@ fun MediaFastScroll(
         return fastScrollFraction(start, end - start, canScrollBack(), canScrollAhead())
     }
 
-    val enabled by remember {
-        derivedStateOf { (canScrollBack() || canScrollAhead()) && !availableMedia().isEmpty() }
+    val enabled by remember(pagerAlpha) {
+        derivedStateOf { pagerAlpha() > 0f && (canScrollBack() || canScrollAhead()) && !availableMedia().isEmpty() }
     }
     LaunchedEffect(Unit) {
         snapshotFlow { enabled && (scrolling() || activeRange != null) }.collectLatest { active ->
@@ -115,7 +119,12 @@ fun MediaFastScroll(
             .collect { invalidated -> if (invalidated) activeRange = null }
     }
 
-    val rail = modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+    val rail = modifier
+        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+        .graphicsLayer {
+            alpha = pagerAlpha()
+            compositingStrategy = CompositingStrategy.ModulateAlpha
+        }
     if (enabled && showHandle) BoxWithConstraints(rail) {
         val travel = (maxHeight - bottomClearance - handleHitSize).coerceAtLeast(0.dp)
         if (maxWidth < handleHitSize || travel == 0.dp) return@BoxWithConstraints

@@ -175,7 +175,8 @@ private fun Screen.ScreenAlbumListContent(
                         topInset = topInset,
                         haptic = haptic,
                         onAlbumClick = onAlbumClick,
-                        columns = selectedColumns
+                        columns = selectedColumns,
+                        enableFastScroll = pagerState.currentPage == page,
                     )
                 }
             }

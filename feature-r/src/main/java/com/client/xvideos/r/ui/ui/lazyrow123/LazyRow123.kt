@@ -1,20 +1,16 @@
 package com.client.xvideos.r.ui.ui.lazyrow123
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -66,8 +62,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.explorer.LocalRNavigationState
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
-import com.client.xvideos.common.ui.scroll.MediaFastScroll
+// import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -86,7 +82,7 @@ fun LazyRow123(
     showScrollButtons: Boolean = true,
     onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
     emptyMessage: String? = null,
-    enableFastScroll: Boolean = false,
+    enableFastScroll: Boolean = true,
     fastScrollSessionKey: Any? = null,
 ) {
 
@@ -113,8 +109,7 @@ fun LazyRow123(
     // Выбор пользователя плюс запас широкого окна; сам выбор в host не меняется.
     val gridColumns = adaptiveUserGridColumns(host.columns)
 
-    // Без `by`: см. VerticalScrollbar — чтение позиции скролла здесь
-    // перекомпоновывало бы весь экран на каждом кадре.
+    // Ручка читает позицию отдельно, чтобы при прокрутке не перекомпоновывать весь экран.
     val firstMediaIndex = if (contentBeforeList != null) 1 else 0
     val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
         gridState = gridState,
@@ -187,6 +182,7 @@ fun LazyRow123(
             )
         }
 
+        /*
         //---- Скролл ----
         Box(
             modifier = Modifier
@@ -194,28 +190,16 @@ fun LazyRow123(
                 .align(Alignment.CenterEnd)
                 .width(2.dp)
         ) { VerticalScrollbar { scrollPercent.value } }
+        */
 
         if (enableFastScroll) {
-            MediaFastScroll(
-                modifier = Modifier.fillMaxSize(),
-                sessionKey = fastScrollSessionKey,
-                canScrollBackward = { gridState.canScrollBackward },
-                canScrollForward = { gridState.canScrollForward },
-                isScrollInProgress = { gridState.isScrollInProgress },
+            LazyGridFastScroll(
+                state = gridState,
+                modifier = Modifier.matchParentSize(),
+                sessionKey = fastScrollSessionKey ?: gridState,
                 visibleRange = { scrollPercent.value },
-                mediaRange = { firstMediaIndex until firstMediaIndex + listGifs.itemSnapshotList.items.size },
-                topVisibleMediaNumber = { mediaRange ->
-                    val layout = gridState.layoutInfo
-                    layout.visibleItemsInfo
-                        .filter {
-                            it.index in mediaRange &&
-                                it.offset.y < layout.viewportEndOffset &&
-                                it.offset.y + it.size.height > layout.viewportStartOffset
-                        }
-                        .minOfOrNull { it.index - mediaRange.first + 1 }
-                },
-                requestScrollToItem = { gridState.requestScrollToItem(it) },
-                stopScroll = { gridState.stopScroll(MutatePriority.UserInput) },
+                firstItemIndex = firstMediaIndex,
+                itemCount = { listGifs.itemSnapshotList.items.size },
                 bottomClearance = if (showScrollButtons) {
                     Theme.ScrollFab.size * 2 + Theme.ScrollFab.spacing + 16.dp
                 } else {

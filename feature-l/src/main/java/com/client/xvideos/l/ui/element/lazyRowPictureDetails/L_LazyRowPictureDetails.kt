@@ -37,7 +37,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.FloatingScrollButtons
-import com.client.xvideos.common.ui.atom.VerticalScrollbar
+// import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.MediaFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenu
@@ -67,7 +67,6 @@ fun L_LazyRowPictureDetails(
     showInitialLoading: Boolean = false,
     isCollection: Boolean = false,
     showScrollButtons: Boolean = true,
-    enableFastScroll: Boolean = false,
     fastScrollSessionKey: Any? = null,
 ) {
     val expandMenuViewModel: ExpandMenuViewModel = hiltViewModel()
@@ -84,10 +83,10 @@ fun L_LazyRowPictureDetails(
     val haptic = LocalHapticFeedback.current
     val gridState = host.position.rememberState()
 
-    // Без `by`: позиция скролла меняется каждый кадр, и разворачивать её здесь
-    // нельзя — чтение на этом уровне перекомпоновывало бы весь экран на каждом
-    // кадре прокрутки. State отдаётся скроллбару лямбдой, см. VerticalScrollbar.
-    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid( gridState, 0 )
+    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid(
+        gridState,
+        itemsToIgnore = if (showInitialLoading) 2 else 1,
+    )
 
     val thumbnailsSize by Settings.thumbalistSize.field.collectAsStateWithLifecycle()
 
@@ -194,6 +193,7 @@ fun L_LazyRowPictureDetails(
         /** Единственный экземпляр P2P-хоста на весь список (не в item'ах!) */
         ExpandMenuP2pHost(expandMenuViewModel)
 
+        /*
         /** Вертикальный индикатор прокрутки */
         if (shouldDisplayPictureScrollbar(host.filteredPic.size)) {
             Box(
@@ -205,40 +205,39 @@ fun L_LazyRowPictureDetails(
                 VerticalScrollbar { scrollPercent.value }
             }
         }
+        */
 
-        if (enableFastScroll) {
-            MediaFastScroll(
-                modifier = Modifier.fillMaxSize(),
-                sessionKey = fastScrollSessionKey,
-                canScrollBackward = { gridState.canScrollBackward },
-                canScrollForward = { gridState.canScrollForward },
-                isScrollInProgress = { gridState.isScrollInProgress },
-                visibleRange = { scrollPercent.value },
-                mediaRange = {
-                    val count = host.filteredPic.size
-                    val first = calculateGridScrollIndex(0, count, showInitialLoading)
-                    if (first == null) IntRange.EMPTY else first until first + count
-                },
-                topVisibleMediaNumber = { mediaRange ->
-                    val layout = gridState.layoutInfo
-                    layout.visibleItemsInfo.asSequence()
-                        .filter {
-                            it.index in mediaRange &&
-                                it.offset.y < layout.viewportEndOffset &&
-                                it.offset.y + it.size.height > layout.viewportStartOffset
-                        }
-                        .minWithOrNull(compareBy({ maxOf(it.offset.y, layout.viewportStartOffset) }, { it.index }))
-                        ?.let { it.index - mediaRange.first + 1 }
-                },
-                requestScrollToItem = { gridState.requestScrollToItem(it) },
-                stopScroll = { gridState.stopScroll(MutatePriority.UserInput) },
-                bottomClearance = if (showScrollButtons) {
-                    Theme.ScrollFab.size * 2 + Theme.ScrollFab.spacing + 16.dp
-                } else {
-                    0.dp
-                },
-            )
-        }
+        MediaFastScroll(
+            modifier = Modifier.matchParentSize(),
+            sessionKey = fastScrollSessionKey ?: gridState,
+            canScrollBackward = { gridState.canScrollBackward },
+            canScrollForward = { gridState.canScrollForward },
+            isScrollInProgress = { gridState.isScrollInProgress },
+            visibleRange = { scrollPercent.value },
+            mediaRange = {
+                val count = host.filteredPic.size
+                val first = calculateGridScrollIndex(0, count, showInitialLoading)
+                if (first == null) IntRange.EMPTY else first until first + count
+            },
+            topVisibleMediaNumber = { mediaRange ->
+                val layout = gridState.layoutInfo
+                layout.visibleItemsInfo.asSequence()
+                    .filter {
+                        it.index in mediaRange &&
+                            it.offset.y < layout.viewportEndOffset &&
+                            it.offset.y + it.size.height > layout.viewportStartOffset
+                    }
+                    .minWithOrNull(compareBy({ maxOf(it.offset.y, layout.viewportStartOffset) }, { it.index }))
+                    ?.let { it.index - mediaRange.first + 1 }
+            },
+            requestScrollToItem = { gridState.requestScrollToItem(it) },
+            stopScroll = { gridState.stopScroll(MutatePriority.UserInput) },
+            bottomClearance = if (showScrollButtons) {
+                Theme.ScrollFab.size * 2 + Theme.ScrollFab.spacing + 16.dp
+            } else {
+                0.dp
+            },
+        )
 
         val onScrollToTop: () -> Unit = remember(haptic, scope, gridState) {
             {
