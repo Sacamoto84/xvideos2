@@ -79,10 +79,10 @@ fun MediaFastScroll(
     canScrollBackward: () -> Boolean,
     canScrollForward: () -> Boolean,
     isScrollInProgress: () -> Boolean,
-    visibleRange: () -> Pair<Float, Float>,
+    positionFraction: () -> Float,
     mediaRange: () -> IntRange,
     topVisibleMediaNumber: (IntRange) -> Int?,
-    requestScrollToItem: (Int) -> Unit,
+    beginDrag: (IntRange) -> (Float) -> Unit,
     stopScroll: suspend () -> Unit,
     bottomClearance: Dp = 0.dp,
 ) = key(sessionKey) {
@@ -90,19 +90,14 @@ fun MediaFastScroll(
     val canScrollBack by rememberUpdatedState(canScrollBackward)
     val canScrollAhead by rememberUpdatedState(canScrollForward)
     val scrolling by rememberUpdatedState(isScrollInProgress)
-    val displayedRange by rememberUpdatedState(visibleRange)
+    val currentFraction by rememberUpdatedState(positionFraction)
     val availableMedia by rememberUpdatedState(mediaRange)
     val visibleMediaNumber by rememberUpdatedState(topVisibleMediaNumber)
-    val requestPosition by rememberUpdatedState(requestScrollToItem)
+    val startDrag by rememberUpdatedState(beginDrag)
     val stopInertia by rememberUpdatedState(stopScroll)
     var activeRange by remember { mutableStateOf<IntRange?>(null) }
     var dragFraction by remember { mutableFloatStateOf(0f) }
     var showHandle by remember { mutableStateOf(false) }
-
-    fun currentFraction(): Float {
-        val (start, end) = displayedRange()
-        return fastScrollFraction(start, end - start, canScrollBack(), canScrollAhead())
-    }
 
     val enabled by remember(pagerAlpha) {
         derivedStateOf { pagerAlpha() > 0f && (canScrollBack() || canScrollAhead()) && !availableMedia().isEmpty() }
@@ -199,7 +194,7 @@ fun MediaFastScroll(
                                 dragFraction = currentFraction()
                                 activeRange = range
                                 try {
-                                    var lastTarget: Int? = null
+                                    val moveTo = startDrag(range)
                                     var pointer = down.id
                                     while (true) {
                                         val change = awaitDragOrCancellation(pointer) ?: break
@@ -207,11 +202,7 @@ fun MediaFastScroll(
                                             .coerceIn(0f, 1f)
                                         if (activeRange != null && availableMedia().preserves(range) && next != dragFraction) {
                                             dragFraction = next
-                                            val target = fastScrollTarget(next, range)
-                                            if (target != null && target != lastTarget) {
-                                                requestPosition(target)
-                                                lastTarget = target
-                                            }
+                                            moveTo(next)
                                         }
                                         change.consume()
                                         if (!change.pressed) break

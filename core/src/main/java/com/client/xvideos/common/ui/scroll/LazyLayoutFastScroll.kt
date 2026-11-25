@@ -28,7 +28,10 @@ fun LazyListFastScroll(
         canScrollBackward = { state.canScrollBackward },
         canScrollForward = { state.canScrollForward },
         isScrollInProgress = { state.isScrollInProgress },
-        visibleRange = visibleRange,
+        positionFraction = {
+            val (start, end) = visibleRange()
+            fastScrollFraction(start, end - start, state.canScrollBackward, state.canScrollForward)
+        },
         mediaRange = { firstItemIndex until firstItemIndex + itemCount() },
         topVisibleMediaNumber = { items ->
             val layout = state.layoutInfo
@@ -39,7 +42,7 @@ fun LazyListFastScroll(
                 }
                 .minOfOrNull { it.index - items.first + 1 }
         },
-        requestScrollToItem = { state.requestScrollToItem(it) },
+        beginDrag = { range -> indexedDrag(range) { state.requestScrollToItem(it) } },
         stopScroll = { state.stopScroll(MutatePriority.UserInput) },
         bottomClearance = bottomClearance,
     )
@@ -63,7 +66,10 @@ fun LazyGridFastScroll(
         canScrollBackward = { state.canScrollBackward },
         canScrollForward = { state.canScrollForward },
         isScrollInProgress = { state.isScrollInProgress },
-        visibleRange = visibleRange,
+        positionFraction = {
+            val (start, end) = visibleRange()
+            fastScrollFraction(start, end - start, state.canScrollBackward, state.canScrollForward)
+        },
         mediaRange = { firstItemIndex until firstItemIndex + itemCount() },
         topVisibleMediaNumber = { items ->
             val layout = state.layoutInfo
@@ -74,8 +80,19 @@ fun LazyGridFastScroll(
                 }
                 .minOfOrNull { it.index - items.first + 1 }
         },
-        requestScrollToItem = { state.requestScrollToItem(it) },
+        beginDrag = { range -> indexedDrag(range) { state.requestScrollToItem(it) } },
         stopScroll = { state.stopScroll(MutatePriority.UserInput) },
         bottomClearance = bottomClearance,
     )
+}
+
+private fun indexedDrag(range: IntRange, requestScrollToItem: (Int) -> Unit): (Float) -> Unit {
+    var lastTarget: Int? = null
+    return { fraction ->
+        val target = fastScrollTarget(fraction, range)
+        if (target != null && target != lastTarget) {
+            requestScrollToItem(target)
+            lastTarget = target
+        }
+    }
 }
