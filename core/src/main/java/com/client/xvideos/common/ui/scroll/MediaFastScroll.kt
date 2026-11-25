@@ -1,5 +1,9 @@
 package com.client.xvideos.common.ui.scroll
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitDragOrCancellation
@@ -27,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -55,6 +60,7 @@ import kotlin.math.roundToInt
 
 private val handleHitSize = 48.dp
 private const val HANDLE_HIDE_DELAY_MILLIS = 1_500L
+private const val POSITION_LABEL_FADE_MILLIS = 150
 
 /**
  * A draggable thumb over a lazy grid. [mediaRange] excludes auxiliary rows, and
@@ -125,11 +131,35 @@ fun MediaFastScroll(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val frozenRange = activeRange
-            if (frozenRange != null) {
+            val positionLabel = if (frozenRange != null) {
                 val number by remember(frozenRange) { derivedStateOf { visibleMediaNumber(frozenRange) } }
-                number?.let {
+                number?.let { "$it / ${frozenRange.last - frozenRange.first + 1}" }
+            } else {
+                null
+            }
+            var lastPositionLabel by remember { mutableStateOf<String?>(null) }
+            if (positionLabel != null) {
+                SideEffect { lastPositionLabel = positionLabel }
+            }
+            AnimatedVisibility(
+                visible = positionLabel != null,
+                modifier = Modifier.offset {
+                    // Keep the fading label at the last drag position as the handle reanchors.
+                    val offsetY = if (activeRange == null) {
+                        ((dragFraction - currentFraction()) * travelPx).roundToInt()
+                    } else {
+                        0
+                    }
+                    IntOffset(0, offsetY)
+                },
+                enter = fadeIn(tween(POSITION_LABEL_FADE_MILLIS)),
+                exit = fadeOut(tween(POSITION_LABEL_FADE_MILLIS)),
+                label = "scroll position",
+            ) {
+                val text = positionLabel ?: lastPositionLabel
+                if (text != null) {
                     Text(
-                        text = "$it / ${frozenRange.last - frozenRange.first + 1}",
+                        text = text,
                         modifier = Modifier
                             .padding(end = 4.dp)
                             .background(MaterialTheme.colorScheme.inverseSurface, CircleShape)
