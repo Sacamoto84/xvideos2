@@ -1,6 +1,8 @@
 package com.client.xvideos.l.ui.element.lazyRowPictureDetails
 
+import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -36,6 +38,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.common.ui.scroll.MediaFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenu
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuP2pHost
@@ -63,7 +66,9 @@ fun L_LazyRowPictureDetails(
     tag: String = "",
     showInitialLoading: Boolean = false,
     isCollection: Boolean = false,
-    showScrollButtons: Boolean = true
+    showScrollButtons: Boolean = true,
+    enableFastScroll: Boolean = false,
+    fastScrollSessionKey: Any? = null,
 ) {
     val expandMenuViewModel: ExpandMenuViewModel = hiltViewModel()
     val navigator = LocalNavigator.currentOrThrow
@@ -199,6 +204,40 @@ fun L_LazyRowPictureDetails(
             ) {
                 VerticalScrollbar { scrollPercent.value }
             }
+        }
+
+        if (enableFastScroll) {
+            MediaFastScroll(
+                modifier = Modifier.fillMaxSize(),
+                sessionKey = fastScrollSessionKey,
+                canScrollBackward = { gridState.canScrollBackward },
+                canScrollForward = { gridState.canScrollForward },
+                isScrollInProgress = { gridState.isScrollInProgress },
+                visibleRange = { scrollPercent.value },
+                mediaRange = {
+                    val count = host.filteredPic.size
+                    val first = calculateGridScrollIndex(0, count, showInitialLoading)
+                    if (first == null) IntRange.EMPTY else first until first + count
+                },
+                topVisibleMediaNumber = { mediaRange ->
+                    val layout = gridState.layoutInfo
+                    layout.visibleItemsInfo.asSequence()
+                        .filter {
+                            it.index in mediaRange &&
+                                it.offset.y < layout.viewportEndOffset &&
+                                it.offset.y + it.size.height > layout.viewportStartOffset
+                        }
+                        .minWithOrNull(compareBy({ maxOf(it.offset.y, layout.viewportStartOffset) }, { it.index }))
+                        ?.let { it.index - mediaRange.first + 1 }
+                },
+                requestScrollToItem = { gridState.requestScrollToItem(it) },
+                stopScroll = { gridState.stopScroll(MutatePriority.UserInput) },
+                bottomClearance = if (showScrollButtons) {
+                    Theme.ScrollFab.size * 2 + Theme.ScrollFab.spacing + 16.dp
+                } else {
+                    0.dp
+                },
+            )
         }
 
         val onScrollToTop: () -> Unit = remember(haptic, scope, gridState) {

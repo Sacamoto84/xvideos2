@@ -162,6 +162,8 @@ fun ScreenLAlbumBody(
                 host = host,
                 expandMenu = ExpandMenuType.ALBUM,
                 showInitialLoading = showInitialItemsLoading,
+                enableFastScroll = true,
+                fastScrollSessionKey = state.showOnlyAnimated,
                 itemBefore = {
                     Column(
                         modifier = Modifier
