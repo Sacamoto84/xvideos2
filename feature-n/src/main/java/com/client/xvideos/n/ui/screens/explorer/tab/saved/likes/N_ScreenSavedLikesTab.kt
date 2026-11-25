@@ -30,6 +30,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
+import com.client.xvideos.n.ui.atom.NGridScrollIndicator
 import com.client.xvideos.n.ui.molecule.NPictureGrid
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
@@ -154,6 +155,7 @@ fun N_ScreenSavedLikesTabContent(
                     menuContent = pictureMenuContent,
                     modifier = Modifier.fillMaxSize()
                 )
+                NGridScrollIndicator(gridState, columns)
             }
         }
     }

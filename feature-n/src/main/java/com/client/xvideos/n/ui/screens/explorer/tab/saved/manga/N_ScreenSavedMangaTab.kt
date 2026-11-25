@@ -33,6 +33,7 @@ import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NGalleryPreview
+import com.client.xvideos.n.ui.atom.NGridScrollIndicator
 import com.client.xvideos.n.ui.molecule.NGalleryGrid
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.N_SavedTabSM
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.model.NSavedMangaOrder
@@ -144,6 +145,7 @@ fun N_ScreenSavedMangaTabContent(
                     },
                     modifier = Modifier.fillMaxSize()
                 )
+                NGridScrollIndicator(gridState, columns)
             }
         }
     }

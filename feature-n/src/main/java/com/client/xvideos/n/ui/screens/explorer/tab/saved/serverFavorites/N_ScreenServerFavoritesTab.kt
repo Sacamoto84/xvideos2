@@ -92,6 +92,7 @@ object N_ScreenServerFavoritesTab : Screen {
                     }
                 },
                 allowChallenge = active && removalChallenge == null,
+                showVerticalScrollbar = true,
                 emptyMessage = "На сервере пока нет добавленных закладок"
             )
         }

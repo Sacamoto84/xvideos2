@@ -29,6 +29,7 @@ import com.client.xvideos.n.model.NGalleryPageResult
 import com.client.xvideos.n.model.NGalleryPreview
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
+import com.client.xvideos.n.ui.atom.NGridScrollIndicator
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryListUiState
 import com.client.xvideos.n.ui.screens.explorer.tab.list.NGalleryPages
 import kotlinx.coroutines.launch
@@ -45,6 +46,7 @@ fun NGalleryPager(
     hasActiveFilter: Boolean = false,
     allowChallenge: Boolean = true,
     gridTopInset: Dp = 0.dp,
+    showVerticalScrollbar: Boolean = false,
     leadingContent: @Composable () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
@@ -72,15 +74,19 @@ fun NGalleryPager(
                             is NGalleryListUiState.Success -> if (state.items.isEmpty()) {
                                 Text(emptyMessage, color = Color.LightGray)
                             } else {
+                                val gridState = pages.grid(index).rememberState()
                                 NGalleryGrid(
                                     items = state.items,
                                     columns = columns,
                                     onItemClick = onGalleryClick,
                                     itemMenuActions = itemMenuActions,
-                                    gridState = pages.grid(index).rememberState(),
+                                    gridState = gridState,
                                     modifier = Modifier.fillMaxSize(),
                                     topInset = gridTopInset
                                 )
+                                if (showVerticalScrollbar && index == pager.currentPage) {
+                                    NGridScrollIndicator(gridState, columns)
+                                }
                             }
                         }
                     }

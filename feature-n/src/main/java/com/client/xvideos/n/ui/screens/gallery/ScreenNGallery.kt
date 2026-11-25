@@ -22,7 +22,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +36,10 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.share.useCaseShareText
 import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
+import com.client.xvideos.common.ui.atom.FloatingScrollButtons
+import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
+import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
@@ -49,6 +55,8 @@ import com.client.xvideos.n.ui.screens.gallery.molecule.NGalleryPagesGrid
 import com.client.xvideos.n.ui.screens.gallery.molecule.NGalleryRelatedStrip
 import com.client.xvideos.n.ui.screens.reader.N_FullScreenReader
 import com.client.xvideos.n.ui.screens.tag.ScreenNTag
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import java.util.UUID
 
 /**
@@ -249,6 +257,13 @@ fun ScreenNGalleryContent(
                 }
                 is NGalleryUiState.Success -> {
                     val gallery = uiState.gallery
+                    val hazeState = remember { HazeState() }
+                    val haptic = LocalHapticFeedback.current
+                    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForGrid(
+                        gridState,
+                        itemsToIgnore = 1,
+                        numberOfColumns = adaptiveUserGridColumns(columns),
+                    )
                     NGalleryPagesGrid(
                         pages = gallery.pages,
                         mediaId = gallery.mediaId,
@@ -275,7 +290,32 @@ fun ScreenNGalleryContent(
                                 )
                             }
                         },
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize().hazeSource(hazeState)
+                    )
+                    LazyGridFastScroll(
+                        state = gridState,
+                        modifier = Modifier.matchParentSize(),
+                        hazeState = hazeState,
+                        itemCount = { gallery.pages.size },
+                        visibleRange = { scrollPercent.value },
+                        firstItemIndex = 1,
+                        sessionKey = galleryId,
+                        bottomClearance = Theme.ScrollFab.size * 2 + Theme.ScrollFab.spacing + 16.dp,
+                    )
+                    FloatingScrollButtons(
+                        visible = gallery.pages.isNotEmpty(),
+                        showScrollToTop = gridState.canScrollBackward,
+                        showScrollToBottom = gridState.canScrollForward,
+                        hazeState = hazeState,
+                        onScrollToTop = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            gridState.requestScrollToItem(0)
+                        },
+                        onScrollToBottom = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            gridState.requestScrollToItem(gallery.pages.size)
+                        },
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
                     )
                 }
             }
