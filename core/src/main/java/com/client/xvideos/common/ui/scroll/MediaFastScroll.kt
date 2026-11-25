@@ -2,9 +2,9 @@ package com.client.xvideos.common.ui.scroll
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.awaitDragOrCancellation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -151,7 +151,9 @@ fun MediaFastScroll(
                                 activeRange = range
                                 try {
                                     var lastTarget: Int? = null
-                                    drag(down.id) { change ->
+                                    var pointer = down.id
+                                    while (true) {
+                                        val change = awaitDragOrCancellation(pointer) ?: break
                                         val next = (dragFraction + change.positionChange().y / travelPx)
                                             .coerceIn(0f, 1f)
                                         if (activeRange != null && availableMedia().preserves(range) && next != dragFraction) {
@@ -163,6 +165,8 @@ fun MediaFastScroll(
                                             }
                                         }
                                         change.consume()
+                                        if (!change.pressed) break
+                                        pointer = change.id
                                     }
                                 } finally {
                                     stop.cancel()
