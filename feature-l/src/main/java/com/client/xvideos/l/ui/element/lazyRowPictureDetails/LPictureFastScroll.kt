@@ -100,13 +100,14 @@ internal fun LPictureFastScroll(
         mediaRange = { firstItemIndex until firstItemIndex + pictures.size },
         topVisibleMediaNumber = { range ->
             val layout = gridState.layoutInfo
-            layout.visibleItemsInfo.asSequence()
-                .filter {
-                    it.index in range && it.offset.y < layout.viewportEndOffset &&
-                        it.offset.y + it.size.height > layout.viewportStartOffset
-                }
-                .minWithOrNull(compareBy({ maxOf(it.offset.y, layout.viewportStartOffset) }, { it.index }))
-                ?.let { it.index - range.first + 1 }
+            pictureNumberAtViewportStart(
+                pictures = layout.visibleItemsInfo.asSequence().map {
+                    VisiblePicture(index = it.index, top = it.offset.y, height = it.size.height)
+                },
+                mediaRange = range,
+                viewportStart = layout.viewportStartOffset,
+                viewportEnd = layout.viewportEndOffset,
+            )
         },
         beginDrag = { range ->
             val frozenGeometry = geometry
@@ -191,3 +192,16 @@ private fun LazyStaggeredGridState.pixelPosition(
 
 private fun ScrollAnchor.matches(item: LazyStaggeredGridItemInfo): Boolean =
     key == item.key && lane == item.lane && height == item.size.height
+
+internal data class VisiblePicture(val index: Int, val top: Int, val height: Int)
+
+internal fun pictureNumberAtViewportStart(
+    pictures: Sequence<VisiblePicture>,
+    mediaRange: IntRange,
+    viewportStart: Int,
+    viewportEnd: Int,
+): Int? = pictures
+    .filter { it.index in mediaRange && it.top < viewportEnd && it.top + it.height > viewportStart }
+    // Compare the real tops so a card crossing the edge cannot mask a closer one.
+    .minWithOrNull(compareBy({ abs(it.top - viewportStart) }, { it.index }))
+    ?.let { it.index - mediaRange.first + 1 }
