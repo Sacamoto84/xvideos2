@@ -50,6 +50,7 @@ class ScreenLServerLikesSM @Inject constructor(
 
     /** Поток текста ошибки загрузки либо null при успешной работе. */
     val errorMessage = list.errorMessage
+    internal val requiresLogin = list.requiresLogin
 
     /** Подгрузка следующей страницы не удалась — см. [LServerPagedList.nextPageFailed]. */
     val nextPageFailed = list.nextPageFailed
@@ -79,6 +80,8 @@ class ScreenLServerLikesSM @Inject constructor(
 
     /** Загружает начальную первую страницу серверных лайков. */
     fun loadInitial() = list.loadInitial()
+
+    internal fun loadForProfile(revision: Int) = list.loadForProfile(revision)
 
     /** Загружает следующую страницу серверных лайков для бесконечного скролла. */
     fun loadNextPage() = list.loadNextPage()

@@ -120,7 +120,7 @@ fun LLoginForm(
             } else {
                 Settings.l_profile.save(normalizedLogin, password)
                 autofillManager?.commit()
-                SnackBar.success("Авторизация L сохранена")
+                SnackBar.success("Данные для входа в L сохранены")
                 onSaved()
             }
         }

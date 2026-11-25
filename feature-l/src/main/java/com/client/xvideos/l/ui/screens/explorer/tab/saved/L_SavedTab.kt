@@ -3,19 +3,26 @@ package com.client.xvideos.l.ui.screens.explorer.tab.saved
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -24,6 +31,7 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.settings.advanceColumnCount
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
+import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.L_ScreenSavedAlbumsTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.L_Screen_CollectionTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.L_ScreenSavedLikesTab
@@ -31,6 +39,8 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.L_SavedBottom
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.L_ScreenServerLikesTab
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.L_ScreenSubscribedAlbumsTab
 import kotlinx.coroutines.launch
+
+private const val SAVED_ALBUMS_PAGE = 1
 
 object L_SavedTab : Screen {
 
@@ -42,19 +52,10 @@ object L_SavedTab : Screen {
     override fun Content() {
         val vm = getScreenModel<L_SavedTabSM>()
         val scope = rememberCoroutineScope()
-        // Без аккаунта L серверных вкладок (подписки, лайки на сервере) нет.
-        val savedProfile by Settings.l_profile.field.collectAsStateWithLifecycle()
-        val pageCount = savedTabPageCount(savedProfile.isComplete)
         val pagerState = rememberPagerState(
-            initialPage = savedTabPage(vm.screenType, pageCount),
-            pageCount = { pageCount }
+            initialPage = savedTabPage(vm.screenType),
+            pageCount = { L_SAVED_TAB_COUNT }
         )
-
-        // Вышли из аккаунта, стоя на серверной вкладке, — на последнюю видимую.
-        LaunchedEffect(pageCount) {
-            val visible = savedTabPage(pagerState.currentPage, pageCount)
-            if (visible != pagerState.currentPage) pagerState.scrollToPage(visible)
-        }
 
         LaunchedEffect(pagerState.currentPage) {
             vm.screenType = pagerState.currentPage
@@ -92,7 +93,6 @@ object L_SavedTab : Screen {
 
         L_SavedTabContent(
             pagerState = pagerState,
-            pageCount = pageCount,
             columnLikes = columnLikes,
             columnCollection = columnCollection,
             isInsideCollection = isInsideCollection,
@@ -104,19 +104,22 @@ object L_SavedTab : Screen {
 @Composable
 fun L_SavedTabContent(
     pagerState: PagerState,
-    pageCount: Int,
     columnLikes: Int,
     columnCollection: Int,
     isInsideCollection: Boolean,
     onTabChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var savedAlbumsVisibleRange by remember { mutableStateOf<State<Pair<Float, Float>>?>(null) }
+    val onSavedAlbumsVisibleRangeChange = remember {
+        { range: State<Pair<Float, Float>>? -> savedAlbumsVisibleRange = range }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             L_SavedBottomBar(
-                currentPage = savedTabPage(pagerState.currentPage, pageCount),
-                tabCount = pageCount,
+                currentPage = savedTabPage(pagerState.currentPage),
                 columnLikes = columnLikes,
                 columnCollection = columnCollection,
                 onTabChange = onTabChange
@@ -136,11 +139,19 @@ fun L_SavedTabContent(
                 ) { page ->
                     when (page) {
                         0 -> L_ScreenSavedLikesTab.Content()
-                        1 -> L_ScreenSavedAlbumsTab.Content()
+                        SAVED_ALBUMS_PAGE -> L_ScreenSavedAlbumsTab.Content(onSavedAlbumsVisibleRangeChange)
                         2 -> L_Screen_CollectionTab.Content()
                         3 -> L_ScreenSubscribedAlbumsTab.Content()
                         4 -> L_ScreenServerLikesTab.Content()
                     }
+                }
+            }
+
+            // Anchor the rail to the viewport while the pager is settling.
+            val visibleRange = savedAlbumsVisibleRange
+            if (pagerState.settledPage == SAVED_ALBUMS_PAGE && visibleRange != null) {
+                Box(Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(2.dp)) {
+                    VerticalScrollbar { visibleRange.value }
                 }
             }
         }
@@ -150,10 +161,9 @@ fun L_SavedTabContent(
 @Preview
 @Composable
 private fun L_SavedTabContentPreview() {
-    val pagerState = rememberPagerState(initialPage = 0) { 5 }
+    val pagerState = rememberPagerState(initialPage = 0) { L_SAVED_TAB_COUNT }
     L_SavedTabContent(
         pagerState = pagerState,
-        pageCount = 5,
         columnLikes = 2,
         columnCollection = 2,
         isInsideCollection = false,

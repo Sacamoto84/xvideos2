@@ -54,6 +54,7 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
 
     /** Поток текста ошибки загрузки. */
     val errorMessage = list.errorMessage
+    internal val requiresLogin = list.requiresLogin
 
     /** Подгрузка следующей страницы не удалась — см. [LServerPagedList.nextPageFailed]. */
     val nextPageFailed = list.nextPageFailed
@@ -72,6 +73,8 @@ class ScreenLSubscribedAlbumsSM @Inject constructor(
 
     /** Загружает начальную первую страницу подписанных альбомов. */
     fun loadInitial() = list.loadInitial()
+
+    internal fun loadForProfile(revision: Int) = list.loadForProfile(revision)
 
     /** Загружает следующую страницу альбомов для бесконечной ленты. */
     fun loadNextPage() = list.loadNextPage()

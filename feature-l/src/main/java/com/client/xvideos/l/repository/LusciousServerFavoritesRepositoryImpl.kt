@@ -18,6 +18,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -32,6 +34,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+
+internal class LSessionRequiredException :
+    IllegalStateException("Вход в L не выполнен: сервер не назвал пользователя сессии")
 
 /**
  * Реализация репозитория серверных подписок и лайков L.
@@ -50,36 +55,48 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
     /** id пользователя и номер записи профиля, под которым сервер его назвал. */
     private class SessionUser(val id: String, val profileRevision: Int)
 
-    @Volatile
+    private val sessionMutex = Mutex()
     private var sessionUser: SessionUser? = null
 
     /**
-     * id пользователя текущей сессии. Запоминается до перезаписи профиля.
-     *
-     * Раньше id брался из общего справочника категорий. Тот не сбрасывался при
-     * выходе и восстанавливался из кэша на диске, ключ которого от сессии не
-     * зависит: после выхода или входа под другим аккаунтом списки лайков и
-     * подписок запрашивались по id прежнего пользователя, и после перезапуска
-     * тоже. Здесь id всегда получен свежим запросом под нынешним профилем.
+     * Идентификатор, подтверждённый сервером для текущего профиля.
+     * Первая страница списка всегда подтверждает сессию заново.
      */
-    override suspend fun getSessionUserId(): Result<String> {
+    override suspend fun getSessionUserId(): Result<String> = getSessionUserId(verify = false)
+
+    private suspend fun getSessionUserId(verify: Boolean): Result<String> = sessionMutex.withLock {
         val revision = repository.profileRevision()
-        sessionUser?.takeIf { it.profileRevision == revision }?.let { return Result.success(it.id) }
+        if (!verify) {
+            sessionUser?.takeIf { it.profileRevision == revision }?.let { return@withLock Result.success(it.id) }
+        }
+        sessionUser = null
 
-        val categories = refreshMediaCategories(repository, forceRefresh = true)
-            .getOrElse { return Result.failure(it) }
-        val userId = categories.filterSettings.userId.takeIf { it > 0 }?.toString()
-            ?: return Result.failure(IllegalStateException("Вход в L не выполнен: сервер не назвал пользователя сессии"))
+        var userId = fetchSessionUserId().getOrElse { return@withLock Result.failure(it) }
+        if (userId <= 0 && repository.handleRejectedSession(revision, retry = true)) {
+            userId = fetchSessionUserId().getOrElse { return@withLock Result.failure(it) }
+            if (userId <= 0) repository.handleRejectedSession(revision, retry = false)
+        }
+        if (revision != repository.profileRevision()) {
+            return@withLock Result.failure(IllegalStateException("Профиль L изменился во время загрузки"))
+        }
+        if (userId <= 0) {
+            return@withLock Result.failure(repository.sessionLoginNetworkFailure(revision) ?: LSessionRequiredException())
+        }
 
-        sessionUser = SessionUser(userId, revision)
-        return Result.success(userId)
+        val id = userId.toString()
+        sessionUser = SessionUser(id, revision)
+        Timber.i("L session confirmed by GraphQL")
+        Result.success(id)
     }
+
+    private suspend fun fetchSessionUserId(): Result<Long> =
+        refreshMediaCategories(repository, forceRefresh = true).map { it.filterSettings.userId }
 
     override suspend fun getSubscribedAlbumsRaw(userId: String?, page: Int): Result<String> {
         val targetUserId = if (!userId.isNullOrBlank()) {
             userId
         } else {
-            val sessionResult = getSessionUserId()
+            val sessionResult = getSessionUserId(verify = page == 1)
             if (sessionResult.isFailure) {
                 return Result.failure(sessionResult.exceptionOrNull() ?: IllegalStateException("Missing user_id"))
             }
@@ -124,7 +141,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
         val targetUserId = if (!userId.isNullOrBlank()) {
             userId
         } else {
-            val sessionResult = getSessionUserId()
+            val sessionResult = getSessionUserId(verify = page == 1)
             if (sessionResult.isFailure) {
                 return Result.failure(sessionResult.exceptionOrNull() ?: IllegalStateException("Missing user_id"))
             }

@@ -3,10 +3,20 @@ package com.client.xvideos.l.repository
 import android.content.ContextWrapper
 import com.client.xvideos.common.AppPath
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
+import com.client.xvideos.l.LServerErrorException
+import com.client.xvideos.l.model.UserProfile
 import com.client.xvideos.l.net.graphQl.FilterSettings
 import com.client.xvideos.l.net.graphQl.GraphQlRequest
 import com.client.xvideos.l.net.graphQl.MediaCategories
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
+import io.ktor.http.content.TextContent
+import io.ktor.http.headersOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -221,6 +231,114 @@ class LServerFavoritesRepositoryImplTest {
     }
 
     // --- Пользователь сессии ---
+
+    private class SessionServer(
+        private val loginAtHome: Boolean = false,
+        private val homeStatus: HttpStatusCode = HttpStatusCode.OK,
+        private val accepts: (Int) -> Boolean,
+    ) {
+        var logins = 0
+            private set
+        val cookies = mutableListOf<String?>()
+        var homeVisits = 0
+            private set
+
+        fun repository(): Repository {
+            val profile = SavedProfile(UserProfile("user@example.com", "test-password"))
+            val domain = Url(LusciousEndpoints.API).host.substringAfter('.')
+            return Repository(
+                fileDb = AppFileDatabase(),
+                credentials = { profile.snapshot },
+                engineFactory = {
+                    MockEngine { request ->
+                        val cookie = request.headers[HttpHeaders.Cookie]
+                        if (request.url.encodedPath.endsWith("/accounts/login/")) {
+                            check(cookie == null) { "Вход отправлен с прежней cookie" }
+                            logins++
+                            if (loginAtHome) {
+                                respond("""{"location":"/","form":{"fields":{},"errors":[]}}""")
+                            } else {
+                                respond(
+                                    "<html>welcome</html>",
+                                    headers = headersOf(HttpHeaders.SetCookie, "sessionid=s$logins; Domain=$domain; Path=/")
+                                )
+                            }
+                        } else if (loginAtHome && request.url.encodedPath == "/") {
+                            check(request.method == HttpMethod.Get)
+                            homeVisits++
+                            respond(
+                                "<html>welcome</html>",
+                                status = homeStatus,
+                                headers = headersOf(HttpHeaders.SetCookie, "sessionid=s$logins; Domain=$domain; Path=/")
+                            )
+                        } else {
+                            cookies += cookie
+                            val body = (request.body as? TextContent)?.text.orEmpty()
+                            val response = if (body.contains("FavoritesByDatePictureSet")) {
+                                """{"data":{"favorite":{"list_by_date":{"picture_sets":{"items":[]}}}}}"""
+                            } else {
+                                val session = cookie?.substringAfter("sessionid=s")?.toIntOrNull()
+                                bootstrapJson(if (session != null && accepts(session)) 111 else 0)
+                            }
+                            respond(response, headers = headersOf(HttpHeaders.ContentType, "application/json"))
+                        }
+                    }
+                },
+                notifyAnonymousFallback = {},
+            )
+        }
+    }
+
+    @Test
+    fun `вход завершается переходом по адресу из ответа формы`() = runTest {
+        val server = SessionServer(loginAtHome = true) { true }
+        val favorites = LusciousServerFavoritesRepositoryImpl(server.repository())
+
+        assertEquals("111", favorites.getSessionUserId().getOrNull())
+        assertEquals(1, server.logins)
+        assertEquals(1, server.homeVisits)
+        assertEquals(listOf("sessionid=s1"), server.cookies)
+    }
+
+    @Test
+    fun `сбой сервера на завершающем шаге входа остаётся сетевой ошибкой списка`() = runTest {
+        val server = SessionServer(loginAtHome = true, homeStatus = HttpStatusCode.ServiceUnavailable) { false }
+        val favorites = LusciousServerFavoritesRepositoryImpl(server.repository())
+
+        val failure = favorites.getSubscribedAlbums(page = 1).exceptionOrNull()
+        assertEquals(HttpStatusCode.ServiceUnavailable.value, (failure as? LServerErrorException)?.statusCode)
+        assertEquals(1, server.logins)
+        assertEquals(1, server.homeVisits)
+    }
+
+    @Test
+    fun `первая страница проверяет сохранённую сессию и повторяет вход с новой cookie`() = runTest {
+        var expired = false
+        val server = SessionServer { session -> session > 1 || !expired }
+        val favorites = LusciousServerFavoritesRepositoryImpl(server.repository())
+        assertEquals("111", favorites.getSessionUserId().getOrNull())
+
+        expired = true
+        assertEquals(emptyList<Any>(), favorites.getSubscribedAlbums(page = 1).getOrThrow())
+
+        assertEquals(2, server.logins)
+        assertEquals(
+            listOf("sessionid=s1", "sessionid=s1", "sessionid=s2", "sessionid=s2"),
+            server.cookies,
+        )
+    }
+
+    @Test
+    fun `если новая сессия тоже отвергнута, соседняя вкладка не запускает вход по кругу`() = runTest {
+        val server = SessionServer { false }
+        val favorites = LusciousServerFavoritesRepositoryImpl(server.repository())
+
+        assertTrue(favorites.getSubscribedAlbums(page = 1).exceptionOrNull() is LSessionRequiredException)
+        assertTrue(favorites.getServerLikedPictures(page = 1).exceptionOrNull() is LSessionRequiredException)
+
+        assertEquals(2, server.logins)
+        assertEquals(listOf("sessionid=s1", "sessionid=s2", null), server.cookies)
+    }
 
     @Test
     fun `id пользователя не берётся из справочника, загруженного под другим аккаунтом`() = runTest {

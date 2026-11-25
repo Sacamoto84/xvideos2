@@ -1,6 +1,7 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved
 
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.l.repository.LSessionRequiredException
 import com.client.xvideos.l.repository.toLUserMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -57,6 +58,9 @@ internal class LServerPagedList<T>(
     /** Текст сбоя первой загрузки или обновления; `null`, когда список в порядке. */
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _requiresLogin = MutableStateFlow(false)
+    val requiresLogin: StateFlow<Boolean> = _requiresLogin.asStateFlow()
+
     private val _nextPageFailed = MutableStateFlow(false)
     /**
      * Подгрузка следующей страницы не удалась и сама не повторится.
@@ -95,11 +99,27 @@ internal class LServerPagedList<T>(
      */
     private val removedKeys = HashSet<Any?>()
     private var loadJob: Job? = null
+    private var profileRevision: Int? = null
+
+    /** Первая загрузка уже запущена моделью. После смены профиля загружаем список заново. */
+    fun loadForProfile(revision: Int) {
+        val previousRevision = profileRevision
+        profileRevision = revision
+        if (previousRevision == null || previousRevision == revision) return
+
+        _errorMessage.value = null
+        _requiresLogin.value = false
+        launchLoad(refreshing = false) {
+            publish(emptyList())
+            reload()
+        }
+    }
 
     /** Первая загрузка или повтор после её сбоя. */
     fun loadInitial() {
         if (_isLoading.value) return
         _errorMessage.value = null
+        _requiresLogin.value = false
         launchLoad(refreshing = false) { reload() }
     }
 
@@ -112,7 +132,7 @@ internal class LServerPagedList<T>(
     /** Подгрузка следующей страницы; вызывается экраном у конца списка. */
     fun loadNextPage() {
         val busy = _isLoading.value || _isRefreshing.value
-        val failed = _errorMessage.value != null || _nextPageFailed.value
+        val failed = _errorMessage.value != null || _nextPageFailed.value || _requiresLogin.value
         if (busy || failed || !hasMore) return
         launchLoad(refreshing = false) {
             // Страница из одних повторов на экране ничего не меняет, поэтому за ней
@@ -126,7 +146,11 @@ internal class LServerPagedList<T>(
                 val list = request(page).getOrElse { error ->
                     Timber.e("LServerPagedList: next page $page failed: ${error.javaClass.simpleName}")
                     _nextPageFailed.value = true
-                    notifyNextPageFailed(error.toLUserMessage())
+                    if (error is LSessionRequiredException) {
+                        _requiresLogin.value = true
+                    } else {
+                        notifyNextPageFailed(error.toLUserMessage())
+                    }
                     return@launchLoad
                 }
                 if (appendPage(page, list)) return@launchLoad
@@ -214,12 +238,14 @@ internal class LServerPagedList<T>(
                 removedKeys.clear()
                 hasMore = list.isNotEmpty()
                 _errorMessage.value = null
+                _requiresLogin.value = false
                 _nextPageFailed.value = false
                 publish(list.distinctBy(keyOf))
             }
             .onFailure { error ->
                 Timber.e("LServerPagedList: first page failed: ${error.javaClass.simpleName}")
                 _errorMessage.value = error.toLUserMessage()
+                _requiresLogin.value = error is LSessionRequiredException
             }
     }
 

@@ -97,6 +97,7 @@ open class Repository(
      * входа. Читается и пишется только под [authMutex].
      */
     private var anonymousFallbackFor: UserProfile? = null
+    private var anonymousLoginFailure: Throwable? = null
 
     /**
      * Когда вход по [anonymousFallbackFor] пробуют снова. [Long.MAX_VALUE] —
@@ -160,6 +161,27 @@ open class Repository(
      */
     open fun profileRevision(): Int = credentials().revision
 
+    internal suspend fun sessionLoginNetworkFailure(revision: Int): IOException? = authMutex.withLock {
+        if (seenCredentialsRevision == revision) anonymousLoginFailure as? IOException else null
+    }
+
+    /** Сбрасывает cookie сессии, которую GraphQL не распознал. */
+    internal suspend fun handleRejectedSession(revision: Int, retry: Boolean): Boolean = authMutex.withLock {
+        if (!handler.loggedIn || seenCredentialsRevision != revision) return@withLock false
+        val saved = credentials()
+        if (saved.revision != revision || !saved.isComplete) return@withLock false
+
+        val profile = UserProfile(email = saved.login.trim(), password = saved.password)
+        dropSession()
+        if (retry) {
+            Timber.i("L session rejected by GraphQL; renewing once")
+            logInIfNeeded(profile)
+        } else {
+            fallBackToAnonymous(profile, LSessionRequiredException())
+        }
+        handler.loggedIn
+    }
+
     private fun createHandler(): KtorRequestHandler {
         return KtorRequestHandler(
             timeoutMillis = 5000,
@@ -191,6 +213,7 @@ open class Repository(
      */
     private suspend fun dropSession() {
         anonymousFallbackFor = null
+        anonymousLoginFailure = null
         loginRetryAtMs = Long.MAX_VALUE
         if (!handler.loggedIn) return
 
@@ -253,7 +276,10 @@ open class Repository(
         if (handler.loggedIn) return
 
         val login = handler.login()
-        login.onSuccess { anonymousFallbackFor = null }
+        login.onSuccess {
+            anonymousFallbackFor = null
+            anonymousLoginFailure = null
+        }
             .onFailure { fallBackToAnonymous(profile, it) }
         // Ключ RAM-кэша — только тело запроса, а вошедшему и анониму сервер
         // отвечает по-разному: после входа анонимные ответы не годятся. Ответы
@@ -270,6 +296,7 @@ open class Repository(
     private fun fallBackToAnonymous(profile: UserProfile, cause: Throwable) {
         val alreadyNotified = profile == anonymousFallbackFor
         anonymousFallbackFor = profile
+        anonymousLoginFailure = cause
         loginRetryAtMs = if (cause is LWrongCredentialsException) {
             Long.MAX_VALUE
         } else {

@@ -6,23 +6,16 @@ import org.junit.Test
 class SavedTabPagesTest {
 
     @Test
-    fun `без аккаунта L - только локальные вкладки, серверные скрыты`() {
-        // 0 лайки, 1 альбомы, 2 коллекции; 3 подписки и 4 лайки на сервере — только с аккаунтом.
-        assertEquals(3, savedTabPageCount(hasAccount = false))
-        assertEquals(5, savedTabPageCount(hasAccount = true))
+    fun `серверные вкладки доступны для входа в L`() {
+        assertEquals(5, L_SAVED_TAB_COUNT)
+        assertEquals(3, savedTabPage(3))
+        assertEquals(4, savedTabPage(4))
     }
 
     @Test
-    fun `страница скрытой вкладки после выхода из аккаунта - последняя видимая`() {
-        assertEquals(2, savedTabPage(page = 4, pageCount = 3))
-        assertEquals(2, savedTabPage(page = 3, pageCount = 3))
-    }
-
-    @Test
-    fun `видимая страница не меняется`() {
-        assertEquals(0, savedTabPage(page = 0, pageCount = 3))
-        assertEquals(2, savedTabPage(page = 2, pageCount = 3))
-        assertEquals(4, savedTabPage(page = 4, pageCount = 5))
-        assertEquals(0, savedTabPage(page = -1, pageCount = 5))
+    fun `страница ограничена числом вкладок`() {
+        assertEquals(0, savedTabPage(-1))
+        assertEquals(2, savedTabPage(2))
+        assertEquals(4, savedTabPage(5))
     }
 }

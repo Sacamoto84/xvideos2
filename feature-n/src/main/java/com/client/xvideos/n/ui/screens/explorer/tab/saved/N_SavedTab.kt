@@ -10,11 +10,17 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
@@ -25,12 +31,16 @@ import com.client.xvideos.common.settings.advanceColumnCount
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.n.net.NAuthState
+import com.client.xvideos.n.ui.atom.LocalNGridScrollIndicator
+import com.client.xvideos.n.ui.atom.NGridScrollIndicatorLayout
+import com.client.xvideos.n.ui.atom.NGridScrollIndicatorOverlay
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.molecule.N_SavedBottomBar
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.serverFavorites.N_ScreenServerFavoritesTab
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * Корневая вкладка сохранённого раздела N (манга).
@@ -125,6 +135,11 @@ fun N_SavedTabContent(
     onTabChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val indicators = remember(pagerState, pageCount) {
+        List(pageCount) { mutableStateOf<NGridScrollIndicatorLayout?>(null) }
+    }
+    var pagerTopInRoot by remember { mutableIntStateOf(0) }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
@@ -140,7 +155,10 @@ fun N_SavedTabContent(
         modifier = modifier.fillMaxSize(),
         containerColor = Theme.background
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
+        Box(
+            modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+                .onGloballyPositioned { pagerTopInRoot = it.positionInRoot().y.roundToInt() }
+        ) {
             ProvidePagerScrollbarAlpha(pagerState = pagerState) {
                 HorizontalPager(
                     state = pagerState,
@@ -149,13 +167,20 @@ fun N_SavedTabContent(
                     key = { page -> page },
                     modifier = Modifier.fillMaxSize()
                 ) { page ->
-                    when (page) {
-                        0 -> N_ScreenSavedLikesTab.Content()
-                        1 -> N_ScreenSavedMangaTab.Content()
-                        2 -> N_ScreenSavedCollectionsTab.Content(active = pagerState.currentPage == 2)
-                        3 -> N_ScreenServerFavoritesTab.Content(active = pagerState.currentPage == 3)
+                    CompositionLocalProvider(LocalNGridScrollIndicator provides indicators.getOrNull(page)) {
+                        when (page) {
+                            0 -> N_ScreenSavedLikesTab.Content()
+                            1 -> N_ScreenSavedMangaTab.Content()
+                            2 -> N_ScreenSavedCollectionsTab.Content(active = pagerState.currentPage == 2)
+                            3 -> N_ScreenServerFavoritesTab.Content(active = pagerState.currentPage == 3)
+                        }
                     }
                 }
+            }
+
+            // Keep the rail in the viewport until a different tab settles.
+            indicators.getOrNull(pagerState.settledPage)?.value?.let { indicator ->
+                NGridScrollIndicatorOverlay(indicator, pagerTopInRoot)
             }
         }
     }

@@ -33,10 +33,12 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import com.client.xvideos.l.net.json.LJson
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import timber.log.Timber
+import java.net.URI
 
 /**
  * Низкоуровневый HTTP-клиент на Ktor/OkHttp для взаимодействия с L.
@@ -238,35 +240,70 @@ class KtorRequestHandler(
             "remember" to "on"
         )
 
-        val (response, body) = try {
+        val failure = try {
             val response = post(LOGIN, formData)
-            response to response.bodyAsText()
+            val body = response.bodyAsText()
+            loginResponseFailure(response, body) ?: completeLoginForm(body)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w("L login request failed: ${e.javaClass.simpleName}")
-            loggedIn = false
-            return Result.failure(e)
+            e
         }
 
-        val failure = when {
-            isCloudflareChallenge(response.headers[CF_MITIGATED_HEADER], body) ->
-                IllegalStateException("защита Cloudflare")
-            response.status.value in SERVER_ERROR_CODES -> LServerErrorException(response.status.value)
-            WRONG_CREDENTIALS_MARKER in body -> LWrongCredentialsException()
-            // 403, 404, 429 и прочие 4xx — отказ, а не вход: раньше всё, что не
-            // подошло под три случая выше, считалось входом.
-            response.status.value in CLIENT_ERROR_CODES ->
-                IllegalStateException("сервер отклонил вход (HTTP ${response.status.value})")
-            else -> null
-        }
         loggedIn = failure == null
         if (failure == null) {
-            Timber.i("L login successful")
+            Timber.i("L login form accepted")
             return Result.success(Unit)
         }
-        Timber.w("L login failed: ${failure.message}")
+        Timber.w("L login request failed: ${failure.javaClass.simpleName}")
         return Result.failure(failure)
+    }
+
+    private fun loginResponseFailure(response: HttpResponse, body: String): Throwable? = when {
+        isCloudflareChallenge(response.headers[CF_MITIGATED_HEADER], body) ->
+            IllegalStateException("защита Cloudflare")
+        response.status.value in SERVER_ERROR_CODES -> LServerErrorException(response.status.value)
+        WRONG_CREDENTIALS_MARKER in body -> LWrongCredentialsException()
+        response.status.value in CLIENT_ERROR_CODES ->
+            IllegalStateException("сервер отклонил вход (HTTP ${response.status.value})")
+        else -> null
+    }
+
+    /** Форма L может вернуть JSON с адресом перехода вместо перенаправления HTTP. */
+    private suspend fun completeLoginForm(body: String): Throwable? {
+        if (!body.trimStart().startsWith('{')) return null
+        val page = LJson.parseToJsonElement(body) as? JsonObject ?: return null
+        val form = page["form"] as? JsonObject
+        val fields = form?.get("fields") as? JsonObject
+        val errors = listOf(
+            form?.get("errors"),
+            (fields?.get("login") as? JsonObject)?.get("errors"),
+            (fields?.get("password") as? JsonObject)?.get("errors"),
+        )
+        if (errors.any { it is JsonArray && it.isNotEmpty() }) {
+            return IllegalStateException("сервер L отклонил форму входа")
+        }
+
+        val location = (page["location"] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+        if (location == null) {
+            return if (form != null) IllegalStateException("сайт L оставил форму входа открытой") else null
+        }
+
+        val loginUri = URI(LOGIN)
+        val target = loginUri.resolve(location)
+        if (target.scheme != loginUri.scheme || target.host != loginUri.host ||
+            target.port != loginUri.port || target.userInfo != null || target.path == loginUri.path
+        ) {
+            return IllegalStateException("сервер L вернул недопустимый адрес после входа")
+        }
+
+        val response = client.get(target.toString())
+        val failure = loginResponseFailure(response, response.bodyAsText())
+        return failure ?: if (response.call.request.url.encodedPath == loginUri.path) {
+            IllegalStateException("сайт L вернул форму входа")
+        } else {
+            null
+        }
     }
     // ! --- Login --- !
 

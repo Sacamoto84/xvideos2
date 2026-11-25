@@ -35,6 +35,7 @@ import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDetails
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.LServerLoginRequired
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.molecule.ServerLikesEmptyOrErrorState
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -51,7 +52,21 @@ object L_ScreenServerLikesTab : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val profile by Settings.l_profile.field.collectAsStateWithLifecycle()
+        val loginMessage = "Войдите в L, чтобы увидеть лайки на сервере"
+        if (!profile.isComplete) {
+            LServerLoginRequired(loginMessage)
+            return
+        }
+
         val vm: ScreenLServerLikesSM = getScreenModel()
+        val requiresLogin by vm.requiresLogin.collectAsStateWithLifecycle()
+        LaunchedEffect(vm, profile.revision) { vm.loadForProfile(profile.revision) }
+        if (requiresLogin) {
+            LServerLoginRequired(loginMessage)
+            return
+        }
+
         val haptic = LocalHapticFeedback.current
 
         val pictures by vm.pictures.collectAsStateWithLifecycle()

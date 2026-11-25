@@ -33,6 +33,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
@@ -42,6 +43,7 @@ import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFi
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumUnlikeDialog
+import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.LServerLoginRequired
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsEmptyOrErrorState
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsGrid
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.model.SubscribedAlbumsUiState
@@ -64,8 +66,22 @@ object L_ScreenSubscribedAlbumsTab : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val profile by Settings.l_profile.field.collectAsStateWithLifecycle()
+        val loginMessage = "Войдите в L, чтобы увидеть подписки на альбомы"
+        if (!profile.isComplete) {
+            LServerLoginRequired(loginMessage)
+            return
+        }
+
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLSubscribedAlbumsSM = getScreenModel()
+        val requiresLogin by vm.requiresLogin.collectAsStateWithLifecycle()
+        LaunchedEffect(vm, profile.revision) { vm.loadForProfile(profile.revision) }
+        if (requiresLogin) {
+            LServerLoginRequired(loginMessage)
+            return
+        }
+
         val haptic = LocalHapticFeedback.current
 
         val albums by vm.albums.collectAsStateWithLifecycle()

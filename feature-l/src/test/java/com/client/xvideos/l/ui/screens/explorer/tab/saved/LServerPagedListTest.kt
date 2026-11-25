@@ -1,5 +1,6 @@
 package com.client.xvideos.l.ui.screens.explorer.tab.saved
 
+import com.client.xvideos.l.repository.LSessionRequiredException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -42,6 +43,49 @@ class LServerPagedListTest {
         notifyNextPageFailed = { failureNotices += it },
         onReplaced = { replacements += it },
     )
+
+    @Test
+    fun `после повторного входа список сам загружается с первой страницы`() = runTest {
+        val newPage = CompletableDeferred<Result<List<String>>>()
+        pages.respond = { page -> when {
+            pages.requests.size == 1 -> Result.success(listOf("old"))
+            page == 2 -> Result.failure(LSessionRequiredException())
+            else -> newPage.await()
+        } }
+        val list = pagedList()
+        list.loadInitial()
+        list.loadForProfile(revision = 1)
+        advanceUntilIdle()
+        list.loadNextPage()
+        advanceUntilIdle()
+
+        assertTrue(list.requiresLogin.value)
+        assertTrue(failureNotices.isEmpty())
+        list.loadForProfile(revision = 2)
+        runCurrent()
+        assertTrue(list.items.value.isEmpty())
+        assertFalse(list.requiresLogin.value)
+        newPage.complete(Result.success(listOf("new")))
+        advanceUntilIdle()
+
+        assertEquals(listOf(1, 2, 1), pages.requests)
+        assertEquals(listOf("new"), list.items.value)
+    }
+
+    @Test
+    fun `кнопка входа нужна при отказе сессии, сетевая ошибка остаётся повторяемой`() = runTest {
+        pages.respond = { Result.failure(LSessionRequiredException()) }
+        val list = pagedList()
+        list.loadInitial()
+        advanceUntilIdle()
+        assertTrue(list.requiresLogin.value)
+
+        pages.respond = { Result.failure(IOException("обрыв")) }
+        list.loadInitial()
+        advanceUntilIdle()
+        assertFalse(list.requiresLogin.value)
+        assertTrue(list.errorMessage.value.orEmpty().contains("обрыв"))
+    }
 
     @Test
     fun `сбой подгрузки не запускает её по кругу`() = runTest {

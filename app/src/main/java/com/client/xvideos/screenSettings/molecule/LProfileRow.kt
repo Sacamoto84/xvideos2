@@ -36,7 +36,7 @@ internal fun LProfileRow(
             textDialogTitle = "Выйти из профиля L?",
             textDialogBody = "Логин и пароль $login будут удалены с устройства. Войти снова можно в настройках L.",
             textDialogButton = "Выйти",
-            subtitle = login,
+            subtitle = "Данные сохранены · $login",
             onClick = onLogout
         )
     } else {

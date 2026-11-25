@@ -84,7 +84,7 @@ fun NGalleryPager(
                                     modifier = Modifier.fillMaxSize(),
                                     topInset = gridTopInset
                                 )
-                                if (showVerticalScrollbar && index == pager.currentPage) {
+                                if (showVerticalScrollbar && index == pager.settledPage) {
                                     NGridScrollIndicator(gridState, columns)
                                 }
                             }

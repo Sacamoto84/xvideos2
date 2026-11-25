@@ -17,6 +17,8 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -56,8 +58,10 @@ object L_ScreenSavedAlbumsTab : Screen {
     private fun readResolve(): Any = L_ScreenSavedAlbumsTab
 
     @Composable
-    override fun Content() {
+    override fun Content() = Content(onVisibleRangeChange = null)
 
+    @Composable
+    internal fun Content(onVisibleRangeChange: ((State<Pair<Float, Float>>?) -> Unit)?) {
         val navigator = LocalNavigator.currentOrThrow
         val vm: ScreenLSavedAlbumsSM = getScreenModel()
         val state = vm.gridPosition.rememberState()
@@ -96,7 +100,8 @@ object L_ScreenSavedAlbumsTab : Screen {
             topInset = topInset,
             order = order,
             onOrderChange = onOrderChange,
-            onAlbumClick = onAlbumClick
+            onAlbumClick = onAlbumClick,
+            onVisibleRangeChange = onVisibleRangeChange,
         )
 
     }
@@ -114,6 +119,7 @@ fun SavedAlbumsTabContent(
     onOrderChange: (LSavedAlbumsOrder) -> Unit,
     onAlbumClick: (AlbumDetails) -> Unit,
     modifier: Modifier = Modifier,
+    onVisibleRangeChange: ((State<Pair<Float, Float>>?) -> Unit)? = null,
 ) {
     val onSelectOrder = remember(onOrderChange) {
         { index: Int -> onOrderChange(LSavedAlbumsOrder.entries[index]) }
@@ -140,8 +146,6 @@ fun SavedAlbumsTabContent(
                 itemsToIgnore = 1,
                 numberOfColumns = columns,
             )
-            val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
-
             LazyVerticalGrid(
                 contentPadding = PaddingValues(horizontal = 2.dp),
                 horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
@@ -188,8 +192,15 @@ fun SavedAlbumsTabContent(
                 }
             }
 
-            Box(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp)) {
-                VerticalScrollbar(scrollPercentProvider)
+            if (onVisibleRangeChange == null) {
+                Box(modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd).width(2.dp)) {
+                    VerticalScrollbar { scrollPercent.value }
+                }
+            } else {
+                DisposableEffect(scrollPercent, onVisibleRangeChange) {
+                    onVisibleRangeChange(scrollPercent)
+                    onDispose { onVisibleRangeChange(null) }
+                }
             }
         }
     }
