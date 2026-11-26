@@ -34,7 +34,7 @@ import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.molecule.RedProfileCreaterInfo
 import com.client.xvideos.r.ui.profile.molecule.TagsBlock
 import com.client.xvideos.r.ui.ui.MetadataLoadState
-import com.client.xvideos.r.ui.ui.MetadataLoadingContent
+import com.client.xvideos.r.ui.ui.atom.MetadataLoadingContent
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.PageableFeed
 import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon

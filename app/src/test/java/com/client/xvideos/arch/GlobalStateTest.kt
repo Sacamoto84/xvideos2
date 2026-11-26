@@ -159,6 +159,10 @@ class GlobalStateTest {
             // Сессионное состояние процесса: «пропустил логин» живёт до
             // перезапуска и не принадлежит ни одному экрану.
             "l/LSession.kt::loginSkipped",
+            // Текущая сессия аккаунта R на процесс: сетевой object ApiClient и экранные
+            // молекулы R не инжектируются Hilt и запрашивают активный токен напрямую,
+            // аналогично XLiveSession и Settings.securePref.
+            "r/auth/RAccountSession.kt::session",
             // Выбранная страна: глобальна по смыслу, раньше была двумя
             // разрозненными top-level переменными.
             "x/feature/country/CountryState.kt::current",

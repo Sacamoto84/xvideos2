@@ -1,7 +1,9 @@
 package com.client.xvideos.common.ui.scroll
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MediaFastScrollTest {
@@ -23,5 +25,13 @@ class MediaFastScrollTest {
         assertEquals(0f, fastScrollFraction(0.2f, 0.2f, false, true), 0.0001f)
         assertEquals(0.5f, fastScrollFraction(0.4f, 0.2f, true, true), 0.0001f)
         assertEquals(1f, fastScrollFraction(0.7f, 0.2f, true, false), 0.0001f)
+    }
+
+    @Test
+    fun rangePreservesAllowsTailGrowthButInvalidatesShrinkOrShift() {
+        assertTrue((1..25).preserves(1..20))
+        assertFalse((1..15).preserves(1..20))
+        assertFalse((2..25).preserves(1..20))
+        assertFalse(IntRange.EMPTY.preserves(1..20))
     }
 }

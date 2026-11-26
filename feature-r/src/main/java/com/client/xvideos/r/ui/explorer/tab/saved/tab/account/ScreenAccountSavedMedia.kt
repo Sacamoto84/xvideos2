@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -20,12 +21,15 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.r.ui.explorer.tab.gifs.normalizeRColumnCount
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AccountSavedHeader
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AccountSignInPrompt
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
+import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 
 internal class ScreenAccountSavedMedia(
     private val collectionId: String = "",
-    private val title: String = "Лайки RedGIFs",
+    private val title: String = "",
 ) : Screen {
     override val key: ScreenKey = "RedAccountSavedMedia:$collectionId"
 
@@ -40,28 +44,61 @@ internal class ScreenAccountSavedMedia(
         else Settings.r_collectionTab_column_current_count
         val columns by columnSetting.field.collectAsStateWithLifecycle()
 
-        Column(Modifier.fillMaxSize().background(Theme.background)) {
-            AccountSavedHeader(title = title, onBack = { navigator.pop() })
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                when (val content = state) {
-                    AccountSavedContent.Loading -> CircularProgressIndicator()
-                    AccountSavedContent.SignedOut -> AccountSignInPrompt()
-                    is AccountSavedContent.Ready -> {
-                        val host = content.value
-                        LaunchedEffect(host, columns) { host.columns = normalizeRColumnCount(columns) }
-                        LazyRow123(
-                            host = host,
-                            modifier = Modifier.fillMaxSize(),
-                            onClickOpenProfile = { username ->
-                                host.currentIndexGoto = host.currentIndex
-                                navigator.push(ScreenRedProfile(username))
-                            },
-                            emptyMessage = if (collectionId.isEmpty()) "У вас пока нет лайков на RedGIFs"
-                            else "В этой коллекции пока нет публикаций",
-                        )
-                    }
+        ScreenAccountSavedMediaContent(
+            title = title.ifEmpty { "Лайки R" },
+            collectionId = collectionId,
+            state = state,
+            columns = columns,
+            onBack = { navigator.pop() },
+            onOpenProfile = { username -> navigator.push(ScreenRedProfile(username)) },
+        )
+    }
+}
+
+@Composable
+internal fun ScreenAccountSavedMediaContent(
+    title: String,
+    collectionId: String,
+    state: AccountSavedContent<LazyRow123Host>,
+    columns: Int,
+    onBack: () -> Unit,
+    onOpenProfile: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier.fillMaxSize().background(Theme.background)) {
+        AccountSavedHeader(title = title, onBack = onBack)
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            when (state) {
+                AccountSavedContent.Loading -> CircularProgressIndicator()
+                AccountSavedContent.SignedOut -> AccountSignInPrompt()
+                is AccountSavedContent.Ready -> {
+                    val host = state.value
+                    LaunchedEffect(host, columns) { host.columns = normalizeRColumnCount(columns) }
+                    LazyRow123(
+                        host = host,
+                        modifier = Modifier.fillMaxSize(),
+                        onClickOpenProfile = { username ->
+                            host.currentIndexGoto = host.currentIndex
+                            onOpenProfile(username)
+                        },
+                        emptyMessage = if (collectionId.isEmpty()) "У вас пока нет лайков в R"
+                        else "В этой коллекции пока нет публикаций",
+                    )
                 }
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun ScreenAccountSavedMediaPreview() {
+    ScreenAccountSavedMediaContent(
+        title = "Лайки R",
+        collectionId = "",
+        state = AccountSavedContent.SignedOut,
+        columns = 2,
+        onBack = {},
+        onOpenProfile = {},
+    )
 }

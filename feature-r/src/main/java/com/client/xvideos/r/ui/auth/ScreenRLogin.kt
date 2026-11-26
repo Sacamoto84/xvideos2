@@ -1,4 +1,4 @@
-package com.client.xvideos.r.auth
+package com.client.xvideos.r.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -24,21 +25,23 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
+import com.client.xvideos.r.ui.auth.molecule.RSignInWebView
+import com.client.xvideos.ui.theme.XvideosTheme
 
-internal object ScreenRedgifsLogin : Screen {
-    override val key: ScreenKey = "RedgifsLogin"
+internal object ScreenRLogin : Screen {
+    override val key: ScreenKey = "RLogin"
 
-    private fun readResolve(): Any = ScreenRedgifsLogin
+    private fun readResolve(): Any = ScreenRLogin
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        RedgifsLoginContent(onClose = { navigator.pop() })
+        ScreenRLoginContent(onClose = { navigator.pop() })
     }
 }
 
 @Composable
-fun RedgifsLoginContent(onClose: () -> Unit, modifier: Modifier = Modifier) {
+fun ScreenRLoginContent(onClose: () -> Unit, modifier: Modifier = Modifier) {
     NoStatusBarScrimEffect()
 
     Column(
@@ -50,7 +53,7 @@ fun RedgifsLoginContent(onClose: () -> Unit, modifier: Modifier = Modifier) {
             .imePadding(),
     ) {
         SavedTabHeader(
-            title = "Вход в RedGIFs",
+            title = "Вход в R",
             navigation = {
                 IconButton(onClick = onClose) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
@@ -64,10 +67,18 @@ fun RedgifsLoginContent(onClose: () -> Unit, modifier: Modifier = Modifier) {
         )
         RSignInWebView(
             onSignedIn = {
-                SnackBar.success("Вход в RedGIFs выполнен")
+                SnackBar.success("Вход в R выполнен")
                 onClose()
             },
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
+    }
+}
+
+@Preview
+@Composable
+private fun ScreenRLoginContentPreview() {
+    XvideosTheme(darkTheme = true) {
+        ScreenRLoginContent(onClose = {})
     }
 }

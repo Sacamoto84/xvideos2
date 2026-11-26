@@ -3,6 +3,7 @@ package com.client.xvideos.r.ui.explorer.tab.saved.tab
 import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.hilt.ScreenModelKey
+import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.model.GifsInfo
 import dagger.Binds
@@ -16,6 +17,8 @@ import javax.inject.Inject
 class ScreenSavedDownloadSM @Inject constructor(
     val downloadRed: DownloadRed
 ) : ScreenModel {
+    val position = LazyGridPosition()
+
     fun delete(item: GifsInfo) {
         downloadRed.delete(item)
     }

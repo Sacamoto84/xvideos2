@@ -33,15 +33,11 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.icons.IconCollection18
 import com.client.xvideos.common.icons.IconSave18
 import com.client.xvideos.r.common.UsersRed
-import com.client.xvideos.r.common.block.BlockRed
-import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.ui.expand_menu_video.ExpandMenuVideo
 import com.client.xvideos.r.ui.expand_menu_video.ExpandMenuVideoTags
-import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.ui.video.player_row_mini.RedUrlVideoImageAndLongClick
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
-import com.client.xvideos.r.network.api.RedApi
 import com.client.xvideos.r.ui.top_this_week.ProfileInfo1
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -61,22 +57,14 @@ fun LazyRow123GridItem(
     LazyRow123GridItemContent(
         item = item,
         index = index,
+        host = host,
         isConnected = isConnected,
         isDownloaded = isDownloaded,
         isRunLike = isRunLike,
-        isCollection = host.isCollection,
-        accountLikes = host.isAccountLikes,
-        accountCollectionId = host.accountCollectionId,
-        visibleProfileInfo = host.visibleProfileInfo,
-        columns = host.columns,
-        block = { host.block },
-        redApi = { host.redApi },
-        savedRed = { host.savedRed },
-        downloadRed = { host.downloadRed },
         onItemClick = onItemClick,
         onRefresh = onRefresh,
         onClickOpenProfile = onClickOpenProfile,
-        onTagClick = onTagClick
+        onTagClick = onTagClick,
     )
 }
 
@@ -84,27 +72,19 @@ fun LazyRow123GridItem(
 private fun LazyRow123GridItemContent(
     item: GifsInfo,
     index: Int,
+    host: LazyRow123Host,
     isConnected: Boolean,
     isDownloaded: Boolean,
     isRunLike: Boolean,
-    isCollection: Boolean,
-    visibleProfileInfo: Boolean,
-    columns: Int,
-    block: () -> BlockRed,
-    redApi: () -> RedApi,
-    savedRed: () -> SavedRed,
-    downloadRed: () -> DownloadRed,
     onItemClick: () -> Unit,
     onRefresh: () -> Unit,
     onClickOpenProfile: (String) -> Unit,
     onTagClick: (String) -> Unit,
-    accountLikes: Boolean = false,
-    accountCollectionId: String? = null,
 ) {
     LazyRow123GridItemContentStateless(
         item = item,
-        visibleProfileInfo = visibleProfileInfo,
-        columns = columns,
+        visibleProfileInfo = host.visibleProfileInfo,
+        columns = host.columns,
         onClickOpenProfile = onClickOpenProfile,
         onTagClick = onTagClick,
         videoImage = { onVideo ->
@@ -118,7 +98,7 @@ private fun LazyRow123GridItemContent(
                 play = false,
                 isNetConnected = isConnected,
                 onFullScreen = onItemClick,
-                downloadRed = downloadRed,
+                downloadRed = { host.downloadRed },
             )
         },
         expandMenu = {
@@ -126,19 +106,19 @@ private fun LazyRow123GridItemContent(
                 item = item,
                 onRunLike = { if (isRunLike) onRefresh() },
                 onRefresh = onRefresh,
-                isCollection = isCollection,
-                block = block,
-                redApi = redApi,
-                savedRed = savedRed,
-                downloadRed = downloadRed,
-                accountLikes = accountLikes,
-                accountCollectionId = accountCollectionId,
+                isCollection = host.isCollection,
+                block = { host.block },
+                redApi = { host.redApi },
+                savedRed = { host.savedRed },
+                downloadRed = { host.downloadRed },
+                accountLikes = host.isAccountLikes,
+                accountCollectionId = host.accountCollectionId,
             )
         },
         icons = {
             LazyRow123Icons(
                 modifier = Modifier.align(Alignment.BottomEnd).offset(2.dp, 2.dp),
-                savedRed = savedRed,
+                savedRed = { host.savedRed },
                 item = item,
                 isDownloaded = isDownloaded
             )

@@ -49,7 +49,6 @@ fun NichePreview(
     Column(
         modifier = modifier
             .height(80.dp)
-            .padding(horizontal = 4.dp)
             .shadow(10.dp, cardShape)
             .clip(cardShape)
             .background(Theme.tabLevel3)

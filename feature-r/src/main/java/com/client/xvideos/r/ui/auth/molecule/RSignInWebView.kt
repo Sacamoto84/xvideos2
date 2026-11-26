@@ -1,6 +1,7 @@
-package com.client.xvideos.r.auth
+package com.client.xvideos.r.ui.auth.molecule
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.webkit.RenderProcessGoneDetail
@@ -12,6 +13,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -27,14 +29,19 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.core.view.doOnLayout
 import androidx.webkit.ProfileStore
 import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.client.xvideos.common.util.runCatchingCancellable
+import com.client.xvideos.r.auth.RAccountCredentials
+import com.client.xvideos.r.auth.RAccountSession
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import timber.log.Timber
@@ -46,16 +53,19 @@ private const val LOGIN_URL = "$WEB_ORIGIN/login"
 private const val PROVIDER_HOST = "auth2.redgifs.com"
 private const val BRIDGE = "androidRedgifsSignIn"
 private const val PROFILE_PREFIX = "redgifs-signin-"
-private const val NETWORK_ERROR = "Не удалось открыть страницу входа RedGIFs."
-private const val SESSION_ERROR = "Не удалось подтвердить вход в RedGIFs."
-private const val PROFILE_ERROR = "RedGIFs подтвердил вход, но не удалось загрузить профиль."
+private const val NETWORK_ERROR = "Не удалось открыть страницу входа R."
+private const val SESSION_ERROR = "Не удалось подтвердить вход в R."
+private const val PROFILE_ERROR = "R подтвердил вход, но не удалось загрузить профиль."
 
 @Composable
 fun RSignInWebView(onSignedIn: () -> Unit, modifier: Modifier = Modifier) {
-    val supported = remember {
-        WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE) &&
-            WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)
+    if (LocalInspectionMode.current) {
+        Box(modifier, contentAlignment = Alignment.Center) {
+            Text("Окно входа в R", Modifier.padding(16.dp))
+        }
+        return
     }
+    val supported = remember { isSignInWebViewSupported() }
     if (!supported) {
         Box(modifier, contentAlignment = Alignment.Center) {
             Text("Для входа обновите Android System WebView.", Modifier.padding(16.dp))
@@ -65,94 +75,142 @@ fun RSignInWebView(onSignedIn: () -> Unit, modifier: Modifier = Modifier) {
 
     var attempt by remember { mutableIntStateOf(0) }
     key(attempt) {
-        RSignInAttempt(onSignedIn, onRetry = { attempt++ }, modifier)
-    }
-}
+        val scope = rememberCoroutineScope()
+        val currentOnSignedIn by rememberUpdatedState(onSignedIn)
+        val profile = remember { PROFILE_PREFIX + UUID.randomUUID() }
+        var loading by remember { mutableStateOf(true) }
+        var saving by remember { mutableStateOf(false) }
+        var error by remember { mutableStateOf<String?>(null) }
 
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-private fun RSignInAttempt(onSignedIn: () -> Unit, onRetry: () -> Unit, modifier: Modifier) {
-    val scope = rememberCoroutineScope()
-    val currentOnSignedIn by rememberUpdatedState(onSignedIn)
-    val profile = remember { PROFILE_PREFIX + UUID.randomUUID() }
-    var loading by remember { mutableStateOf(true) }
-    var saving by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-
-    Box(modifier, contentAlignment = Alignment.Center) {
-        val message = error
-        if (message != null) {
-            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(message)
-                TextButton(onClick = onRetry) { Text("Повторить") }
-            }
-        } else {
-            AndroidView(
-                factory = { context ->
-                    val store = ProfileStore.getInstance()
-                    store.allProfileNames.filter { it.startsWith(PROFILE_PREFIX) }.forEach { removeProfile(it) }
-                    WebView(context).apply {
-                        WebViewCompat.setProfile(this, profile)
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.allowFileAccess = false
-                        settings.allowContentAccess = false
-                        settings.setSupportMultipleWindows(true)
-                        settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-
-                        val signInClient = RedgifsSignInClient(
+        Box(modifier, contentAlignment = Alignment.Center) {
+            val message = error
+            if (message != null) {
+                Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(message)
+                    TextButton(onClick = { attempt++ }) { Text("Повторить") }
+                }
+            } else {
+                AndroidView(
+                    factory = { context ->
+                        buildSignInWebView(
+                            context = context,
+                            profile = profile,
                             onLoading = { loading = it },
                             onError = { error = it },
-                        )
-                        webViewClient = signInClient
-                        WebViewCompat.addWebMessageListener(this, BRIDGE, setOf(WEB_ORIGIN)) {
-                                view, reply, origin, isMainFrame, _ ->
-                            if (!isMainFrame || !origin.isHttpsHost(WEB_HOST) ||
-                                !signInClient.isReturningFromProvider || saving || error != null ||
-                                !Uri.parse(view.url.orEmpty()).isHttpsHost(WEB_HOST)
-                            ) return@addWebMessageListener
-                            if (reply.type != WebMessageCompat.TYPE_STRING) return@addWebMessageListener
-                            val payload = reply.data.orEmpty()
-                            if (payload.length > 17_000) return@addWebMessageListener
-                            if (payload == "profile-unavailable") {
-                                error = PROFILE_ERROR
-                                return@addWebMessageListener
-                            }
-                            val credentials = runCatching { Json.decodeFromString<RAccountCredentials>(payload) }.getOrNull()
-                            if (credentials == null) {
-                                error = SESSION_ERROR
-                                return@addWebMessageListener
-                            }
-                            saving = true
-                            scope.launch {
-                                if (runCatchingCancellable { RAccountSession.save(credentials) }.getOrDefault(false)) {
-                                    currentOnSignedIn()
-                                } else {
-                                    error = "Не удалось сохранить сессию RedGIFs."
+                            canAcceptMessage = { !saving && error == null },
+                            onCredentials = { credentials ->
+                                saving = true
+                                scope.launch {
+                                    if (runCatchingCancellable { RAccountSession.save(credentials) }.getOrDefault(false)) {
+                                        currentOnSignedIn()
+                                    } else {
+                                        error = "Не удалось сохранить сессию R."
+                                    }
                                 }
-                            }
-                        }
-                        doOnLayout { loadUrl(LOGIN_URL) }
-                    }
-                },
-                modifier = Modifier.matchParentSize(),
-                onRelease = { view ->
-                    view.stopLoading()
-                    view.destroy()
-                    removeProfile(profile)
-                },
-            )
-            if (loading || saving) CircularProgressIndicator()
+                            },
+                        )
+                    },
+                    modifier = Modifier.matchParentSize(),
+                    onRelease = { view ->
+                        view.stopLoading()
+                        view.destroy()
+                        removeProfile(profile)
+                    },
+                )
+                if (loading || saving) CircularProgressIndicator()
+            }
         }
     }
 }
 
-private fun removeProfile(name: String) {
-    runCatching { ProfileStore.getInstance().deleteProfile(name) }
-        .onFailure { Timber.w("Не удалось очистить профиль WebView для входа в RedGIFs") }
+private fun isSignInWebViewSupported(): Boolean =
+    WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE) &&
+        WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)
+
+@SuppressLint("SetJavaScriptEnabled")
+private fun buildSignInWebView(
+    context: Context,
+    profile: String,
+    onLoading: (Boolean) -> Unit,
+    onError: (String) -> Unit,
+    canAcceptMessage: () -> Boolean,
+    onCredentials: (RAccountCredentials) -> Unit,
+): WebView {
+    if (WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE)) {
+        ProfileStore.getInstance().allProfileNames
+            .filter { it.startsWith(PROFILE_PREFIX) }
+            .forEach(::removeProfile)
+    }
+    return WebView(context).apply {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE)) {
+            WebViewCompat.setProfile(this, profile)
+        }
+        settings.javaScriptEnabled = true
+        settings.domStorageEnabled = true
+        settings.allowFileAccess = false
+        settings.allowContentAccess = false
+        settings.setSupportMultipleWindows(true)
+        settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+
+        val signInClient = RSignInClient(onLoading = onLoading, onError = onError)
+        webViewClient = signInClient
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            WebViewCompat.addWebMessageListener(this, BRIDGE, setOf(WEB_ORIGIN)) {
+                    view, reply, origin, isMainFrame, _ ->
+                if (!shouldAcceptSignInMessage(
+                        isMainFrame = isMainFrame,
+                        origin = origin,
+                        returningFromProvider = signInClient.isReturningFromProvider,
+                        canAccept = canAcceptMessage(),
+                        pageUrl = view.url.orEmpty(),
+                        replyType = reply.type,
+                    )
+                ) return@addWebMessageListener
+                handleSignInPayload(reply.data.orEmpty(), onError, onCredentials)
+            }
+        }
+        doOnLayout { loadUrl(LOGIN_URL) }
+    }
 }
 
-private class RedgifsSignInClient(
+private fun shouldAcceptSignInMessage(
+    isMainFrame: Boolean,
+    origin: Uri,
+    returningFromProvider: Boolean,
+    canAccept: Boolean,
+    pageUrl: String,
+    replyType: Int,
+): Boolean {
+    if (!isMainFrame || !returningFromProvider || !canAccept) return false
+    if (replyType != WebMessageCompat.TYPE_STRING) return false
+    return origin.isHttpsHost(WEB_HOST) && pageUrl.toUri().isHttpsHost(WEB_HOST)
+}
+
+private fun handleSignInPayload(
+    payload: String,
+    onError: (String) -> Unit,
+    onCredentials: (RAccountCredentials) -> Unit,
+) {
+    if (payload.length > 17_000) return
+    if (payload == "profile-unavailable") {
+        onError(PROFILE_ERROR)
+        return
+    }
+    val credentials = runCatching { Json.decodeFromString<RAccountCredentials>(payload) }.getOrNull()
+    if (credentials == null) {
+        onError(SESSION_ERROR)
+        return
+    }
+    onCredentials(credentials)
+}
+
+private fun removeProfile(name: String) {
+    if (!WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE)) return
+    runCatching { ProfileStore.getInstance().deleteProfile(name) }
+        .onFailure { Timber.w("Не удалось очистить профиль WebView для входа в R") }
+}
+
+private class RSignInClient(
     private val onLoading: (Boolean) -> Unit,
     private val onError: (String) -> Unit,
 ) : WebViewClient() {
@@ -164,7 +222,7 @@ private class RedgifsSignInClient(
         request.isForMainFrame && !request.url.isSignInHost()
 
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
-        val uri = Uri.parse(url)
+        val uri = url.toUri()
         if (!uri.isSignInHost()) {
             view.stopLoading()
             onError(NETWORK_ERROR)
@@ -177,7 +235,7 @@ private class RedgifsSignInClient(
     override fun onPageFinished(view: WebView, url: String) {
         val currentUrl = view.url
         val finishedOnSite =
-            Uri.parse(url).isHttpsHost(WEB_HOST) && Uri.parse(currentUrl.orEmpty()).isHttpsHost(WEB_HOST)
+            url.toUri().isHttpsHost(WEB_HOST) && currentUrl.orEmpty().toUri().isHttpsHost(WEB_HOST)
         if (finishedOnSite) {
             if (isReturningFromProvider) {
                 onLoading(true)
@@ -278,3 +336,9 @@ private val READ_ACCOUNT_SESSION = """
         window.$BRIDGE.postMessage(session ?? (tokenReceived ? 'profile-unavailable' : ''));
     })();
 """.trimIndent()
+
+@Preview
+@Composable
+private fun RSignInWebViewPreview() {
+    RSignInWebView(onSignedIn = {}, modifier = Modifier.fillMaxSize())
+}

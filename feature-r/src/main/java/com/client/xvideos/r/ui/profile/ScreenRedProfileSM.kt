@@ -124,7 +124,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
 
     private fun loadMetadata() {
         if (cleanProfileName.isBlank()) {
-            metadata = MetadataLoadState.Failed("Не указан автор RedGIFs")
+            metadata = MetadataLoadState.Failed("Не указан автор R")
             return
         }
 
@@ -132,7 +132,7 @@ class ScreenRedProfileSM @AssistedInject constructor(
         screenModelScope.launch {
             val creator = runCatchingCancellable {
                 redApi.readCreator(cleanProfileName).getOrThrow().also {
-                    check(it.isValid) { "RedGIFs вернул пустой профиль автора" }
+                    check(it.isValid) { "R вернул пустой профиль автора" }
                 }
             }.getOrElse { error ->
                 Timber.w("ScreenRedProfileSM: профиль автора не загрузился: ${error.javaClass.simpleName}")

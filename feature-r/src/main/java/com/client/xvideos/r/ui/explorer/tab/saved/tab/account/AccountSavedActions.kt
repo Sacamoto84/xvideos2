@@ -37,6 +37,10 @@ internal val AccountMembership.savedList: AccountSavedList
 internal data class AccountSavedKey(val list: AccountSavedList, val id: String = "")
 internal data class AccountSavedOperation(val account: RAccountStatus.SignedIn, val key: AccountSavedKey)
 
+internal val collectionsKey = AccountSavedKey(AccountSavedList.COLLECTIONS)
+
+internal fun collectionItems(id: String) = AccountSavedKey(AccountSavedList.COLLECTION_ITEMS, id)
+
 internal object AccountSavedActions {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val revisions = MutableStateFlow<Map<AccountSavedKey, Long>>(emptyMap())
@@ -79,35 +83,52 @@ internal object AccountSavedActions {
         val appContext = context.applicationContext
         mutablePending.update { it + operation }
         scope.launch {
-            val result = try {
+            val rawResult = try {
                 request()
             } finally {
                 mutablePending.update { it - operation }
             }
+            val result = finalizeAccountAction(
+                account = operation.account,
+                currentStatus = RAccountSession.status.value,
+                rawResult = rawResult,
+            )
             if (result.isSuccess) {
-                if (RAccountSession.status.value !== operation.account) return@launch
                 revisions.update { previous ->
                     previous.toMutableMap().apply {
                         for (key in changedLists) put(key, (get(key) ?: 0L) + 1)
                     }
                 }
             }
-            val message = result.fold({ successMessage }, { it.accountActionMessage() })
-            if (message != null) Toast.makeText(appContext, message, Toast.LENGTH_SHORT).show()
-            onResult(result)
+            try {
+                val message = result.fold({ successMessage }, { it.accountActionMessage() })
+                if (message != null) Toast.makeText(appContext, message, Toast.LENGTH_SHORT).show()
+            } finally {
+                onResult(result)
+            }
         }
     }
 }
 
+internal fun <T> finalizeAccountAction(
+    account: RAccountStatus.SignedIn,
+    currentStatus: RAccountStatus,
+    rawResult: Result<T>,
+): Result<T> = if (rawResult.isSuccess && currentStatus !== account) {
+    Result.failure(IllegalStateException("Сессия R изменилась или истекла"))
+} else {
+    rawResult
+}
+
 internal fun Throwable.accountActionMessage(): String =
     if (this is ResponseException && response.status == HttpStatusCode.Unauthorized) {
-        "Войдите в RedGIFs повторно"
+        "Войдите в R повторно"
     } else {
         toRUserMessage()
     }
 
 @Composable
-internal fun signedInRedgifsAccount(): RAccountStatus.SignedIn? {
+internal fun signedInAccount(): RAccountStatus.SignedIn? {
     if (LocalInspectionMode.current) return null
     val account by RAccountSession.status.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { RAccountSession.restore() }

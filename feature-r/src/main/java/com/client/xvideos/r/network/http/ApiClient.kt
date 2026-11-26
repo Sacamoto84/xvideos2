@@ -176,7 +176,7 @@ object ApiClient {
         val url = route.url
         require(url.toHttpUrlOrNull()?.isRedgifsApi() == true)
         val token = RAccountSession.activeToken(account)
-            ?: return Result.failure(IllegalStateException("Войдите в RedGIFs"))
+            ?: return Result.failure(IllegalStateException("Войдите в R"))
         val result = if (route.isGet) {
             getAsAccount(url, emptyList(), token, read)
         } else {

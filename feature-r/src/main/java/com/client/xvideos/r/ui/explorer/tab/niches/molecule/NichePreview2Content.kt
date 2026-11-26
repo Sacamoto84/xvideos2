@@ -39,9 +39,9 @@ import com.client.xvideos.ui.theme.XvideosTheme
 fun NichePreview2Content(
     niche: Niche,
     isFollowed: Boolean,
-    onFollowClick: (() -> Unit)? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onFollowClick: (() -> Unit)? = null,
     trailingFollowAction: (@Composable (onClick: () -> Unit) -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {

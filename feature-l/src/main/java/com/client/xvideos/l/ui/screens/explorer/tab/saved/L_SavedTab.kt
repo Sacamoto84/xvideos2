@@ -145,13 +145,13 @@ fun L_SavedTabContent(
                         4 -> L_ScreenServerLikesTab.Content()
                     }
                 }
-            }
 
-            // Anchor the rail to the viewport while the pager is settling.
-            val visibleRange = savedAlbumsVisibleRange
-            if (pagerState.settledPage == SAVED_ALBUMS_PAGE && visibleRange != null) {
-                Box(Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(2.dp)) {
-                    VerticalScrollbar { visibleRange.value }
+                // Anchor the rail to the viewport while keeping the pager drag fade active.
+                val visibleRange = savedAlbumsVisibleRange
+                if (pagerState.settledPage == SAVED_ALBUMS_PAGE && visibleRange != null) {
+                    Box(Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(2.dp)) {
+                        VerticalScrollbar { visibleRange.value }
+                    }
                 }
             }
         }

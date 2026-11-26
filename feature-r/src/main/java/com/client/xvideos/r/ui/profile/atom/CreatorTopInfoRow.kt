@@ -36,7 +36,7 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.feature.r.R
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.network.api.AccountMembership
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AccountMembershipMenu
 import com.client.xvideos.ui.theme.XvideosTheme
 
 /**

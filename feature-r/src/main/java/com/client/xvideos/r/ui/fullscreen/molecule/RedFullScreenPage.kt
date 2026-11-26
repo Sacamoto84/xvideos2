@@ -83,7 +83,7 @@ fun RedFullScreenPage(
                     // затирает те, что успела выставить пришедшая ей на смену.
                     if (player.currentPlayerControls === controls) player.currentPlayerControls = null
                 },
-                onClick = { if (isCurrentPage) player.togglePlay() },
+                onClick = { if (isCurrentPage) player.playPauseFeedback.togglePlayback() },
                 onBufferingChanged = { buffering ->
                     if (isCurrentPage) {
                         onBuffering(buffering)

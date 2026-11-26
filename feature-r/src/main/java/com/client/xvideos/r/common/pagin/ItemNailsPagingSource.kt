@@ -86,17 +86,20 @@ class ItemNailsPagingSource(
 
         } catch (e: CancellationException) {
             throw e // G1
-        } catch (e: Exception) {
+        } catch (e: ClientRequestException) {
             Timber.e("!!! ItemNailsPagingSource load() page = $page nichesName:$nichesName: ${e.javaClass.simpleName}")
-            if (e is ClientRequestException && e.response.status == HttpStatusCode.BadRequest) {
+            if (e.response.status == HttpStatusCode.BadRequest) {
                 val code = runCatchingCancellable {
                     RJson.parseToJsonElement(e.response.bodyAsText()).jsonObject["error"]
                         ?.jsonObject?.get("code")?.jsonPrimitive?.content
                 }.getOrNull()
                 if (code == "BadPageNumber") {
-                    return LoadResult.Error(IllegalStateException("RedGIFs не выдаёт страницу $page этой группы", e))
+                    return LoadResult.Error(IllegalStateException("R не выдаёт страницу $page этой группы", e))
                 }
             }
+            LoadResult.Error(e)
+        } catch (e: Exception) {
+            Timber.e("!!! ItemNailsPagingSource load() page = $page nichesName:$nichesName: ${e.javaClass.simpleName}")
             LoadResult.Error(e)
         }
     }

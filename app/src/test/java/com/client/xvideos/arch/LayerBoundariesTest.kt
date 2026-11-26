@@ -149,6 +149,8 @@ class LayerBoundariesTest {
             ),
             "r" to mapOf(
                 "model" to "model",
+                // Сессия и учётные данные аккаунта R; UI входа вынесен в ui/auth.
+                "auth" to "data",
                 "network" to "data",
                 "common" to "domain",
                 "ui" to "ui",

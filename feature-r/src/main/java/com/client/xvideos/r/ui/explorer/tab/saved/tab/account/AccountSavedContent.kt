@@ -1,30 +1,10 @@
 package com.client.xvideos.r.ui.explorer.tab.saved.tab.account
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Stable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import com.client.xvideos.common.ui.atom.SavedTabHeader
-import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.auth.RAccountSession
 import com.client.xvideos.r.auth.RAccountStatus
-import com.client.xvideos.r.auth.ScreenRedgifsLogin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -34,6 +14,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 
+@Stable
 internal sealed interface AccountSavedContent<out T> {
     data object Loading : AccountSavedContent<Nothing>
     data object SignedOut : AccountSavedContent<Nothing>
@@ -55,47 +36,3 @@ internal fun <T> ScreenModel.accountSavedContent(create: (CoroutineScope) -> T) 
         }
     }
     .stateIn(screenModelScope, SharingStarted.Lazily, AccountSavedContent.Loading)
-
-@Composable
-internal fun AccountSavedHeader(
-    title: String,
-    onBack: () -> Unit,
-    onRefresh: (() -> Unit)? = null,
-    refreshing: Boolean = false,
-    actions: @Composable () -> Unit = {},
-) {
-    SavedTabHeader(
-        title = title,
-        topCutout = getTopInsetDp(),
-        navigation = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
-            }
-        },
-        trailing = {
-            actions()
-            if (onRefresh != null) {
-                IconButton(onClick = onRefresh, enabled = !refreshing) {
-                    Icon(Icons.Filled.Refresh, contentDescription = "Обновить")
-                }
-            }
-        },
-    )
-}
-
-@Composable
-internal fun AccountSavedMessage(message: String) {
-    Text(message, modifier = Modifier.padding(horizontal = 20.dp), color = Color.White, textAlign = TextAlign.Center)
-}
-
-@Composable
-internal fun AccountSignInPrompt() {
-    val navigator = LocalNavigator.currentOrThrow
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        AccountSavedMessage("Войдите в RedGIFs, чтобы открыть этот список.")
-        Button(onClick = { navigator.push(ScreenRedgifsLogin) }) { Text("Войти в RedGIFs") }
-    }
-}

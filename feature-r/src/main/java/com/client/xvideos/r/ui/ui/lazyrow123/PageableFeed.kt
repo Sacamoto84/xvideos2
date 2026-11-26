@@ -1,18 +1,13 @@
 package com.client.xvideos.r.ui.ui.lazyrow123
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,14 +17,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.pagination.PageNavigationBar
 import com.client.xvideos.r.model.GifsInfo
+import com.client.xvideos.r.ui.ui.lazyrow123.atom.InfiniteScrollSwitch
 
 @Composable
 internal fun PageableFeed(
@@ -106,16 +100,10 @@ internal fun PageableFeed(
     }
 }
 
+@Preview
 @Composable
-private fun InfiniteScrollSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
-            .padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("Бесконечная\nпрокрутка", style = MaterialTheme.typography.labelMedium, color = Color.LightGray)
-        Switch(checked = checked, onCheckedChange = null)
+private fun PageableFeedPreview() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("PageableFeed")
     }
 }

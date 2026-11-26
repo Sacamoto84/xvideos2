@@ -176,11 +176,11 @@ fun N_SavedTabContent(
                         }
                     }
                 }
-            }
 
-            // Keep the rail in the viewport until a different tab settles.
-            indicators.getOrNull(pagerState.settledPage)?.value?.let { indicator ->
-                NGridScrollIndicatorOverlay(indicator, pagerTopInRoot)
+                // Keep the rail anchored to the viewport while fading with pager drags.
+                indicators.getOrNull(pagerState.settledPage)?.value?.let { indicator ->
+                    NGridScrollIndicatorOverlay(indicator, pagerTopInRoot)
+                }
             }
         }
     }

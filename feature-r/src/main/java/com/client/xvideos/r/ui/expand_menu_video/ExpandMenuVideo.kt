@@ -37,15 +37,15 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.network.api.AccountCollectionsApi
 import com.client.xvideos.r.network.api.AccountMembership
 import com.client.xvideos.r.network.api.RedApi
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenuItem
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedActions
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedKey
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedList
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountSavedOperation
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AddToAccountCollectionDialog
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.accountMenuItemColors
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.collectionItems
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.signedInRedgifsAccount
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AccountMembershipMenuItem
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AddToAccountCollectionDialog
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.signedInAccount
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.ui.theme.XvideosTheme
 
@@ -70,7 +70,7 @@ fun ExpandMenuVideo(
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val navigator = cafe.adriel.voyager.navigator.LocalNavigator.current
-    val account = signedInRedgifsAccount()
+    val account = signedInAccount()
     var choosingAccountCollection by remember(account, item?.id) { mutableStateOf(false) }
     val gifId = item?.id?.takeIf { it.isNotBlank() }
 
@@ -115,7 +115,7 @@ fun ExpandMenuVideo(
                 expanded = false
             }
             DropdownMenuItem(
-                text = { Text("В коллекцию RedGIFs…") },
+                text = { Text("В коллекцию R…") },
                 leadingIcon = { Icon(Icons.Default.CreateNewFolder, contentDescription = null) },
                 colors = accountMenuItemColors(),
                 onClick = {
@@ -136,7 +136,7 @@ fun ExpandMenuVideo(
                         expanded = false
                         AccountSavedActions.run(
                             context, operation, list, AccountSavedKey(AccountSavedList.COLLECTIONS),
-                            successMessage = "Убрано из коллекции RedGIFs",
+                            successMessage = "Убрано из коллекции R",
                             request = { AccountCollectionsApi.setItem(account, accountCollectionId, gifId, added = false) },
                         )
                     },

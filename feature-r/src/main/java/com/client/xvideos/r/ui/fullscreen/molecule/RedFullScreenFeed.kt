@@ -115,6 +115,7 @@ fun RedFullScreenFeed(
                 if (page >= listGifs.itemCount) isVideoBuffering = false
                 host.currentIndex = page
                 host.returnToIndex = page
+                player.playPauseFeedback.clear()
                 player.play = true
                 player.currentPlayerTime = 0f
                 player.currentPlayerDuration = 0

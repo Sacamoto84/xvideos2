@@ -40,7 +40,7 @@ import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.StorageStat
 import com.client.xvideos.screenSettings.components.loadStorageStats
 import com.client.xvideos.screenSettings.molecule.AppSettingsScreenBody
-import com.client.xvideos.r.auth.RedgifsLoginContent
+import com.client.xvideos.r.ui.auth.ScreenRLoginContent
 import com.client.xvideos.screenSettings.molecule.SettingsXLoginForm
 import com.client.xvideos.screenSettings.model.SettingsDetailParams
 import com.client.xvideos.screenSettings.model.SettingsLoginForms
@@ -170,130 +170,64 @@ internal fun AppSettingsScreenContent(
     modifier: Modifier = Modifier
 ) {
     var currentPage by rememberSaveable { mutableStateOf(SettingsPage.Main) }
-    // Форма входа в L рисуется здесь же, вместо страницы настроек, а не отдельным
-    // экраном навигатора. Корневой навигатор не хранит rememberSaveable-состояние
-    // экрана, с которого ушли: возврат с отдельного экрана открывал главную
-    // страницу настроек вместо страницы L.
     var lLoginVisible by rememberSaveable { mutableStateOf(false) }
-    // Форма входа в X — так же, по кнопке «Войти» на странице X.
     var xLoginVisible by rememberSaveable { mutableStateOf(false) }
     var rLoginVisible by rememberSaveable { mutableStateOf(false) }
-    val lLoginForm = loginForms.l
-    val xLoginForm = loginForms.x
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(currentPage) {
-        scrollState.scrollTo(0)
-    }
+    LaunchedEffect(currentPage) { scrollState.scrollTo(0) }
 
     val onMainBack: () -> Unit = remember { { currentPage = SettingsPage.Main } }
-    // Поля формы заполняются при открытии, а не подпиской на настройки:
-    // «Сохранить» меняет профиль, и подписка пересоздала бы поля перед самым
-    // закрытием формы. При закрытии набранное стирается.
-    val onOpenLLogin: () -> Unit = remember(lLoginForm) {
-        {
-            lLoginForm.prefill(Settings.l_profile.field.value)
-            lLoginVisible = true
-        }
+    val onOpenLLogin: () -> Unit = remember(loginForms.l) {
+        { loginForms.l.prefill(Settings.l_profile.field.value); lLoginVisible = true }
     }
-    val onCloseLLogin: () -> Unit = remember(lLoginForm) {
-        {
-            lLoginVisible = false
-            lLoginForm.clear()
-        }
+    val onCloseLLogin: () -> Unit = remember(loginForms.l) {
+        { lLoginVisible = false; loginForms.l.clear() }
     }
-    val onLLoginChange = remember(lLoginForm) { lLoginForm::updateLogin }
-    val onLPasswordChange = remember(lLoginForm) { lLoginForm::updatePassword }
-    // Как у L: поля заполняются при открытии. Закрытие формы отменяет идущий
-    // вход и стирает набранное; удачный вход закрывает её так же.
-    val onOpenXLogin: () -> Unit = remember(xLoginForm) {
-        {
-            xLoginForm.prefill(Settings.x_profile.field.value)
-            xLoginVisible = true
-        }
+    val onOpenXLogin: () -> Unit = remember(loginForms.x) {
+        { loginForms.x.prefill(Settings.x_profile.field.value); xLoginVisible = true }
     }
-    val onCloseXLogin: () -> Unit = remember(xLoginForm) {
-        {
-            xLoginVisible = false
-            xLoginForm.clear()
-        }
+    val onCloseXLogin: () -> Unit = remember(loginForms.x) {
+        { xLoginVisible = false; loginForms.x.clear() }
     }
     val onOpenRLogin: () -> Unit = remember { { rLoginVisible = true } }
     val onCloseRLogin: () -> Unit = remember { { rLoginVisible = false } }
     BackHandler(enabled = currentPage != SettingsPage.Main, onBack = onMainBack)
     BackHandler(enabled = currentPage == SettingsPage.Main, onBack = onBack)
-    // Объявлены последними: пока форма открыта, «назад» закрывает её, а не страницу.
     BackHandler(enabled = lLoginVisible, onBack = onCloseLLogin)
     BackHandler(enabled = xLoginVisible, onBack = onCloseXLogin)
     BackHandler(enabled = rLoginVisible, onBack = onCloseRLogin)
 
     LaunchedEffect(currentPage) {
-        if (currentPage == SettingsPage.Storage) {
-            onRefreshFileStats()
-        }
-        // Со страницы бэкапа ушли: открытый архив закрывается, его пароль стирается.
-        if (currentPage != SettingsPage.Backup) {
-            data.backup?.closeArchive()
-        }
+        if (currentPage == SettingsPage.Storage) onRefreshFileStats()
+        if (currentPage != SettingsPage.Backup) data.backup?.closeArchive()
     }
 
     val onOpenPage: (SettingsPage) -> Unit = remember { { page -> currentPage = page } }
     val topCutout = getTopInsetDp()
-
     val detailParams = remember(
-        currentPage,
-        imageCacheSizeBytes,
-        storageStats,
-        sizeRedTotal,
-        sizeRedDownload,
-        onClearImageCache,
-        onClearDownload,
-        data,
-        context,
-        onRefreshFileStats,
-        onOpenLLogin,
-        onOpenXLogin,
-        onOpenRLogin,
+        currentPage, imageCacheSizeBytes, storageStats, sizeRedTotal, sizeRedDownload,
+        onClearImageCache, onClearDownload, data, context, onRefreshFileStats,
+        onOpenLLogin, onOpenXLogin, onOpenRLogin,
     ) {
         SettingsDetailParams(
-            currentPage = currentPage,
-            imageCacheSizeBytes = imageCacheSizeBytes,
-            storageStats = storageStats,
-            sizeRedTotal = sizeRedTotal,
-            sizeRedDownload = sizeRedDownload,
-            onClearImageCache = onClearImageCache,
-            onClearDownload = onClearDownload,
-            data = data,
-            context = context,
-            onBackupDataChanged = onRefreshFileStats,
-            onOpenLLogin = onOpenLLogin,
-            onOpenXLogin = onOpenXLogin,
-            onOpenRLogin = onOpenRLogin,
+            currentPage, imageCacheSizeBytes, storageStats, sizeRedTotal, sizeRedDownload,
+            onClearImageCache, onClearDownload, data, context, onRefreshFileStats,
+            onOpenLLogin, onOpenXLogin, onOpenRLogin,
         )
     }
 
     if (lLoginVisible) {
         LLoginForm(
-            login = lLoginForm.login,
-            password = lLoginForm.password,
-            onLoginChange = onLLoginChange,
-            onPasswordChange = onLPasswordChange,
-            onSaved = onCloseLLogin,
-            onBack = onCloseLLogin,
-            onSkip = null,
-            modifier = modifier
+            login = loginForms.l.login, password = loginForms.l.password,
+            onLoginChange = loginForms.l::updateLogin, onPasswordChange = loginForms.l::updatePassword,
+            onSaved = onCloseLLogin, onBack = onCloseLLogin, onSkip = null, modifier = modifier,
         )
     } else if (xLoginVisible) {
-        // WebView идущего входа форма держит в окне, см. XSignInWebViewHost.
         val xSignInView by (data.xSession?.signInView ?: NO_SIGN_IN_VIEW).collectAsStateWithLifecycle()
-        SettingsXLoginForm(
-            form = xLoginForm,
-            signInWebView = xSignInView,
-            onClose = onCloseXLogin,
-            modifier = modifier
-        )
+        SettingsXLoginForm(form = loginForms.x, signInWebView = xSignInView, onClose = onCloseXLogin, modifier = modifier)
     } else if (rLoginVisible) {
-        RedgifsLoginContent(onClose = onCloseRLogin, modifier = modifier)
+        ScreenRLoginContent(onClose = onCloseRLogin, modifier = modifier)
     } else {
         Scaffold(
             modifier = modifier,
@@ -302,11 +236,8 @@ internal fun AppSettingsScreenContent(
         ) { paddingValues ->
             AppSettingsScreenBody(
                 params = detailParams,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = paddingValues.calculateBottomPadding())
-                    .verticalScroll(scrollState)
-                    .adaptiveContentWidth(),
+                modifier = Modifier.fillMaxSize().padding(bottom = paddingValues.calculateBottomPadding())
+                    .verticalScroll(scrollState).adaptiveContentWidth(),
                 topCutout = topCutout,
                 onOpenPage = onOpenPage,
                 onBack = if (currentPage == SettingsPage.Main) onBack else onMainBack

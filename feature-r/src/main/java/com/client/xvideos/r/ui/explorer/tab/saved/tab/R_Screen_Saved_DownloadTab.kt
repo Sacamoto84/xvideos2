@@ -37,7 +37,6 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.SavedTabHeader
-// import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
@@ -47,9 +46,9 @@ import com.client.xvideos.r.common.downloader.downloadedVideoKey
 import com.client.xvideos.r.common.downloader.sortedItems
 import com.client.xvideos.r.common.share.useCaseShareGifs
 import com.client.xvideos.r.model.GifsInfo
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.DownloadView
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadListItem
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadSortMenu
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadView
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadViewMenu
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -115,7 +114,7 @@ object R_Screen_Saved_DownloadTab : Screen {
             onViewChange = { Settings.r_download_view.setValue(it.name) },
             sort = sort,
             onSortChange = { Settings.r_download_sort.setValue(it.name) },
-            state = rememberLazyGridState(),
+            state = vm.position.rememberState(),
             topInset = getTopInsetDp(),
             onItemClick = onItemClickHandler,
             onShareClick = onShareClickHandler,
@@ -194,16 +193,6 @@ private fun SavedDownloadTabContent(
                 }
             }
 
-            /*
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterEnd)
-                    .width(2.dp)
-            ) {
-                VerticalScrollbar(scrollPercentProvider)
-            }
-            */
             LazyGridFastScroll(
                 hazeState = hazeState,
                 state = state,

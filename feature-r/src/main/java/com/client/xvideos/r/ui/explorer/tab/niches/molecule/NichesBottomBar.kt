@@ -9,17 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.Order
-import com.client.xvideos.r.ui.ui.atom.ButtonUp
 import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
 import com.client.xvideos.ui.theme.XvideosTheme
@@ -39,25 +35,16 @@ fun NichesBottomBar(
     isSearchFocused: Boolean,
     sortType: Order,
     onSortTypeChange: (Order) -> Unit,
-    onUpClick: () -> Unit,
     modifier: Modifier = Modifier,
     searchWidget: @Composable (Modifier) -> Unit
 ) {
-    val haptic = LocalHapticFeedback.current
-    val handleUpClick = remember(haptic, onUpClick) {
-        {
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-            onUpClick()
-        }
-    }
-
     Column(modifier = modifier.background(Theme.tabLevel1)) {
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .adaptiveContentWidth()
-                .padding(vertical = 2.dp),
+                .padding(horizontal = 2.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
@@ -71,11 +58,7 @@ fun NichesBottomBar(
                 )
             }
 
-            searchWidget(Modifier.weight(1f).padding(horizontal = 4.dp))
-
-            AnimatedVisibility(visible = !isSearchFocused) {
-                ButtonUp(onClick = handleUpClick)
-            }
+            searchWidget(Modifier.weight(1f).padding(start = 4.dp))
         }
         HorizontalDivider(color = Theme.R.colorBorderGray)
     }
@@ -83,13 +66,12 @@ fun NichesBottomBar(
 
 @Preview
 @Composable
-fun NichesBottomBarPreview() {
+private fun NichesBottomBarPreview() {
     XvideosTheme {
         NichesBottomBar(
             isSearchFocused = false,
             sortType = Order.NICHES_SUBSCRIBERS_D,
             onSortTypeChange = {},
-            onUpClick = {},
             searchWidget = {}
         )
     }

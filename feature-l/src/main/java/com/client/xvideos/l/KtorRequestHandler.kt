@@ -291,9 +291,7 @@ class KtorRequestHandler(
 
         val loginUri = URI(LOGIN)
         val target = loginUri.resolve(location)
-        if (target.scheme != loginUri.scheme || target.host != loginUri.host ||
-            target.port != loginUri.port || target.userInfo != null || target.path == loginUri.path
-        ) {
+        if (!isValidPostLoginRedirect(loginUri, target)) {
             return IllegalStateException("сервер L вернул недопустимый адрес после входа")
         }
 
@@ -306,6 +304,13 @@ class KtorRequestHandler(
         }
     }
     // ! --- Login --- !
+
+    private fun isValidPostLoginRedirect(loginUri: URI, target: URI): Boolean =
+        target.scheme == loginUri.scheme &&
+            target.host == loginUri.host &&
+            target.port == loginUri.port &&
+            target.userInfo == null &&
+            target.path != loginUri.path
 
 }
 

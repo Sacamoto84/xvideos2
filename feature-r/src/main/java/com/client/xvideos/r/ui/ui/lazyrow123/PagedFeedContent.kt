@@ -22,6 +22,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -75,4 +76,10 @@ internal fun PagedFeedContent(
             pages(Modifier.nestedScroll(gridScrollConnection))
         }
     }
+}
+
+@Preview
+@Composable
+private fun PagedFeedContentPreview() {
+    PagedFeedContent(header = {}) { Box(Modifier.fillMaxSize()) }
 }

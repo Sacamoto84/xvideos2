@@ -21,7 +21,7 @@ import com.client.xvideos.r.model.TopCreatorsResponse
 import com.client.xvideos.r.ui.niche.molecule.NicheHeaderContent
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.MetadataLoadState
-import com.client.xvideos.r.ui.ui.MetadataLoadingContent
+import com.client.xvideos.r.ui.ui.atom.MetadataLoadingContent
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.PageableFeed
 import timber.log.Timber
@@ -127,7 +127,6 @@ fun ScreenNicheContent(
                 onFollowClick = onFollowClick,
                 currentSort = currentSort,
                 onSortChange = onSortChange,
-                columns = lazyHost.columns,
                 scrollMode = scrollMode,
             )
         },

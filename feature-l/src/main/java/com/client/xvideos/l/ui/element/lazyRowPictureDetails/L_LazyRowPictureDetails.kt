@@ -3,10 +3,8 @@ package com.client.xvideos.l.ui.element.lazyRowPictureDetails
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -35,7 +33,6 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.FloatingScrollButtons
-// import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenu
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuP2pHost
 import com.client.xvideos.l.ui.element.expandMenu.ExpandMenuType
@@ -183,25 +180,6 @@ fun L_LazyRowPictureDetails(
 
         /** Единственный экземпляр P2P-хоста на весь список (не в item'ах!) */
         ExpandMenuP2pHost(expandMenuViewModel)
-
-        /*
-        /** Вертикальный индикатор прокрутки */
-        val scrollPercent = com.client.xvideos.common.ui.scroll
-            .rememberVisibleRangePercentIgnoringFirstNForLazyStaggeredGrid(
-                gridState,
-                itemsToIgnore = if (showInitialLoading) 2 else 1,
-            )
-        if (shouldDisplayPictureScrollbar(host.filteredPic.size)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterEnd)
-                    .width(2.dp)
-            ) {
-                VerticalScrollbar { scrollPercent.value }
-            }
-        }
-        */
 
         LPictureFastScroll(
             gridState = gridState,

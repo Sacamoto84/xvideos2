@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
+import com.client.xvideos.common.videoplayer.ui.component.PlayPauseFeedbackState
 import com.client.xvideos.r.common.video.PlayerControls
 import com.client.xvideos.r.ui.fullscreen.sanitizePointTime
 
@@ -30,6 +31,12 @@ class RedFullScreenPlayerState {
 
     /** Флаг активного воспроизведения видео. */
     var play by mutableStateOf(true)
+    val playPauseFeedback = PlayPauseFeedbackState(
+        togglePlaybackAndGetPaused = {
+            togglePlay()
+            !play
+        },
+    )
     /** Флаг заглушения аудиодорожки. */
     var mute by mutableStateOf(true)
     /** Флаг автоматического поворота экрана в горизонтальную ориентацию. */

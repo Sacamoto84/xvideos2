@@ -62,7 +62,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.ui.explorer.LocalRNavigationState
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
-// import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.theme.Theme
@@ -123,19 +122,7 @@ fun LazyRow123(
     }
 
     /** Показывать ли кнопку "вниз" */
-    val showScrollToBottom by remember(gridState) {
-        derivedStateOf {
-            val layoutInfo = gridState.layoutInfo
-            val totalItems = layoutInfo.totalItemsCount
-            val visible = layoutInfo.visibleItemsInfo
-            if (totalItems <= 4 || visible.isEmpty()) {
-                false
-            } else {
-                val lastVisibleIndex = visible.maxOf { it.index }
-                lastVisibleIndex < totalItems - 1
-            }
-        }
-    }
+    val showScrollToBottom by rememberCanScrollToBottom(gridState)
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -170,27 +157,14 @@ fun LazyRow123(
             onAppendLoaded = onAppendLoaded
         )
 
-        val appendState = listGifs.loadState.append
-        if (emptyMessage != null && listGifs.itemCount == 0 && refreshState is LoadState.NotLoading &&
-            appendState is LoadState.NotLoading && appendState.endOfPaginationReached
-        ) {
+        if (shouldShowEmptyMessage(emptyMessage, listGifs.itemCount, refreshState, listGifs.loadState.append)) {
             Text(
-                emptyMessage,
+                emptyMessage.orEmpty(),
                 modifier = Modifier.align(Alignment.Center).padding(horizontal = 20.dp),
                 color = Color.White,
                 textAlign = TextAlign.Center,
             )
         }
-
-        /*
-        //---- Скролл ----
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .align(Alignment.CenterEnd)
-                .width(2.dp)
-        ) { VerticalScrollbar { scrollPercent.value } }
-        */
 
         if (enableFastScroll) {
             LazyGridFastScroll(
@@ -235,6 +209,31 @@ fun LazyRow123(
         )
     }
 
+}
+
+@Composable
+private fun rememberCanScrollToBottom(gridState: LazyGridState) = remember(gridState) {
+    derivedStateOf {
+        val layoutInfo = gridState.layoutInfo
+        val totalItems = layoutInfo.totalItemsCount
+        val visible = layoutInfo.visibleItemsInfo
+        if (totalItems <= 4 || visible.isEmpty()) {
+            false
+        } else {
+            visible.maxOf { it.index } < totalItems - 1
+        }
+    }
+}
+
+private fun shouldShowEmptyMessage(
+    emptyMessage: String?,
+    itemCount: Int,
+    refreshState: LoadState,
+    appendState: LoadState,
+): Boolean {
+    if (emptyMessage == null || itemCount != 0) return false
+    if (refreshState !is LoadState.NotLoading || appendState !is LoadState.NotLoading) return false
+    return appendState.endOfPaginationReached
 }
 
 /** @param columns колонки сетки, уже с запасом широкого окна — их считает [LazyRow123]. */

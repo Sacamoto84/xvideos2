@@ -1,7 +1,7 @@
 package com.client.xvideos.r.ui.niche.molecule
 
 import com.client.xvideos.r.network.api.AccountMembership
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AccountMembershipMenu
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +30,6 @@ import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.model.NichesResponse
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.TopCreatorsResponse
-import com.client.xvideos.r.ui.niche.NicheBottomBar
 import com.client.xvideos.r.ui.niche.atom.NicheCreatorItem
 import com.client.xvideos.r.ui.niche.atom.NichePreviewItem
 import com.client.xvideos.r.ui.niche.atom.NicheProfileContent
@@ -50,7 +49,6 @@ fun NicheHeaderContent(
     onFollowClick: () -> Unit,
     currentSort: Order,
     onSortChange: (Order) -> Unit,
-    columns: Int,
     modifier: Modifier = Modifier,
     scrollMode: @Composable () -> Unit = {},
 ) {
@@ -79,9 +77,8 @@ fun NicheHeaderContent(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 modifier = Modifier
-                    .padding(top = 4.dp)
+                    .padding(top = 2.dp, start = 2.dp, end = 2.dp)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
                 // Индекс в ключе: поле приходит с сервера, и повтор или пустое значение уронили бы список.
                 itemsIndexed(
@@ -105,7 +102,7 @@ fun NicheHeaderContent(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
                 modifier = Modifier.padding(vertical = 4.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = PaddingValues(horizontal = 2.dp)
             ) {
                 itemsIndexed(
                     items = creators,
@@ -117,15 +114,13 @@ fun NicheHeaderContent(
             }
         }
 
-        Spacer(Modifier.height(2.dp))
-
         NicheBottomBar(
-            niche = niche,
             currentSort = currentSort,
             onSortChange = onSortChange,
-            columns = columns,
             scrollMode = scrollMode,
         )
+
+        Spacer(Modifier.height(2.dp))
     }
 }
 
@@ -143,7 +138,6 @@ private fun NicheHeaderContentPreview() {
             onFollowClick = {},
             currentSort = Order.NICHES_NAME_A_Z,
             onSortChange = {},
-            columns = 2,
         )
     }
 }

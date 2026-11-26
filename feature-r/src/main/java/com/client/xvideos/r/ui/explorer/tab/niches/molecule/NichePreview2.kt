@@ -10,7 +10,7 @@ import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.network.api.AccountMembership
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.AccountMembershipMenu
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AccountMembershipMenu
 
 @Composable
 fun NichePreview2(

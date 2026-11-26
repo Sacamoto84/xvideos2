@@ -1,12 +1,7 @@
 package com.client.xvideos.r.ui.ui.sortByOrder
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ManageSearch
-import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.History
@@ -14,13 +9,11 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.ui.atom.SortCalendarIcon
 import com.client.xvideos.core.R
 import com.client.xvideos.r.model.Order
@@ -42,35 +35,30 @@ internal fun RSortOrderIcon(order: Order) {
             rememberVectorPainter(Icons.Filled.SortByAlpha),
             ascending = order == Order.NICHES_NAME_A_Z,
         )
-        else -> Icon(
-            imageVector = when (order) {
-                Order.TOP -> Icons.Filled.EmojiEvents
-                Order.HOT, Order.TRENDING -> Icons.Filled.LocalFireDepartment
-                Order.LATEST -> Icons.Filled.AutoAwesome
-                Order.OLDEST -> Icons.Filled.History
-                Order.RELEVANT -> Icons.AutoMirrored.Filled.ManageSearch
-                else -> Icons.AutoMirrored.Filled.Sort
-            },
+        Order.TOP,
+        Order.HOT,
+        Order.TRENDING,
+        Order.LATEST,
+        Order.OLDEST,
+        Order.RELEVANT -> Icon(
+            imageVector = order.sortVector(),
             contentDescription = null,
-            tint = Color.White
+            tint = Color.White,
         )
     }
 }
 
+private fun Order.sortVector(): ImageVector = when (this) {
+    Order.TOP -> Icons.Filled.EmojiEvents
+    Order.HOT, Order.TRENDING -> Icons.Filled.LocalFireDepartment
+    Order.LATEST -> Icons.Filled.AutoAwesome
+    Order.OLDEST -> Icons.Filled.History
+    Order.RELEVANT -> Icons.AutoMirrored.Filled.ManageSearch
+    else -> error("Unsupported non-vector order: $this")
+}
+
+@Preview
 @Composable
-private fun CatalogSortIcon(painter: Painter, ascending: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = Color.White,
-        )
-        Icon(
-            imageVector = if (ascending) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
-            contentDescription = null,
-            modifier = Modifier.size(12.dp),
-            tint = Color.White,
-        )
-    }
+private fun RSortOrderIconPreview() {
+    RSortOrderIcon(order = Order.TRENDING)
 }

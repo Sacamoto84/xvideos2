@@ -2,14 +2,9 @@ package com.client.xvideos.common.videoplayer.local.molecule
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -24,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -33,9 +27,8 @@ import androidx.media3.common.util.UnstableApi
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.ComposeVideoPlayer
-import com.client.xvideos.common.videoplayer.ui.component.PlayPauseFeedback
 import com.client.xvideos.common.videoplayer.ui.component.PlayPauseFeedbackState
-import com.client.xvideos.common.videoplayer.local.atom.ResumePlaybackPill
+import com.client.xvideos.common.videoplayer.local.model.LocalVideoPlayerOverlayActions
 import com.client.xvideos.common.videoplayer.local.model.SeekScrub
 import com.client.xvideos.common.videoplayer.local.model.rememberStoryboardImage
 import com.client.xvideos.common.videoplayer.local.model.shouldAutoHideControls
@@ -217,6 +210,16 @@ fun LocalVideoPlayerContent(
         }
     }
 
+    val overlayActions = remember(onExitFullScreen, onRestartPlayback, onToggleFullScreen, onScrub, onToggleMute) {
+        LocalVideoPlayerOverlayActions(
+            onExitFullScreen = onExitFullScreen,
+            onRestartPlayback = onRestartPlayback,
+            onToggleFullScreen = onToggleFullScreen,
+            onScrub = onScrub,
+            onToggleMute = onToggleMute,
+        )
+    }
+
     Box(modifier = modifier.fillMaxSize().background(Color(0xFF040404))) {
         ComposeVideoPlayer(
             playerHost = host,
@@ -227,63 +230,18 @@ fun LocalVideoPlayerContent(
             // Свайп по видео влево-вправо — ±5 с.
             swipeSeekSeconds = 5,
             overlay = {
-                PlayPauseFeedback(playbackFeedback, Modifier.align(Alignment.Center))
-
-                // На весь экран сверху — «назад» (выход из полного экрана) и название.
-                if (isFullScreen) {
-                    AnimatedVisibility(
-                        visible = areControlsVisible,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .fillMaxWidth()
-                    ) {
-                        LocalPlayerFullScreenTopBar(title = title, onBack = onExitFullScreen)
-                    }
-                }
-
-                // Плашка возобновления
-                AnimatedVisibility(
-                    visible = resumeNoticeText != null && (!isFullScreen || areControlsVisible),
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 76.dp)
-                ) {
-                    resumeNoticeText?.let { notice ->
-                        ResumePlaybackPill(
-                            text = notice,
-                            onRestart = onRestartPlayback
-                        )
-                    }
-                }
-
-                // Превью кадра при перемотке — ниже панели, чтобы полоса была поверх.
-                SeekPreviewOverlay(
+                LocalVideoPlayerOverlay(
+                    host = host,
+                    playbackFeedback = playbackFeedback,
+                    isFullScreen = isFullScreen,
+                    areControlsVisible = areControlsVisible,
+                    title = title,
+                    resumeNoticeText = resumeNoticeText,
                     storyboard = storyboardImage,
                     scrub = scrub,
-                    durationSec = host.totalTime
+                    muted = muted,
+                    actions = overlayActions,
                 )
-
-                // Нижняя панель; на весь экран прячется по таймеру.
-                AnimatedVisibility(
-                    visible = !isFullScreen || areControlsVisible,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    PlayerBottomBar(
-                        host = host,
-                        isFullScreen = isFullScreen,
-                        onFullScreen = onToggleFullScreen,
-                        onScrub = onScrub,
-                        muted = muted,
-                        onToggleMute = onToggleMute,
-                        onTogglePlayPause = playbackFeedback::togglePlayback,
-                    )
-                }
             }
         )
     }

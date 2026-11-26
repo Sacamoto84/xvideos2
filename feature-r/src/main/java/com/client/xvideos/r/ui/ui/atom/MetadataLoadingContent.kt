@@ -1,4 +1,4 @@
-package com.client.xvideos.r.ui.ui
+package com.client.xvideos.r.ui.ui.atom
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -7,14 +7,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.r.ui.ui.lazyrow123.molecule.RListLoadError
-
-internal sealed interface MetadataLoadState<out T> {
-    data object Loading : MetadataLoadState<Nothing>
-    data class Ready<T>(val value: T) : MetadataLoadState<T>
-    data class Failed(val message: String) : MetadataLoadState<Nothing>
-}
 
 @Composable
 internal fun MetadataLoadingContent(errorMessage: String?, onRetry: () -> Unit) {
@@ -28,4 +23,10 @@ internal fun MetadataLoadingContent(errorMessage: String?, onRetry: () -> Unit) 
             RListLoadError(message = errorMessage, onRetry = onRetry)
         }
     }
+}
+
+@Preview
+@Composable
+private fun MetadataLoadingContentPreview() {
+    MetadataLoadingContent(errorMessage = "Ошибка загрузки", onRetry = {})
 }

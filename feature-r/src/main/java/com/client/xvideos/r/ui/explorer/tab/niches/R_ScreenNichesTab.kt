@@ -1,20 +1,12 @@
 package com.client.xvideos.r.ui.explorer.tab.niches
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
@@ -30,8 +22,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,23 +32,14 @@ import cafe.adriel.voyager.hilt.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.adaptive.adaptiveListPadding
-import com.client.xvideos.common.ui.atom.FloatingScrollButtons
-// import com.client.xvideos.common.ui.atom.VerticalScrollbar
-import com.client.xvideos.common.ui.scroll.LazyListFastScroll
-import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForLazyColumn
-import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.Order
-import com.client.xvideos.r.ui.explorer.tab.niches.atom.RefreshMini
-import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NicheItemRow
 import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NichesBottomBar
+import com.client.xvideos.r.ui.explorer.tab.niches.molecule.NichesTabBody
 import com.client.xvideos.r.ui.explorer.tab.niches.molecule.Refresh
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
 import com.client.xvideos.r.ui.search.RSearchTextField
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -173,6 +154,7 @@ object R_ScreenNichesTab : Screen {
             listState = listState,
             niches = nicheItems,
             sortType = sortType,
+            searchQuery = searchTextDone,
             isSearchFocused = isSearchFocused,
             savedRed = getSavedRed,
             searchWidget = searchWidget,
@@ -187,6 +169,7 @@ fun R_ScreenNichesTabContent(
     listState: LazyListState,
     niches: List<Niche>,
     sortType: Order,
+    searchQuery: String,
     isSearchFocused: Boolean,
     savedRed: () -> SavedRed?,
     searchWidget: @Composable (Modifier) -> Unit,
@@ -194,152 +177,39 @@ fun R_ScreenNichesTabContent(
     actions: com.client.xvideos.r.ui.explorer.tab.niches.model.NichesTabActions,
     modifier: Modifier = Modifier,
 ) {
-    val scrollPercent = rememberVisibleRangePercentIgnoringFirstNForLazyColumn(listState, itemsToIgnore = 1)
-    val scrollPercentProvider = remember(scrollPercent) { { scrollPercent.value } }
-
     if (cacheState.count == 0) {
         Refresh(
             onRefreshNichesCacheClick = actions.onRefreshNichesCacheClick,
             nichesCacheProgress = cacheState.progress,
             modifier = modifier,
         )
-    } else {
-        val scope = rememberCoroutineScope()
-        val haptic = LocalHapticFeedback.current
-        val hazeState = remember { HazeState() }
+        return
+    }
 
-        Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            bottomBar = {
-                NichesBottomBar(
-                    isSearchFocused = isSearchFocused,
-                    sortType = sortType,
-                    onSortTypeChange = actions.onSortTypeChange,
-                    onUpClick = actions.onUpClick,
-                    searchWidget = searchWidget
-                )
-            },
-            containerColor = Theme.tabLevel1,
-            modifier = modifier.fillMaxSize()
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .padding(bottom = paddingValues.calculateBottomPadding())
-                    .fillMaxSize()
-            ) {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .hazeSource(hazeState),
-                    contentPadding = adaptiveListPadding(PaddingValues(top = getTopInsetDp()))
-                ) {
-                    item(key = "refresh_mini", contentType = "refresh_mini") {
-                        AnimatedVisibility(cacheState.lastModifiedHour > 72, enter = fadeIn(), exit = fadeOut()) {
-                            RefreshMini(
-                                onRefreshNichesCacheClick = actions.onRefreshNichesCacheClick,
-                                nichesCacheProgress = cacheState.progress,
-                                cacheHour = cacheState.lastModifiedHour
-                            )
-                        }
-                    }
-
-                    if (niches.isEmpty()) {
-                        item(key = "empty_placeholder", contentType = "empty_placeholder") {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No results",
-                                    color = Color.Gray,
-                                    fontFamily = Theme.R.fontFamilyDMsanss
-                                )
-                            }
-                        }
-                    } else {
-                        val currentRed = savedRed()
-                        items(items = niches, key = { it.id }, contentType = { "niche" }) { item ->
-                            if (currentRed != null) {
-                                NicheItemRow(
-                                    item = item,
-                                    savedRed = currentRed,
-                                    onNicheClick = actions.onNicheClick,
-                                    modifier = Modifier.padding(vertical = 1.dp)
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(vertical = 2.dp)
-                                        .padding(horizontal = 8.dp)
-                                        .fillMaxWidth()
-                                        .height(78.dp)
-                                        .background(Theme.tabLevel3, RoundedCornerShape(16.dp)),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
-                                    Text(
-                                        text = item.name,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(start = 16.dp),
-                                        fontFamily = Theme.R.fontFamilyDMsanss
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                /*
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .align(Alignment.CenterEnd)
-                        .width(2.dp)
-                ) {
-                    VerticalScrollbar(scrollPercentProvider)
-                }
-                */
-                LazyListFastScroll(
-                    hazeState = hazeState,
-                    state = listState,
-                    modifier = Modifier.matchParentSize(),
-                    itemCount = { niches.size },
-                    visibleRange = scrollPercentProvider,
-                    firstItemIndex = 1,
-                    sessionKey = sortType,
-                    bottomClearance = if (isSearchFocused) {
-                        0.dp
-                    } else {
-                        Theme.ScrollFab.size * 2 + Theme.ScrollFab.spacing + 16.dp
-                    },
-                )
-
-                FloatingScrollButtons(
-                    visible = niches.isNotEmpty() && !isSearchFocused,
-                    showScrollToTop = listState.canScrollBackward,
-                    showScrollToBottom = listState.canScrollForward,
-                    hazeState = hazeState,
-                    contentColor = Theme.ScrollFab.contentColorR,
-                    onScrollToTop = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        actions.onUpClick()
-                    },
-                    onScrollToBottom = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        scope.launch {
-                            val lastIndex = listState.layoutInfo.totalItemsCount - 1
-                            if (lastIndex >= 0) listState.scrollToItem(lastIndex)
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                )
-            }
-        }
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = {
+            NichesBottomBar(
+                isSearchFocused = isSearchFocused,
+                sortType = sortType,
+                onSortTypeChange = actions.onSortTypeChange,
+                searchWidget = searchWidget
+            )
+        },
+        containerColor = Theme.tabLevel1,
+        modifier = modifier.fillMaxSize()
+    ) { paddingValues ->
+        NichesTabBody(
+            listState = listState,
+            niches = niches,
+            sortType = sortType,
+            searchQuery = searchQuery,
+            isSearchFocused = isSearchFocused,
+            savedRed = savedRed,
+            cacheState = cacheState,
+            actions = actions,
+            modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()),
+        )
     }
 }
 
@@ -358,6 +228,7 @@ private fun R_ScreenNichesTabPreview() {
         listState = rememberLazyListState(),
         niches = items,
         sortType = Order.NICHES_SUBSCRIBERS_D,
+        searchQuery = "",
         isSearchFocused = false,
         savedRed = { null },
         searchWidget = { modifier ->

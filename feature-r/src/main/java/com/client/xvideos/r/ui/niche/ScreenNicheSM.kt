@@ -97,7 +97,7 @@ class ScreenNicheSM @AssistedInject constructor(
 
     private fun loadMetadata() {
         if (cleanNicheName.isBlank()) {
-            metadata = MetadataLoadState.Failed("Не указана группа RedGIFs")
+            metadata = MetadataLoadState.Failed("Не указана группа R")
             return
         }
 
@@ -106,7 +106,7 @@ class ScreenNicheSM @AssistedInject constructor(
             val metadataLoad = async {
                 runCatchingCancellable {
                     val response = redApi.getNiche(cleanNicheName).getOrThrow()
-                    check(response.isValid) { "RedGIFs вернул пустые данные группы" }
+                    check(response.isValid) { "R вернул пустые данные группы" }
                     response.niche
                 }
             }

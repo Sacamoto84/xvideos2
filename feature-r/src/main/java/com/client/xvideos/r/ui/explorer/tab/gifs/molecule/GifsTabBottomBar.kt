@@ -47,7 +47,7 @@ fun GifsTabBottomBar(
     Column(modifier.background(Theme.tabLevel1)) {
         HorizontalDivider(color = Theme.R.colorBorderGray)
         Row(
-            modifier = Modifier.padding(horizontal = 1.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.Bottom
         ) {

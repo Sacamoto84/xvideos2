@@ -18,35 +18,16 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-
-class PlayPauseFeedbackState(
-    private val host: MediaPlayerHost,
-    private val enabled: Boolean,
-) {
-    internal var action by mutableStateOf<Action?>(null)
-        private set
-
-    fun togglePlayback() {
-        host.togglePlayPause()
-        if (enabled) action = Action(host.isPaused)
-    }
-
-    // У каждого нажатия свой ключ, даже если ролик успел сам встать на паузу.
-    internal class Action(val isPaused: Boolean)
-}
 
 @Composable
 fun PlayPauseFeedback(state: PlayPauseFeedbackState, modifier: Modifier = Modifier) {
@@ -87,4 +68,13 @@ fun PlayPauseFeedback(state: PlayPauseFeedbackState, modifier: Modifier = Modifi
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun PlayPauseFeedbackPreview() {
+    val state = remember {
+        PlayPauseFeedbackState(togglePlaybackAndGetPaused = { true }).apply { togglePlayback() }
+    }
+    PlayPauseFeedback(state = state)
 }
