@@ -136,7 +136,7 @@ internal fun AddToAccountCollectionDialog(
 @Composable
 private fun AddToAccountCollectionDialogPreview() {
     AddToAccountCollectionDialog(
-        account = RAccountStatus.SignedIn("sample", Long.MAX_VALUE),
+        account = RAccountStatus.SignedIn("sample", "preview"),
         gifId = "sample_id",
         redApi = null,
         onDismiss = {},

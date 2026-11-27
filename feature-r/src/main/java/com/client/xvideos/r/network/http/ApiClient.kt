@@ -177,27 +177,43 @@ object ApiClient {
         if (url.toHttpUrlOrNull()?.isRedgifsApi() != true) {
             return Result.failure(IllegalArgumentException("Unsupported R API URL: $url"))
         }
-        val token = RAccountSession.activeToken(account)
-            ?: return Result.failure(IllegalStateException("Войдите в R"))
-        val result = if (route.isGet) {
-            getAsAccount(url, emptyList(), token, read)
-        } else {
-            runCatchingCancellable {
-                val response = client.request(url) {
-                    method = HttpMethod.parse(route.method)
-                    headers.append(HttpHeaders.Authorization, "Bearer $token")
-                    if (body != null) {
-                        contentType(ContentType.Application.Json)
-                        setBody(body)
-                    }
-                }
-                read(response)
-            }
+        val authorization = RAccountSession.authorization(account) ?: return missingAccountToken(account)
+        val result = performAccountRequest(route, authorization.token, body, read)
+        if ((result.exceptionOrNull() as? ClientRequestException)?.response?.status != HttpStatusCode.Unauthorized) {
+            return result
         }
-        return result.onFailure { error ->
-            if ((error as? ClientRequestException)?.response?.status == HttpStatusCode.Unauthorized) {
-                RAccountSession.reject(token)
+        val renewed = RAccountSession.authorization(authorization.account, rejectedToken = authorization.token)
+            ?: return missingAccountToken(authorization.account)
+        return performAccountRequest(route, renewed.token, body, read)
+    }
+
+    private fun <T> missingAccountToken(account: RAccountStatus.SignedIn?): Result<T> {
+        val signedIn = RAccountSession.status.value as? RAccountStatus.SignedIn
+        val message = if (signedIn != null && (account == null || signedIn == account)) {
+            "Не удалось обновить сессию R. Повторите попытку."
+        } else {
+            "Войдите в R"
+        }
+        return Result.failure(IllegalStateException(message))
+    }
+
+    private suspend fun <T> performAccountRequest(
+        route: Route,
+        token: String,
+        body: JsonElement?,
+        read: suspend (HttpResponse) -> T,
+    ): Result<T> {
+        if (route.isGet) return getAsAccount(route.url, emptyList(), token, read)
+        return runCatchingCancellable {
+            val response = client.request(route.url) {
+                method = HttpMethod.parse(route.method)
+                headers.append(HttpHeaders.Authorization, "Bearer $token")
+                if (body != null) {
+                    contentType(ContentType.Application.Json)
+                    setBody(body)
+                }
             }
+            read(response)
         }
     }
 

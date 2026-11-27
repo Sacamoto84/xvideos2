@@ -34,7 +34,7 @@ internal fun CreateAccountCollectionDialog(
 @Composable
 private fun CreateAccountCollectionDialogPreview() {
     CreateAccountCollectionDialog(
-        account = RAccountStatus.SignedIn("sample", Long.MAX_VALUE),
+        account = RAccountStatus.SignedIn("sample", "preview"),
         onDismiss = {},
     )
 }

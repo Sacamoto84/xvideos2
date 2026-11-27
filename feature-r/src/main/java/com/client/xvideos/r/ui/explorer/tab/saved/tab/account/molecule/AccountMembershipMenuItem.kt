@@ -129,7 +129,7 @@ private fun AccountMembership.itemSpec(member: Boolean, knownMember: Boolean?): 
 @Composable
 private fun AccountMembershipMenuItemPreview() {
     AccountMembershipMenuItem(
-        account = RAccountStatus.SignedIn("sample", Long.MAX_VALUE),
+        account = RAccountStatus.SignedIn("sample", "preview"),
         kind = AccountMembership.LIKE,
         id = "sample",
         knownMember = true,

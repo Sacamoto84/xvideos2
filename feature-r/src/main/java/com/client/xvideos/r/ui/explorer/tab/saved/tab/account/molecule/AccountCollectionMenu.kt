@@ -84,7 +84,7 @@ internal fun AccountCollectionMenu(account: RAccountStatus.SignedIn, collection:
 @Composable
 private fun AccountCollectionMenuPreview() {
     AccountCollectionMenu(
-        account = RAccountStatus.SignedIn("sample", Long.MAX_VALUE),
+        account = RAccountStatus.SignedIn("sample", "preview"),
         collection = AccountCollection(folderId = "1", folderName = "Избранное"),
     )
 }

@@ -11,10 +11,10 @@ import java.util.Base64
 
 class RAccountCredentialsTest {
     @Test
-    fun `reads account name and token expiry`() {
+    fun `reads account subject and token expiry`() {
         val token = tokenWithClaims("""{"iss":"https://auth2.redgifs.com","sub":"account","exp":2000000000}""")
 
-        assertEquals(RAccountStatus.SignedIn("example", 2_000_000_000_000L), RAccountCredentials(token, "example").profile())
+        assertEquals(RAccountTokenClaims("account", 2_000_000_000_000L), RAccountCredentials(token, "example").claims())
     }
 
     @Test
@@ -22,9 +22,9 @@ class RAccountCredentialsTest {
         val wrongIssuer = tokenWithClaims("""{"iss":"https://example.com","sub":"account","exp":2000000000}""")
         val invalidExpiry = tokenWithClaims("""{"iss":"https://auth2.redgifs.com","sub":"account","exp":9223372036854775807}""")
 
-        assertNull(RAccountCredentials(wrongIssuer, "example").profile())
-        assertNull(RAccountCredentials(invalidExpiry, "example").profile())
-        assertNull(RAccountCredentials("invalid", "example").profile())
+        assertNull(RAccountCredentials(wrongIssuer, "example").claims())
+        assertNull(RAccountCredentials(invalidExpiry, "example").claims())
+        assertNull(RAccountCredentials("invalid", "example").claims())
     }
 
     @Test

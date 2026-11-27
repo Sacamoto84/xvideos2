@@ -15,7 +15,6 @@ import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -23,13 +22,7 @@ internal fun RProfileRow(onLogin: () -> Unit) {
     val status by RAccountSession.status.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     if (!LocalInspectionMode.current) {
-        LaunchedEffect(status) {
-            val account = status
-            if (account is RAccountStatus.SignedIn) {
-                delay((account.expiresAtMillis - System.currentTimeMillis()).coerceAtLeast(0L))
-            }
-            RAccountSession.checkExpiry()
-        }
+        LaunchedEffect(Unit) { RAccountSession.restore() }
     }
 
     when (val account = status) {
