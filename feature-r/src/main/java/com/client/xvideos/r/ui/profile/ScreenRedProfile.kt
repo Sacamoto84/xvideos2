@@ -142,6 +142,11 @@ fun ScreenRedProfileContent(
 
                 RedProfileCreaterInfo(creator, isFollow = isFollow, onFollowClick = onFollowClick, about = about)
 
+                if (tags.isNotEmpty()) {
+                    TagsBlock(tags = tags, tagsSelect = tagsSelect, modifier = Modifier.adaptiveContentWidth(), onClick = onTagClick)
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
                 Row(
                     modifier = Modifier
                         .adaptiveContentWidth()
@@ -161,11 +166,6 @@ fun ScreenRedProfileContent(
                         )
                     }
                     scrollMode()
-                }
-
-                if (tags.isNotEmpty()) {
-                    TagsBlock(tags = tags, tagsSelect = tagsSelect, modifier = Modifier.adaptiveContentWidth(), onClick = onTagClick)
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         },

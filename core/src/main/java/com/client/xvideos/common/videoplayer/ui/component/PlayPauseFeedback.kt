@@ -37,41 +37,42 @@ fun PlayPauseFeedback(state: PlayPauseFeedbackState, modifier: Modifier = Modifi
     val action = state.action ?: return
     key(action) {
         var dismissed by remember { mutableStateOf(false) }
-        if (dismissed) return@key
-        val visibility = remember {
-            MutableTransitionState(false).apply { targetState = true }
-        }
-        LaunchedEffect(visibility) {
-            snapshotFlow { visibility.currentState }.first { it }
-            delay(if (action.isPaused) 450L else 200L)
-            visibility.targetState = false
-            snapshotFlow { visibility.isIdle && !visibility.currentState }.first { it }
-            dismissed = true
-        }
-        AnimatedVisibility(
-            visibleState = visibility,
-            modifier = modifier,
-            enter = scaleIn(
-                initialScale = 0f,
-                animationSpec = keyframes {
-                    durationMillis = 350
-                    0f at 0 using LinearOutSlowInEasing
-                    1.3f at 110 using FastOutSlowInEasing
-                    1f at 350
-                },
-            ),
-            exit = fadeOut(tween(150)),
-        ) {
-            Box(
-                modifier = Modifier.size(64.dp).background(Color(0x99000000), CircleShape),
-                contentAlignment = Alignment.Center,
+        if (!dismissed) {
+            val visibility = remember {
+                MutableTransitionState(false).apply { targetState = true }
+            }
+            LaunchedEffect(visibility) {
+                snapshotFlow { visibility.currentState }.first { it }
+                delay(if (action.isPaused) 450L else 200L)
+                visibility.targetState = false
+                snapshotFlow { visibility.isIdle && !visibility.currentState }.first { it }
+                dismissed = true
+            }
+            AnimatedVisibility(
+                visibleState = visibility,
+                modifier = modifier,
+                enter = scaleIn(
+                    initialScale = 0f,
+                    animationSpec = keyframes {
+                        durationMillis = 350
+                        0f at 0 using LinearOutSlowInEasing
+                        1.3f at 110 using FastOutSlowInEasing
+                        1f at 350
+                    },
+                ),
+                exit = fadeOut(tween(150)),
             ) {
-                Icon(
-                    imageVector = if (action.isPaused) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(36.dp),
-                )
+                Box(
+                    modifier = Modifier.size(64.dp).background(Color(0x99000000), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = if (action.isPaused) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
             }
         }
     }
