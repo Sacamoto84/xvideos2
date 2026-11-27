@@ -15,7 +15,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
-import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -59,8 +58,11 @@ class LServerFavoritesRepositoryImplTest {
         private const val ALBUM_ID = 4242
         private val OPERATION = Regex("\"operationName\":\"([A-Za-z0-9_]+)\"")
 
-        private fun bootstrapJson(userId: Long) =
-            """{"data":{"media_categories":{"filter_settings":{"user_id":$userId}}}}"""
+        private fun bootstrapJson(userId: Long) = if (userId > 0) {
+            """{"auth":{"state":"authenticated","user":{"id":"$userId"}}}"""
+        } else {
+            """{"auth":{"state":"anonymous","user":null}}"""
+        }
 
         private fun albumPageJson(totalPages: Int, items: String) =
             """{"data":{"picture":{"list_in_album":{"info":{"total_pages":$totalPages},"items":[$items]}}}}"""
@@ -78,6 +80,11 @@ class LServerFavoritesRepositoryImplTest {
         val operations = mutableListOf<String>()
 
         override fun profileRevision(): Int = revision
+
+        override suspend fun getSiteApi(url: String): Result<String> {
+            operations += url.removePrefix(LusciousEndpoints.REST)
+            return respond(url)
+        }
 
         override suspend fun openURI(data: String, config: RepositoryUriConfig): Result<String> {
             operations += OPERATION.find(data)?.groupValues?.get(1).orEmpty()
@@ -171,29 +178,31 @@ class LServerFavoritesRepositoryImplTest {
     // --- errors: null ---
 
     @Test
-    fun `errors null в списке подписок — не ошибка`() = runTest {
+    fun `подписки загружаются из REST для подтверждённого пользователя`() = runTest {
         mediaCategoriesFlow.value = null
         base.respond = { data ->
-            if ("MediaCategoriesBootstrap" in data) {
+            if (data.endsWith("site_bootstrap")) {
                 Result.success(bootstrapJson(111))
             } else {
-                Result.success("""{"data":{"favorite":{"list_by_date":{"errors":null,"picture_sets":{"items":[{"id":"7","title":"A"}]}}}}}""")
+                Result.success("""{"items":[{"id":"7","title":"A"}]}""")
             }
         }
 
         val albums = favorites.getSubscribedAlbums(page = 1)
 
         assertEquals(listOf("7"), albums.getOrThrow().map { it.id })
+        assertEquals(listOf("luscious/site_bootstrap", "favorite/list_by_date?user_id=111&kind=picture_set&page=1&show_likes=true"), base.operations)
+        assertNull(mediaCategoriesFlow.value)
     }
 
     @Test
-    fun `errors null в списке лайков — не ошибка, а картинка без альбома остаётся без альбома`() = runTest {
+    fun `картинка без альбома в REST-ответе остаётся без альбома`() = runTest {
         base.respond = { data ->
-            if ("MediaCategoriesBootstrap" in data) {
+            if (data.endsWith("site_bootstrap")) {
                 Result.success(bootstrapJson(111))
             } else {
                 val item = """{"id":"5","url_to_original":"https://example.com/a.jpg","album":null}"""
-                Result.success("""{"data":{"favorite":{"list_by_date":{"errors":null,"pictures":{"items":[$item]}}}}}""")
+                Result.success("""{"items":[$item]}""")
             }
         }
 
@@ -251,9 +260,16 @@ class LServerFavoritesRepositoryImplTest {
                 credentials = { profile.snapshot },
                 engineFactory = {
                     MockEngine { request ->
+                        if (request.url.encodedPath == "/login/") {
+                            check(request.method == HttpMethod.Get)
+                            return@MockEngine respond(
+                                "<form></form>",
+                                headers = headersOf(HttpHeaders.SetCookie, "form=open; Path=/accounts/login/")
+                            )
+                        }
                         val cookie = request.headers[HttpHeaders.Cookie]
                         if (request.url.encodedPath.endsWith("/accounts/login/")) {
-                            check(cookie == null) { "Вход отправлен с прежней cookie" }
+                            check(cookie == "form=open") { "Вход должен использовать сессию открытой формы" }
                             logins++
                             if (loginAtHome) {
                                 respond("""{"location":"/","form":{"fields":{},"errors":[]}}""")
@@ -273,9 +289,9 @@ class LServerFavoritesRepositoryImplTest {
                             )
                         } else {
                             cookies += cookie
-                            val body = (request.body as? TextContent)?.text.orEmpty()
-                            val response = if (body.contains("FavoritesByDatePictureSet")) {
-                                """{"data":{"favorite":{"list_by_date":{"picture_sets":{"items":[]}}}}}"""
+                            check(request.method == HttpMethod.Get)
+                            val response = if (request.url.encodedPath.endsWith("/favorite/list_by_date")) {
+                                """{"items":[]}"""
                             } else {
                                 val session = cookie?.substringAfter("sessionid=s")?.toIntOrNull()
                                 bootstrapJson(if (session != null && accepts(session)) 111 else 0)

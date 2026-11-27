@@ -2,7 +2,7 @@ package com.client.xvideos.l.ui.screens.explorer.tab.albumTopHits.molecule
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -39,25 +39,29 @@ fun TopHitsSectionItem(
             modifier = Modifier.padding(start = 4.dp, top = 16.dp)
         )
 
-        FlowRow(
-            maxItemsInEachRow = itemsPerRow,
+        val rows = remember(item.items, itemsPerRow) {
+            item.items.take(itemsPerRow * 3).chunked(itemsPerRow)
+        }
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 1.dp),
-            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
             verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing)
         ) {
-            val albums = remember(item.items, itemsPerRow) { item.items.take(itemsPerRow * 3) }
-            albums.forEach { album ->
-                key(album.id) {
-                    TopHitsAlbumItem(
-                        album = album,
-                        modifier = Modifier.weight(1f),
-                        onAlbumClick = onAlbumClick
-                    )
+            rows.forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing)) {
+                    row.forEach { album ->
+                        key(album.id) {
+                            TopHitsAlbumItem(
+                                album = album,
+                                modifier = Modifier.weight(1f),
+                                onAlbumClick = onAlbumClick
+                            )
+                        }
+                    }
+                    repeat(sectionRowFillers(row.size, itemsPerRow)) { Spacer(Modifier.weight(1f)) }
                 }
             }
-            repeat(sectionRowFillers(albums.size, itemsPerRow)) { Spacer(Modifier.weight(1f)) }
         }
 
         val onSeeAll = remember(item.url, item.title, onSeeAllClick) {

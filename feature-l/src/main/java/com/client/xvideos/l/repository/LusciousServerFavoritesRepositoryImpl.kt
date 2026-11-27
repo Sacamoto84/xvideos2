@@ -5,16 +5,14 @@ import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.graphQl.FavoriteAdd
 import com.client.xvideos.l.net.graphQl.FavoriteRemove
-import com.client.xvideos.l.net.graphQl.FavoritesByDatePicture
-import com.client.xvideos.l.net.graphQl.FavoritesByDatePictureSet
 import com.client.xvideos.l.net.graphQl.GraphQlRequest
-import com.client.xvideos.l.net.graphQl.refreshMediaCategories
 import com.client.xvideos.l.net.json.LJson
 import com.client.xvideos.l.net.normalizePictureUrls
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.ktor.http.URLBuilder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,6 +32,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -88,29 +87,33 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
 
         val id = userId.toString()
         sessionUser = SessionUser(id, revision)
-        Timber.i("L session confirmed by GraphQL")
+        Timber.i("L session confirmed by site API")
         Result.success(id)
     }
 
     private suspend fun fetchSessionUserId(): Result<Long> =
-        refreshMediaCategories(repository, forceRefresh = true).map { it.filterSettings.userId }
-
-    override suspend fun getSubscribedAlbumsRaw(userId: String?, page: Int): Result<String> {
-        val targetUserId = if (!userId.isNullOrBlank()) {
-            userId
-        } else {
-            val sessionResult = getSessionUserId(verify = page == 1)
-            if (sessionResult.isFailure) {
-                return Result.failure(sessionResult.exceptionOrNull() ?: IllegalStateException("Missing user_id"))
+        repository.getSiteApi("${LusciousEndpoints.REST}luscious/site_bootstrap").mapCatching { raw ->
+            val auth = LJson.parseToJsonElement(raw).jsonObject.getValue("auth").jsonObject
+            if (auth["state"]?.jsonPrimitive?.contentOrNull == "authenticated") {
+                requireNotNull(auth.objectAt("user")?.get("id")?.jsonPrimitive?.longOrNull) { "Missing session user ID" }
+            } else {
+                0L
             }
-            sessionResult.getOrThrow()
         }
 
-        return FavoritesByDatePictureSet(
-            repository = repository,
-            userId = targetUserId,
-            page = page
-        )
+    override suspend fun getSubscribedAlbumsRaw(userId: String?, page: Int): Result<String> =
+        favoritesPage(userId, page, "picture_set")
+
+    private suspend fun favoritesPage(userId: String?, page: Int, kind: String): Result<String> {
+        val targetUserId = userId?.takeIf { it.isNotBlank() }
+            ?: getSessionUserId(verify = page <= 1).getOrElse { return Result.failure(it) }
+        val url = URLBuilder("${LusciousEndpoints.REST}favorite/list_by_date").apply {
+            parameters.append("user_id", targetUserId)
+            parameters.append("kind", kind)
+            parameters.append("page", page.coerceAtLeast(1).toString())
+            parameters.append("show_likes", "true")
+        }.buildString()
+        return repository.getSiteApi(url)
     }
 
     override suspend fun getSubscribedAlbums(page: Int): Result<List<AlbumDetails>> {
@@ -123,18 +126,8 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             runCatchingCancellable {
                 val raw = rawResult.getOrThrow()
                 val json = LJson.parseToJsonElement(raw).jsonObject
-                val listByDate = json.objectAt("data", "favorite", "list_by_date")
-
-                listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
-                    throw IllegalStateException("Server error: $msg")
-                }
-
-                val items = listByDate.objectAt("picture_sets")?.get("items")
-
-                if (items is JsonArray) {
-                    LJson.decodeFromJsonElement<List<AlbumDetails>>(items)
-                } else {
-                    emptyList()
+                LJson.decodeFromJsonElement<List<AlbumDetails>>(json.getValue("items")).also {
+                    Timber.d("L subscribed albums: page=%d count=%d", page, it.size)
                 }
             }
         }.onFailure { e ->
@@ -142,23 +135,8 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getServerLikedPicturesRaw(userId: String?, page: Int): Result<String> {
-        val targetUserId = if (!userId.isNullOrBlank()) {
-            userId
-        } else {
-            val sessionResult = getSessionUserId(verify = page == 1)
-            if (sessionResult.isFailure) {
-                return Result.failure(sessionResult.exceptionOrNull() ?: IllegalStateException("Missing user_id"))
-            }
-            sessionResult.getOrThrow()
-        }
-
-        return FavoritesByDatePicture(
-            repository = repository,
-            userId = targetUserId,
-            page = page
-        )
-    }
+    override suspend fun getServerLikedPicturesRaw(userId: String?, page: Int): Result<String> =
+        favoritesPage(userId, page, "picture")
 
     override suspend fun getServerLikedPictures(page: Int): Result<List<PicsDetails>> {
         val rawResult = getServerLikedPicturesRaw(userId = null, page = page)
@@ -170,13 +148,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             runCatchingCancellable {
                 val raw = rawResult.getOrThrow()
                 val json = LJson.parseToJsonElement(raw).jsonObject
-                val listByDate = json.objectAt("data", "favorite", "list_by_date")
-
-                listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
-                    throw IllegalStateException("Server error: $msg")
-                }
-
-                val itemsElement = listByDate.objectAt("pictures")?.get("items")
+                val itemsElement = json.getValue("items")
 
                 if (itemsElement is JsonArray) {
                     val sanitized = buildJsonArray {
@@ -210,7 +182,7 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
                     val pics = LJson.decodeFromJsonElement<List<PicsDetails>>(sanitized)
                     normalizePictureUrls(pics)
                 } else {
-                    emptyList()
+                    error("Invalid picture list")
                 }
             }
         }.onFailure { e ->

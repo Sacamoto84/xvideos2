@@ -2,6 +2,12 @@ package com.client.xvideos.l.model
 
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonTransformingSerializer
 import java.io.Serializable
 
 /**
@@ -64,6 +70,7 @@ data class FilterGenre(
     val url: String = "",
 
     @SerialName("parent")
+    @kotlinx.serialization.Serializable(with = GenreParentIdSerializer::class)
     val parent: String? = null,
 
     @SerialName("only_allows_model")
@@ -75,6 +82,12 @@ data class FilterGenre(
     companion object {
         val EMPTY = FilterGenre()
     }
+}
+
+/** GraphQL отдаёт объект родителя, а сохранённые фильтры хранят только его ID. */
+internal object GenreParentIdSerializer : JsonTransformingSerializer<String?>(String.serializer().nullable) {
+    override fun transformDeserialize(element: JsonElement): JsonElement =
+        if (element is JsonObject) element["id"] ?: JsonNull else element
 }
 
 /** Ограничение жанра по типу контента. `Serializable` вслед за [FilterGenre]. */

@@ -23,7 +23,7 @@ interface LusciousServerFavoritesRepository {
     suspend fun getSessionUserId(): Result<String>
 
     /**
-     * Выполнить сетевой запрос FavoritesByDatePictureSet и вернуть сырую строку ответа.
+     * Получить исходный REST-ответ со страницей подписанных альбомов.
      *
      * @param userId ID пользователя. Если null, извлекается автоматически из сессии.
      * @param page Номер страницы (начиная с 1).
@@ -39,7 +39,7 @@ interface LusciousServerFavoritesRepository {
     suspend fun getSubscribedAlbums(page: Int): Result<List<AlbumDetails>>
 
     /**
-     * Выполнить сетевой запрос FavoritesByDatePicture и вернуть сырую строку ответа.
+     * Получить исходный REST-ответ со страницей лайкнутых картинок.
      *
      * @param userId ID пользователя. Если null, извлекается автоматически из сессии.
      * @param page Номер страницы (начиная с 1).

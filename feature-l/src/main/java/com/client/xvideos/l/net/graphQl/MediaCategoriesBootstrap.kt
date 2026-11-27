@@ -23,16 +23,12 @@ val mediaCategoriesFlow = MutableStateFlow<MediaCategories?>(null)
  * Загружает и обновляет справочник медиа-категорий L через запрос `MediaCategoriesBootstrap`.
  *
  * @param repository Репозиторий сетевых запросов.
- * @param forceRefresh Если `true`, игнорирует ROM-кэш и запрашивает свежие данные по сети.
- * @return Полученный справочник либо причина, по которой его нет. Вызывающему,
- * которому нужны данные именно этой сессии, читать [mediaCategoriesFlow] нельзя:
- * после сбоя там остаётся прежнее значение.
+ * @return Полученный справочник либо причина, по которой его нет.
  */
-suspend fun refreshMediaCategories(repository: Repository, forceRefresh: Boolean = false): Result<MediaCategories> {
-    Timber.d("refreshMediaCategories (forceRefresh=$forceRefresh)")
+suspend fun refreshMediaCategories(repository: Repository): Result<MediaCategories> {
+    Timber.d("refreshMediaCategories")
 
-    val config = if (forceRefresh) RepositoryUriConfig.DIRECT else RepositoryUriConfig.CACHE_ROM
-    val categories = repository.openURI(mediaCategoriesBootstrap, config = config).mapCatching { raw ->
+    val categories = repository.openURI(mediaCategoriesBootstrap, config = RepositoryUriConfig.CACHE_ROM).mapCatching { raw ->
         LJson.decodeFromString<MediaCategoriesBootstrapResponse>(raw).data.mediaCategories
     }.getOrElse { e ->
         Timber.w("refreshMediaCategories failed: ${e.javaClass.simpleName}")

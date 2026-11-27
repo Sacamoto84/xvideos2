@@ -5,6 +5,7 @@ import com.client.xvideos.common.net.SiteMaintenanceInterceptor
 import com.client.xvideos.common.net.SiteMaintenanceReporter
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.l.repository.LusciousEndpoints.LOGIN
+import com.client.xvideos.l.repository.LusciousEndpoints.WEB
 import com.client.xvideos.common.net.UserAgentProvider
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -122,7 +123,10 @@ class KtorRequestHandler(
         // login/password и session-cookie) в лог. Подробное логирование оставляем
         // только в debug-сборках, чтобы не утекали учётные данные в release.
         if (AppBuildInfo.debug) {
-            install(Logging) { level = LogLevel.HEADERS }
+            install(Logging) {
+                level = LogLevel.HEADERS
+                sanitizeHeader { it.equals(HttpHeaders.Cookie, true) || it.equals(HttpHeaders.SetCookie, true) }
+            }
         }
     }
 
@@ -134,7 +138,8 @@ class KtorRequestHandler(
      */
     suspend fun postJson(url: String, data: String): LHttpResponse {
         return client.post {
-            url(url)
+            url(graphQlPostUrl(url, data))
+            header(REQUESTED_WITH_HEADER, REQUESTED_WITH_XHR)
             contentType(ContentType.Application.Json)
             setBody(TextContent(data, ContentType.Application.Json))
         }.toLResponse()
@@ -156,13 +161,18 @@ class KtorRequestHandler(
                 header(REQUESTED_WITH_HEADER, REQUESTED_WITH_XHR)
             }
         } else {
-            anonymousClient.post(anonymousGraphQlPostUrl(endpoint, data)) {
+            anonymousClient.post(graphQlPostUrl(endpoint, data)) {
                 header(REQUESTED_WITH_HEADER, REQUESTED_WITH_XHR)
                 contentType(ContentType.Application.Json)
                 setBody(TextContent(data, ContentType.Application.Json))
             }
         }
         return response.toLResponse()
+    }
+
+    internal suspend fun getSiteApi(url: String): LHttpResponse {
+        val sessionClient = if (loggedIn) client else anonymousClient
+        return sessionClient.get(url).toLResponse()
     }
 
     private suspend fun HttpResponse.toLResponse(): LHttpResponse {
@@ -176,6 +186,9 @@ class KtorRequestHandler(
     private suspend fun post(url: String, formData: Map<String, String> = emptyMap()): HttpResponse {
         return client.post {
             url(url)
+            header(HttpHeaders.Accept, ContentType.Text.Html.toString())
+            header(HttpHeaders.Origin, WEB)
+            header(HttpHeaders.Referrer, "$WEB/login/")
             setBody(FormDataContent(Parameters.build {
                 formData.forEach { (k, v) -> append(k, v) }
             }))
@@ -237,10 +250,16 @@ class KtorRequestHandler(
         val formData = mapOf(
             "login" to currentUsername,
             "password" to currentPassword,
-            "remember" to "on"
+            "remember" to "on",
+            "next" to "/",
         )
 
         val failure = try {
+            // Открытие формы создаёт ту же начальную сессию, что и в браузере.
+            val formPage = client.get("$WEB/login/") {
+                header(HttpHeaders.Accept, ContentType.Text.Html.toString())
+            }
+            loginResponseFailure(formPage, formPage.bodyAsText())?.let { throw it }
             val response = post(LOGIN, formData)
             val body = response.bodyAsText()
             loginResponseFailure(response, body) ?: completeLoginForm(body)
@@ -393,8 +412,8 @@ internal fun anonymousGraphQlGetUrl(endpoint: String, data: String): String? {
     return url.takeIf { it.length <= MAX_ANONYMOUS_GET_URL_LENGTH }
 }
 
-/** Адрес анонимного POST: как у сайта, имя операции в URL (`fetch_as_post`). */
-private fun anonymousGraphQlPostUrl(endpoint: String, data: String): String {
+/** Адрес POST: имя операции в URL, как в `fetch_as_post`. */
+private fun graphQlPostUrl(endpoint: String, data: String): String {
     val operationName = parseGraphQlRequest(data)?.operationName.orEmpty()
     return if (operationName.isEmpty()) endpoint else "$endpoint?operationName=${formUrlEncode(operationName)}"
 }

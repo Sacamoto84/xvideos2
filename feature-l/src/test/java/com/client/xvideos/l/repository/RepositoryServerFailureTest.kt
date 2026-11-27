@@ -56,6 +56,7 @@ class RepositoryServerFailureTest {
         val apiCalls = AtomicInteger()
 
         val engine = MockEngine { request ->
+            if (request.url.encodedPath == "/login/") return@MockEngine respond("<form></form>")
             val html = headersOf(HttpHeaders.ContentType, "text/html; charset=utf-8")
             val json = headersOf(HttpHeaders.ContentType, "application/json")
             when {

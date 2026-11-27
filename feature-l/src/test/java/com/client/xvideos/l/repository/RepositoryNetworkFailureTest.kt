@@ -94,6 +94,7 @@ class RepositoryNetworkFailureTest {
         val apiCalls: MutableList<HttpRequestData> = Collections.synchronizedList(mutableListOf())
 
         val engine = MockEngine { request ->
+            if (request.url.encodedPath == "/login/") return@MockEngine respond("<form></form>")
             if (request.url.encodedPath.endsWith("/accounts/login/")) {
                 loginCalls.incrementAndGet()
                 loginRequests += request
@@ -150,7 +151,7 @@ class RepositoryNetworkFailureTest {
         repository.openURI(query("B"))
 
         assertEquals(2, server.loginCalls.get())
-        assertEquals(LusciousEndpoints.API, server.apiCalls.last().url.toString())
+        assertEquals(LusciousEndpoints.API + "?operationName=B", server.apiCalls.last().url.toString())
     }
 
     @Test

@@ -68,6 +68,7 @@ class RepositoryAnonymousModeTest {
         val requests: MutableList<Recorded> = Collections.synchronizedList(mutableListOf())
 
         val engine = MockEngine { request ->
+            if (request.url.encodedPath == "/login/") return@MockEngine respond("<form></form>")
             if (request.url.encodedPath.endsWith("/accounts/login/")) {
                 val headers = if (loginCookie != null) {
                     headersOf(HttpHeaders.SetCookie, loginCookie)
@@ -117,8 +118,9 @@ class RepositoryAnonymousModeTest {
 
         val request = server.requests.single()
         assertEquals(HttpMethod.Post, request.method)
-        assertEquals(LusciousEndpoints.API, request.url.toString())
+        assertEquals(LusciousEndpoints.API + "?operationName=Q", request.url.toString())
         assertEquals(QUERY, request.body)
+        assertEquals("XMLHttpRequest", request.requestedWith)
         assertTrue("ожидалась cookie сессии, пришло ${request.cookie}", request.cookie.orEmpty().contains("sessionid=s1"))
     }
 

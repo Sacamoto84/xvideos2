@@ -168,7 +168,7 @@ open class Repository(
         if (seenCredentialsRevision == revision) anonymousLoginFailure as? IOException else null
     }
 
-    /** Сбрасывает cookie сессии, которую GraphQL не распознал. */
+    /** Сбрасывает cookie сессии, которую сайт не распознал. */
     internal suspend fun handleRejectedSession(revision: Int, retry: Boolean): Boolean = authMutex.withLock {
         if (!handler.loggedIn || seenCredentialsRevision != revision) return@withLock false
         val saved = credentials()
@@ -177,7 +177,7 @@ open class Repository(
         val profile = UserProfile(email = saved.login.trim(), password = saved.password)
         dropSession()
         if (retry) {
-            Timber.i("L session rejected by GraphQL; renewing once")
+            Timber.i("L session rejected by site API; renewing once")
             logInIfNeeded(profile)
         } else {
             fallBackToAnonymous(profile, LSessionRequiredException())
@@ -335,7 +335,7 @@ open class Repository(
                 }
                 cacheUrlStringRomDao.delete(cacheKey)
             }
-            val checkedResponse = postJsonValidated(data, cacheKey)
+            val checkedResponse = requestJsonValidated(data, cacheKey)
             if (checkedResponse.isFailure) return checkedResponse
 
             cacheUrlStringRomDao.put(cacheKey, checkedResponse.getOrThrow())
@@ -364,7 +364,7 @@ open class Repository(
                 Timber.w("openURI() CACHE_RAM malformed cache: ${cached.exceptionOrNull()?.javaClass?.simpleName}")
                 deleteRamCache(cacheKey)
             }
-            val checkedResponse = postJsonValidated(data, cacheKey)
+            val checkedResponse = requestJsonValidated(data, cacheKey)
             if (checkedResponse.isFailure) return checkedResponse
 
             putRamCache(cacheKey, checkedResponse.getOrThrow(), lookup.generation)
@@ -396,24 +396,29 @@ open class Repository(
         }
 
         return when (config) {
-            RepositoryUriConfig.DIRECT -> postJsonValidated(data)
+            RepositoryUriConfig.DIRECT -> requestJsonValidated(data)
             RepositoryUriConfig.CACHE_ROM -> getFromCacheRom(data)
             RepositoryUriConfig.CACHE_RAM -> getFromCacheRam(data)
         }
     }
 
-    /**
-     * Выполняет POST-запрос с автоматическим повтором при обнаружении HTML challenge страницы.
-     */
-    private suspend fun postJsonValidated(
+    /** REST-запрос сайта с текущей сессией. Ответ может содержать профиль и не кэшируется. */
+    internal open suspend fun getSiteApi(url: String): Result<String> {
+        require(url.startsWith(LusciousEndpoints.REST))
+        ensureAuthenticated().getOrElse { return Result.failure(it) }
+        return requestJsonValidated(url) { handler.getSiteApi(url) }
+    }
+
+    private suspend fun requestJsonValidated(
         data: String,
-        requestHash: String = data.toMD5()
+        requestHash: String = data.toMD5(),
+        send: suspend () -> LHttpResponse = { sendGraphQl(data) },
     ): Result<String> {
         var lastFailure: Result<String>? = null
 
         for (attempt in 0 until HTML_CHALLENGE_RETRY_ATTEMPTS) {
             val response = try {
-                postJsonThrottled(data)
+                fetchJsonThrottled(send)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -453,11 +458,11 @@ open class Repository(
      *
      * @throws LServerErrorException сервер ответил 5xx, и это не проверка Cloudflare.
      */
-    private suspend fun postJsonThrottled(data: String): String {
+    private suspend fun fetchJsonThrottled(send: suspend () -> LHttpResponse): String {
         var attempt = 0
         while (true) {
             val response = try {
-                requestMutex.withLock { sendThrottled(data) }
+                requestMutex.withLock { sendThrottled(send) }
             } catch (e: IOException) {
                 if (attempt >= MAX_RETRIES || !e.isWorthRetrying()) throw e
                 Timber.w("openURI() network failure, retry #${attempt + 1}: ${e.javaClass.simpleName}")
@@ -472,7 +477,7 @@ open class Repository(
     }
 
     /** Одна попытка запроса с минимальным интервалом после предыдущей. Вызывать под [requestMutex]. */
-    private suspend fun sendThrottled(data: String): LHttpResponse {
+    private suspend fun sendThrottled(send: suspend () -> LHttpResponse): LHttpResponse {
         val now = System.currentTimeMillis()
         val intervalWaitMs = MIN_NETWORK_REQUEST_INTERVAL_MS - (now - lastNetworkRequestAtMs)
         val challengeWaitMs = htmlChallengeCooldownUntilMs.get() - now
@@ -480,19 +485,16 @@ open class Repository(
         if (waitMs > 0) delay(waitMs)
 
         return try {
-            // Как у сайта: вошедший — POST на адрес участников с cookie
-            // сессии; аноним (нет логина или вход не удался) — GET на
-            // анонимный адрес без cookies. Раньше аноним тоже ходил на
-            // адрес участников и не попадал в кэш Cloudflare, на котором
-            // сайт продолжал работать при отказе сервера.
-            if (handler.loggedIn) {
-                handler.postJson(apiUrl, data)
-            } else {
-                handler.graphQlAnonymous(LusciousEndpoints.API_ANONYMOUS, data)
-            }
+            send()
         } finally {
             lastNetworkRequestAtMs = System.currentTimeMillis()
         }
+    }
+
+    private suspend fun sendGraphQl(data: String): LHttpResponse = if (handler.loggedIn) {
+        handler.postJson(apiUrl, data)
+    } else {
+        handler.graphQlAnonymous(LusciousEndpoints.API_ANONYMOUS, data)
     }
 
     /**

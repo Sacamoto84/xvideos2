@@ -142,7 +142,7 @@ fun AlbumFilterGenresDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "All genres selected",
+                                    text = "No genres available",
                                     color = palette.textSecondary,
                                     style = Theme.L.Type.rowTitle
                                 )

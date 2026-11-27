@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.l.model.AlbumListFilter
+import com.client.xvideos.l.model.FilterGenre
+import com.client.xvideos.l.model.isValid
+import com.client.xvideos.l.model.lAlbumListLinkParams
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
 import com.client.xvideos.l.net.graphQl.mediaCategoriesFlow
 import com.client.xvideos.l.ui.screens.screenAlbumList.filter.style.StyleGenresTags
@@ -26,18 +29,14 @@ fun AlbumListFilterGenres(
 ) {
     val mediaCategories by mediaCategoriesFlow.collectAsStateWithLifecycle()
 
-    val filterTerms = remember(filterGenreStateCount) {
-        filterGenreStateCount?.map { it.term }?.toSet()
-    }
-
-    val genresPlus = remember(filter.genresPlus) { filter.genresPlus.distinctBy { it.title } }
-    val genresMinus = remember(filter.genresMinus) { filter.genresMinus.distinctBy { it.title } }
+    val genresPlus = remember(filter.genresPlus) { filter.genresPlus.distinctBy { it.id } }
+    val genresMinus = remember(filter.genresMinus) { filter.genresMinus.distinctBy { it.id } }
 
     val allGenres = mediaCategories?.genres ?: emptyList()
 
-    val genresPlusCorrect = remember(allGenres, genresPlus, genresMinus, filterTerms) {
-        allGenres.minus(genresPlus.toSet()).minus(genresMinus.toSet())
-            .filter { filterTerms?.contains(it.title) == true }
+    val selectableGenres = remember(allGenres, genresPlus, genresMinus, filterGenreStateCount) {
+        val selectedIds = (genresPlus + genresMinus).map { it.id }.toSet()
+        selectableAlbumGenres(allGenres, filterGenreStateCount.orEmpty(), selectedIds)
     }
     val palette = StyleGenresTags.Palette
 
@@ -77,7 +76,7 @@ fun AlbumListFilterGenres(
         AlbumFilterGenresDialog(
             genresPlus = genresPlus,
             genresMinus = genresMinus,
-            selectableGenres = genresPlusCorrect,
+            selectableGenres = selectableGenres,
             genreCounts = filterGenreStateCount,
             onAddPlus = { item ->
                 onChange(filter.copy(genresPlus = genresPlus + item))
@@ -94,6 +93,38 @@ fun AlbumListFilterGenres(
             onDismiss = { showDialog = false }
         )
     }
+}
+
+internal fun selectableAlbumGenres(
+    catalog: List<FilterGenre>,
+    counts: List<AlbumListFilterGenreCountResponse>,
+    selectedIds: Set<String>,
+): List<FilterGenre> {
+    val validGenres = catalog.filter { it.isValid }
+    val genresById = validGenres.associateBy { it.id }
+    val genresByTitle = validGenres.associateBy { it.title.trim().lowercase() }
+    val countedGenres = counts.mapNotNull { count ->
+        val term = count.term.trim()
+        val id = genreIdFromFacetLink(count.urlToMustInclude, selectedIds)
+        genresById[id] ?: genresByTitle[term.lowercase()]
+            ?: id?.takeIf { term.isNotEmpty() }?.let { FilterGenre(id = it, title = term) }
+    }
+
+    return countedGenres.ifEmpty { validGenres }.distinctBy { it.id }.filterNot { it.id in selectedIds }
+}
+
+private val includedGenreId = Regex("""(?:^|[+ ])(\d+)(?=[+ -]|$)""")
+
+private fun genreIdFromFacetLink(url: String, selectedIds: Set<String>): String? {
+    val ids = try {
+        lAlbumListLinkParams(url.substringBefore('#'))["genre_ids"]
+    } catch (_: IllegalArgumentException) {
+        null
+    } ?: return null
+
+    return includedGenreId.findAll(ids).map { it.groupValues[1] }
+        .filter { it !in selectedIds && (it.toLongOrNull() ?: 0L) > 0L }
+        .singleOrNull()
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF141418)

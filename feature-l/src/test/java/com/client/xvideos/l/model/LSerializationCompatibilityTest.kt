@@ -230,6 +230,7 @@ class LSerializationCompatibilityTest {
                                 "acts_as_default": true,
                                 "represents_uncategorized": false,
                                 "url": "/genres/fantasy/",
+                                "parent": {"id": "g0"},
                                 "only_content": {
                                     "id": "c1",
                                     "title": "Pictures",
@@ -266,7 +267,9 @@ class LSerializationCompatibilityTest {
 
         assertEquals(1, categories.genres.size)
         assertEquals("Fantasy", categories.genres[0].title)
+        assertEquals("g0", categories.genres[0].parent)
         assertEquals("Pictures", categories.genres[0].onlyContent?.title)
+        assertEquals("g0", LJson.decodeFromString<FilterGenre>("""{"parent":"g0"}""").parent)
         assertEquals(999L, categories.filterSettings.userId)
         assertEquals(1, categories.languages.size)
         assertEquals(1, categories.contentTypes.size)

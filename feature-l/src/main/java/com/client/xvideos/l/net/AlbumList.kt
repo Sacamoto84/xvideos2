@@ -36,7 +36,10 @@ data class AlbumListFilterGenreCountResponse(
     val term: String = "",
 
     @SerialName("is_active")
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+
+    @SerialName("url_to_must_include")
+    val urlToMustInclude: String = ""
 )
 
 @Serializable
