@@ -25,7 +25,9 @@ import com.client.xvideos.xlive.record.XLiveRecordStore.Companion.VIDEO_RAW
 import com.client.xvideos.xlive.saved.XLiveSaved
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -96,6 +98,9 @@ object XLiveRecordings {
     fun refresh() {
         if (coreLazy.isInitialized()) core.store.refresh()
     }
+
+    /** `true`, если запись [id] сейчас активно пишется или доклеивается. */
+    fun isBusy(id: Long): Boolean = coreLazy.isInitialized() && core.isBusy(id)
 }
 
 /** Логика [XLiveRecordings] с зависимостями снаружи — для тестов. */
@@ -119,16 +124,23 @@ internal class XLiveRecordingsCore(
     private companion object {
         /** Запас места сверх копии видео при переклейке — как у записи. */
         const val REMUX_RESERVE_BYTES = 300L * 1024 * 1024
+        const val MAX_BROKEN_REPAIR_ATTEMPTS = 3
     }
 
     private val lock = Any()
     private var current: XLiveRecordingSession? = null
+    private var currentJob: Job? = null
+    private var lastIssuedId = 0L
 
     /** Записи, которые сейчас пишутся или склеиваются: доклейка их не трогает. */
     private val busy = mutableSetOf<Long>()
 
+    fun isBusy(id: Long): Boolean = synchronized(lock) { id in busy }
+
     fun start(room: XLiveRoom, bio: XLiveBio?): XLiveRecordingSession {
-        val id = newId()
+        val id = synchronized(lock) {
+            maxOf(newId(), lastIssuedId + 1L).also { lastIssuedId = it }
+        }
         val dir = store.dirOf(id).apply { mkdirs() }
         store.put(XLiveRecord(id = id, username = room.username, room = room.toRecordRoom(), bio = bio))
         val recorder = XLiveRecorder(
@@ -140,16 +152,19 @@ internal class XLiveRecordingsCore(
             nowMs = elapsedMs,
         )
         val session = XLiveRecordingSession(id, recorder, store, elapsedMs())
+        var previousJob: Job? = null
         val previous = synchronized(lock) {
             busy += id
+            previousJob = currentJob
             current.also { current = session }
         }
         previous?.stop(XLiveRecordStop.LEFT_ROOM)
         scope.launch { saveSnapshot(room.username, dir) }
-        scope.launch {
+        val job = scope.launch(start = CoroutineStart.LAZY) {
             // Сессия не должна ни уронить процесс, ни оставить запись «идущей»:
             // что бы ни случилось, записанное склеивается, а занятость снимается.
             try {
+                previousJob?.join()
                 val reason = runRecorder(recorder)
                 session.finishing()
                 val stats = recorder.stats.value
@@ -172,21 +187,26 @@ internal class XLiveRecordingsCore(
                 }
             }
         }
+        synchronized(lock) {
+            if (current === session) currentJob = job
+        }
+        job.start()
         return session
     }
 
     /** Запись до остановки; неожиданное исключение — тоже остановка, с сохранением записанного. */
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun runRecorder(recorder: XLiveRecorder): XLiveRecordStop = try {
         recorder.run()
     } catch (e: CancellationException) {
         throw e
-    } catch (e: Exception) {
+    } catch (e: IOException) {
+        Timber.w("XLive: запись прервалась — %s", e.javaClass.simpleName)
+        XLiveRecordStop.ERROR
+    } catch (e: RuntimeException) {
         Timber.w("XLive: запись прервалась — %s", e.javaClass.simpleName)
         XLiveRecordStop.ERROR
     }
 
-    @Suppress("TooGenericExceptionCaught")
     fun finishPending() {
         scope.launch {
             val pending = store.snapshot().filter(::needsFinishing)
@@ -197,8 +217,10 @@ internal class XLiveRecordingsCore(
                     Timber.i("XLive: доклейка записи — %s", outcome)
                 } catch (e: CancellationException) {
                     throw e
-                } catch (e: Exception) {
+                } catch (e: IOException) {
                     // Одна испорченная запись не мешает доклеить остальные.
+                    Timber.w("XLive: доклейка не удалась — %s", e.javaClass.simpleName)
+                } catch (e: RuntimeException) {
                     Timber.w("XLive: доклейка не удалась — %s", e.javaClass.simpleName)
                 } finally {
                     synchronized(lock) { busy -= record.id }
@@ -237,7 +259,8 @@ internal class XLiveRecordingsCore(
         XLiveRecordStatus.RECORDING, XLiveRecordStatus.FINISHING -> true
         XLiveRecordStatus.BROKEN -> {
             val dir = store.dirOf(record.id)
-            File(dir, VIDEO_RAW).length() > 0L || File(dir, VIDEO).length() > 0L
+            record.repairAttempts < MAX_BROKEN_REPAIR_ATTEMPTS &&
+                (File(dir, VIDEO_RAW).length() > 0L || File(dir, VIDEO).length() > 0L)
         }
         XLiveRecordStatus.READY -> false
     }
@@ -248,7 +271,6 @@ internal class XLiveRecordingsCore(
      * нет — в другой раз. Не склеилось — прежнее видео остаётся, а версия
      * пишется, чтобы файл не перечитывался при каждом входе во вкладку.
      */
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun remux(id: Long) {
         val dir = store.dirOf(id)
         val video = File(dir, VIDEO)
@@ -262,8 +284,11 @@ internal class XLiveRecordingsCore(
         } catch (e: CancellationException) {
             temp.delete()
             throw e
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             // MediaMuxer бросает и не IOException.
+            Timber.w("XLive: переклейка не удалась — %s", e.javaClass.simpleName)
+            temp.delete()
+        } catch (e: RuntimeException) {
             Timber.w("XLive: переклейка не удалась — %s", e.javaClass.simpleName)
             temp.delete()
         }
@@ -293,7 +318,6 @@ internal class XLiveRecordingsCore(
     }
 
     /** Склеить сырые дорожки записи [id] в `video.mp4`; без видео — удалить запись. */
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun finishRecord(id: Long, hasVideo: Boolean): Outcome {
         val dir = store.dirOf(id)
         val videoRaw = File(dir, VIDEO_RAW)
@@ -331,11 +355,16 @@ internal class XLiveRecordingsCore(
             Outcome.READY
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             // MediaMuxer бросает и не IOException; сырые дорожки остаются для повтора.
             Timber.w("XLive: запись не склеилась — %s", e.javaClass.simpleName)
             temp.delete()
-            store.update(id) { it.copy(status = XLiveRecordStatus.BROKEN) }
+            store.update(id) { it.copy(status = XLiveRecordStatus.BROKEN, repairAttempts = it.repairAttempts + 1) }
+            Outcome.BROKEN
+        } catch (e: RuntimeException) {
+            Timber.w("XLive: запись не склеилась — %s", e.javaClass.simpleName)
+            temp.delete()
+            store.update(id) { it.copy(status = XLiveRecordStatus.BROKEN, repairAttempts = it.repairAttempts + 1) }
             Outcome.BROKEN
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.client.xvideos.common.theme.Theme
 
@@ -21,8 +22,9 @@ import com.client.xvideos.common.theme.Theme
 fun ExpandMenuActionItem(
     icon: ImageVector,
     text: String,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     DropdownMenuItem(
         leadingIcon = {
@@ -33,6 +35,7 @@ fun ExpandMenuActionItem(
             val style = Theme.ExpandMenu.style
             Text(text, style = if (enabled) style else style.copy(color = style.color.copy(alpha = 0.38f)))
         },
+        modifier = modifier,
         enabled = enabled,
         onClick = onClick,
         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding

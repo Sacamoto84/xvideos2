@@ -2,6 +2,7 @@ package com.client.xvideos.r.network.api
 
 import com.client.xvideos.common.fileDB.folder.AppFileDatabase
 import com.client.xvideos.common.fileDB.folder.FileStringCacheTable
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.r.auth.RAccountSession
 import com.client.xvideos.r.auth.RAccountStatus
 import com.client.xvideos.r.model.CreatorResponse
@@ -527,7 +528,7 @@ private suspend fun cacheMediaResponse(
     // Битая запись — не повод показывать ошибку: выкидываем её и идём дальше,
     // как будто кеша не было.
     val cached = cache.get(route.url)?.let { entry ->
-        runCatching { RJson.decodeFromString<MediaResponse>(entry.content) }
+        runCatchingCancellable { RJson.decodeFromString<MediaResponse>(entry.content) }
             .getOrElse { e ->
                 Timber.w("Corrupted cache entry for ${route.path}: ${e.javaClass.simpleName}")
                 null
@@ -546,7 +547,7 @@ private suspend fun cacheMediaResponse(
     Timber.d("Fetching from network: ${route.path}")
     return redApi.api.requestAsGuest(route) { it.body<MediaResponse>() }
         .onSuccess {
-            runCatching {
+            runCatchingCancellable {
                 cache.put(route.url, RJson.encodeToString(it))
             }.onFailure { e ->
                 Timber.w(e, "Не удалось сохранить ответ в кэш: ${route.path}")

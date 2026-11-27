@@ -5,6 +5,7 @@ import com.client.xvideos.common.kdownloader.DownloaderConfig
 import com.client.xvideos.common.kdownloader.KDownloader
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
@@ -30,4 +31,10 @@ object KDownloaderModule {
     @Provides
     fun provideDownloader(@ApplicationContext context: Context): KDownloader =
         KDownloader.create(context, DownloaderConfig(false))
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface KDownloaderEntryPoint {
+    fun kDownloader(): KDownloader
 }

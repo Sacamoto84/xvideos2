@@ -1,5 +1,6 @@
 package com.client.xvideos.common.storage
 
+import com.client.xvideos.common.util.runCatchingCancellable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -35,7 +36,7 @@ class StorageCleanupGate @Inject constructor() {
     fun start(scope: CoroutineScope, block: suspend () -> Unit) {
         if (job != null) return
         job = scope.launch {
-            runCatching { block() }
+            runCatchingCancellable { block() }
                 .onFailure { Timber.e(it, "StorageCleanupGate: уборка staging-папок упала") }
         }
     }

@@ -21,10 +21,10 @@ import androidx.compose.ui.unit.dp
  * @param onClick Обработчик нажатия.
  */
 @Composable
-fun ButtonMoveVert(size : Dp = 26.dp, onClick : () -> Unit= {}){
+fun ButtonMoreVert(modifier: Modifier = Modifier, size: Dp = 26.dp, onClick: () -> Unit = {}) {
 
-    IconButton(onClick = onClick) {
-        
+    IconButton(onClick = onClick, modifier = modifier) {
+
         Icon(
             Icons.Default.MoreVert, contentDescription = "",
             tint = Color.Black, modifier = Modifier.size(size).offset(0.5.dp, 0.5.dp)
@@ -40,4 +40,4 @@ fun ButtonMoveVert(size : Dp = 26.dp, onClick : () -> Unit= {}){
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_ButtonMoveVert() { ButtonMoveVert() }
+fun ButtonMoreVertPreview() { ButtonMoreVert() }

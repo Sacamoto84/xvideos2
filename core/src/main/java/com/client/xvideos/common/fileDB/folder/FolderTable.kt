@@ -31,13 +31,13 @@ class FolderTable(
         mutex.withLock {
             val rowDir = rowDir(key, createTableDir = true)
             rowDir.mkdirs()
-            if (rowDir.name != key) {
-                writeField(rowDir, FIELD_KEY, key)
-            } else {
-                File(rowDir, fieldFileName(FIELD_KEY)).delete()
-            }
             fields.forEach { (field, value) ->
                 writeField(rowDir, field, value)
+            }
+            if (rowDir.name != key) {
+                File(rowDir, ROW_KEY_META_FILE).writeTextAtomically(key)
+            } else {
+                File(rowDir, ROW_KEY_META_FILE).delete()
             }
         }
     }
@@ -105,13 +105,16 @@ class FolderTable(
         if (!rowDir.exists() || !rowDir.isDirectory) return null
 
         return runCatching {
-            val fields = rowDir.listFiles { file -> file.isFile && !file.name.endsWith(".tmp") }
-                ?.associate { file ->
-                    file.name.removeSuffix(".txt") to file.readText(Charsets.UTF_8)
-                }
-                ?: emptyMap()
+            val fields = rowDir.listFiles { file ->
+                file.isFile && file.name.endsWith(".txt") && !file.name.endsWith(".tmp")
+            }?.associate { file ->
+                file.name.removeSuffix(".txt") to file.readText(Charsets.UTF_8)
+            } ?: emptyMap()
 
-            val key = fields[FIELD_KEY] ?: rowDir.name
+            val metaKey = File(rowDir, ROW_KEY_META_FILE)
+                .takeIf { it.isFile }
+                ?.readText(Charsets.UTF_8)
+            val key = metaKey ?: fields[FIELD_KEY] ?: rowDir.name
             FolderRecord(key = key, fields = fields)
         }.onFailure {
             Timber.e(it, "FolderTable read error: ${rowDir.absolutePath}")
@@ -129,6 +132,7 @@ class FolderTable(
 
     companion object {
         private val SAFE_FIELD_NAME_REGEX = Regex("[^A-Za-z0-9._-]")
+        private const val ROW_KEY_META_FILE = "_row_key.meta"
         const val FIELD_KEY = "key"
         const val FIELD_CONTENT = "content"
         const val FIELD_TIME_CREATE = "timeCreate"

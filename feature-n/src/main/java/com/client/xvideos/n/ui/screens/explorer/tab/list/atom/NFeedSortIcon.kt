@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.ui.atom.SortCalendarIcon
 import com.client.xvideos.n.model.NSortType
 
@@ -19,4 +20,10 @@ internal fun NFeedSortIcon(sort: NSortType) {
         NSortType.POPULAR_WEEK -> SortCalendarIcon(7)
         NSortType.POPULAR_TODAY -> SortCalendarIcon(1)
     }
+}
+
+@Preview
+@Composable
+private fun NFeedSortIconPreview() {
+    NFeedSortIcon(sort = NSortType.POPULAR_WEEK)
 }

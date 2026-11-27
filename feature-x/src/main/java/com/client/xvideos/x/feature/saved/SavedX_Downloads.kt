@@ -21,6 +21,7 @@ import com.client.xvideos.x.parcer.parseHTML5Player
 import com.client.xvideos.x.parcer.parserItemVideo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import timber.log.Timber
 
 /**
@@ -106,6 +111,28 @@ class SavedX_Downloads(
 
     fun contains(id: Long): Boolean = id > 0L && _downloadedVideoIds.value.contains(id)
     fun contains(item: ItemsX?): Boolean = item != null && contains(item.id)
+
+    /** Сериализует завершение скачивания (запись `.info`) и удаление файлов с диска. */
+    private val cacheMutationLock = ReentrantLock()
+    private val itemGenerations = ConcurrentHashMap<Long, AtomicLong>()
+    private val completionJobs = ConcurrentHashMap.newKeySet<TrackedCompletion>()
+
+    private class TrackedCompletion(val itemId: Long, val job: Job)
+
+    private fun itemGeneration(id: Long): Long = itemGenerations[id]?.get() ?: 0L
+
+    private fun invalidateItem(id: Long) {
+        itemGenerations.computeIfAbsent(id) { AtomicLong(0L) }.incrementAndGet()
+    }
+
+    private fun launchTrackedCompletion(itemId: Long, block: () -> Unit): Job {
+        val job = scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) { block() }
+        val entry = TrackedCompletion(itemId, job)
+        completionJobs.add(entry)
+        job.invokeOnCompletion { completionJobs.remove(entry) }
+        job.start()
+        return job
+    }
 
     /** id роликов, которые сейчас качаются: от нажатия «Скачать» до конца загрузки. */
     private val inFlight = HashSet<Long>()
@@ -203,7 +230,7 @@ class SavedX_Downloads(
             try {
                 enqueueVideo(item)
             } catch (e: CancellationException) {
-                onVideoFinished(item.id, failed = true)
+                onVideoFinished(item.id, failed = false)
                 throw e
             } catch (e: Exception) {
                 Timber.e("X download: не удалось поставить в очередь ${item.id}: ${e.javaClass.simpleName}")
@@ -235,6 +262,7 @@ class SavedX_Downloads(
             }
         }
 
+        val startGen = itemGeneration(item.id)
         val req = kDownloader.newRequestBuilder(videoUrl, dir, "${item.id}.mp4")
             .tag(item.id.toString())
             .build()
@@ -249,20 +277,44 @@ class SavedX_Downloads(
                 onVideoFinished(item.id, failed = true)
                 SnackBar.error("Ошибка скачивания: $it")
             },
-            onCompleted = { scope.launch(Dispatchers.IO) { completeDownload(item) } },
+            onCompleted = {
+                launchTrackedCompletion(item.id) {
+                    completeDownloadChecked(item, startGen)
+                }
+            },
             // Отмена — не сбой: загрузку сняли удалением ролика.
             onCancelled = { onVideoFinished(item.id, failed = false) },
         )
     }
 
+    private fun completeDownloadChecked(item: ItemsX, expectedGeneration: Long) {
+        val completed = cacheMutationLock.withLock {
+            if (itemGeneration(item.id) != expectedGeneration) {
+                onVideoFinished(item.id, failed = false)
+                return@withLock false
+            }
+            completeDownloadLocked(item)
+        }
+        if (completed) {
+            // Сетка кадров для превью перемотки — сразу, в фоне: к первому
+            // открытию ролика она обычно уже готова.
+            storyboards.prepare(item.id)
+        }
+    }
+
     /** Завершает загрузку [item]: видео уже на диске, осталось записать `.info`. */
     internal fun completeDownload(item: ItemsX) {
+        val completed = cacheMutationLock.withLock { completeDownloadLocked(item) }
+        if (completed) storyboards.prepare(item.id)
+    }
+
+    private fun completeDownloadLocked(item: ItemsX): Boolean {
         val file = File(dir, "${item.id}.mp4")
         if (!file.exists() || file.length() == 0L) {
             file.delete()
             onVideoFinished(item.id, failed = true)
             SnackBar.error("Ошибка: скачанный файл пуст")
-            return
+            return false
         }
         // `.info` — до объявления успеха. Раньше «Скачано» показывалось первым,
         // а сбой записи только логировался: видео оставалось на диске без
@@ -275,14 +327,12 @@ class SavedX_Downloads(
             File(dir, "${item.id}.jpg").delete()
             onVideoFinished(item.id, failed = true)
             SnackBar.error("Ошибка: не удалось сохранить данные ролика")
-            return
+            return false
         }
         onVideoFinished(item.id, failed = false)
         SnackBar.success("Скачано")
         loadFromDisk()
-        // Сетка кадров для превью перемотки — сразу, в фоне: к первому
-        // открытию ролика она обычно уже готова.
-        storyboards.prepare(item.id)
+        return true
     }
 
     /**
@@ -357,13 +407,17 @@ class SavedX_Downloads(
      */
     fun delete(item: ItemsX) {
         if (item.id <= 0L) return
+        invalidateItem(item.id)
         scope.launch(Dispatchers.IO) {
-            kDownloader.cancel(item.id.toString())
+            kDownloader.cancelAndJoin(item.id.toString())
+            completionJobs.filter { it.itemId == item.id }.forEach { it.job.join() }
             // Отменённая загрузка не должна держать id «качается» и общий прогресс.
             onVideoFinished(item.id, failed = false)
             storyboards.cancel(item.id)
-            deleteFiles(item.id)
-            loadFromDisk()
+            cacheMutationLock.withLock {
+                deleteFiles(item.id)
+                loadFromDisk()
+            }
             SnackBar.info("Удалено из сохранённого")
         }
     }

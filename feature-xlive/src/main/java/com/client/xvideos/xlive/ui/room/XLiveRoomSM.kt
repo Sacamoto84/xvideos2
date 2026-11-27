@@ -123,8 +123,12 @@ class XLiveRoomSM(
     private var startedUrl: String? = null
 
     init {
-        history.put(XLiveSavedRoom(room))
-        reload()
+        if (room.isNotBlank()) {
+            history.put(XLiveSavedRoom(room))
+            reload()
+        } else {
+            _state.value = XLiveRoomState.Failed("Комната не указана")
+        }
         screenModelScope.launch {
             account.signedIn.collect { signedIn ->
                 if (signedIn) {
@@ -158,6 +162,10 @@ class XLiveRoomSM(
     private fun load() {
         loadJob?.cancel()
         startedUrl = null
+        if (room.isBlank()) {
+            _state.value = XLiveRoomState.Failed("Комната не указана")
+            return
+        }
         loadJob = screenModelScope.launch {
             val next = try {
                 resolve()

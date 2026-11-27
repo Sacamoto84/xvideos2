@@ -47,10 +47,10 @@ internal fun LFullScreenVideo(
     isMuted: Boolean,
     seekDragEnabled: Boolean,
     rotate: Boolean,
+    onTap: () -> Unit,
+    modifier: Modifier = Modifier,
     resetZoomTrigger: Int = 0,
     onZoomChanged: (Boolean) -> Unit = {},
-    modifier: Modifier = Modifier,
-    onTap: () -> Unit
 ) {
     // Соседние страницы пейджера тоже скомпонованы, и каждая поднимала свой
     // ExoPlayer (кодек + буферы). Плеер создаём только когда прокрутка

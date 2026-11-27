@@ -28,8 +28,8 @@ import kotlinx.coroutines.delay
 fun Refresh(
     onRefreshNichesCacheClick: () -> Unit,
     nichesCacheProgress: Float,
-    refreshList: () -> Unit = {},
     modifier: Modifier = Modifier,
+    refreshList: () -> Unit = {},
 ) {
     LaunchedEffect(nichesCacheProgress) {
         if (nichesCacheProgress == 1f) {

@@ -34,10 +34,10 @@ fun DashboardsPaginatedListContent(
     onFavoriteRemove: (ItemsX) -> Unit,
     onDownload: (ItemsX) -> Unit,
     openVideoPlayer: (ItemsX) -> Unit,
+    modifier: Modifier = Modifier,
     onSaveToGallery: (ItemsX) -> Unit = {},
     gridState: LazyGridState = rememberLazyGridState(cacheWindow = viewportFractionCacheWindow()),
     contentPadding: PaddingValues? = null,
-    modifier: Modifier = Modifier,
     localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
 ) {
     val topCutout = getTopInsetDp()

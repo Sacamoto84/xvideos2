@@ -63,7 +63,7 @@ fun ThumbnailSizeSelector(
 
 @Preview(showBackground = true, backgroundColor = 0xFF353535)
 @Composable
-private fun ThumbnailSizeSelectorPreview() = SettingsPreview {
+private fun ThumbnailSizeSelectorPreview() {
     ThumbnailSizeSelector(
         currentValue = "Medium",
         onSelected = {},

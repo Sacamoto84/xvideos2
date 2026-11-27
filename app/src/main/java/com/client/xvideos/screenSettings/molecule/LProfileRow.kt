@@ -5,7 +5,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
  * Строка профиля L в настройках: показывает, сохранён ли аккаунт, и предлагает
@@ -52,7 +51,7 @@ internal fun LProfileRow(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun LProfileRowPreview() = SettingsPreview {
+private fun LProfileRowPreview() {
     SettingsGroup {
         LProfileRow(login = "", hasAccount = false, onLogin = {}, onLogout = {})
     }
@@ -60,7 +59,7 @@ private fun LProfileRowPreview() = SettingsPreview {
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun LProfileRowWithAccountPreview() = SettingsPreview {
+private fun LProfileRowWithAccountPreview() {
     SettingsGroup {
         LProfileRow(login = "preview_user", hasAccount = true, onLogin = {}, onLogout = {})
     }

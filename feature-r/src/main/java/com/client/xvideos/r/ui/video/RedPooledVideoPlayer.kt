@@ -144,10 +144,10 @@ fun RedPooledVideoPlayer(
     onPlayerControlsRelease: (PlayerControls) -> Unit,
     onClick: () -> Unit,
     onBufferingChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     onZoomChanged: (Boolean) -> Unit = {},
     resetZoomTrigger: Int = 0,
     speed: PlayerSpeed = PlayerSpeed.DEFAULT,
-    modifier: Modifier = Modifier,
 ) {
     val mediaItem = remember(index, url) { feedState.mediaItemFor(index, url) }
 
@@ -168,8 +168,11 @@ fun RedPooledVideoPlayer(
         }
     }
 
+    val currentOnBufferingChanged by rememberUpdatedState(onBufferingChanged)
     var isBuffering by remember(player) { mutableStateOf(true) }
-    LaunchedEffect(isBuffering) { onBufferingChanged(isBuffering) }
+    LaunchedEffect(isBuffering, isCurrentPage) {
+        if (isCurrentPage) currentOnBufferingChanged(isBuffering)
+    }
 
     val appLockActive = LocalAppLockActive.current
     val isAppLockActive = appLockActive.value
@@ -325,18 +328,17 @@ fun RedPooledVideoPlayer(
         }
     }
 
+    val currentOnZoomChanged by rememberUpdatedState(onZoomChanged)
     val isZoomed by remember(zoomState) {
         derivedStateOf { isZoomActive(zoomState.scale) }
     }
-    LaunchedEffect(isZoomed) {
-        onZoomChanged(isZoomed)
+    LaunchedEffect(isZoomed, isCurrentPage) {
+        if (isCurrentPage) currentOnZoomChanged(isZoomed)
     }
 
     LaunchedEffect(resetZoomTrigger) {
         if (resetZoomTrigger > 0) {
-            coroutineScope.launch {
-                zoomState.changeScale(1.0f, Offset.Zero)
-            }
+            zoomState.changeScale(1.0f, Offset.Zero)
         }
     }
 
@@ -402,7 +404,7 @@ fun RedPooledVideoPlayer(
                 .zoomable(
                     zoomState = zoomState,
                     enableOneFingerZoom = false,
-                    onTap = { onClick() },
+                    onTap = { currentOnClick() },
                     onDoubleTap = onDoubleTapZoom,
                 ),
             contentScale = ContentScale.Fit,

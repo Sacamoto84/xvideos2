@@ -19,9 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import com.client.xvideos.common.ui.adaptive.CONTENT_MAX_WIDTH_DP
 import com.client.xvideos.l.model.AlbumListFilter as LAlbumListFilter
 import com.client.xvideos.l.net.AlbumListFilterGenreCountResponse
@@ -56,7 +57,7 @@ fun AlbumListFilterOverlay(
                     .clickable(onClick = onClose)
             )
 
-            val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+            val screenHeight = LocalWindowInfo.current.containerDpSize.height.takeIf { it.isSpecified && it > 0.dp } ?: 800.dp
             Surface(
                 modifier = Modifier
                     .fillMaxWidth(0.95f)

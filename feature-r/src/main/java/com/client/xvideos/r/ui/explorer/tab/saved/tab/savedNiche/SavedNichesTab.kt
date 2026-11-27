@@ -38,7 +38,6 @@ import com.client.xvideos.r.model.NichesInfo
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule.DialogNicheDelete
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.savedNiche.molecule.SavedNicheRow
 import com.client.xvideos.r.ui.niche.R_ScreenNiche
-import com.client.xvideos.ui.theme.XvideosTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
@@ -170,16 +169,14 @@ fun SavedNichesTabContent(
 @Preview
 @Composable
 private fun SavedNichesTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        SavedNichesTabContent(
-            niches = listOf(
-                NichesInfo(id = "1", name = "Sample Group", thumbnail = "")
-            ),
-            state = rememberLazyListState(),
-            topInset = 24.dp,
-            scrollPercentProvider = { 0f to 1f },
-            onNicheClick = {},
-            onDeleteClick = {}
-        )
-    }
+    SavedNichesTabContent(
+        niches = listOf(
+            NichesInfo(id = "1", name = "Sample Group", thumbnail = "")
+        ),
+        state = rememberLazyListState(),
+        topInset = 24.dp,
+        scrollPercentProvider = { 0f to 1f },
+        onNicheClick = {},
+        onDeleteClick = {}
+    )
 }

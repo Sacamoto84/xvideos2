@@ -305,8 +305,8 @@ class CalculatorState(
 
     private fun evalFactorial(current: BigDecimal) {
         val isInt = current.stripTrailingZeros().scale() <= 0
-        val longVal = current.toLong()
-        if (isInt && longVal in 0..100) {
+        if (isInt && current >= BigDecimal.ZERO && current <= MAX_FACTORIAL_INPUT) {
+            val longVal = current.toLong()
             var fact = BigInteger.ONE
             for (i in 2..longVal) {
                 fact = fact.multiply(BigInteger.valueOf(i))
@@ -354,7 +354,7 @@ class CalculatorState(
         candidatePin: String,
         codeToTest: String,
         onUnlock: suspend (String) -> Boolean,
-        onUnlockFailed: () -> Unit
+        onUnlockFailed: () -> Unit,
     ): Boolean {
         val unlocked = onUnlock(candidatePin)
         if (!unlocked && candidatePin != codeToTest && isPinCandidate(codeToTest)) {
@@ -533,6 +533,12 @@ class CalculatorState(
 
     internal fun formatNumber(number: BigDecimal): String {
         val stripped = number.stripTrailingZeros()
+        val absDouble = kotlin.math.abs(stripped.toDouble())
+        val isOutOfPlainRange = absDouble >= SCIENTIFIC_THRESHOLD ||
+            (stripped.compareTo(BigDecimal.ZERO) != 0 && absDouble < 1e-10)
+        if (absDouble.isFinite() && isOutOfPlainRange) {
+            return String.format(Locale.US, "%.6e", stripped.toDouble())
+        }
         val plain = stripped.toPlainString()
 
         val isNegative = plain.startsWith("-")
@@ -569,6 +575,8 @@ class CalculatorState(
             code.length in MIN_CODE_DIGITS..MAX_CODE_DIGITS && code.all { it in '0'..'9' }
 
         private const val CALC_SCALE = 12
+        private const val SCIENTIFIC_THRESHOLD = 1e15
+        private val MAX_FACTORIAL_INPUT = BigDecimal(100)
         private val ONE_HUNDRED = BigDecimal("100")
 
         /** [Saver] для сохранения состояния калькулятора при смене конфигурации Android. */

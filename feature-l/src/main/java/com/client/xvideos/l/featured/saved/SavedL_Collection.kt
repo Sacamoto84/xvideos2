@@ -250,6 +250,9 @@ class SavedL_Collection(
                         newRoot.deleteRecursively()
                         false
                     }
+                } catch (e: CancellationException) {
+                    newRoot.deleteRecursively()
+                    throw e
                 } catch (e: Exception) {
                     Timber.e(e, "SavedL_Collection renameCollection() fallback failed")
                     newRoot.deleteRecursively()

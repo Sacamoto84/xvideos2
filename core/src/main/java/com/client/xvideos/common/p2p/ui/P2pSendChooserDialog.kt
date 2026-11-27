@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Маленький диалог: выбрать способ «Поделиться» — системный chooser или P2P рядом.
@@ -50,11 +49,9 @@ fun P2pSendChooserDialog(
 @Preview(showBackground = true)
 @Composable
 fun PreviewP2pSendChooserDialog() {
-    XvideosTheme {
-        P2pSendChooserDialog(
-            onSystem = {},
-            onP2p = {},
-            onDismiss = {}
-        )
-    }
+    P2pSendChooserDialog(
+        onSystem = {},
+        onP2p = {},
+        onDismiss = {}
+    )
 }

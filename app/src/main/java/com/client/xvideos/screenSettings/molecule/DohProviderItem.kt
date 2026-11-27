@@ -11,7 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.R
 import com.client.xvideos.common.net.doh.DohProvider
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 @Composable
 internal fun DohProviderItem(
@@ -44,7 +43,7 @@ internal fun DohProviderItem(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun DohProviderItemPreview() = SettingsPreview {
+private fun DohProviderItemPreview() {
     DohProviderItem(
         provider = DohProvider.CLOUDFLARE,
         isSelected = true,

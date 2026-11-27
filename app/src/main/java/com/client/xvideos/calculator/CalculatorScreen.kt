@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.calculator.converter.ConverterScreen
 import com.client.xvideos.calculator.molecule.CalculatorDisplay
 import com.client.xvideos.calculator.molecule.CalculatorKeypad
-import com.client.xvideos.calculator.molecule.CalculatorTab
+import com.client.xvideos.calculator.model.CalculatorTab
 import com.client.xvideos.calculator.molecule.CalculatorTopBar
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.ui.adaptive.currentWidthClass

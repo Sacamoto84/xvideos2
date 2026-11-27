@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun StatItem(
@@ -28,10 +27,8 @@ fun StatItem(
 @Preview
 @Composable
 private fun StatItemPreview() {
-    XvideosTheme {
-        StatItem(
-            count = "12.3K",
-            label = "Подписчиков"
-        )
-    }
+    StatItem(
+        count = "12.3K",
+        label = "Подписчиков"
+    )
 }

@@ -37,7 +37,6 @@ import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDet
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.LServerLoginRequired
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.serverLikes.molecule.ServerLikesEmptyOrErrorState
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Экран лайкнутых картинок пользователя с сервера L.
@@ -202,17 +201,15 @@ fun ServerLikesTabContent(
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun ServerLikesTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        ServerLikesTabContent(
-            host = remember { LazyRowPictureDetailsHost("preview_server_likes") },
-            pictures = emptyList(),
-            isLoading = false,
-            isRefreshing = false,
-            errorMessage = null,
-            topInset = 24.dp,
-            pullToRefreshState = rememberPullToRefreshState(),
-            onRefresh = {},
-            onRetry = {}
-        )
-    }
+    ServerLikesTabContent(
+        host = remember { LazyRowPictureDetailsHost("preview_server_likes") },
+        pictures = emptyList(),
+        isLoading = false,
+        isRefreshing = false,
+        errorMessage = null,
+        topInset = 24.dp,
+        pullToRefreshState = rememberPullToRefreshState(),
+        onRefresh = {},
+        onRetry = {}
+    )
 }

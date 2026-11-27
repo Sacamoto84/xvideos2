@@ -9,6 +9,7 @@
 
         <!-- Кнопочный навигационный бар: тёмный до применения enableEdgeToEdge -->
         <item name="android:navigationBarColor">#212121</item>
+        <item name="android:windowLightNavigationBar">false</item>
 
         <!-- Чёрный фон -->
         <item name="android:windowBackground">#000000</item>

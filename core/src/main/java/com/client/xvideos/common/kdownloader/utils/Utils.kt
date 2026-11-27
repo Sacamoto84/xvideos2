@@ -108,6 +108,7 @@ fun getRedirectedConnectionIfAny(
     var redirectTimes = 0
     var code: Int = httpClient.getResponseCode()
     var location: String? = httpClient.getResponseHeader("Location")
+    val initialUri = runCatching { java.net.URI(req.url) }.getOrNull()
     while (isRedirection(code)) {
         if (location.isNullOrBlank()) {
             throw IOException("HTTP redirection code $code without Location header")
@@ -124,6 +125,9 @@ fun getRedirectedConnectionIfAny(
         if (req.url.startsWith("https://", ignoreCase = true) && scheme == "http") {
             throw IOException("Insecure HTTPS to HTTP redirect downgrade rejected")
         }
+        if (!isSameOrigin(initialUri, resolvedUri)) {
+            stripSensitiveHeadersOnCrossOriginRedirect(req)
+        }
         req.url = resolvedLocation
         val nextClient = DefaultHttpClient().clone()
         httpClient = nextClient
@@ -137,6 +141,36 @@ fun getRedirectedConnectionIfAny(
         }
     }
     return httpClient
+}
+
+private fun isSameOrigin(a: java.net.URI?, b: java.net.URI?): Boolean {
+    if (a == null || b == null) return false
+    val schemeSame = a.scheme.equals(b.scheme, ignoreCase = true)
+    val hostSame = a.host.equals(b.host, ignoreCase = true)
+    val portA = effectivePort(a)
+    val portB = effectivePort(b)
+    return schemeSame && hostSame && portA == portB
+}
+
+private fun effectivePort(uri: java.net.URI): Int = when {
+    uri.port != -1 -> uri.port
+    uri.scheme.equals("https", ignoreCase = true) -> 443
+    uri.scheme.equals("http", ignoreCase = true) -> 80
+    else -> -1
+}
+
+private fun stripSensitiveHeadersOnCrossOriginRedirect(req: DownloadRequest) {
+    val existing = req.headers ?: return
+    val sanitized = HashMap<String, List<String>>(existing.size)
+    for ((name, values) in existing) {
+        if (!name.equals("Authorization", ignoreCase = true) &&
+            !name.equals("Cookie", ignoreCase = true) &&
+            !name.equals("Proxy-Authorization", ignoreCase = true)
+        ) {
+            sanitized[name] = values
+        }
+    }
+    req.headers = sanitized
 }
 
 private val HEX_DIGITS = "0123456789abcdef".toCharArray()

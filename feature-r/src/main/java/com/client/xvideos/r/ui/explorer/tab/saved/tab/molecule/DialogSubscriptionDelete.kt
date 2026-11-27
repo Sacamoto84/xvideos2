@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.r.common.saved.SelectedCreator
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun DialogSubscriptionDelete(
@@ -81,11 +80,9 @@ fun DialogSubscriptionDelete(
 @Preview(showBackground = true)
 @Composable
 private fun DialogSubscriptionDeletePreview() {
-    XvideosTheme {
-        DialogSubscriptionDelete(
-            user = SelectedCreator(name = "SampleUser", true, "https://via.placeholder.com/96"),
-            onDismiss = {},
-            onConfirm = {}
-        )
-    }
+    DialogSubscriptionDelete(
+        user = SelectedCreator(name = "SampleUser", true, "https://via.placeholder.com/96"),
+        onDismiss = {},
+        onConfirm = {}
+    )
 }

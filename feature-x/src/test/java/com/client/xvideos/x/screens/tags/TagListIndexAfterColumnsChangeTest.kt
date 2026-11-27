@@ -1,6 +1,6 @@
 package com.client.xvideos.x.screens.tags
 
-import com.client.xvideos.x.screens.tags.molecule.tagListIndexAfterColumnsChange
+import com.client.xvideos.x.screens.tags.model.tagListIndexAfterColumnsChange
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

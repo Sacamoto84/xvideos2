@@ -1,5 +1,6 @@
 package com.client.xvideos.common.duress
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import com.client.xvideos.common.applock.AppLockRepository
@@ -58,6 +59,7 @@ object DuressWipeIsolation {
             defaultPrefs = defaultPrefs,
             securePrefs = securePrefs,
             externalDirs = externalDirs,
+            context = null,
             isRetry = false,
         )
     }
@@ -65,14 +67,14 @@ object DuressWipeIsolation {
     fun isolate(context: Context): Boolean {
         val dataDir = context.dataDir
         val defaultPrefs = runCatching { context.defaultSharedPreferences() }.getOrNull()
-        val externalDirs = listOfNotNull(
-            context.getExternalFilesDir(null),
-            context.externalCacheDir,
-        )
-        return isolate(
+        val externalDirs = externalDirsFor(context)
+        return isolateInternal(
             dataDir = dataDir,
             defaultPrefs = defaultPrefs,
+            securePrefs = null,
             externalDirs = externalDirs,
+            context = context,
+            isRetry = false,
         )
     }
 
@@ -81,112 +83,162 @@ object DuressWipeIsolation {
         defaultPrefs: SharedPreferences?,
         securePrefs: SharedPreferences?,
         externalDirs: List<File>,
+        context: Context?,
         isRetry: Boolean,
     ): Boolean {
         val markerFile = File(dataDir, MARKER_FILE_NAME)
-        runCatching {
+        val markerCreated = runCatching {
             markerFile.writeText("wipe_in_progress", Charsets.UTF_8)
         }.onFailure {
             Timber.e(it, "DuressWipeIsolation: не удалось создать маркер стирания")
-            if (!isRetry) {
-                return isolateInternal(dataDir, defaultPrefs, securePrefs, externalDirs, isRetry = true)
-            }
-            return false
+        }.isSuccess
+        if (!markerCreated) {
+            return retryOrFail(dataDir, defaultPrefs, securePrefs, externalDirs, context, isRetry)
         }
 
         val pendingWipeDir = File(dataDir, PENDING_WIPE_DIR_NAME).apply { mkdirs() }
-
-        // 1. Очистка shared_prefs: оставляем только замок и разрешённые настройки
-        cleanSharedPrefs(dataDir, defaultPrefs)
-
-        // 2. Перемещение каталогов данных в pending_wipe
-        var moveFailed = false
-        val entries = dataDir.listFiles() ?: emptyArray()
-        for (entry in entries) {
-            if (entry.name in SKIPPED_DATA_DIR_ENTRIES) continue
-
-            val target = File(pendingWipeDir, entry.name)
-            val moved = if (target.exists()) {
-                entry.renameTo(File(pendingWipeDir, "${entry.name}_${System.currentTimeMillis()}"))
-            } else {
-                entry.renameTo(target)
-            }
-
-            if (!moved) {
-                // Если renameTo не сработал (например, между разными точками монтирования), пробуем рекурсивное удаление
-                Timber.w("DuressWipeIsolation: renameTo не сработал для ${entry.name}, пробую deleteRecursively")
-                if (!entry.deleteRecursively()) {
-                    moveFailed = true
-                }
-            }
+        if (!pendingWipeDir.isDirectory) {
+            Timber.e("DuressWipeIsolation: не удалось создать каталог $PENDING_WIPE_DIR_NAME")
+            return retryOrFail(dataDir, defaultPrefs, securePrefs, externalDirs, context, isRetry)
         }
 
-        // 3. Внешние папки приложения
-        for (extDir in externalDirs) {
-            if (extDir.exists()) {
-                extDir.deleteRecursively()
-            }
-        }
-
-        if (moveFailed) {
+        // 1. Перемещение каталогов данных в pending_wipe и очистка внешних папок
+        val dirsMoved = moveDataDirEntriesToPendingWipe(dataDir, pendingWipeDir)
+        val externalCleared = deleteExternalDirs(externalDirs)
+        if (!dirsMoved || !externalCleared) {
             Timber.e("DuressWipeIsolation: изоляция каталогов завершилась с ошибками")
-            if (!isRetry) {
-                return isolateInternal(dataDir, defaultPrefs, securePrefs, externalDirs, isRetry = true)
-            }
-            return false
+            return retryOrFail(dataDir, defaultPrefs, securePrefs, externalDirs, context, isRetry)
         }
 
-        // 4. Перенос кода уничтожения в код доступа
-        val promoted = AppLockRepository.promoteDuressCodeToAccessCode()
+        // 2. Очистка shared_prefs: оставляем только замок и разрешённые настройки
+        if (!cleanSharedPrefs(dataDir, defaultPrefs)) {
+            Timber.e("DuressWipeIsolation: не удалось синхронно сохранить очищенные настройки")
+            return retryOrFail(dataDir, defaultPrefs, securePrefs, externalDirs, context, isRetry)
+        }
+
+        // 3. Перенос кода уничтожения в код доступа
+        val promoted = AppLockRepository.promoteDuressCode(
+            context = context,
+            securePrefsOverride = securePrefs,
+        )
         if (!promoted) {
-            Timber.w("DuressWipeIsolation: promoteDuressCodeToAccessCode вернул false")
+            Timber.e("DuressWipeIsolation: promoteDuressCode вернул false")
+            return false
         }
 
         return true
     }
 
-    private fun cleanSharedPrefs(dataDir: File, defaultPrefs: SharedPreferences?) {
+    private fun retryOrFail(
+        dataDir: File,
+        defaultPrefs: SharedPreferences?,
+        securePrefs: SharedPreferences?,
+        externalDirs: List<File>,
+        context: Context?,
+        isRetry: Boolean,
+    ): Boolean {
+        if (isRetry) return false
+        return isolateInternal(
+            dataDir = dataDir,
+            defaultPrefs = defaultPrefs,
+            securePrefs = securePrefs,
+            externalDirs = externalDirs,
+            context = context,
+            isRetry = true,
+        )
+    }
+
+    private fun moveDataDirEntriesToPendingWipe(dataDir: File, pendingWipeDir: File): Boolean {
+        var allOk = true
+        val entries = dataDir.listFiles() ?: emptyArray()
+        for (entry in entries) {
+            if (entry.name in SKIPPED_DATA_DIR_ENTRIES) continue
+
+            val target = uniqueCollisionTarget(pendingWipeDir, entry.name)
+            val moved = entry.renameTo(target)
+            if (!moved) {
+                // Если renameTo не сработал (например, между разными точками монтирования), пробуем рекурсивное удаление
+                Timber.w("DuressWipeIsolation: renameTo не сработал для ${entry.name}, пробую deleteRecursively")
+                if (!entry.deleteRecursively()) {
+                    allOk = false
+                }
+            }
+        }
+        return allOk
+    }
+
+    private fun uniqueCollisionTarget(pendingWipeDir: File, baseName: String): File {
+        val direct = File(pendingWipeDir, baseName)
+        if (!direct.exists()) return direct
+        var suffix = 1
+        while (true) {
+            val candidate = File(pendingWipeDir, "${baseName}_$suffix")
+            if (!candidate.exists()) return candidate
+            suffix++
+        }
+    }
+
+    private fun deleteExternalDirs(externalDirs: List<File>): Boolean {
+        var allCleared = true
+        for (extDir in externalDirs) {
+            if (extDir.exists() && !extDir.deleteRecursively()) {
+                Timber.w("DuressWipeIsolation: не удалось удалить внешнюю папку ${extDir.name}")
+                allCleared = false
+            }
+        }
+        return allCleared
+    }
+
+    private fun externalDirsFor(context: Context): List<File> = listOfNotNull(
+        context.getExternalFilesDir(null),
+        context.externalCacheDir,
+    )
+
+    private fun cleanSharedPrefsDirectory(dataDir: File) {
         val sharedPrefsDir = File(dataDir, "shared_prefs")
-        if (sharedPrefsDir.exists()) {
-            val prefFiles = sharedPrefsDir.listFiles() ?: emptyArray()
-            for (file in prefFiles) {
-                val name = file.name
-                // Сохраняем app_lock_secure_prefs.xml и основной XML настроек
-                val isSecurePrefs = name.startsWith("app_lock_secure_prefs")
-                val isDefaultPrefs = name.endsWith("_preferences.xml") || name == "mock_prefs.xml"
-                if (!isSecurePrefs && !isDefaultPrefs) {
-                    file.delete()
-                }
+        if (!sharedPrefsDir.exists()) return
+        val prefFiles = sharedPrefsDir.listFiles() ?: emptyArray()
+        for (file in prefFiles) {
+            val name = file.name
+            // Сохраняем app_lock_secure_prefs.xml и основной XML настроек
+            val isSecurePrefs = name.startsWith("app_lock_secure_prefs")
+            val isDefaultPrefs = name.endsWith("_preferences.xml") || name == "mock_prefs.xml"
+            if (!isSecurePrefs && !isDefaultPrefs) {
+                file.delete()
+            }
+        }
+    }
+
+    // Проверяем Boolean результат commit(), KTX edit(commit = true) возвращает Unit.
+    @SuppressLint("UseKtx")
+    private fun cleanSharedPrefs(dataDir: File, defaultPrefs: SharedPreferences?): Boolean {
+        cleanSharedPrefsDirectory(dataDir)
+        if (defaultPrefs == null) return true
+
+        val allEntries = defaultPrefs.all
+        val preservedValues = mutableMapOf<String, Any?>()
+        for (key in PRESERVED_SETTINGS_KEYS) {
+            if (allEntries.containsKey(key)) {
+                preservedValues[key] = allEntries[key]
             }
         }
 
-        // В основном SharedPreferences очищаем все настройки, кроме белого списка
-        if (defaultPrefs != null) {
-            val allEntries = defaultPrefs.all
-            val preservedValues = mutableMapOf<String, Any?>()
-            for (key in PRESERVED_SETTINGS_KEYS) {
-                if (allEntries.containsKey(key)) {
-                    preservedValues[key] = allEntries[key]
-                }
+        // Гарантируем, что замок и отметка взвода включены
+        preservedValues["app_lock_enabled"] = true
+        preservedValues["app_lock_armed"] = true
+
+        val editor = defaultPrefs.edit()
+        editor.clear()
+        for ((k, v) in preservedValues) {
+            when (v) {
+                is Boolean -> editor.putBoolean(k, v)
+                is Int -> editor.putInt(k, v)
+                is Long -> editor.putLong(k, v)
+                is Float -> editor.putFloat(k, v)
+                is String -> editor.putString(k, v)
             }
-
-            // Гарантируем, что замок и отметка взвода включены
-            preservedValues["app_lock_enabled"] = true
-            preservedValues["app_lock_armed"] = true
-
-            defaultPrefs.edit().apply {
-                clear()
-                for ((k, v) in preservedValues) {
-                    when (v) {
-                        is Boolean -> putBoolean(k, v)
-                        is Int -> putInt(k, v)
-                        is Long -> putLong(k, v)
-                        is Float -> putFloat(k, v)
-                        is String -> putString(k, v)
-                    }
-                }
-            }.commit()
         }
+        return editor.commit()
     }
 
     /**
@@ -197,24 +249,16 @@ object DuressWipeIsolation {
         if (!markerFile.exists()) return
 
         val pendingWipeDir = File(dataDir, PENDING_WIPE_DIR_NAME).apply { mkdirs() }
-        val entries = dataDir.listFiles() ?: emptyArray()
-        for (entry in entries) {
-            if (entry.name in SKIPPED_DATA_DIR_ENTRIES) continue
-
-            val target = File(pendingWipeDir, entry.name)
-            val moved = if (target.exists()) {
-                entry.renameTo(File(pendingWipeDir, "${entry.name}_${System.currentTimeMillis()}"))
-            } else {
-                entry.renameTo(target)
-            }
-            if (!moved) {
-                entry.deleteRecursively()
-            }
-        }
+        moveDataDirEntriesToPendingWipe(dataDir, pendingWipeDir)
+        cleanSharedPrefsDirectory(dataDir)
     }
 
     fun ensureIsolatedBeforeStartup(context: Context) {
+        if (!hasInterruptedWipe(context)) return
         ensureIsolatedBeforeStartup(context.dataDir)
+        deleteExternalDirs(externalDirsFor(context))
+        val defaultPrefs = runCatching { context.defaultSharedPreferences() }.getOrNull()
+        cleanSharedPrefs(context.dataDir, defaultPrefs)
     }
 
     /**
@@ -223,16 +267,21 @@ object DuressWipeIsolation {
      */
     fun cleanPendingWipe(dataDir: File) {
         val pendingWipeDir = File(dataDir, PENDING_WIPE_DIR_NAME)
-        if (pendingWipeDir.exists()) {
-            pendingWipeDir.deleteRecursively()
+        val pendingRemoved = !pendingWipeDir.exists() || pendingWipeDir.deleteRecursively()
+        if (!pendingRemoved) {
+            Timber.w("DuressWipeIsolation: не удалось полностью удалить $PENDING_WIPE_DIR_NAME")
+            return
         }
         val markerFile = File(dataDir, MARKER_FILE_NAME)
-        if (markerFile.exists()) {
-            markerFile.delete()
+        if (markerFile.exists() && !markerFile.delete()) {
+            Timber.w("DuressWipeIsolation: не удалось удалить файл-маркер $MARKER_FILE_NAME")
         }
     }
 
     fun cleanPendingWipe(context: Context) {
+        if (hasInterruptedWipe(context)) {
+            deleteExternalDirs(externalDirsFor(context))
+        }
         cleanPendingWipe(context.dataDir)
     }
 

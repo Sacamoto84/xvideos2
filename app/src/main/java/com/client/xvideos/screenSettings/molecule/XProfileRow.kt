@@ -5,7 +5,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
  * Строка профиля X в настройках — как [LProfileRow]: без аккаунта «Войти»
@@ -58,7 +57,7 @@ internal fun XProfileRow(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun XProfileRowPreview() = SettingsPreview {
+private fun XProfileRowPreview() {
     SettingsGroup {
         XProfileRow(login = "", hasAccount = false, restoreFailure = null, onLogin = {}, onLogout = {})
     }
@@ -66,7 +65,7 @@ private fun XProfileRowPreview() = SettingsPreview {
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun XProfileRowWithAccountPreview() = SettingsPreview {
+private fun XProfileRowWithAccountPreview() {
     SettingsGroup {
         XProfileRow(login = "user@example.com", hasAccount = true, restoreFailure = null, onLogin = {}, onLogout = {})
     }
@@ -74,7 +73,7 @@ private fun XProfileRowWithAccountPreview() = SettingsPreview {
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun XProfileRowRejectedPreview() = SettingsPreview {
+private fun XProfileRowRejectedPreview() {
     SettingsGroup {
         XProfileRow(
             login = "user@example.com",

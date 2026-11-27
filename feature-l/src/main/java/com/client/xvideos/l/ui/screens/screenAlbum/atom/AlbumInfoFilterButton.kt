@@ -13,15 +13,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.l.model.AlbumDetails
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun AlbumInfoFilterButton(
     parsed: AlbumDetails?,
     checked: Boolean,
-    hasAnimatedItems: Boolean = false,
     onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasAnimatedItems: Boolean = false,
 ) {
     if ((parsed?.number_of_animated_pictures ?: 0) <= 0 && !hasAnimatedItems) return
 
@@ -50,11 +49,9 @@ fun AlbumInfoFilterButton(
 @Preview
 @Composable
 private fun AlbumInfoFilterButtonPreview() {
-    XvideosTheme {
-        AlbumInfoFilterButton(
-            parsed = AlbumDetails(number_of_animated_pictures = 5),
-            checked = true,
-            onCheckedChange = {}
-        )
-    }
+    AlbumInfoFilterButton(
+        parsed = AlbumDetails(number_of_animated_pictures = 5),
+        checked = true,
+        onCheckedChange = {}
+    )
 }

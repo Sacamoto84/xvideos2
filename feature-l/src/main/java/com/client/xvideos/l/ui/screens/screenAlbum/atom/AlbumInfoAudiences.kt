@@ -20,8 +20,8 @@ import com.client.xvideos.l.model.Audience
 @Composable
 fun AlbumInfoAudiences(
     parsed: AlbumDetails,
+    modifier: Modifier = Modifier,
     onAudienceClick: (Audience) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     val headerStyle = remember(Theme.L.Type.rowTitle) {
         Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)

@@ -1,10 +1,10 @@
 package com.client.xvideos.common.settings.element
 
 import android.content.SharedPreferences
-import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import timber.log.Timber
 
 /**
  * Логин и пароль, прочитанные одним снимком.
@@ -61,9 +61,15 @@ class SettingElementSecureCredentials(
     /** Сохраняет логин и пароль одной записью хранилища и одним снимком [field]. */
     @Synchronized
     fun save(login: String, password: String) {
-        securePrefs?.edit {
-            putString(loginKey, login)
-            putString(passwordKey, password)
+        if (securePrefs != null) {
+            val saved = securePrefs.edit()
+                .putString(loginKey, login)
+                .putString(passwordKey, password)
+                .commit()
+            if (!saved) {
+                Timber.w("SettingElementSecureCredentials: не удалось сохранить $loginKey")
+                return
+            }
         }
         _field.value = SavedCredentials(login, password, _field.value.revision + 1)
     }

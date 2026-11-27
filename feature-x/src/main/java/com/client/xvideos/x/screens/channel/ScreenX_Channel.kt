@@ -29,7 +29,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.util.getTopInsetDp
-import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelCollaborator
 import com.client.xvideos.x.model.ChannelHeaderModel
 import com.client.xvideos.x.model.ChannelModelFilterItem
@@ -169,11 +168,12 @@ fun ScreenX_ChannelContent(
     onCurrentPageChange: (Int) -> Unit,
     headerOffset: MutableFloatState,
     onBack: () -> Unit,
-    isSubscribed: Boolean = false,
-    onToggleSubscription: () -> Unit = {},
     onSortChange: (ChannelSortOrder) -> Unit,
     onRetryInitial: () -> Unit,
     onOpenVideo: (ItemsX) -> Unit,
+    modifier: Modifier = Modifier,
+    isSubscribed: Boolean = false,
+    onToggleSubscription: () -> Unit = {},
     isFavorite: (Long) -> Boolean = { false },
     localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
     onFavoriteAdd: (ItemsX) -> Unit = {},
@@ -184,7 +184,6 @@ fun ScreenX_ChannelContent(
     onRankingClick: (targetUrl: String, title: String) -> Unit = { _, _ -> },
     onSelectModel: (ChannelModelFilterItem?) -> Unit = {},
     onModelExpandedChange: (Boolean) -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     // До первой удачной загрузки — только индикатор или ошибка на весь экран. После неё
     // загрузку и сбой ленты (смена сортировки, фильтра) показывает страница 0 пейджера.
@@ -343,24 +342,22 @@ private fun ScreenX_ChannelContentPreview() {
     )
     val gridPosition = remember { LazyGridPosition() }
 
-    XvideosTheme(darkTheme = true) {
-        ScreenX_ChannelContent(
-            uiState = sampleUiState,
-            pagesCache = mapOf(0 to sampleVideos),
-            loadingPages = emptySet(),
-            errorPages = emptyMap(),
-            getGridPosition = { gridPosition },
-            onLoadPage = {},
-            onRetryPage = {},
-            initialPage = 0,
-            onCurrentPageChange = {},
-            headerOffset = remember { mutableFloatStateOf(0f) },
-            onBack = {},
-            onSortChange = {},
-            onRetryInitial = {},
-            onOpenVideo = {},
-        )
-    }
+    ScreenX_ChannelContent(
+        uiState = sampleUiState,
+        pagesCache = mapOf(0 to sampleVideos),
+        loadingPages = emptySet(),
+        errorPages = emptyMap(),
+        getGridPosition = { gridPosition },
+        onLoadPage = {},
+        onRetryPage = {},
+        initialPage = 0,
+        onCurrentPageChange = {},
+        headerOffset = remember { mutableFloatStateOf(0f) },
+        onBack = {},
+        onSortChange = {},
+        onRetryInitial = {},
+        onOpenVideo = {},
+    )
 }
 
 

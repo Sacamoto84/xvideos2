@@ -10,10 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,12 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.n.model.NTag
 import com.client.xvideos.n.model.NTagCondition
@@ -43,7 +36,6 @@ import com.client.xvideos.n.model.NTagType
 import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.molecule.NRequestChallengeDialog
-import com.client.xvideos.n.ui.screens.explorer.tab.search.atom.NFilterChip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 
@@ -153,44 +145,6 @@ internal fun NTagCatalog(
     }
 }
 
-@Composable
-private fun <T> NTagCatalogMenu(
-    description: String,
-    selected: String,
-    options: List<Pair<T, String>>,
-    modifier: Modifier,
-    onSelect: (T) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(modifier) {
-        TextButton(
-            onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth().semantics { contentDescription = "$description, $selected" }
-        ) {
-            Text(selected, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        DropdownMenu(expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { (item, label) ->
-                DropdownMenuItem(text = { Text(label) }, onClick = {
-                    onSelect(item)
-                    expanded = false
-                })
-            }
-        }
-    }
-}
-
-@Composable
-private fun NTagCatalogItem(tag: NTag, excluded: Boolean?, onChange: (NTag, Boolean?) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("${tag.name} · ${tag.count}", color = Color.White)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            NFilterChip("Добавить", excluded == false, onClick = { onChange(tag, if (excluded == false) null else false) })
-            NFilterChip("Исключить", excluded == true, onClick = { onChange(tag, if (excluded == true) null else true) })
-        }
-    }
-}
-
 @Preview(name = "Каталог тегов", widthDp = 360, heightDp = 440)
 @Composable
 private fun NTagCatalogPreview() {
@@ -199,13 +153,11 @@ private fun NTagCatalogPreview() {
         NTag(id = 2, type = "tag", name = "monochrome", count = 2100),
         NTag(id = 3, type = "tag", name = "illustrations", count = 1250)
     )
-    Surface(color = Theme.background) {
-        NTagCatalog(
-            selectedTags = listOf(NTagCondition(tags[0], excluded = false), NTagCondition(tags[1], excluded = true)),
-            onTagChange = { _, _ -> },
-            loadPage = { _, _, _ -> Result.success(NTagPage(tags, totalPages = 2)) },
-            findTags = { query, _ -> Result.success(tags.filter { it.name.startsWith(query, ignoreCase = true) }) },
-            modifier = Modifier.fillMaxSize().padding(16.dp)
-        )
-    }
+    NTagCatalog(
+        selectedTags = listOf(NTagCondition(tags[0], excluded = false), NTagCondition(tags[1], excluded = true)),
+        onTagChange = { _, _ -> },
+        loadPage = { _, _, _ -> Result.success(NTagPage(tags, totalPages = 2)) },
+        findTags = { query, _ -> Result.success(tags.filter { it.name.startsWith(query, ignoreCase = true) }) },
+        modifier = Modifier.fillMaxSize().padding(16.dp)
+    )
 }

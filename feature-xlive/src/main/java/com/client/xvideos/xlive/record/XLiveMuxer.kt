@@ -5,7 +5,9 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -51,21 +53,35 @@ object MediaMuxerJoin : XLiveMuxer {
         }
     }
 
-    private fun join(inputs: List<File>, out: File): Long {
+    private suspend fun join(inputs: List<File>, out: File): Long {
         // По извлекателю на дорожку: у сырых файлов она одна, у готового видео — две.
         val extractors = mutableListOf<MediaExtractor>()
         val formats = mutableListOf<MediaFormat>()
         try {
             for (file in inputs) {
-                var track = 0
-                do {
-                    val extractor = MediaExtractor().also { extractors += it }
+                var probeExtractor: MediaExtractor? = MediaExtractor()
+                val trackCount = try {
+                    probeExtractor!!.setDataSource(file.path)
+                    probeExtractor.trackCount
+                } finally {
+                    probeExtractor?.release()
+                }
+                if (trackCount < 1) throw IOException("В дорожке нет данных")
+                for (track in 0 until trackCount) {
+                    val extractor = MediaExtractor()
                     extractor.setDataSource(file.path)
-                    if (extractor.trackCount < 1) throw IOException("В дорожке нет данных")
+                    val format = extractor.getTrackFormat(track)
+                    val mime = format.getString(MediaFormat.KEY_MIME).orEmpty()
+                    if (!mime.startsWith("video/") && !mime.startsWith("audio/")) {
+                        extractor.release()
+                        continue
+                    }
                     extractor.selectTrack(track)
-                    formats += extractor.getTrackFormat(track)
-                } while (++track < extractor.trackCount)
+                    extractors += extractor
+                    formats += format
+                }
             }
+            if (extractors.isEmpty()) throw IOException("В дорожках нет аудио или видео")
             val muxer = MediaMuxer(out.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
             try {
                 val tracks = formats.map { muxer.addTrack(it) }
@@ -98,7 +114,7 @@ object MediaMuxerJoin : XLiveMuxer {
                 .map { check.getTrackFormat(it) }
                 .filter { it.containsKey(MediaFormat.KEY_DURATION) }
                 .maxOfOrNull { it.getLong(MediaFormat.KEY_DURATION) } ?: 0L
-            if (durationUs < expectedUs - VERIFY_TOLERANCE_US) {
+            if ((expectedUs > 0L && durationUs <= 0L) || durationUs < expectedUs - VERIFY_TOLERANCE_US) {
                 throw IOException("Склейка неполная: ${durationUs / US_PER_MS} из ${expectedUs / US_PER_MS} мс")
             }
         } finally {
@@ -107,22 +123,27 @@ object MediaMuxerJoin : XLiveMuxer {
     }
 
     /** Кадры обеих дорожек по возрастанию времени — так mp4 выходит перемежённым. */
-    private fun writeInterleaved(
+    private suspend fun writeInterleaved(
         extractors: List<MediaExtractor>,
         tracks: List<Int>,
         mimes: List<String?>,
         muxer: MediaMuxer,
         base: Long,
     ): Long {
-        val buffer = ByteBuffer.allocateDirect(SAMPLE_BUFFER_BYTES)
+        var buffer = ByteBuffer.allocateDirect(SAMPLE_BUFFER_BYTES)
         val info = MediaCodec.BufferInfo()
         var lastUs = 0L
         val done = BooleanArray(extractors.size)
         while (true) {
+            coroutineContext.ensureActive()
             val index = extractors.indices
                 .filter { !done[it] && extractors[it].sampleTime >= 0 }
                 .minByOrNull { extractors[it].sampleTime } ?: break
             val extractor = extractors[index]
+            val needed = extractor.sampleSize
+            if (needed > buffer.capacity() && needed <= MAX_SAMPLE_BUFFER_BYTES) {
+                buffer = ByteBuffer.allocateDirect(needed.toInt())
+            }
             val size = extractor.readSampleData(buffer, 0)
             if (size < 0) {
                 done[index] = true
@@ -139,4 +160,6 @@ object MediaMuxerJoin : XLiveMuxer {
         }
         return lastUs
     }
+
+    private const val MAX_SAMPLE_BUFFER_BYTES = 32L * 1024 * 1024
 }

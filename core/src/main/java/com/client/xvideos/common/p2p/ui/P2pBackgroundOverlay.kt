@@ -39,6 +39,7 @@ import com.client.xvideos.common.eventBus.Event
 import com.client.xvideos.common.eventBus.EventBus
 import com.client.xvideos.common.theme.Theme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterIsInstance
 
 /**
  * Плашка поверх контента с ходом приёма файлов по P2P (Nearby):
@@ -46,7 +47,8 @@ import kotlinx.coroutines.delay
  */
 @Composable
 fun P2pBackgroundOverlay() {
-    val event by EventBus.events.collectAsStateWithLifecycle(null)
+    val transferEvents = remember { EventBus.events.filterIsInstance<Event.P2pTransferUpdate>() }
+    val event by transferEvents.collectAsStateWithLifecycle(null)
     var visible by rememberSaveable { mutableStateOf(false) }
     var text by rememberSaveable { mutableStateOf("") }
     var progress by remember { mutableFloatStateOf(0f) }

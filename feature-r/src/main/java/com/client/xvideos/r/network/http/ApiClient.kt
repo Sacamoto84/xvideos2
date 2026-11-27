@@ -174,7 +174,9 @@ object ApiClient {
         read: suspend (HttpResponse) -> T,
     ): Result<T> {
         val url = route.url
-        require(url.toHttpUrlOrNull()?.isRedgifsApi() == true)
+        if (url.toHttpUrlOrNull()?.isRedgifsApi() != true) {
+            return Result.failure(IllegalArgumentException("Unsupported R API URL: $url"))
+        }
         val token = RAccountSession.activeToken(account)
             ?: return Result.failure(IllegalStateException("Войдите в R"))
         val result = if (route.isGet) {

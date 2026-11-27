@@ -148,8 +148,6 @@ class GlobalStateTest {
             "common/p2p/P2pReceiveManager.kt::job",
             // Та же причина со стороны отправки.
             "common/p2p/P2pSendPreparer.kt::l",
-            // Признак повреждения keyset Keystore для безопасного пересоздания хранилища.
-            "common/settings/SecureCredentialStore.kt::lastFailureLooksLikeBrokenKeyset",
             // Экземпляр SharedPreferences для настроек приложения.
             "common/settings/Settings.kt::pref",
             // Зашифрованное хранилище учетных данных L и X.

@@ -33,10 +33,10 @@ import kotlinx.coroutines.delay
 @Composable
 fun RefreshMini(
     onRefreshNichesCacheClick: () -> Unit,
+    modifier: Modifier = Modifier,
     nichesCacheProgress: Float = 0f,
     refreshList: () -> Unit = {},
     cacheHour: Long = 1L,
-    modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(nichesCacheProgress) {
         if (nichesCacheProgress == 1f) {

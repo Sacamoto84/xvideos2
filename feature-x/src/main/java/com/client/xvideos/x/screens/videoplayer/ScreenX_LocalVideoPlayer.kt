@@ -1,7 +1,7 @@
 package com.client.xvideos.x.screens.videoplayer
 
-import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.core.net.toUri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -67,7 +67,7 @@ fun ScreenX_LocalVideoPlayerContent(
     val downloadsList by sm.saved.downloads.list.collectAsStateWithLifecycle()
 
     val videoId = item?.id?.takeIf { it > 0L }
-        ?: Uri.parse(fileUrl).lastPathSegment?.substringBefore('.')?.toLongOrNull()
+        ?: fileUrl.toUri().lastPathSegment?.substringBefore('.')?.toLongOrNull()
         ?: 0L
 
     val resolvedItem = remember(item, videoId, downloadsList) {

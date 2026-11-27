@@ -17,7 +17,6 @@ import com.client.xvideos.r.network.http.Route
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.model.dohDiagnosticsMessage
 import com.client.xvideos.x.urlStart
@@ -84,6 +83,6 @@ internal fun DohDiagnosticsGroup(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun DohDiagnosticsGroupPreview() = SettingsPreview {
+private fun DohDiagnosticsGroupPreview() {
     DohDiagnosticsGroup()
 }

@@ -18,7 +18,6 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.common.net.doh.parseDohUrl
@@ -128,6 +127,6 @@ internal fun NetworkSettingsSection(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun NetworkSettingsSectionPreview() = SettingsPreview {
+private fun NetworkSettingsSectionPreview() {
     NetworkSettingsSection()
 }

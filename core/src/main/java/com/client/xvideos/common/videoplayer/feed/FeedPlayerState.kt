@@ -1,15 +1,10 @@
 package com.client.xvideos.common.videoplayer.feed
 
 import android.content.Context
-import android.net.Uri
 import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.annotation.OptIn
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -166,7 +161,7 @@ class FeedPlayerState(
      * и на редиректе, то есть ровно там, где краш и вернулся бы.
      */
     fun mediaItemFor(index: Int, url: String): MediaItem {
-        val uri = Uri.parse(url)
+        val uri = url.toUri()
         return MediaItem.Builder()
             .setUri(uri)
             .setMediaId(index.toString())
@@ -221,10 +216,14 @@ class FeedPlayerState(
     private val playersWithVideoEffects = Collections.newSetFromMap(WeakHashMap<ExoPlayer, Boolean>())
 
     /** Ставили ли [player] видеоэффекты — см. `rotationToApply`. */
-    fun hasVideoEffects(player: ExoPlayer): Boolean = player in playersWithVideoEffects
+    fun hasVideoEffects(player: ExoPlayer): Boolean {
+        verifyMainThread()
+        return player in playersWithVideoEffects
+    }
 
     /** Запоминает, что [player] получил видеоэффекты. */
     fun markVideoEffects(player: ExoPlayer) {
+        verifyMainThread()
         playersWithVideoEffects += player
     }
 
@@ -316,21 +315,4 @@ class FeedPlayerState(
          */
         const val DEFAULT_POOL_CAPACITY = 3
     }
-}
-
-@Composable
-fun rememberFeedPlayerState(
-    poolCapacity: Int = FeedPlayerState.DEFAULT_POOL_CAPACITY,
-): FeedPlayerState {
-    val context = LocalContext.current
-    val state = remember(context, poolCapacity) { FeedPlayerState(context, poolCapacity) }
-    // Освобождение объявлено первым: эффекты снимаются в обратном порядке, и
-    // foreground-режим выключается у ещё живого пула. Раньше пул освобождался
-    // раньше, а режим выключался уже на освобождённом.
-    DisposableEffect(state) { onDispose { state.release() } }
-    LifecycleStartEffect(state) {
-        state.setForegroundMode(true)
-        onStopOrDispose { state.setForegroundMode(false) }
-    }
-    return state
 }

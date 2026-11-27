@@ -24,10 +24,18 @@ object P2pInboxMerger {
             val target = File(mainRoot, file.relativeTo(inboxRoot).path)
             Timber.i("P2P merge: $file -> $target")
             target.parentFile?.mkdirs()
-            if (target.exists()) target.delete()
-            if (!file.renameTo(target)) {
-                file.copyTo(target, overwrite = true)
+            val staged = File(target.parentFile, ".${target.name}.p2p_tmp")
+            val movedToStage = file.renameTo(staged)
+            if (!movedToStage) {
+                file.copyTo(staged, overwrite = true)
                 file.delete()
+            }
+            if (target.exists() && !target.delete()) {
+                Timber.w("P2P merge: не удалось удалить старый $target перед заменой")
+            }
+            if (!staged.renameTo(target)) {
+                staged.copyTo(target, overwrite = true)
+                staged.delete()
             }
         }
         inboxRoot.deleteRecursively()

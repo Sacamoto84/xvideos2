@@ -146,6 +146,9 @@ class AlbumPicsDetails(
     /** Растёт с каждой новой загрузкой: повтор прежней загрузки по нему узнаёт, что устарел. */
     private val loadGeneration = AtomicInteger()
 
+    /** Число вызовов новой загрузки, ожидающих [loadMutex] (пока активны и не отменены). */
+    private val pendingLoadRequests = AtomicInteger()
+
     /**
      * Раньше роль этого мьютекса играл `withContext(Dispatchers.Main)`: он и
      * упорядочивал доступ к [loadedPages] между загрузкой и ретраем, и делал
@@ -268,23 +271,31 @@ class AlbumPicsDetails(
     suspend fun contentUrls(
         pageCacheConfig: RepositoryUriConfig = RepositoryUriConfig.CACHE_RAM
     ) = withContext(dispatcher) {
-        val generation = loadGeneration.incrementAndGet()
-        loadMutex.withLock {
-            stateMutex.withLock {
-                Snapshot.withMutableSnapshot {
-                    pics.clear()
-                    failedPages.clear()
-                    loadedPages.clear()
-                    loadComplete = false
-                    totalPages = null
-                    percentLoad = 0f
-                    isPageRequestInFlight = false
+        pendingLoadRequests.incrementAndGet()
+        try {
+            loadMutex.withLock {
+                pendingLoadRequests.decrementAndGet()
+                val generation = loadGeneration.incrementAndGet()
+                stateMutex.withLock {
+                    Snapshot.withMutableSnapshot {
+                        pics.clear()
+                        failedPages.clear()
+                        loadedPages.clear()
+                        loadComplete = false
+                        totalPages = null
+                        percentLoad = 0f
+                        isPageRequestInFlight = false
+                    }
                 }
-            }
 
-            Timber.d("AlbumPicsDetails [$id] Starting chunked load (config=$pageCacheConfig)")
-            loadMissingPages(pageCacheConfig, generation)
-            Timber.d("AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
+                Timber.d("AlbumPicsDetails [$id] Starting chunked load (config=$pageCacheConfig)")
+                loadMissingPages(pageCacheConfig, generation)
+                Timber.d("AlbumPicsDetails [$id] Chunked load complete: ${pics.size} items loaded, failedPages count: ${failedPages.size}")
+            }
+        } catch (t: Throwable) {
+            // Если корутину отменили в ожидании loadMutex, не оставляем висящий счётчик.
+            pendingLoadRequests.updateAndGet { current -> (current - 1).coerceAtLeast(0) }
+            throw t
         }
     }
 
@@ -316,7 +327,7 @@ class AlbumPicsDetails(
         val pages = totalPages ?: return
         for (page in 2..pages) {
             // Началась новая загрузка: эта работает со списком, который та сейчас очистит.
-            if (generation != loadGeneration.get()) return
+            if (generation != loadGeneration.get() || pendingLoadRequests.get() > 0) return
             if (isPageLoaded(page)) continue
             loadPage(page, config).onSuccess { appendPage(it, pages) }
             delay(PAGE_REQUEST_DELAY_MS)
@@ -333,23 +344,30 @@ class AlbumPicsDetails(
         cachedTotalPages: Int?
     ) = withContext(dispatcher) {
         val corrected = normalizePictureUrls(items)
-        loadGeneration.incrementAndGet()
-        loadMutex.withLock {
-            stateMutex.withLock {
-                Snapshot.withMutableSnapshot {
-                    pics.clear()
-                    failedPages.clear()
-                    loadedPages.clear()
-                    val pages = cachedTotalPages?.coerceAtLeast(1) ?: 1
-                    totalPages = pages
-                    percentLoad = 1f
-                    isPageRequestInFlight = false
-                    loadedPages[1] = corrected
-                    // В кэш попадает только полный альбом.
-                    loadComplete = true
-                    pics.addAll(corrected)
+        pendingLoadRequests.incrementAndGet()
+        try {
+            loadMutex.withLock {
+                pendingLoadRequests.decrementAndGet()
+                loadGeneration.incrementAndGet()
+                stateMutex.withLock {
+                    Snapshot.withMutableSnapshot {
+                        pics.clear()
+                        failedPages.clear()
+                        loadedPages.clear()
+                        val pages = cachedTotalPages?.coerceAtLeast(1) ?: 1
+                        totalPages = pages
+                        percentLoad = 1f
+                        isPageRequestInFlight = false
+                        loadedPages[1] = corrected
+                        // В кэш попадает только полный альбом.
+                        loadComplete = true
+                        pics.addAll(corrected)
+                    }
                 }
             }
+        } catch (t: Throwable) {
+            pendingLoadRequests.updateAndGet { current -> (current - 1).coerceAtLeast(0) }
+            throw t
         }
     }
 
@@ -445,7 +463,9 @@ class AlbumPicsDetails(
 
     private suspend fun clearPageIssue(page: Int) {
         stateMutex.withLock {
-            failedPages.removeAll { it.page == page }
+            Snapshot.withMutableSnapshot {
+                failedPages.removeAll { it.page == page }
+            }
         }
     }
 

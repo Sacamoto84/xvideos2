@@ -46,10 +46,20 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
      * @return Идентификатор загрузки [DownloadRequest.downloadId].
      */
     fun enqueue(req: DownloadRequest): Int {
-        val job = scope.launch(Dispatchers.IO.limitedParallelism(1)) {
+        val job = scope.launch(
+            context = Dispatchers.IO.limitedParallelism(1),
+            start = CoroutineStart.LAZY
+        ) {
             execute(req)
         }
-        req.job = job
+        synchronized(req) {
+            req.job = job
+            if (req.status == Status.CANCELLED) {
+                job.cancel()
+            } else {
+                job.start()
+            }
+        }
         return req.downloadId
     }
 
@@ -99,18 +109,27 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
      * @param req Запрос, подлежащий отмене.
      */
     fun cancel(req: DownloadRequest) {
-        val wasPaused = req.status == Status.PAUSED
-        val tempPath = if (wasPaused) getTempPath(req.dirPath, req.fileName) else null
-        if (wasPaused) {
-            req.reset()
+        cancelAsync(req)
+    }
+
+    /** Отменяет задачу и возвращает фоновую задачу ожидания и очистки БД/временных файлов. */
+    internal fun cancelAsync(req: DownloadRequest): Job {
+        val tempPath: String?
+        val listener: DownloadRequest.Listener?
+        val job: Job?
+        synchronized(req) {
+            val wasPaused = req.status == Status.PAUSED
+            tempPath = if (wasPaused) getTempPath(req.dirPath, req.fileName) else null
+            if (wasPaused) {
+                req.reset()
+            }
+            req.status = Status.CANCELLED
+            listener = req.takeListener()
+            job = req.job
+            job?.cancel()
         }
 
-        req.status = Status.CANCELLED
-        val listener = req.takeListener()
-        val job = req.job
-        job?.cancel()
-
-        dbScope.launch {
+        return dbScope.launch {
             try {
                 job?.join()
                 if (tempPath != null) {
@@ -122,6 +141,15 @@ class DownloadDispatchers(private val dbHelper: DbHelper) {
                 if (listener != null) executeOnMainThread { listener.onError(Constants.CANCELLED) }
             }
         }
+    }
+
+    /** Отменяет задачи, прерывает активные воркеры и дожидается освобождения файлов и БД. */
+    internal suspend fun cancelAllAndJoin(requests: List<DownloadRequest>) {
+        val cleanupJobs = requests.map { cancelAsync(it) }
+        val activeChildren = scope.coroutineContext[Job]?.children?.toList().orEmpty()
+        scope.coroutineContext.cancelChildren()
+        activeChildren.forEach { it.join() }
+        cleanupJobs.joinAll()
     }
 
     /**

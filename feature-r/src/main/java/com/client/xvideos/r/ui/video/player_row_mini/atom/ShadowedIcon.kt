@@ -8,8 +8,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Icon
 import com.client.xvideos.feature.r.R
-import com.composables.core.Icon
 
 @Composable
 fun ShadowedIcon(

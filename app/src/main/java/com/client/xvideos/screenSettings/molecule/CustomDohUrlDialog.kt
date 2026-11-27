@@ -17,7 +17,6 @@ import com.client.xvideos.common.net.doh.parseDohUrl
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.common.ui.excludedFromAutofill
 
 @Composable
@@ -70,7 +69,7 @@ internal fun CustomDohUrlDialog(
 
 @Preview(showBackground = true, backgroundColor = 0xFF353535)
 @Composable
-private fun CustomDohUrlDialogPreview() = SettingsPreview {
+private fun CustomDohUrlDialogPreview() {
     CustomDohUrlDialog(
         initialUrl = "https://dns.google/dns-query",
         onDismiss = {},

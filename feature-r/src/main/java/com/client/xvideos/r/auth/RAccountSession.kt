@@ -73,7 +73,7 @@ object RAccountSession {
         restore()
         val expiredToken = mutex.withLock {
             val profile = status.value as? RAccountStatus.SignedIn ?: return null
-            if (expectedAccount != null && profile !== expectedAccount) return null
+            if (expectedAccount != null && profile != expectedAccount) return null
             val token = session?.token ?: return null
             if (profile.expiresAtMillis > System.currentTimeMillis()) return token
             token

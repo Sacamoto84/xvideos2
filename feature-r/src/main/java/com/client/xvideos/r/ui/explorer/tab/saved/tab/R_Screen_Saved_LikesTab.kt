@@ -28,7 +28,6 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.ScreenAccountSaved
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
-import com.client.xvideos.ui.theme.XvideosTheme
 
 object R_Screen_Saved_LikesTab : Screen {
 
@@ -96,11 +95,9 @@ fun SavedLikesTabContent(
 @Preview
 @Composable
 private fun SavedLikesTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        SavedLikesTabContent(
-            host = null,
-            topInset = getTopInsetDp(),
-            onClickOpenProfile = {}
-        )
-    }
+    SavedLikesTabContent(
+        host = null,
+        topInset = getTopInsetDp(),
+        onClickOpenProfile = {}
+    )
 }

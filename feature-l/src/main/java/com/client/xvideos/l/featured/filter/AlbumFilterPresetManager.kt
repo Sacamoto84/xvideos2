@@ -2,6 +2,7 @@ package com.client.xvideos.l.featured.filter
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.client.xvideos.l.model.AlbumListFilter
 import com.client.xvideos.l.model.SavedAlbumFilter
 import com.client.xvideos.l.model.enum.AlbumType
@@ -170,7 +171,7 @@ object AlbumFilterPresetManager {
     private fun persist(prefs: SharedPreferences, list: List<SavedAlbumFilter>) {
         runCatching {
             val json = LJson.encodeToString(list)
-            prefs.edit().putString(KEY_PRESETS, json).apply()
+            prefs.edit { putString(KEY_PRESETS, json) }
         }.onFailure {
             Timber.e(it, "Failed to persist saved filter presets")
         }

@@ -17,7 +17,6 @@ import com.client.xvideos.r.model.NICHE_VIDEO_ORDERS
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun NicheBottomBar(
@@ -58,10 +57,8 @@ fun NicheBottomBar(
 @Preview
 @Composable
 private fun NicheBottomBarPreview() {
-    XvideosTheme {
-        NicheBottomBar(
-            currentSort = Order.HOT,
-            onSortChange = {},
-        )
-    }
+    NicheBottomBar(
+        currentSort = Order.HOT,
+        onSortChange = {},
+    )
 }

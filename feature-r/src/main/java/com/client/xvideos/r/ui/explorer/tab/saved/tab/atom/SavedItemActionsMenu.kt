@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,27 +18,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.theme.Theme
 
 @Composable
 internal fun SavedItemActionsMenu(
-    actionIcon: ImageVector,
-    actionLabel: String,
-    onAction: () -> Unit,
-) = SavedItemActionsMenu { dismiss ->
-    ExpandMenuActionItem(icon = actionIcon, text = actionLabel) {
-        dismiss()
-        onAction()
-    }
-}
-
-@Composable
-internal fun SavedItemActionsMenu(
-    enabled: Boolean = true,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     iconModifier: Modifier = Modifier,
     onAction: @Composable ColumnScope.(dismiss: () -> Unit) -> Unit,
 ) {
@@ -57,5 +46,13 @@ internal fun SavedItemActionsMenu(
         ) {
             onAction { expanded = false }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun SavedItemActionsMenuPreview() {
+    SavedItemActionsMenu { dismiss ->
+        DropdownMenuItem(text = { Text("Действие") }, onClick = dismiss)
     }
 }

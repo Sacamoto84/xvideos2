@@ -1,7 +1,7 @@
 package com.client.xvideos.screenSettings.backup
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import com.client.xvideos.common.backup.XlrBackupItem
 import com.client.xvideos.common.backup.XlrBackupManager
 import com.client.xvideos.common.backup.XlrBackupOptions
@@ -94,15 +94,15 @@ class XlrBackupEngine @Inject constructor(
         password: CharArray,
         onProgress: (XlrBackupReport) -> Unit,
     ): Result<XlrBackupReport> = withContext(Dispatchers.IO) {
-        XlrBackupManager.createBackup(context, Uri.parse(uri), paths, options, password, onProgress)
+        XlrBackupManager.createBackup(context, uri.toUri(), paths, options, password, onProgress)
     }
 
     override suspend fun detectType(uri: String): XlrBackupType = withContext(Dispatchers.IO) {
-        XlrBackupManager.detectBackupType(context, Uri.parse(uri))
+        XlrBackupManager.detectBackupType(context, uri.toUri())
     }
 
     override suspend fun inspect(uri: String, password: CharArray?): Result<List<XlrBackupItem>> =
-        withContext(Dispatchers.IO) { XlrBackupManager.inspectBackup(context, Uri.parse(uri), password) }
+        withContext(Dispatchers.IO) { XlrBackupManager.inspectBackup(context, uri.toUri(), password) }
 
     override suspend fun restore(
         uri: String,
@@ -110,7 +110,7 @@ class XlrBackupEngine @Inject constructor(
         password: CharArray?,
         mode: XlrRestoreMode,
     ): Result<XlrRestoreResult> = withContext(Dispatchers.IO) {
-        XlrBackupManager.restoreBackup(context, Uri.parse(uri), paths, password, mode)
+        XlrBackupManager.restoreBackup(context, uri.toUri(), paths, password, mode)
     }
 
     override suspend fun afterRestore(paths: Set<String>, log: (String) -> Unit) {

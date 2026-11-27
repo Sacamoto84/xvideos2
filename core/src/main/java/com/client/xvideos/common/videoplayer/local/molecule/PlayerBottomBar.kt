@@ -1,18 +1,15 @@
 package com.client.xvideos.common.videoplayer.local.molecule
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -25,7 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -34,13 +30,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.videoplayer.host.MediaPlayerHost
 import com.client.xvideos.common.videoplayer.model.PlayerSpeed
 import com.client.xvideos.common.videoplayer.model.ScreenResize
 import com.client.xvideos.common.videoplayer.ui.component.CustomSeekBar
 import com.client.xvideos.common.videoplayer.ui.component.PlaybackSpeedMenu
 import com.client.xvideos.common.videoplayer.local.atom.FitModeToggle
+import com.client.xvideos.common.videoplayer.local.atom.PlayerControlIcon
 import com.client.xvideos.common.videoplayer.local.atom.PlayerMuteButton
 import com.client.xvideos.common.videoplayer.local.model.SeekScrub
 import com.client.xvideos.common.videoplayer.local.model.finishSeekDrag
@@ -68,12 +64,13 @@ import java.util.Locale
 @Composable
 fun PlayerBottomBar(
     host: MediaPlayerHost,
+    modifier: Modifier = Modifier,
     isFullScreen: Boolean = false,
     onFullScreen: (() -> Unit)? = null,
     onScrub: (SeekScrub?) -> Unit = {},
-    modifier: Modifier = Modifier,
     muted: Boolean = true,
     onToggleMute: (() -> Unit)? = null,
+    onSpeedMenuExpandedChange: (Boolean) -> Unit = {},
     onTogglePlayPause: () -> Unit = host::togglePlayPause,
 ) {
     // Запоминаем последнюю позицию слайдера, чтобы зафиксировать её по отпусканию.
@@ -189,7 +186,8 @@ fun PlayerBottomBar(
         // Меню выбора скорости воспроизведения
         PlaybackSpeedMenu(
             currentSpeed = host.speed,
-            onSpeedSelected = onSpeedSelected
+            onSpeedSelected = onSpeedSelected,
+            onExpandedChange = onSpeedMenuExpandedChange,
         )
 
         // Переключатель режима масштабирования Fit / Fill
@@ -208,18 +206,6 @@ fun PlayerBottomBar(
                 onClick = onFullScreenClick
             )
         }
-    }
-}
-
-@Composable
-private fun PlayerControlIcon(icon: ImageVector, hint: String, onClick: () -> Unit) {
-    HintTooltip(text = hint) {
-        Icon(
-            imageVector = icon,
-            contentDescription = hint,
-            tint = Color.White,
-            modifier = Modifier.size(28.dp).clickable(onClick = onClick)
-        )
     }
 }
 

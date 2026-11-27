@@ -21,11 +21,12 @@ fun XLiveMessage(
     text: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    actionLabel: String = "Повторить",
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = text, color = XLiveColors.Value, textAlign = TextAlign.Center)
         TextButton(onClick = onRetry) {
-            Text(text = "Повторить", color = XLiveColors.Link)
+            Text(text = actionLabel, color = XLiveColors.Link)
         }
     }
 }

@@ -121,12 +121,14 @@ class ScreenXDashBoardsScreenModel @Inject constructor(
         val epoch = CountryState.userSelectionEpoch
         val category = XCategoryState.current
         val (flag, items) = fetchDashboardPage(index, category)
-        flag?.let { CountryState.updateCurrent(it) }
         val page = items.toImmutableList()
-        // Пока шла загрузка, могли выбрать другую страну или категорию — такую страницу не кэшируем.
-        if (page.isNotEmpty() && epoch == CountryState.userSelectionEpoch && category == XCategoryState.current) {
-            dropPagesOfOtherSelection()
-            dashboardPages[index] = page
+        // Пока шла загрузка, могли выбрать другую страну или категорию — не меняем флаг и страницу не кэшируем.
+        if (epoch == CountryState.userSelectionEpoch && category == XCategoryState.current) {
+            flag?.let { CountryState.updateCurrent(it) }
+            if (page.isNotEmpty()) {
+                dropPagesOfOtherSelection()
+                dashboardPages[index] = page
+            }
         }
         return page
     }

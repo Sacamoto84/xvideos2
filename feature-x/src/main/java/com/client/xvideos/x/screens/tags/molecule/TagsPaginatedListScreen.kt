@@ -32,6 +32,7 @@ import com.client.xvideos.common.ui.atom.TopLoadingBar
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.screens.tags.atom.TagsStateMessage
 import com.client.xvideos.x.screens.tags.model.TagCellActions
+import com.client.xvideos.x.screens.tags.model.tagListIndexAfterColumnsChange
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 

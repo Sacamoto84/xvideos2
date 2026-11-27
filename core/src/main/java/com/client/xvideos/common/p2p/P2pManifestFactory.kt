@@ -1,5 +1,6 @@
 package com.client.xvideos.common.p2p
 
+import com.client.xvideos.common.io.requireInside
 import java.io.File
 
 /** Строит [P2pManifest] из файлов бандла: relativePath считается от [P2pExportBundle.storeRoot]. */
@@ -12,13 +13,11 @@ object P2pManifestFactory {
         metadataFile: File?,
         payloadIds: Map<File, Long>,
     ): P2pManifest {
-        val rootPath = storeRoot.absoluteFile.normalize().path
+        val canonicalRoot = storeRoot.canonicalFile
         val entries = files.map { file ->
-            val abs = file.absoluteFile.normalize().path
-            require(abs.startsWith(rootPath)) { "File $abs is not inside store root $rootPath" }
-            val rel = abs.removePrefix(rootPath)
-                .trimStart(File.separatorChar)
-                .replace(File.separatorChar, '/')
+            val canonicalFile = file.canonicalFile
+            requireInside(canonicalRoot, canonicalFile)
+            val rel = canonicalFile.relativeTo(canonicalRoot).invariantSeparatorsPath
             val payloadId = payloadIds[file] ?: error("Missing payloadId for ${file.name}")
             P2pManifestFile(
                 name = file.name,

@@ -67,7 +67,9 @@ object XLiveSession : XLiveAccount {
         if (!_signedIn.value) return
         Timber.i("XLive: сайт не узнал сессию")
         _signedIn.value = false
-        scope.launch { clearXLiveSessionCookie() }
+        scope.launch {
+            signOutLock.withLock { clearXLiveSessionCookie() }
+        }
     }
 
     override fun onFollowChanged() {

@@ -11,15 +11,17 @@ import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.CreateNewFolder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.expandmenu.LazyExpandMenuAnchor
 import com.client.xvideos.common.gallery.GallerySaver
-import com.client.xvideos.common.kdownloader.KDownloader
+import com.client.xvideos.common.kdownloader.di.KDownloaderEntryPoint
 import com.client.xvideos.common.share.useCaseShareText
 import com.client.xvideos.n.model.NPicture
+import dagger.hilt.android.EntryPointAccessors
 
 /**
  * Выпадающее меню действий для отдельной картинки манги (кнопка «три точки»),
@@ -40,6 +42,7 @@ fun NPictureItemExpandMenu(
     onDelete: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val appContext = remember(context) { context.applicationContext }
 
     LazyExpandMenuAnchor(
         modifier = modifier,
@@ -86,9 +89,12 @@ fun NPictureItemExpandMenu(
 
         val saveToGalleryAction = onSaveToGallery ?: {
             val fileName = "n_${picture.galleryId}_${picture.pageNumber}.${picture.ext}"
+            val kDownloader = EntryPointAccessors
+                .fromApplication(appContext, KDownloaderEntryPoint::class.java)
+                .kDownloader()
             GallerySaver.saveFromUrl(
-                context = context,
-                kDownloader = KDownloader.create(context),
+                context = appContext,
+                kDownloader = kDownloader,
                 url = picture.imageUrl,
                 fileName = fileName
             )

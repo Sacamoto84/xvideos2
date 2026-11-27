@@ -18,11 +18,18 @@ import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import com.google.android.gms.nearby.connection.Strategy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -38,12 +45,30 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     private val client: ConnectionsClient = Nearby.getConnectionsClient(appContext)
     private val serviceId = "${appContext.packageName}.p2p"
 
-    override val events = MutableSharedFlow<P2pEvent>(extraBufferCapacity = 64)
+    override val events = MutableSharedFlow<P2pEvent>(
+        extraBufferCapacity = 256,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+    private val ioSupervisor = SupervisorJob()
+    private val ioScope = CoroutineScope(ioSupervisor + Dispatchers.IO)
 
     /** Накопленные FILE-payload'ы по id, чтобы по завершению отдать готовый File. */
-    private val incomingFiles = HashMap<Long, Payload>()
+    private val incomingFiles = ConcurrentHashMap<Long, Payload>()
+    private val lastProgressEmitMs = AtomicLong(0L)
 
     private fun emit(event: P2pEvent) { events.tryEmit(event) }
+
+    private fun emitProgress(update: PayloadTransferUpdate) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        val isTerminal = update.totalBytes > 0 && update.bytesTransferred >= update.totalBytes
+        val prev = lastProgressEmitMs.get()
+        if (isTerminal || now - prev >= PROGRESS_THROTTLE_MS) {
+            if (isTerminal || lastProgressEmitMs.compareAndSet(prev, now)) {
+                emit(P2pEvent.TransferProgress(update.payloadId, update.bytesTransferred, update.totalBytes))
+            }
+        }
+    }
 
     /**
      * Кладёт принятый FILE-payload во внутренний кеш и отдаёт обычный [File].
@@ -60,20 +85,32 @@ class NearbyClientImpl(context: Context) : NearbyClient {
      */
     private fun receiveToCache(payloadId: Long, file: Payload.File): File? = runCatching {
         val target = File(nearbyCacheDir, payloadId.toString())
-        val descriptor = file.asParcelFileDescriptor()
+        val tempTarget = File(nearbyCacheDir, "$payloadId.part")
+        val descriptor: ParcelFileDescriptor? = file.asParcelFileDescriptor()
         if (descriptor != null) {
             ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { input ->
-                target.outputStream().use { output -> input.copyTo(output) }
+                tempTarget.outputStream().use { output -> input.copyTo(output) }
+            }
+            if (target.exists()) target.delete()
+            if (!tempTarget.renameTo(target)) {
+                tempTarget.copyTo(target, overwrite = true)
+                tempTarget.delete()
             }
             Timber.i("P2P: payload $payloadId принят -> $target (${target.length()} байт)")
             return@runCatching target
         }
 
         // Fallback для старых Android, где дескриптора нет, а java.io.File есть.
+        @Suppress("DEPRECATION")
         val javaFile = file.asJavaFile()
         if (javaFile != null) {
-            javaFile.copyTo(target, overwrite = true)
+            javaFile.copyTo(tempTarget, overwrite = true)
             javaFile.delete()
+            if (target.exists()) target.delete()
+            if (!tempTarget.renameTo(target)) {
+                tempTarget.copyTo(target, overwrite = true)
+                tempTarget.delete()
+            }
             Timber.i("P2P: payload $payloadId принят через javaFile -> $target")
             return@runCatching target
         }
@@ -173,9 +210,11 @@ class NearbyClientImpl(context: Context) : NearbyClient {
     }
 
     override fun stopAll() {
+        ioSupervisor.cancelChildren()
         runCatching { client.stopAllEndpoints() }
         runCatching { client.stopAdvertising() }
         runCatching { client.stopDiscovery() }
+        incomingFiles.values.forEach { payload -> runCatching { payload.close() } }
         incomingFiles.clear()
     }
 
@@ -220,24 +259,29 @@ class NearbyClientImpl(context: Context) : NearbyClient {
             }
         }
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
-            emit(P2pEvent.TransferProgress(update.payloadId, update.bytesTransferred, update.totalBytes))
+            emitProgress(update)
             when (update.status) {
                 PayloadTransferUpdate.Status.SUCCESS -> {
                     // Отправителю — подтверждение доставки (Done только после всех).
                     emit(P2pEvent.PayloadTransferred(update.payloadId))
                     val payload = incomingFiles.remove(update.payloadId) ?: return
-                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                        val received = payload.asFile()?.let { receiveToCache(update.payloadId, it) }
-                        if (received != null) {
-                            emit(P2pEvent.FilePayloadReceived(update.payloadId, received))
-                        } else {
-                            Timber.e("P2P: FILE payload ${update.payloadId} прочитать не удалось")
-                            emit(P2pEvent.PayloadTransferFailed(update.payloadId))
+                    ioScope.launch {
+                        try {
+                            val received = payload.asFile()?.let { receiveToCache(update.payloadId, it) }
+                            if (received != null) {
+                                emit(P2pEvent.FilePayloadReceived(update.payloadId, received))
+                            } else {
+                                Timber.e("P2P: FILE payload ${update.payloadId} прочитать не удалось")
+                                emit(P2pEvent.PayloadTransferFailed(update.payloadId))
+                            }
+                        } finally {
+                            runCatching { payload.close() }
                         }
                     }
                 }
                 PayloadTransferUpdate.Status.FAILURE,
                 PayloadTransferUpdate.Status.CANCELED -> {
+                    incomingFiles.remove(update.payloadId)?.let { runCatching { it.close() } }
                     Timber.w("P2P: payload ${update.payloadId} не доставлен (status=${update.status})")
                     emit(P2pEvent.PayloadTransferFailed(update.payloadId))
                 }
@@ -248,5 +292,6 @@ class NearbyClientImpl(context: Context) : NearbyClient {
 
     private companion object {
         val STRATEGY: Strategy = Strategy.P2P_CLUSTER
+        const val PROGRESS_THROTTLE_MS = 80L
     }
 }

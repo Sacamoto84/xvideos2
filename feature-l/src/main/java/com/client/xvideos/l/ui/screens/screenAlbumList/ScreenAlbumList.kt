@@ -72,8 +72,8 @@ private class ScreenLAlbumList(
 @Composable
 private fun Screen.ScreenAlbumListContent(
     initialFilter: LAlbumListFilter?,
+    modifier: Modifier = Modifier,
     title: String = "",
-    modifier: Modifier = Modifier
 ) {
     val navigator = LocalNavigator.currentOrThrow
     val vm = getScreenModel<ScreenLAlbumListSM, ScreenLAlbumListSM.Factory> { factory ->

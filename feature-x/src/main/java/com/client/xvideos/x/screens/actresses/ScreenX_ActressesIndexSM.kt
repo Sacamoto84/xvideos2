@@ -85,6 +85,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
     private var pagingJob: Job? = null
     private var profileSearchJob: Job? = null
     private var currentPageIndex: Int = 0
+    private var filterGeneration: Int = 0
 
     init {
         loadInitial()
@@ -94,6 +95,8 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
      * Загружает начальную страницу каталога по текущему [currentUrlPath].
      */
     fun loadInitial() {
+        filterGeneration++
+        val requestGeneration = filterGeneration
         initialJob?.cancel()
         pagingJob?.cancel()
         currentPageIndex = 0
@@ -165,13 +168,18 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
         if (!uiState.canLoadMore) return
 
         pagingJob?.cancel()
+        val requestGeneration = filterGeneration
+        val expectedUrlPath = currentUrlPath
         val nextPage = currentPageIndex + 1
 
         val nextPagePath = if (uiState.catalog.nextPageUrl.isNotBlank()) {
             uiState.catalog.nextPageUrl
         } else {
-            val basePath = currentUrlPath.trimEnd('/').replace(Regex("/\\d+$"), "")
-            "$basePath/$nextPage"
+            val rawPath = currentUrlPath.substringBefore('?')
+            val rawQuery = currentUrlPath.substringAfter('?', "")
+            val basePath = rawPath.trimEnd('/').replace(Regex("/\\d+$"), "")
+            val numberedPath = "$basePath/$nextPage"
+            if (rawQuery.isEmpty()) numberedPath else "$numberedPath?$rawQuery"
         }
 
         uiState = uiState.copy(isLoadingMore = true)
@@ -188,6 +196,8 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
                 val parsedCatalog = withContext(Dispatchers.Default) {
                     parseActressesIndexPage(html)
                 }
+
+                if (requestGeneration != filterGeneration || expectedUrlPath != currentUrlPath) return@launch
 
                 val newItems = parsedCatalog.items
                 if (newItems.isEmpty()) {
@@ -209,6 +219,7 @@ class ScreenX_ActressesIndexSM @AssistedInject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (requestGeneration != filterGeneration || expectedUrlPath != currentUrlPath) return@launch
                 Timber.w("ScreenX_ActressesIndexSM: сбой подгрузки следующей страницы %s: %s", nextPagePath.pathForLog(), e.logLabel())
                 uiState = uiState.copy(
                     isLoadingMore = false,

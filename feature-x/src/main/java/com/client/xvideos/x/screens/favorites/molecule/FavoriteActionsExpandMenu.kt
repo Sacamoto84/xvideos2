@@ -32,8 +32,8 @@ import com.client.xvideos.common.theme.Theme
 fun FavoriteActionsExpandMenu(
     onDelete: () -> Unit,
     onDownload: () -> Unit,
-    onSaveToGallery: () -> Unit = {},
     modifier: Modifier = Modifier,
+    onSaveToGallery: () -> Unit = {},
 ) {
     var expanded by remember { mutableStateOf(false) }
 

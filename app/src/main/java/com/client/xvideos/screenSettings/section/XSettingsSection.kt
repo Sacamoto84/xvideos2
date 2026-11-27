@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.molecule.XProfileRow
 
 /**
@@ -38,7 +37,7 @@ internal fun XSettingsSection(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun XSettingsSectionPreview() = SettingsPreview {
+private fun XSettingsSectionPreview() {
     XSettingsSection(
         xLogin = "user@example.com",
         hasXAccount = true,

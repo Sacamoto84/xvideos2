@@ -35,6 +35,8 @@ import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import io.ktor.util.appendIfNameAbsent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /**
@@ -82,7 +84,9 @@ object XLiveApi {
     suspend fun room(name: String): XLiveRoom {
         val response = client.get("$xLiveUrlStart/api/chatvideocontext/${name.encodeURLPathPart()}/")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-        return parseXLiveRoom(response.bodyAsText()) ?: throw IOException("Ответ без room_status")
+        val raw = response.bodyAsText()
+        return withContext(Dispatchers.Default) { parseXLiveRoom(raw) }
+            ?: throw IOException("Ответ без room_status")
     }
 
     /**
@@ -116,7 +120,8 @@ object XLiveApi {
     suspend fun bio(name: String): XLiveBio {
         val response = client.get("$xLiveUrlStart/api/biocontext/${name.encodeURLPathPart()}/")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-        return parseXLiveBio(response.bodyAsText()) ?: throw IOException("Анкета не JSON")
+        val raw = response.bodyAsText()
+        return withContext(Dispatchers.Default) { parseXLiveBio(raw) } ?: throw IOException("Анкета не JSON")
     }
 
     /**
@@ -130,7 +135,9 @@ object XLiveApi {
         val response = client.get("$xLiveUrlStart/api/online/${name.encodeURLPathPart()}/")
         if (response.status == HttpStatusCode.NotFound) return false
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-        return parseXLiveOnline(response.bodyAsText()) ?: throw IOException("Ответ без online")
+        val raw = response.bodyAsText()
+        return withContext(Dispatchers.Default) { parseXLiveOnline(raw) }
+            ?: throw IOException("Ответ без online")
     }
 
     /**
@@ -150,7 +157,9 @@ object XLiveApi {
         val query = roomListQuery(gender, collection, offset, hashtag = hashtag, keywords = keywords, filters = filters)
         val response = client.get("$xLiveUrlStart/api/ts/roomlist/room-list/?$query")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-        return parseXLiveRoomPage(response.bodyAsText()) ?: throw IOException("Ответ без списка комнат")
+        val raw = response.bodyAsText()
+        return withContext(Dispatchers.Default) { parseXLiveRoomPage(raw) }
+            ?: throw IOException("Ответ без списка комнат")
     }
 
     /**
@@ -161,7 +170,9 @@ object XLiveApi {
     suspend fun tags(gender: XLiveGender, sort: XLiveTagSort, page: Int): XLiveTagPage {
         val response = client.get("$xLiveUrlStart/api/ts/hashtags/tag-table-data/?${tagTableQuery(gender, sort, page)}")
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-        return parseXLiveTagPage(response.bodyAsText()) ?: throw IOException("Ответ без списка тегов")
+        val raw = response.bodyAsText()
+        return withContext(Dispatchers.Default) { parseXLiveTagPage(raw) }
+            ?: throw IOException("Ответ без списка тегов")
     }
 
     /**
@@ -192,7 +203,9 @@ object XLiveApi {
         val response = client.get("$xLiveUrlStart/follow/api/online_followed_rooms/")
         response.requireSignedIn()
         if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-        return parseXLiveFollowedCount(response.bodyAsText()) ?: throw IOException("Ответ без total")
+        val raw = response.bodyAsText()
+        return withContext(Dispatchers.Default) { parseXLiveFollowedCount(raw) }
+            ?: throw IOException("Ответ без total")
     }
 
     /** Все страницы подписок в эфире или не в эфире, без промо и повторов. */
@@ -201,8 +214,11 @@ object XLiveApi {
         var offset = 0
         for (page in 1..FOLLOWED_MAX_PAGES) {
             val response = client.get("$xLiveUrlStart/api/ts/roomlist/room-list/?${followedRoomsQuery(offline, offset)}")
+            response.requireSignedIn()
             if (!response.status.isSuccess()) throw IOException("HTTP ${response.status.value}")
-            val result = parseXLiveRoomPage(response.bodyAsText()) ?: throw IOException("Ответ без списка комнат")
+            val raw = response.bodyAsText()
+            val result = withContext(Dispatchers.Default) { parseXLiveRoomPage(raw) }
+                ?: throw IOException("Ответ без списка комнат")
             val regular = result.rooms.filterNot { it.isPromoted }
             rooms += regular
             offset += ROOM_PAGE_SIZE

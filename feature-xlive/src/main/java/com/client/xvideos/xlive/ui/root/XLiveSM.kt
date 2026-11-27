@@ -266,6 +266,7 @@ class XLiveSM(
 
     /** Удалить запись [id] вместе с её файлами. */
     fun removeRecord(id: Long) {
+        if (XLiveRecordings.isBusy(id)) return
         records.remove(id)
     }
 

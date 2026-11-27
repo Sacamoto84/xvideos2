@@ -17,7 +17,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.common.snackbar.SnackBar
 
@@ -70,6 +69,6 @@ internal fun P2PSettingsSection(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun P2PSettingsSectionPreview() = SettingsPreview {
+private fun P2PSettingsSectionPreview() {
     P2PSettingsSection(modifier = Modifier)
 }

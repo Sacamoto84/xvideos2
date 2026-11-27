@@ -1,17 +1,10 @@
-<?xml version="1.0" ?>
+<?xml version='1.0' encoding='utf-8'?>
 <SmellBaseline>
-  <ManuallySuppressedIssues/>
+  <ManuallySuppressedIssues />
   <CurrentIssues>
-    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("download_url") val download_url: String = ""</ID>
-    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("is_manga") val is_manga: Boolean = false</ID>
-    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("number_of_animated_pictures") val number_of_animated_pictures: Int = 0</ID>
-    <ID>ConstructorParameterNaming:AlbumDetails.kt$AlbumDetails$@SerializedName("number_of_pictures") val number_of_pictures: Int = 0</ID>
     <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val album_type: AlbumType = AlbumType.Pictures</ID>
     <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val content_id : ContentId = ContentId.All</ID>
     <ID>ConstructorParameterNaming:AlbumListFilter.kt$AlbumListFilter$val picture_count_rank : PictureCountRank = PictureCountRank.All</ID>
-    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("is_animated") val is_animated: Boolean = false</ID>
-    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_original") val url_to_original: String? = null</ID>
-    <ID>ConstructorParameterNaming:PicsDetails.kt$PicsDetails$@SerializedName("url_to_video") val url_to_video: String? = null</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val A: Map&lt;String, String&gt;? = null // Дополнительные атрибуты</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val CPV: Boolean</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Channel$val F: String</ID>
@@ -33,81 +26,31 @@
     <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val RF: String</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$Pornstar$val T: String</ID>
     <ID>ConstructorParameterNaming:searchModel.kt$SearchResult$val BLACKLISTED: Boolean? = null // Может отсутствовать</ID>
-    <ID>CyclomaticComplexMethod:AppLockSection.kt$@Composable internal fun AppLockPasswordDialog( mode: AppLockDialogMode, onDismiss: () -&gt; Unit, onComplete: () -&gt; Unit )</ID>
-    <ID>CyclomaticComplexMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, data: SettingsDataHolders, onDataChanged: () -&gt; Unit )</ID>
     <ID>CyclomaticComplexMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
     <ID>CyclomaticComplexMethod:LMediaPersist.kt$internal suspend fun lPersistPicsDetailsToFolder( item: PicsDetails, root: File, luscious: Luscious, progress: LDownloadProgress ): Result&lt;File&gt;</ID>
-    <ID>CyclomaticComplexMethod:Repository.kt$Repository$suspend fun openURI( data: String, config: RepositoryUriConfig = RepositoryUriConfig.DIRECT ): Result&lt;String&gt;</ID>
-    <ID>CyclomaticComplexMethod:SortByOrder.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SortByOrder( list: List&lt;Order&gt;, selected: Order, onSelect: (Order) -&gt; Unit, containerColor: Color = Color.Transparent, circle : Boolean = false )</ID>
-    <ID>CyclomaticComplexMethod:UrlImage.kt$@Suppress("UiComposable") @Composable fun UrlImage( url: String, urlGif : String?= null, //url для gif файла modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, loadIndicator: Boolean = true, albumName: String = "", isAnimated: Boolean = false, onSuccess: () -&gt; Unit = {}, onFailure: () -&gt; Unit = {}, autoPlay: Boolean = false, sizeButton: Dp = 32.dp, sizeButtonIcon: Dp = 20.dp, rotate: Boolean = false, //Поворот изображения isVisible: Boolean = true, //new isVisibleLoadingIndicator: Boolean = true, //Показ индикатора прогресса после индикатора загрузки sizeLoadingIndicator: Dp = 32.dp, //Показ индикатора прогресса после индикатора загрузки isVisibleProgressText: Boolean = false, //Показ текста скачанных данных isFullScreen: Boolean = false, //Режим полного экрана с поддержкой поворота backgroung : Color = Color.Transparent, )</ID>
-    <ID>EmptyElseBlock:ExpandMenuVideo.kt$if (it) onClick.invoke()</ID>
-    <ID>ExplicitItLambdaParameter:DashboardsPaginatedListScreen.kt${ index, it -&gt; "${it.id}_$index" }</ID>
-    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; // Refresh will be handled by the collection screen }</ID>
-    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; item.url_to_original?.let { url -&gt; saved.likes.remove(url) } haptic.performHapticFeedback(HapticFeedbackType.Confirm) }</ID>
-    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; onShareClicked(it) }</ID>
-    <ID>ExplicitItLambdaParameter:ExpandMenuVM.kt$ExpandMenuViewModel${ it -&gt; saveToGallery(it) }</ID>
-    <ID>ImplicitDefaultLocale:X_PlayerBottomBar.kt$String.format("%d:%02d", m, sec)</ID>
-    <ID>ImplicitDefaultLocale:X_PlayerBottomBar.kt$String.format("%d:%02d:%02d", h, m, sec)</ID>
-    <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d", minutes, seconds)</ID>
-    <ID>ImplicitDefaultLocale:util.android.kt$String.format("%02d:%02d:%02d", hours, minutes, seconds)</ID>
-    <ID>LongMethod:AlbumFilterDisplay.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AlbumFilterDisplay(startString: String, onRequestApply: (String) -&gt; Unit)</ID>
-    <ID>LongMethod:AlbumListFilterGenres.kt$@Composable fun AlbumListFilterGenres( filter: AlbumListFilter, filterGenreStateCount: List&lt;AlbumListFilterGenreCountResponse&gt;?, onChange: (AlbumListFilter) -&gt; Unit )</ID>
-    <ID>LongMethod:BackupSettingsSection.kt$@Composable internal fun BackupSettingsSection( context: Context, data: SettingsDataHolders, onDataChanged: () -&gt; Unit )</ID>
-    <ID>LongMethod:CanvasTimeDurationLine.kt$@Composable fun CanvasTimeDurationLine1( currentTime: () -&gt; Float, duration: Int, modifier: Modifier = Modifier, timeA: Float = 0f, timeB: Float = 1f, timeABEnable: Boolean, visibleAB: Boolean = true, play: Boolean = false, isBuffering: Boolean = false, onSeek: (Float) -&gt; Unit, // 🔹 при перетаскивании onSeekFinished: (() -&gt; Unit)? = null, // 🔹 когда отпустили isVisibleTime: Boolean = true, isVisibleStep: Boolean = true )</ID>
     <ID>LongMethod:DownloadTask.kt$DownloadTask$suspend fun run(listener: DownloadRequest.Listener)</ID>
     <ID>LongMethod:KeyboardNumber.kt$@Composable fun KeyboardNumber( value: Int, max: Int, theme: KeyboardNumberTheme = KeyboardNumberTheme(), onClick: (Int) -&gt; Unit, )</ID>
-    <ID>LongMethod:L_FullScreenImage.kt$L_FullScreenImage$@OptIn( ExperimentalFoundationApi::class, ExperimentalMaterialApi::class, DelicateCoroutinesApi::class ) @Composable override fun Content()</ID>
-    <ID>LongMethod:RedProfileUserImage.kt$@Composable fun RedProfileCreaterInfo( item: UserInfo, isFollow: Boolean, onFollowClick: () -&gt; Unit )</ID>
     <ID>LongMethod:ScreenP2pSend.kt$ScreenP2pSend$@OptIn(ExperimentalMaterial3Api::class) @Composable override fun Content()</ID>
-    <ID>LongMethod:SortByOrder.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun SortByOrder( list: List&lt;Order&gt;, selected: Order, onSelect: (Order) -&gt; Unit, containerColor: Color = Color.Transparent, circle : Boolean = false )</ID>
-    <ID>LongMethod:UrlImage.kt$@Suppress("UiComposable") @Composable fun UrlImage( url: String, urlGif : String?= null, //url для gif файла modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Crop, loadIndicator: Boolean = true, albumName: String = "", isAnimated: Boolean = false, onSuccess: () -&gt; Unit = {}, onFailure: () -&gt; Unit = {}, autoPlay: Boolean = false, sizeButton: Dp = 32.dp, sizeButtonIcon: Dp = 20.dp, rotate: Boolean = false, //Поворот изображения isVisible: Boolean = true, //new isVisibleLoadingIndicator: Boolean = true, //Показ индикатора прогресса после индикатора загрузки sizeLoadingIndicator: Dp = 32.dp, //Показ индикатора прогресса после индикатора загрузки isVisibleProgressText: Boolean = false, //Показ текста скачанных данных isFullScreen: Boolean = false, //Режим полного экрана с поддержкой поворота backgroung : Color = Color.Transparent, )</ID>
-    <ID>LongParameterList:AppSettingsScreen.kt$( onBack: () -&gt; Unit, imageCacheSizeBytes: Long, storageStats: List&lt;StorageStat&gt;, sizeRedTotal: Long, sizeRedDownload: Long, onClearImageCache: () -&gt; Unit, onClearDownload: () -&gt; Unit, savedRed: SavedRed?, downloadRed: DownloadRed?, savedL: SavedL?, context: Context, onBackupDataChanged: () -&gt; Unit, onRefreshFileStats: () -&gt; Unit )</ID>
-    <ID>LongParameterList:LazyRow123GridItem.kt$( item: GifsInfo, index: Int, isConnected: Boolean, isDownloaded: Boolean, isRunLike: Boolean, isCollection: Boolean, visibleProfileInfo: Boolean, columns: Int, block: () -&gt; BlockRed, redApi: () -&gt; RedApi, savedRed: () -&gt; SavedRed, downloadRed: () -&gt; DownloadRed, onItemClick: () -&gt; Unit, onRefresh: () -&gt; Unit, onClickOpenProfile: (String) -&gt; Unit, onTagClick: (String) -&gt; Unit )</ID>
-    <ID>LongParameterList:R_ScreenNichesTab.kt$( listState: LazyListState, niches: List&lt;Niche&gt;, sortType: Order, onSortTypeChange: (Order) -&gt; Unit, isSearchFocused: Boolean, onUpClick: () -&gt; Unit, onNicheClick: (String) -&gt; Unit, savedRed: () -&gt; SavedRed?, searchWidget: @Composable (Modifier) -&gt; Unit, onRefreshNichesCacheClick: () -&gt; Unit, nichesCacheProgress: Float, countNichesInCache : Int, cacheHour : Long )</ID>
     <ID>MatchingDeclarationName:AlbumTopHits.kt$AlbumTopHitsImpl</ID>
     <ID>MatchingDeclarationName:AlbumsResult.kt$AlbumResult : RepositoryResult</ID>
-    <ID>MatchingDeclarationName:AnimatedZoomStateImpl.kt$AnimatedZoomState : BaseEnhancedZoomState</ID>
-    <ID>MatchingDeclarationName:AppLockSection.kt$AppLockDialogMode</ID>
     <ID>MatchingDeclarationName:Display.kt$DataAlbumFilterDisplay</ID>
     <ID>MatchingDeclarationName:KeyboardNumber.kt$KeyboardNumberTheme</ID>
     <ID>MatchingDeclarationName:LDownloadRecovery.kt$LDownloadRecoveryReport</ID>
-    <ID>MatchingDeclarationName:ScreenAlbum.kt$ScreenLAlbum : Screen</ID>
     <ID>MatchingDeclarationName:ScreenNiche.kt$R_ScreenNiche : Screen</ID>
-    <ID>MatchingDeclarationName:ScreenSaved.kt$R_ScreenSavedTab : Screen</ID>
     <ID>MatchingDeclarationName:SearchItemTagsResponce.kt$SearchItemTagsResponse</ID>
     <ID>MatchingDeclarationName:SnackBarEvent.kt$SnackBar</ID>
-    <ID>MatchingDeclarationName:ZoomStateImpl.kt$ZoomState</ID>
-    <ID>MemberNameEqualsClassName:AlbumInfo.kt$AlbumInfo$val albumInfo = MutableStateFlow( AlbumDetails( id = "", title = "", tags = listOf(), is_manga = false, content = Content("", "", ""), genres = listOf(), cover = Cover(0, 0, "", ""), description = "", audiences = listOf(), number_of_pictures = 0, number_of_animated_pictures = 0, url = "", download_url = "", created = 0.0, modified = 0.0 ) )</ID>
-    <ID>SwallowedException:R_SearchNiches.kt$R_SearchNiches$e: Exception</ID>
-    <ID>SwallowedException:SettingElementList.kt$SettingElementList$e: Exception</ID>
-    <ID>SwallowedException:ZipUtilsTest.kt$ZipUtilsTest$e: IllegalArgumentException</ID>
     <ID>TooGenericExceptionThrown:ExoplayerHelper.kt$throw RuntimeException("DRM state issue: ${e.message}", e)</ID>
     <ID>TooGenericExceptionThrown:ExoplayerHelper.kt$throw RuntimeException("Failed to create DRM session manager: ${e.message}", e)</ID>
     <ID>TooGenericExceptionThrown:ExoplayerHelper.kt$throw RuntimeException("Unsupported DRM scheme: ${e.message}", e)</ID>
     <ID>TooGenericExceptionThrown:Utils.kt$throw RuntimeException("NoSuchAlgorithmException", e)</ID>
     <ID>TooGenericExceptionThrown:Utils.kt$throw RuntimeException("UnsupportedEncodingException", e)</ID>
-    <ID>UnusedParameter:LazyRow123Host.kt$searchNiches: R_SearchNiches</ID>
-    <ID>UnusedParameter:LazyRow123Host.kt$textNiches: String</ID>
-    <ID>UnusedParameter:createPlayerListener.kt$sourceUrl: String? = null</ID>
-    <ID>UnusedPrivateMember:CMPAudioPlayer.android.kt$private fun PlayerSpeed.toFloat(): Float</ID>
-    <ID>UnusedPrivateProperty:ExpandMenuVideoTags.kt$private val tintColor = Color(0xFF48454E)</ID>
-    <ID>UnusedPrivateProperty:Repository.kt$Repository$context: Context</ID>
-    <ID>VariableNaming:AppSettingsScreen.kt$val l_login = Settings.l_login.field.collectAsStateWithLifecycle().value</ID>
-    <ID>VariableNaming:L_ScreenExplorer.kt$L_ScreenExplorer$val columnR_ScreenGifsTab = Settings.l_gifsTab_column_current_count.field.collectAsStateWithLifecycle().value</ID>
-    <ID>VariableNaming:Route.kt$Route$val BASE = "https://api.redgifs.com"</ID>
-    <ID>VariableNaming:ScreenRedMnageBlockSM.kt$ScreenRedManageBlockSM$val _blockList = MutableStateFlow&lt;List&lt;GifsInfo&gt;&gt;(emptyList())</ID>
-    <ID>VariableNaming:ScreenRedProfileSM.kt$ScreenRedProfileSM$val _list = MutableStateFlow&lt;List&lt;GifsInfo&gt;&gt;(emptyList())</ID>
-    <ID>WildcardImport:AnimatedZoomModifier.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:DownloadDispatchers.kt$import kotlinx.coroutines.*</ID>
     <ID>WildcardImport:DownloadTask.kt$import kotlinx.coroutines.*</ID>
-    <ID>WildcardImport:EnhancedZoomModifier.kt$import androidx.compose.runtime.*</ID>
     <ID>WildcardImport:FileDownloadRandomAccessFile.kt$import java.io.*</ID>
-    <ID>WildcardImport:ImageWithConstraints.kt$import androidx.compose.ui.graphics.*</ID>
     <ID>WildcardImport:NetworkTrafficMonitor.kt$import kotlinx.coroutines.*</ID>
     <ID>WildcardImport:NetworkTrafficMonitor.kt$import kotlinx.coroutines.flow.*</ID>
     <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.foundation.layout.*</ID>
     <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.material3.*</ID>
     <ID>WildcardImport:ScreenP2pSend.kt$import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:ZoomModifier.kt$import androidx.compose.runtime.*</ID>
   </CurrentIssues>
 </SmellBaseline>

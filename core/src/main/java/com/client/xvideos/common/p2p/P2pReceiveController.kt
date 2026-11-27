@@ -5,14 +5,19 @@ import com.client.xvideos.common.p2p.nearby.NearbyClient
 import com.client.xvideos.common.p2p.nearby.P2pEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /** Состояние экрана приёма. */
 sealed interface ReceiveState {
@@ -37,20 +42,29 @@ class P2pReceiveController(
     private val _state = MutableStateFlow<ReceiveState>(ReceiveState.Idle)
     val state: StateFlow<ReceiveState> = _state.asStateFlow()
 
-    private val receivedFiles = mutableMapOf<Long, File>()
+    private val receivedFiles = ConcurrentHashMap<Long, File>()
+    private val importMutex = Mutex()
+    @Volatile
+    private var importCompleted = false
+    @Volatile
     private var manifest: P2pManifest? = null
+    @Volatile
     private var currentEndpoint: String? = null
 
     /** Имя телефона-отправителя текущей/последней сессии — для уведомлений. */
     var peerName: String = DEFAULT_PEER_NAME
         private set
-    private var eventsJob: kotlinx.coroutines.Job? = null
-    private var pendingStopJob: kotlinx.coroutines.Job? = null
+    private var eventsJob: Job? = null
+    private var pendingStopJob: Job? = null
+    private var disconnectGraceJob: Job? = null
 
     fun start() {
         Timber.d("P2P Receiver: Starting advertising...")
         pendingStopJob?.cancel()
         pendingStopJob = null
+        disconnectGraceJob?.cancel()
+        disconnectGraceJob = null
+        importCompleted = false
         receivedFiles.clear()
         manifest = null
         currentEndpoint = null
@@ -88,12 +102,19 @@ class P2pReceiveController(
                 manifest = runCatching { P2pManifestCodec.fromBytes(event.bytes) }.getOrNull()
                 if (manifest == null) _state.value = ReceiveState.Error("Битый манифест") else tryImport()
             }
-            is P2pEvent.Disconnected ->
-                // Ошибка только если разрыв случился посреди активной сессии.
-                // Запоздавший disconnect от предыдущей сессии не должен ронять рекламу.
+            is P2pEvent.Disconnected -> {
+                // Ошибка только если разрыв случился посреди активной сессии,
+                // и не пришло завершение копирования FILE-payload в кеш.
                 if (_state.value is ReceiveState.Connecting || _state.value is ReceiveState.Receiving) {
-                    _state.value = ReceiveState.Error("Соединение разорвано")
+                    disconnectGraceJob?.cancel()
+                    disconnectGraceJob = scope.launch {
+                        delay(DISCONNECT_GRACE_MS)
+                        if (shouldFailOnDisconnect()) {
+                            _state.value = ReceiveState.Error("Соединение разорвано")
+                        }
+                    }
                 }
+            }
             is P2pEvent.Failed -> _state.value = ReceiveState.Error(event.message)
             // Недоставленный payload раньше проваливался в `else` и терялся:
             // приём просто ничего не импортировал, молча и без следа на экране.
@@ -105,28 +126,39 @@ class P2pReceiveController(
         }
     }
 
+    private fun shouldFailOnDisconnect(): Boolean {
+        val currentManifest = manifest
+        val allArrived = currentManifest != null &&
+            currentManifest.files.all { receivedFiles.containsKey(it.payloadId) }
+        val awaitingData = _state.value is ReceiveState.Connecting || _state.value is ReceiveState.Receiving
+        return !importCompleted && !allArrived && awaitingData
+    }
+
     private suspend fun tryImport() {
-        val m = manifest ?: return
-        if (!m.files.all { receivedFiles.containsKey(it.payloadId) }) return
-        try {
-            Timber.d("P2P Receiver: All files received, importing bundle...")
-            withContext(Dispatchers.IO) {
-                importer.import(m, receivedFiles.toMap())
+        importMutex.withLock {
+            if (importCompleted) return
+            val m = manifest ?: return
+            if (!m.files.all { receivedFiles.containsKey(it.payloadId) }) return
+            disconnectGraceJob?.cancel()
+            disconnectGraceJob = null
+            try {
+                Timber.d("P2P Receiver: All files received, importing bundle...")
+                withContext(Dispatchers.IO) {
+                    importer.import(m, receivedFiles.toMap())
+                }
+                importCompleted = true
+                _state.value = ReceiveState.Done
+                // Не вызываем stopAll сразу, даем время отправителю получить подтверждение.
+                pendingStopJob = scope.launch {
+                    delay(2000)
+                    if (_state.value is ReceiveState.Done) nearby.stopAll()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "P2P Receiver: Import failed")
+                _state.value = ReceiveState.Error(e.message ?: "Ошибка импорта")
             }
-            _state.value = ReceiveState.Done
-            // Не вызываем stopAll сразу, даем время отправителю получить подтверждение.
-            // Если рекламу успели перезапустить (start() отменяет job и проверка state
-            // не пройдёт) — очистка не должна убить новую рекламу.
-            pendingStopJob = scope.launch {
-                kotlinx.coroutines.delay(2000)
-                if (_state.value is ReceiveState.Done) nearby.stopAll()
-            }
-        } catch (e: CancellationException) {
-            // Отмена scope — не ошибка импорта: показывать её на экране нельзя.
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e, "P2P Receiver: Import failed")
-            _state.value = ReceiveState.Error(e.message ?: "Ошибка импорта")
         }
     }
 
@@ -148,11 +180,15 @@ class P2pReceiveController(
         eventsJob = null
         pendingStopJob?.cancel()
         pendingStopJob = null
+        disconnectGraceJob?.cancel()
+        disconnectGraceJob = null
+        importCompleted = false
         nearby.stopAll()
         _state.value = ReceiveState.Idle
     }
 
     private companion object {
         const val DEFAULT_PEER_NAME = "Устройство"
+        const val DISCONNECT_GRACE_MS = 1200L
     }
 }

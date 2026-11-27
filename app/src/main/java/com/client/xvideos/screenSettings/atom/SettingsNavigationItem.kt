@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 @Composable
 internal fun SettingsNavigationItem(
@@ -27,7 +26,7 @@ internal fun SettingsNavigationItem(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun SettingsNavigationItemPreview() = SettingsPreview {
+private fun SettingsNavigationItemPreview() {
     SettingsNavigationItem(
         page = SettingsPage.Privacy,
         onOpenPage = {}

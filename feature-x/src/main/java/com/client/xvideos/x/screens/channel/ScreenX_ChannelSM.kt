@@ -243,17 +243,22 @@ class ScreenX_ChannelSM @AssistedInject constructor(
     /**
      * Загружает JSON порцию видеороликов с fallback между models и channels.
      */
-    private suspend fun fetchVideosJsonWithFallback(page: Int, isModel: Boolean): String {
+    private data class ResolvedChannelVideos(val json: String, val isModel: Boolean)
+
+    private suspend fun fetchVideosJsonWithFallback(page: Int, isModel: Boolean): ResolvedChannelVideos {
         val effectivePrefix = if (isModel) "models" else "channels"
         var jsonVideos = fetchVideosJson(page, overridePrefix = effectivePrefix)
+        var resolvedIsModel = isModel
         if (jsonVideos.isBlank() || jsonVideos.trim() == "{\"videos\":[]}") {
-            val altPrefix = if (effectivePrefix == "models") "channels" else "models"
+            val altIsModel = !isModel
+            val altPrefix = if (altIsModel) "models" else "channels"
             val altJson = fetchVideosJson(page, overridePrefix = altPrefix)
             if (altJson.isNotBlank() && altJson.trim() != "{\"videos\":[]}") {
                 jsonVideos = altJson
+                resolvedIsModel = altIsModel
             }
         }
-        return jsonVideos
+        return ResolvedChannelVideos(json = jsonVideos, isModel = resolvedIsModel)
     }
 
     /**
@@ -323,15 +328,26 @@ class ScreenX_ChannelSM @AssistedInject constructor(
                 }
 
                 // 2. Загрузка 0-й страницы видео из JSON API
-                val jsonVideos = fetchVideosJsonWithFallback(0, isModel = headerWithRanks.isModel)
+                val resolved = fetchVideosJsonWithFallback(0, isModel = headerWithRanks.isModel)
+                val finalHeader = if (resolved.isModel != headerWithRanks.isModel) {
+                    headerWithRanks.copy(
+                        profileType = if (resolved.isModel) {
+                            com.client.xvideos.x.model.ProfileType.MODEL
+                        } else {
+                            com.client.xvideos.x.model.ProfileType.CHANNEL
+                        }
+                    )
+                } else {
+                    headerWithRanks
+                }
 
                 val result = withContext(Dispatchers.Default) {
-                    parseChannelVideosResponse(jsonVideos)
+                    parseChannelVideosResponse(resolved.json)
                 }
 
                 pagesCache[0] = result.videos
                 uiState = uiState.copy(
-                    header = headerWithRanks,
+                    header = finalHeader,
                     videos = result.videos,
                     totalVideosCount = result.totalVideos ?: 0,
                     error = null,
@@ -371,11 +387,11 @@ class ScreenX_ChannelSM @AssistedInject constructor(
         val job = screenModelScope.launch(start = CoroutineStart.LAZY) {
             val self = coroutineContext[Job]
             try {
-                val jsonVideos = fetchVideosJsonWithFallback(targetPage, isModel = uiState.header.isModel)
+                val resolved = fetchVideosJsonWithFallback(targetPage, isModel = uiState.header.isModel)
 
                 // Неразобранный ответ — ошибка страницы с повтором, а не страница «без видео».
                 val result = withContext(Dispatchers.Default) {
-                    parseChannelVideosResponse(jsonVideos)
+                    parseChannelVideosResponse(resolved.json)
                 }
 
                 pagesCache[targetPage] = result.videos

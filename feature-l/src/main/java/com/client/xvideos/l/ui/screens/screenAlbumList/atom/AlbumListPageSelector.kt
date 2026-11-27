@@ -48,8 +48,8 @@ fun calculateNextAlbumPage(page: Int, pageMax: Int): Int =
 fun AlbumListPageSelector(
     page: Int,
     pageMax: Int,
-    onChange: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
+    onChange: (Int) -> Unit = {},
 ) {
     val haptic = LocalHapticFeedback.current
     var expanded by remember { mutableStateOf(false) }

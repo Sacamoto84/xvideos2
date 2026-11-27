@@ -26,7 +26,6 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.r.ui.auth.molecule.RSignInWebView
-import com.client.xvideos.ui.theme.XvideosTheme
 
 internal object ScreenRLogin : Screen {
     override val key: ScreenKey = "RLogin"
@@ -78,7 +77,5 @@ fun ScreenRLoginContent(onClose: () -> Unit, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun ScreenRLoginContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        ScreenRLoginContent(onClose = {})
-    }
+    ScreenRLoginContent(onClose = {})
 }

@@ -16,7 +16,6 @@ import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.components.SettingsUncheckedColor
 
@@ -76,7 +75,7 @@ internal fun DohProviderSelectionGroup(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun DohProviderSelectionGroupPreview() = SettingsPreview {
+private fun DohProviderSelectionGroupPreview() {
     DohProviderSelectionGroup(
         currentProvider = DohProvider.CLOUDFLARE,
         customUrl = "",

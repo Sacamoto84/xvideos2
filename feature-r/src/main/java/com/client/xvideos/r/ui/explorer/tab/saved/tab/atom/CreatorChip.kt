@@ -28,10 +28,10 @@ import com.client.xvideos.common.theme.Theme
 @Composable
 fun CreatorChip(
     creator: String,
-    url: String? = null,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    url: String? = null,
     onLongClick: () -> Unit = {}
 ) {
     Row(

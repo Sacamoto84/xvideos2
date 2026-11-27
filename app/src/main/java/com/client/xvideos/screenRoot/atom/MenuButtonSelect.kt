@@ -35,10 +35,10 @@ import com.client.xvideos.R
 @Composable
 fun MenuButtonSelect(
     iconId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     tag: String = "",
     iconHeight: Dp = IconAreaHeight,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
 ) {
     val buttonShape = RoundedCornerShape(16.dp)
     val baseModifier = modifier

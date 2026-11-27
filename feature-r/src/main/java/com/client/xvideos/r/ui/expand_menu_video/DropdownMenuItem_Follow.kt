@@ -1,17 +1,11 @@
 package com.client.xvideos.r.ui.expand_menu_video
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PermIdentity
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.network.api.RedApi
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -52,27 +46,4 @@ fun DropdownMenuItem_Follow(item: GifsInfo? = null, redApi: () -> RedApi, savedR
         isFollowed = isFollowed,
         onClick = handleClick
     )
-}
-
-@Composable
-fun DropdownMenuItem_FollowContent(
-    isFollowed: Boolean,
-    onClick: () -> Unit
-) {
-    ExpandMenuActionItem(
-        icon = if (isFollowed) Icons.Default.Person else Icons.Default.PermIdentity,
-        text = if (isFollowed) "Отписаться" else "Подписаться",
-        onClick = onClick
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun DropdownMenuItem_FollowPreview() {
-    XvideosTheme {
-        DropdownMenuItem_FollowContent(
-            isFollowed = false,
-            onClick = {}
-        )
-    }
 }

@@ -105,8 +105,8 @@ fun ScreenLAlbumDetailsHeader(
         }
 
         Spacer(modifier = Modifier.height(4.dp))
-        AlbumInfoGreeting(parsed, onGenreClick)
-        AlbumInfoAudiences(parsed, onAudienceClick)
+        AlbumInfoGreeting(parsed = parsed, onGenreClick = onGenreClick)
+        AlbumInfoAudiences(parsed = parsed, onAudienceClick = onAudienceClick)
         val activeTags = remember(parsed.tags) {
             parsed.tags.reversed().filter { it.count > 0 }
         }

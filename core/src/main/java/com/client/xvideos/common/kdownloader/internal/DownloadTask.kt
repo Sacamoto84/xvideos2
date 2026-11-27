@@ -14,6 +14,7 @@ import com.client.xvideos.common.kdownloader.utils.getRedirectedConnectionIfAny
 import com.client.xvideos.common.kdownloader.utils.getTempPath
 import com.client.xvideos.common.kdownloader.utils.renameFileName
 import com.client.xvideos.common.util.invokeOnCancellation
+import com.client.xvideos.common.util.runCatchingCancellable
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -119,9 +120,28 @@ class DownloadTask(
      * Удаляет запись из БД после завершения или при отмене задачи.
      */
     private suspend fun removeNoMoreNeededModelFromDatabase() {
-        withContext(Dispatchers.IO) {
-            dbHelper.remove(req.downloadId)
+        withContext(NonCancellable + Dispatchers.IO) {
+            runCatchingCancellable {
+                dbHelper.remove(req.downloadId)
+            }.onFailure {
+                Timber.e(it, "KDownloader: dbHelper.remove(${req.downloadId}) failed")
+            }
         }
+    }
+
+    private suspend fun cleanupCancelled(
+        outStream: FileDownloadOutputStream?,
+        listener: DownloadRequest.Listener,
+    ) {
+        withContext(NonCancellable + Dispatchers.IO) {
+            closeAllSafely(outStream, syncProgress = false)
+            this@DownloadTask.outputStream = null
+            deleteTempFile()
+            removeNoMoreNeededModelFromDatabase()
+        }
+        req.reset()
+        req.status = Status.CANCELLED
+        listener.onError(Constants.CANCELLED)
     }
 
     /**
@@ -163,8 +183,9 @@ class DownloadTask(
                     // Восстановление прогресса из БД при наличии существующего файла
                     if (model != null) {
                         if (file.exists()) {
-                            req.totalBytes = (model.totalBytes)
-                            req.downloadedBytes = (model.downloadedBytes)
+                            val diskLength = file.length()
+                            req.totalBytes = model.totalBytes
+                            req.downloadedBytes = model.downloadedBytes.coerceIn(0L, diskLength)
                         } else {
                             removeNoMoreNeededModelFromDatabase()
                             req.downloadedBytes = 0
@@ -241,9 +262,15 @@ class DownloadTask(
                         req.downloadedBytes = 0
                     }
 
-                    if (totalBytes == 0L) {
-                        totalBytes = redirectedClient.getContentLength()
-                        req.totalBytes = (totalBytes)
+                    if (totalBytes <= 0L) {
+                        totalBytes = if (isResumeSupported) {
+                            parseTotalBytesFromContentRange(redirectedClient.getResponseHeader("Content-Range"))
+                                ?: redirectedClient.getContentLength().takeIf { it > 0L }?.let { req.downloadedBytes + it }
+                                ?: -1L
+                        } else {
+                            redirectedClient.getContentLength()
+                        }
+                        req.totalBytes = totalBytes
                     }
 
                     if (isResumeSupported && model == null) {
@@ -252,10 +279,15 @@ class DownloadTask(
 
                     inputStream = redirectedClient.getInputStream()
                     if (inputStream == null) {
-                        closeAllSafely(null)
+                        closeAllSafely(null, syncProgress = false)
+                        val wasCancelled = req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true
+                        val wasPaused = !wasCancelled && req.status == Status.PAUSED
+                        if (wasPaused) {
+                            listener.onPause()
+                            return@withContext
+                        }
                         deleteTempFile()
                         removeNoMoreNeededModelFromDatabase()
-                        val wasCancelled = req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true
                         req.reset()
                         if (wasCancelled) {
                             req.status = Status.CANCELLED
@@ -284,12 +316,7 @@ class DownloadTask(
                     this@DownloadTask.outputStream = outStream
 
                     if (req.status === Status.CANCELLED) {
-                        closeAllSafely(outStream)
-                        this@DownloadTask.outputStream = null
-                        deleteTempFile()
-                        removeNoMoreNeededModelFromDatabase()
-                        req.reset()
-                        listener.onError(Constants.CANCELLED)
+                        cleanupCancelled(outStream, listener)
                         return@withContext
                     } else if (req.status === Status.PAUSED) {
                         sync(outStream)
@@ -303,8 +330,9 @@ class DownloadTask(
                     }
 
                     val stream = inputStream ?: run {
-                        closeAllSafely(outStream)
+                        closeAllSafely(outStream, syncProgress = false)
                         this@DownloadTask.outputStream = null
+                        req.status = Status.FAILED
                         listener.onError("Input stream closed")
                         return@withContext
                     }
@@ -318,12 +346,7 @@ class DownloadTask(
                         }
 
                         if (req.status === Status.CANCELLED) {
-                            closeAllSafely(outStream)
-                            this@DownloadTask.outputStream = null
-                            deleteTempFile()
-                            removeNoMoreNeededModelFromDatabase()
-                            req.reset()
-                            listener.onError(Constants.CANCELLED)
+                            cleanupCancelled(outStream, listener)
                             return@withContext
                         } else if (req.status === Status.PAUSED) {
                             sync(outStream)
@@ -332,13 +355,7 @@ class DownloadTask(
                         }
 
                         if (!isActive || req.job?.isActive == false) {
-                            closeAllSafely(outStream)
-                            this@DownloadTask.outputStream = null
-                            deleteTempFile()
-                            removeNoMoreNeededModelFromDatabase()
-                            req.reset()
-                            req.status = Status.CANCELLED
-                            listener.onError(Constants.CANCELLED)
+                            cleanupCancelled(outStream, listener)
                             return@withContext
                         }
                         outStream.write(buff, 0, byteCount)
@@ -356,13 +373,7 @@ class DownloadTask(
                     } while (true)
 
                     if (!isActive || req.job?.isActive == false || req.status === Status.CANCELLED) {
-                        closeAllSafely(outStream)
-                        this@DownloadTask.outputStream = null
-                        deleteTempFile()
-                        removeNoMoreNeededModelFromDatabase()
-                        req.reset()
-                        req.status = Status.CANCELLED
-                        listener.onError(Constants.CANCELLED)
+                        cleanupCancelled(outStream, listener)
                         return@withContext
                     } else if (req.status === Status.PAUSED) {
                         sync(outStream)
@@ -372,7 +383,7 @@ class DownloadTask(
 
                     // Guard 1: Защита от создания 0-байтовых файлов при пустом ответе сервера
                     if (req.downloadedBytes == 0L) {
-                        closeAllSafely(outStream)
+                        closeAllSafely(outStream, syncProgress = false)
                         this@DownloadTask.outputStream = null
                         deleteTempFile()
                         removeNoMoreNeededModelFromDatabase()
@@ -384,7 +395,7 @@ class DownloadTask(
 
                     // Guard 2: Защита от недокачанных файлов (сверка с Content-Length)
                     if (totalBytes > 0 && req.downloadedBytes < totalBytes) {
-                        closeAllSafely(outStream)
+                        closeAllSafely(outStream, syncProgress = isResumeSupported)
                         this@DownloadTask.outputStream = null
                         if (!isResumeSupported) {
                             deleteTempFile()
@@ -398,7 +409,7 @@ class DownloadTask(
 
                     // Финальное переименование временного .temp файла в целевой
                     val path = getPath(req.dirPath, req.fileName)
-                    closeAllSafely(outStream)
+                    closeAllSafely(outStream, syncProgress = false)
                     this@DownloadTask.outputStream = null
                     renameFileName(tempPath, path)
                     removeNoMoreNeededModelFromDatabase()
@@ -406,40 +417,35 @@ class DownloadTask(
                     listener.onCompleted()
                     return@withContext
                 } catch (e: CancellationException) {
-                    closeAllSafely(this@DownloadTask.outputStream)
-                    this@DownloadTask.outputStream = null
-                    deleteTempFile()
-                    removeNoMoreNeededModelFromDatabase()
-                    req.reset()
-                    req.status = Status.CANCELLED
-                    listener.onError(Constants.CANCELLED)
+                    cleanupCancelled(this@DownloadTask.outputStream, listener)
                     throw e
                 } catch (e: Exception) {
-                    closeAllSafely(this@DownloadTask.outputStream)
-                    this@DownloadTask.outputStream = null
                     val wasCancelled = req.status == Status.CANCELLED || !isActive || req.job?.isCancelled == true
-                    val wasPaused = req.status == Status.PAUSED
+                    val wasPaused = !wasCancelled && req.status == Status.PAUSED
+                    if (wasCancelled) {
+                        cleanupCancelled(this@DownloadTask.outputStream, listener)
+                        return@withContext
+                    }
+                    closeAllSafely(this@DownloadTask.outputStream, syncProgress = wasPaused || isResumeSupported)
+                    this@DownloadTask.outputStream = null
                     if (wasPaused) {
                         listener.onPause()
                         return@withContext
                     }
-                    if (wasCancelled || !isResumeSupported) {
+                    if (!isResumeSupported) {
                         deleteTempFile()
                         removeNoMoreNeededModelFromDatabase()
                         req.reset()
                     }
-                    if (wasCancelled) {
-                        req.status = Status.CANCELLED
-                        listener.onError(Constants.CANCELLED)
-                    } else {
-                        req.status = Status.FAILED
-                        listener.onError(e.toString())
-                    }
+                    req.status = Status.FAILED
+                    listener.onError(e.toString())
                     return@withContext
                 } finally {
                     cancelHandler?.dispose()
-                    closeAllSafely(this@DownloadTask.outputStream)
-                    this@DownloadTask.outputStream = null
+                    withContext(NonCancellable + Dispatchers.IO) {
+                        closeAllSafely(this@DownloadTask.outputStream, syncProgress = false)
+                        this@DownloadTask.outputStream = null
+                    }
                 }
             }
         }
@@ -511,32 +517,31 @@ class DownloadTask(
     /**
      * Потокобезопасное закрытие всех активных сетевых соединений и файловых потоков с подавлением ошибок.
      */
-    private suspend fun closeAllSafely(outputStream: FileDownloadOutputStream?) {
-        try {
-            httpClient?.close()
-        } catch (e: Exception) {
-            Timber.e(e, "KDownloader: httpClient.close() failed")
-        } finally {
+    private suspend fun closeAllSafely(
+        outputStream: FileDownloadOutputStream?,
+        syncProgress: Boolean = true,
+    ) {
+        withContext(NonCancellable + Dispatchers.IO) {
+            runCatchingCancellable { httpClient?.close() }
+                .onFailure { Timber.e(it, "KDownloader: httpClient.close() failed") }
             httpClient = null
-        }
 
-        try {
-            // Было inputStream!!: если загрузка сорвалась до открытия потока,
-            // это NPE, а он не IOException — то есть пролетал мимо своего же
-            // catch и валил уборку целиком.
-            inputStream?.close()
-        } catch (e: IOException) {
-            Timber.e(e, "KDownloader: inputStream.close() failed")
-        } finally {
-            inputStream = null
-        }
-
-        if (outputStream != null) {
             try {
-                sync(outputStream)
-            } catch (e: Exception) {
-                Timber.e(e, "KDownloader: sync(outputStream) failed")
+                // Было inputStream!!: если загрузка сорвалась до открытия потока,
+                // это NPE, а он не IOException — то есть пролетал мимо своего же
+                // catch и валил уборку целиком.
+                inputStream?.close()
+            } catch (e: IOException) {
+                Timber.e(e, "KDownloader: inputStream.close() failed")
             } finally {
+                inputStream = null
+            }
+
+            if (outputStream != null) {
+                if (syncProgress) {
+                    runCatchingCancellable { sync(outputStream) }
+                        .onFailure { Timber.e(it, "KDownloader: sync(outputStream) failed") }
+                }
                 try {
                     outputStream.close()
                 } catch (e: IOException) {
@@ -589,5 +594,12 @@ class DownloadTask(
     private fun isSuccessful(): Boolean {
         return (responseCode >= HttpURLConnection.HTTP_OK
                 && responseCode < HttpURLConnection.HTTP_MULT_CHOICE)
+    }
+
+    private fun parseTotalBytesFromContentRange(header: String): Long? {
+        val slash = header.lastIndexOf('/')
+        if (slash < 0 || slash == header.lastIndex) return null
+        val totalPart = header.substring(slash + 1).trim()
+        return totalPart.toLongOrNull()?.takeIf { it > 0L }
     }
 }

@@ -20,6 +20,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -89,13 +91,14 @@ fun ScreenLAlbumBody(
         if (parsed == null) return@LaunchedEffect
 
         val allPics = albumPicsDetails.pics.toList()
-        val newFilteredAnimatedPics = allPics.filter { it.isAnimatedMedia() }
-
-        if (state.showOnlyAnimated) {
-            host.replaceFilteredPictures(newFilteredAnimatedPics)
+        val nextPics = if (state.showOnlyAnimated) {
+            withContext(Dispatchers.Default) {
+                allPics.filter { it.isAnimatedMedia() }
+            }
         } else {
-            host.replaceFilteredPictures(allPics)
+            allPics
         }
+        host.replaceFilteredPictures(nextPics)
     }
 
     val onGenreClick = remember(navigator) {
@@ -127,7 +130,9 @@ fun ScreenLAlbumBody(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            if (albumPicsDetails.percentLoad != 1.0f) {
+            val showProgress = albumPicsDetails.isPageRequestInFlight ||
+                (albumPicsDetails.percentLoad < 1.0f && albumPicsDetails.failedPages.isEmpty())
+            if (showProgress) {
                 LinearProgressIndicator(
                     progress = { albumPicsDetails.percentLoad },
                     modifier = Modifier.fillMaxWidth(),

@@ -35,14 +35,14 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.core.R
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.CreatorMetric
-import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.SavedItemActionsMenu
+import com.client.xvideos.r.ui.explorer.tab.saved.tab.atom.SavedSingleActionMenu
 
 @Composable
 fun CreatorListItem(
     item: UserInfo,
     onClick: (String) -> Unit,
-    onDelete: ((UserInfo) -> Unit)? = null,
     modifier: Modifier = Modifier,
+    onDelete: ((UserInfo) -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val handleItemClick = remember(item.username, onClick) { { onClick(item.username) } }
@@ -136,7 +136,7 @@ fun CreatorListItem(
 
         if (onDelete != null) {
             val handleDeleteClick = remember(item, onDelete) { { onDelete(item) } }
-            SavedItemActionsMenu(
+            SavedSingleActionMenu(
                 actionIcon = Icons.Filled.PersonRemove,
                 actionLabel = "Отписаться",
                 onAction = handleDeleteClick,

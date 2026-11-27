@@ -14,17 +14,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import com.client.xvideos.xlive.auth.SESSION_COOKIE
 import com.client.xvideos.xlive.auth.isPastSignInPages
 import com.client.xvideos.xlive.auth.signInStep
@@ -54,10 +62,32 @@ fun XLiveLoginPage(
     onLeftSignInPages: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (LocalInspectionMode.current) {
+        Box(
+            modifier = modifier.fillMaxSize().background(XLiveColors.Background),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Вход XLive", color = Color.LightGray)
+        }
+        return
+    }
+
     val currentOnLeft by rememberUpdatedState(onLeftSignInPages)
+    val ioScope = rememberCoroutineScope()
+    val flushCookiesAsync = {
+        ioScope.launch(Dispatchers.IO) { runCatching { xLiveWebViewCookies()?.flush() } }
+        Unit
+    }
     var progress by remember { mutableIntStateOf(0) }
-    var failed by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(!url.startsWith("https://", ignoreCase = true)) }
     var webView by remember { mutableStateOf<WebView?>(null) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        webView?.onResume()
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        webView?.onPause()
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
@@ -66,16 +96,21 @@ fun XLiveLoginPage(
                     context = context,
                     onProgress = { progress = it },
                     onFailed = { failed = true },
+                    flushCookiesAsync = flushCookiesAsync,
                     onLeftSignInPages = { currentOnLeft() },
-                ).also {
-                    webView = it
-                    it.loadUrl(url)
+                ).also { view ->
+                    webView = view
+                    if (url.startsWith("https://", ignoreCase = true)) {
+                        view.loadUrl(url)
+                    }
                 }
             },
             onRelease = { view ->
                 webView = null
                 runCatching {
                     view.stopLoading()
+                    view.webChromeClient = WebChromeClient()
+                    view.webViewClient = WebViewClient()
                     view.destroy()
                 }.onFailure { Timber.w("XLive: WebView входа не уничтожен: ${it.javaClass.simpleName}") }
             },
@@ -100,8 +135,10 @@ fun XLiveLoginPage(
                 XLiveMessage(
                     text = "Страница входа не загрузилась",
                     onRetry = {
-                        failed = false
-                        webView?.loadUrl(url)
+                        if (url.startsWith("https://", ignoreCase = true)) {
+                            failed = false
+                            webView?.loadUrl(url)
+                        }
                     },
                 )
             }
@@ -114,6 +151,7 @@ private fun createLoginWebView(
     context: Context,
     onProgress: (Int) -> Unit,
     onFailed: () -> Unit,
+    flushCookiesAsync: () -> Unit,
     onLeftSignInPages: () -> Unit,
 ): WebView {
     // Логин и пароль пользователь вводит сам, в форму сайта; автозаполнение —
@@ -140,20 +178,21 @@ private fun createLoginWebView(
         // Консоль страницы в журнал не идёт: WebView печатает её вместе с адресом.
         override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean = true
     }
-    webView.webViewClient = LoginPageClient(onFailed, onLeftSignInPages)
+    webView.webViewClient = LoginPageClient(onFailed, flushCookiesAsync, onLeftSignInPages)
     return webView
 }
 
 /** Следит за главным фреймом: ошибка загрузки и уход со страниц входа с сессией. */
 private class LoginPageClient(
     private val onFailed: () -> Unit,
+    private val flushCookiesAsync: () -> Unit,
     private val onLeftSignInPages: () -> Unit,
 ) : WebViewClient() {
 
-    // Ссылки в другие приложения (`intent:`, `mailto:`) не открываются: окно — только для входа.
+    // Ссылки в другие приложения (`intent:`, `mailto:`, `http:`) не открываются: окно — только для входа по HTTPS.
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val scheme = request?.url?.scheme
-        return scheme != "https" && scheme != "http"
+        return !scheme.equals("https", ignoreCase = true)
     }
 
     // Страницу не обрываем: после формы сайт может вести по своим шагам, и
@@ -163,7 +202,7 @@ private class LoginPageClient(
         if (url == null) return
         Timber.i("XLive: вход — страница %s", signInStep(url))
         if (isPastSignInPages(url, hasSession = xLiveCookie(SESSION_COOKIE) != null)) {
-            xLiveWebViewCookies()?.flush()
+            flushCookiesAsync()
             onLeftSignInPages()
         }
     }

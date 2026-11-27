@@ -18,8 +18,11 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +36,8 @@ import kotlinx.coroutines.flow.first
 fun PlayPauseFeedback(state: PlayPauseFeedbackState, modifier: Modifier = Modifier) {
     val action = state.action ?: return
     key(action) {
+        var dismissed by remember { mutableStateOf(false) }
+        if (dismissed) return@key
         val visibility = remember {
             MutableTransitionState(false).apply { targetState = true }
         }
@@ -40,6 +45,8 @@ fun PlayPauseFeedback(state: PlayPauseFeedbackState, modifier: Modifier = Modifi
             snapshotFlow { visibility.currentState }.first { it }
             delay(if (action.isPaused) 450L else 200L)
             visibility.targetState = false
+            snapshotFlow { visibility.isIdle && !visibility.currentState }.first { it }
+            dismissed = true
         }
         AnimatedVisibility(
             visibleState = visibility,

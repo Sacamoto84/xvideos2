@@ -65,13 +65,15 @@ object RetrieverFrameGrabber : XLiveFrameGrabber {
     private fun grabNow(video: File, out: File): Boolean = MediaMetadataRetriever().use { retriever ->
         retriever.setDataSource(video.absolutePath)
         val frame = pickFrame(retriever) ?: return false
+        val temp = File(out.parentFile, "${out.name}.tmp")
+        var renamed = false
         try {
-            // Временный файл и переименование: оборванный кадр готовым не выглядит.
-            val temp = File(out.parentFile, "${out.name}.tmp")
             val written = temp.outputStream().use { frame.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, it) }
             if (!written) throw IOException("Кадр не записан")
-            temp.renameTo(out)
+            renamed = temp.renameTo(out)
+            return renamed
         } finally {
+            if (!renamed) temp.delete()
             frame.recycle()
         }
     }

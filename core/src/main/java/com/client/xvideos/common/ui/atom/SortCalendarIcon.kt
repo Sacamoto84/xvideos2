@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -34,4 +35,10 @@ fun SortCalendarIcon(days: Int) {
             maxLines = 1
         )
     }
+}
+
+@Preview
+@Composable
+private fun SortCalendarIconPreview() {
+    SortCalendarIcon(days = 7)
 }

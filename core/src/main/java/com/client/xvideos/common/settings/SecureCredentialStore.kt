@@ -36,70 +36,52 @@ object SecureCredentialStore {
      * (LayoutLib) и на отдельных прошивках. Вызывающий обязан пережить `null`:
      * лучше не сохранить секрет вообще, чем записать его открытым текстом.
      */
+    private class BuildOutcome(
+        val prefs: SharedPreferences?,
+        val brokenKeyset: Boolean,
+    )
+
+    @Synchronized
     fun createOrNull(context: Context): SharedPreferences? {
         val appContext = context.applicationContext
-        build(appContext)?.let { return it }
+        val attempt = build(appContext)
+        attempt.prefs?.let { return it }
 
-        // Пересоздаём файл ТОЛЬКО если ключи действительно не подходят к нему.
-        // Раньше пересоздание запускал любой провал build(), включая временную
-        // недоступность Keystore (direct boot, часть прошивок) — и сохранённый
-        // пароль стирался там, где достаточно было вернуть null и попробовать
-        // позже.
-        if (!lastFailureLooksLikeBrokenKeyset) {
+        if (!attempt.brokenKeyset) {
             Timber.w("SecureCredentialStore: Keystore недоступен, $FILE_NAME оставлен как есть")
             return null
         }
 
-        // Повреждённый keyset (сброс ключей Keystore, восстановление из бэкапа,
-        // смена биометрии на части прошивок) расшифровать уже нечем — файл можно
-        // только пересоздать. Пользователь потеряет сохранённый пароль и введёт
-        // его заново; это лучше, чем неработающий вход в раздел L.
         Timber.w("SecureCredentialStore: keyset повреждён, пересоздаю $FILE_NAME")
         appContext.deleteSharedPreferences(FILE_NAME)
-        return build(appContext)
+        return build(appContext).prefs
     }
 
-    /**
-     * Признак того, что последний отказ [build] выглядит как несовпадение
-     * ключей с файлом, а не как недоступность Keystore. Хранится полем, а не
-     * возвращается, чтобы не менять сигнатуру `SharedPreferences?`.
-     */
-    @Volatile
-    private var lastFailureLooksLikeBrokenKeyset = false
-
-    private fun build(appContext: Context): SharedPreferences? = try {
+    private fun build(appContext: Context): BuildOutcome = try {
         val masterKey = MasterKey.Builder(appContext)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
 
-        EncryptedSharedPreferences.create(
+        val prefs = EncryptedSharedPreferences.create(
             appContext,
             FILE_NAME,
             masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-        ).also { lastFailureLooksLikeBrokenKeyset = false }
+        )
+        BuildOutcome(prefs = prefs, brokenKeyset = false)
     } catch (e: GeneralSecurityException) {
-        // Tink бросает это, когда keyset не расшифровывается имеющимся
-        // мастер-ключом — файл и ключи разошлись, чинится только пересозданием.
         onBuildFailed(e, brokenKeyset = true)
     } catch (e: IOException) {
-        // Keyset не разбирается: тот же случай, но на уровне формата файла.
         onBuildFailed(e, brokenKeyset = true)
     } catch (e: NoClassDefFoundError) {
-        // Compose Preview: Tink-классов нет в classpath превью. Это Error, а не
-        // Exception — прежний общий catch его пропускал, и Preview падал мимо
-        // контракта createOrNull «верни null, если сейчас нельзя».
         onBuildFailed(e, brokenKeyset = false)
     } catch (e: Exception) {
-        // Всё остальное (IllegalStateException, отказ Keystore) означает
-        // «сейчас нельзя», а не «файл испорчен».
         onBuildFailed(e, brokenKeyset = false)
     }
 
-    private fun onBuildFailed(e: Throwable, brokenKeyset: Boolean): SharedPreferences? {
-        lastFailureLooksLikeBrokenKeyset = brokenKeyset
+    private fun onBuildFailed(e: Throwable, brokenKeyset: Boolean): BuildOutcome {
         Timber.e(e, "SecureCredentialStore: EncryptedSharedPreferences недоступны")
-        return null
+        return BuildOutcome(prefs = null, brokenKeyset = brokenKeyset)
     }
 }

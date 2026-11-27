@@ -2,6 +2,7 @@ package com.client.xvideos.l.net
 
 import androidx.compose.runtime.Stable
 import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.isLFavoriteLikeStatus
 import com.client.xvideos.l.net.graphQl.getAlbumInfo
@@ -255,7 +256,7 @@ class AlbumInfo(
             totalPages = snapshot.totalPages,
             pics = snapshot.pics
         )
-        runCatching {
+        runCatchingCancellable {
             repository.putAlbumBundleCache(id, LJson.encodeToString(bundle))
             Timber.d("L album bundle cache saved id:$id items:${snapshot.pics.size}")
             if (snapshot.pics.size != albumDetails.number_of_pictures) {

@@ -206,14 +206,14 @@ object GallerySaver {
                 }
             },
             onError = { error ->
-                tmpFile.delete()
+                scope.launch { runCatching { tmpFile.delete() } }
                 // При сбое сети текст — toString() исключения: после двоеточия в нём хост.
                 Timber.e("GallerySaver: ошибка скачивания $cleanFileName: ${error.substringBefore(':')}")
                 SnackBar.error("Ошибка сохранения: $error")
                 finish(true)
             },
             onCancelled = {
-                tmpFile.delete()
+                scope.launch { runCatching { tmpFile.delete() } }
                 finish(false)
             },
         )

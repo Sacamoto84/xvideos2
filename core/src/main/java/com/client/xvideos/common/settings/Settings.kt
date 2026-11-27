@@ -1,5 +1,6 @@
 package com.client.xvideos.common.settings
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
@@ -68,11 +69,15 @@ object Settings {
 
     fun readRedgifsSession(): String? = securePref.value?.getString(KEY_R_SESSION, null)
 
+    // Проверяем Boolean результат commit(), KTX edit(commit = true) возвращает Unit.
+    @SuppressLint("UseKtx")
     fun writeRedgifsSession(value: String?): Boolean = securePref.value
         ?.edit()
         ?.putString(KEY_R_SESSION, value)
         ?.commit() == true
 
+    // Проверяем Boolean результат commit(), KTX edit(commit = true) возвращает Unit.
+    @SuppressLint("UseKtx")
     private fun migrateLusciousCredentials(prefs: SharedPreferences, secure: SharedPreferences) {
         val legacyLogin = prefs.getString(KEY_L_LOGIN, null)
         val legacyPass = prefs.getString(KEY_L_PASS, null)
@@ -89,7 +94,7 @@ object Settings {
             }
         }
 
-        prefs.edit {
+        prefs.edit(commit = true) {
             remove(KEY_L_LOGIN)
             remove(KEY_L_PASS)
         }

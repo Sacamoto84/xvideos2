@@ -183,7 +183,9 @@ class CollectionDB<T>(
             synchronized(lock) {
                 if (!dir.exists()) {
                     val created = dir.mkdirs()
-                    if (!created) { return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}")) }
+                    if (!created && !dir.exists()) {
+                        return Result.failure(IOException("Не удалось создать директорию: ${dir.absolutePath}"))
+                    }
                 }
 
                 // Создаем файл-блокировку

@@ -12,8 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.ButtonMoveVert
-import com.client.xvideos.ui.theme.XvideosTheme
+import com.client.xvideos.common.ui.ButtonMoreVert
 
 @Composable
 fun X_DashboardExpandMenu(
@@ -44,7 +43,7 @@ fun X_DashboardExpandMenu(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        ButtonMoveVert(26.dp, onOpen)
+        ButtonMoreVert(size = 26.dp, onClick = onOpen)
 
         DropdownMenu(
             expanded = expanded,
@@ -68,12 +67,10 @@ fun X_DashboardExpandMenu(
 @Preview(showBackground = true)
 @Composable
 private fun X_DashboardExpandMenuPreview() {
-    XvideosTheme {
-        X_DashboardExpandMenu(
-            isFavorite = false,
-            onFavoriteAdd = {},
-            onFavoriteRemove = {},
-            onDownload = {}
-        )
-    }
+    X_DashboardExpandMenu(
+        isFavorite = false,
+        onFavoriteAdd = {},
+        onFavoriteRemove = {},
+        onDownload = {}
+    )
 }

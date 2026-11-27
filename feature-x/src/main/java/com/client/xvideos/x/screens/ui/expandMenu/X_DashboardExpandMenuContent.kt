@@ -1,6 +1,5 @@
 package com.client.xvideos.x.screens.ui.expandMenu
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -9,15 +8,12 @@ import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -116,21 +112,11 @@ fun X_DashboardExpandMenuContent(
 @Preview(showBackground = true)
 @Composable
 private fun X_DashboardExpandMenuContentPreview() {
-    XvideosTheme {
-        Surface(
-            color = Color(0xFFF2EDF7),
-            tonalElevation = 16.dp,
-            shadowElevation = 2.dp
-        ) {
-            Column {
-                X_DashboardExpandMenuContent(
-                    isFavorite = false,
-                    onFavoriteAdd = {},
-                    onFavoriteRemove = {},
-                    onDownload = {},
-                    onDismiss = {}
-                )
-            }
-        }
-    }
+    X_DashboardExpandMenuContent(
+        isFavorite = false,
+        onFavoriteAdd = {},
+        onFavoriteRemove = {},
+        onDownload = {},
+        onDismiss = {}
+    )
 }

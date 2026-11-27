@@ -1,7 +1,5 @@
 package com.client.xvideos.r.ui.profile.molecule
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +19,6 @@ import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.profile.atom.CreatorStatsRow
 import com.client.xvideos.r.ui.profile.atom.CreatorTopInfoRow
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Блок полной информации о профиле креатора в шапке экрана профиля.
@@ -88,13 +85,9 @@ private fun RedProfileCreaterInfoPreview() {
         url = "https://www.redgifs.com/users/lilijunex"
     )
 
-    XvideosTheme {
-        Box(modifier = Modifier.background(Theme.R.colorCommonBackground)) {
-            RedProfileCreaterInfo(
-                item = sampleUserInfo,
-                isFollow = false,
-                onFollowClick = {}
-            )
-        }
-    }
+    RedProfileCreaterInfo(
+        item = sampleUserInfo,
+        isFollow = false,
+        onFollowClick = {}
+    )
 }

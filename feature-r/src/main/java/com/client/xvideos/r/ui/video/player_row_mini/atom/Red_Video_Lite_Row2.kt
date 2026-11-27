@@ -35,11 +35,11 @@ import com.client.xvideos.r.ui.video.CanvasTimeDurationLine1
 @Composable
 fun Red_Video_Lite_Row2(
     url: String,
-    play: Boolean = true,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     poster: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    play: Boolean = true,
 ) {
 
     var time by remember { mutableFloatStateOf(0f) }

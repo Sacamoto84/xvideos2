@@ -7,16 +7,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenu
@@ -46,42 +43,6 @@ import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.model.nearestIn
 
 private val SORT_TRIGGER_HEIGHT = 46.dp
-private val SORT_ORDER_TEXT_AUTO_SIZE = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 18.sp)
-
-private fun Order.toDisplayName(): String = when (this) {
-    Order.TOP -> "Top"
-    Order.LATEST -> "Latest"
-    Order.TRENDING -> "Trending"
-    Order.HOT -> "Hot"
-    Order.OLDEST -> "Oldest"
-    Order.TOP28 -> "Top28"
-    Order.RELEVANT -> "Relevant"
-    Order.TOP_WEEK -> "Week"
-    Order.TOP_MONTH -> "Month"
-    Order.NICHES_SUBSCRIBERS_D -> "Subscribers↓"
-    Order.NICHES_POST_D -> "Post↓"
-    Order.NICHES_SUBSCRIBERS_A -> "Subscribers↑"
-    Order.NICHES_POST_A -> "Post↑"
-    Order.NICHES_NAME_A_Z -> "Name A-Z"
-    Order.NICHES_NAME_Z_A -> "Name Z-A"
-}
-
-private fun Order.toIconLabel(): String = when (this) {
-    Order.TOP_WEEK -> "Топ недели"
-    Order.TOP_MONTH, Order.TOP28 -> "Топ месяца"
-    Order.TOP -> "Топ за всё время"
-    Order.TRENDING -> "В тренде"
-    Order.HOT -> "Горячее"
-    Order.LATEST -> "Новые"
-    Order.OLDEST -> "Старые"
-    Order.RELEVANT -> "По релевантности"
-    Order.NICHES_SUBSCRIBERS_D -> "Больше подписчиков"
-    Order.NICHES_SUBSCRIBERS_A -> "Меньше подписчиков"
-    Order.NICHES_POST_D -> "Больше публикаций"
-    Order.NICHES_POST_A -> "Меньше публикаций"
-    Order.NICHES_NAME_A_Z -> "Название A–Z"
-    Order.NICHES_NAME_Z_A -> "Название Z–A"
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -211,36 +172,6 @@ fun SortByOrder(
                     },
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun SortOrderOptionLabel(order: Order, selected: Boolean, withIcon: Boolean, textStyle: TextStyle) {
-    if (withIcon) {
-        BasicText(
-            order.toIconLabel(),
-            style = textStyle.copy(
-                color = if (selected) Color(0xFFFF6A87) else Color.White,
-                fontSize = 14.sp
-            )
-        )
-    } else {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(32.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (selected) Color(0xFF222222) else Color.Transparent),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            BasicText(
-                order.toDisplayName(),
-                modifier = Modifier.padding(horizontal = 8.dp),
-                style = textStyle,
-                autoSize = SORT_ORDER_TEXT_AUTO_SIZE,
-                maxLines = 1
-            )
         }
     }
 }

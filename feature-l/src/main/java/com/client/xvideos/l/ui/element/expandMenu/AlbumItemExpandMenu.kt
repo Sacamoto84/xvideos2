@@ -13,7 +13,6 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Serve
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_RemoveFromCollection
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveToGallery
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Меню элемента альбома. Само меню поднимается только после первого нажатия —
@@ -21,8 +20,8 @@ import com.client.xvideos.ui.theme.XvideosTheme
  */
 @Composable
 fun AlbumItemExpandMenu(
-    item: PicsDetails? = null,
     modifier: Modifier = Modifier,
+    item: PicsDetails? = null,
     onClick: () -> Unit = {},
     onDownload: (PicsDetails) -> Unit = {},
     onServerLike: (PicsDetails) -> Unit = {},
@@ -59,18 +58,16 @@ fun AlbumItemExpandMenu(
 @Preview(showBackground = true, backgroundColor = 0xFF303030)
 @Composable
 private fun AlbumItemExpandMenuPreview() {
-    XvideosTheme(darkTheme = true) {
-        AlbumItemExpandMenu(
-            item = PicsDetails(
-                height = 1080,
-                width = 1920,
-                is_animated = false,
-                url_to_original = null,
-                url_to_video = null,
-                album = "preview-album",
-                thumbnails = emptyList(),
-            ),
-            idAlbum = "preview-album"
-        )
-    }
+    AlbumItemExpandMenu(
+        item = PicsDetails(
+            height = 1080,
+            width = 1920,
+            is_animated = false,
+            url_to_original = null,
+            url_to_video = null,
+            album = "preview-album",
+            thumbnails = emptyList(),
+        ),
+        idAlbum = "preview-album"
+    )
 }

@@ -43,6 +43,7 @@ import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
 import com.client.xvideos.n.ui.molecule.NPictureItemExpandMenu
 import com.client.xvideos.n.ui.screens.gallery.ScreenNGallery
+import com.client.xvideos.n.ui.screens.gallery.ScreenNGallerySM
 import com.client.xvideos.n.ui.screens.reader.atom.NReaderTopBar
 import com.client.xvideos.n.ui.screens.reader.atom.ReaderImagePage
 import com.client.xvideos.n.ui.screens.reader.molecule.NReaderBottomStrip
@@ -69,7 +70,7 @@ class N_FullScreenReader(
         val screens = navigator.items
         val album = (screens.getOrNull(screens.lastIndex - 1) as? ScreenNGallery)
             ?.takeIf { it.galleryId == galleryId }
-            ?.rememberModel()
+            ?.getScreenModel<ScreenNGallerySM, ScreenNGallerySM.Factory> { it.create(galleryId) }
         var currentPageNumber by rememberSaveable { mutableIntStateOf(initialPageNumber) }
         var reload by remember { mutableIntStateOf(0) }
         val result by produceState<Result<NGallery>?>(null, galleryId, album, reload) {

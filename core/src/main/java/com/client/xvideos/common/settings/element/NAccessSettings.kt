@@ -1,5 +1,6 @@
 package com.client.xvideos.common.settings.element
 
+import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,8 @@ class NAccessSettings(
     val field = _field.asStateFlow()
 
     /** Возвращает `false`, когда новые данные действуют только до перезапуска. */
+    // Проверяем Boolean результат commit(), KTX edit(commit = true) возвращает Unit.
+    @SuppressLint("UseKtx")
     @Synchronized
     fun save(credentials: NAccessCredentials): Boolean {
         _field.value = credentials
@@ -38,6 +41,8 @@ class NAccessSettings(
         return false
     }
 
+    // Проверяем Boolean результат commit(), KTX edit(commit = true) возвращает Unit.
+    @SuppressLint("UseKtx")
     private fun load(): NAccessCredentials {
         val reset = resetRequested()
         val old = if (reset) NAccessCredentials() else legacy.read()
@@ -59,7 +64,7 @@ class NAccessSettings(
 
     private fun resetRequested() = legacy.getBoolean(RESET_STORED_ACCESS, false)
 
-    private fun removeLegacy(reset: Boolean = false) = legacy.edit {
+    private fun removeLegacy(reset: Boolean = false) = legacy.edit(commit = true) {
         remove(API_KEY)
         remove(SESSION_COOKIE)
         if (reset) putBoolean(RESET_STORED_ACCESS, true) else remove(RESET_STORED_ACCESS)

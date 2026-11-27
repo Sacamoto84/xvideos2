@@ -1,8 +1,8 @@
 package com.client.xvideos.common.zip
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -43,11 +43,8 @@ class ZipUtilsTest {
             zip.closeEntry()
         }
         val dest = tmp.newFolder("dest2")
-        try {
+        assertThrows(IllegalArgumentException::class.java) {
             ZipUtils.unzip(evilZip, dest)
-            fail("Expected zip-slip to be rejected")
-        } catch (e: IllegalArgumentException) {
-            // ожидаемо
         }
     }
 }

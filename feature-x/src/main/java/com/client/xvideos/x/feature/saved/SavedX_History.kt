@@ -13,8 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
+import timber.log.Timber
 
 /**
  * Хранилище истории просмотров раздела X.
@@ -50,6 +51,9 @@ class SavedX_History(
      * файла завершались вразнобой — позиция откатывалась, удалённая запись возвращалась.
      */
     private val writeDispatcher = ioDispatcher.limitedParallelism(1)
+    private val mutationEpochs = ConcurrentHashMap<Long, AtomicLong>()
+
+    private fun epochFor(id: Long): AtomicLong = mutationEpochs.computeIfAbsent(id) { AtomicLong(0L) }
 
     private var refreshJob: Job? = null
 
@@ -151,12 +155,15 @@ class SavedX_History(
             isCompleted = markCompleted
         )
 
+        val opEpoch = epochFor(item.id).incrementAndGet()
+        val prevEntry = historyMap[item.id]
         historyMap[item.id] = entry
 
         scope.launch(writeDispatcher) {
             historyDb.insert(item.id.toString(), entry)
                 .onSuccess {
                     withContext(Dispatchers.Main) {
+                        if (epochFor(item.id).get() != opEpoch) return@withContext
                         val existingIndex = list.indexOfFirst { it.item.id == item.id }
                         if (existingIndex >= 0) {
                             list.removeAt(existingIndex)
@@ -166,6 +173,9 @@ class SavedX_History(
                     }
                 }
                 .onFailure { e ->
+                    if (epochFor(item.id).get() == opEpoch) {
+                        if (prevEntry != null) historyMap[item.id] = prevEntry else historyMap.remove(item.id)
+                    }
                     Timber.e(e, "SavedX_History: не удалось сохранить прогресс для %d", item.id)
                 }
         }
@@ -178,11 +188,12 @@ class SavedX_History(
      */
     fun delete(item: ItemsX) {
         if (item.id <= 0L) return
+        val opEpoch = epochFor(item.id).incrementAndGet()
+        val prevEntry = historyMap.remove(item.id)
         scope.launch(writeDispatcher) {
             historyDb.delete(item.id.toString())
                 .onSuccess {
                     withContext(Dispatchers.Main) {
-                        historyMap.remove(item.id)
                         val existingIndex = list.indexOfFirst { it.item.id == item.id }
                         if (existingIndex >= 0) {
                             list.removeAt(existingIndex)
@@ -191,6 +202,9 @@ class SavedX_History(
                     SnackBar.info("Удалено из истории")
                 }
                 .onFailure { e ->
+                    if (epochFor(item.id).get() == opEpoch && prevEntry != null) {
+                        historyMap[item.id] = prevEntry
+                    }
                     SnackBar.error("Ошибка удаления: ${e.message}")
                 }
         }

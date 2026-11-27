@@ -170,12 +170,20 @@ fun RedFullScreenFeed(
                             downloadedKeys = downloadedKeys,
                             index = index,
                             bottomPadding = bottomPadding,
-                            play = player.play,
-                            isCurrentPage = true,
-                            showOverlay = true,
-                            onBuffering = { isVideoBuffering = it },
-                            onZoomChanged = { isCurrentPageZoomed = it },
-                            resetZoomTrigger = resetZoomTrigger,
+                            play = player.play && isCurrentPage,
+                            isCurrentPage = isCurrentPage,
+                            showOverlay = isCurrentPage,
+                            onBuffering = { buffering ->
+                                if (isCurrentPage) {
+                                    isVideoBuffering = buffering
+                                }
+                            },
+                            onZoomChanged = { zoomed ->
+                                if (isCurrentPage) {
+                                    isCurrentPageZoomed = zoomed
+                                }
+                            },
+                            resetZoomTrigger = if (isCurrentPage) resetZoomTrigger else 0,
                             overlay = { pageOverlay(fallbackItem, handleBack) }
                         )
                     } else {

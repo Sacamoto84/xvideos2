@@ -24,11 +24,13 @@ internal const val CSRF_COOKIE = "csrftoken"
 private val xLiveHost: String by lazy { URI(xLiveUrlStart).host.orEmpty() }
 
 /** Домен cookie сайта: сайт ставит их на `.<домен>`, без `www`. */
-private val xLiveCookieDomain: String by lazy { xLiveHost.removePrefix("www.") }
+private val xLiveCookieDomain: String by lazy { xLiveHost.removePrefix("www.").lowercase() }
 
 /** Хост относится к сайту XLive: сам сайт или его поддомен. */
-internal fun isXLiveHost(host: String): Boolean =
-    host.isNotEmpty() && (host == xLiveCookieDomain || host.endsWith(".$xLiveCookieDomain"))
+internal fun isXLiveHost(host: String): Boolean {
+    val lower = host.lowercase()
+    return lower.isNotEmpty() && (lower == xLiveCookieDomain || lower.endsWith(".$xLiveCookieDomain"))
+}
 
 /** Хранилище cookie WebView; `null`, если WebView в системе недоступен (обновляется, отключён). */
 internal fun xLiveWebViewCookies(): CookieManager? =

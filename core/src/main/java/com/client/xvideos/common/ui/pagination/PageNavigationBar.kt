@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -16,15 +15,15 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Dialpad
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.currentWidthClass
 import com.client.xvideos.common.ui.keyboard.KeyboardNumber
 import com.client.xvideos.common.ui.keyboard.KeyboardNumberTheme
@@ -73,8 +71,10 @@ fun PageNavigationBar(
     // pageFraction — ключ: после раскрытия складного ширина номеров другая, и текущую
     // страницу надо снова поставить по центру.
     LaunchedEffect(value, safeMax, pageFraction) {
+        snapshotFlow { state.layoutInfo.viewportEndOffset - state.layoutInfo.viewportStartOffset }
+            .first { it > 0 }
         val indexToScroll = value.coerceIn(0, maxPageIndex)
-        val offset = calculateCenterOffset(state, indexToScroll)
+        val offset = calculateCenterOffset(state, indexToScroll, pageFraction)
         state.animateScrollToItem(index = indexToScroll, scrollOffset = -offset)
     }
 
@@ -175,39 +175,11 @@ fun PageNavigationBar(
     }
 }
 
-@Composable
-private fun PageNumberInputButton(onClick: () -> Unit) {
-    val hint = "Ввести номер страницы"
-    HintTooltip(text = hint) {
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 0.5.dp)
-                .size(48.dp)
-                .background(Color(0xFF2C2C2C))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Dialpad,
-                contentDescription = hint,
-                tint = Color(0xFFFF9900),
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-// Функция для вычисления смещения, чтобы элемент был в центре экрана
-private fun calculateCenterOffset(state: LazyListState, index: Int): Int {
+private fun calculateCenterOffset(state: LazyListState, index: Int, pageFraction: Float): Int {
     val layoutInfo = state.layoutInfo
     val viewportWidth = layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset
-
-    // Получаем информацию о конкретном элементе по индексу
     val itemInfo = layoutInfo.visibleItemsInfo.find { it.index == index }
-
-    // Если элемент видим, используем его ширину, иначе предполагаем стандартную ширину
-    val itemWidth = itemInfo?.size ?: 0
-
+    val itemWidth = itemInfo?.size ?: (viewportWidth * pageFraction).roundToInt()
     return calculateCenterOffset(viewportWidth, itemWidth)
 }
 

@@ -3,9 +3,14 @@ package com.client.xvideos.n.net
 import android.webkit.CookieManager
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.settings.element.NAccessCredentials
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicReference
 
@@ -24,6 +29,8 @@ object NAuthState {
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username.asStateFlow()
 
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private val processCredentials = AtomicReference(NAccessCredentials())
     internal val currentCredentials: NAccessCredentials
         get() = if (Settings.isInitialized) Settings.nAccess.field.value else processCredentials.get()
@@ -35,11 +42,28 @@ object NAuthState {
         get() = currentCredentials.apiKey
 
     init {
-        val saved = currentCredentials
+        applyStoredCredentials(currentCredentials)
+        if (Settings.isInitialized) {
+            ioScope.launch {
+                Settings.nAccess.field.drop(1).collect { updated ->
+                    applyStoredCredentials(updated)
+                }
+            }
+        }
+    }
+
+    private fun applyStoredCredentials(saved: NAccessCredentials) {
         if (saved.sessionCookie.isNotBlank() || saved.apiKey.isNotBlank()) {
-            val savedUser = runCatching { Settings.n_profile.field.value.login }.getOrDefault("")
+            val savedUser = if (Settings.isInitialized) {
+                runCatching { Settings.n_profile.field.value.login }.getOrDefault("")
+            } else {
+                ""
+            }
             _username.value = savedUser.ifEmpty { if (saved.apiKey.isNotBlank()) "API Key" else "User" }
             _isLoggedIn.value = true
+        } else {
+            _username.value = ""
+            _isLoggedIn.value = false
         }
     }
 
@@ -47,7 +71,7 @@ object NAuthState {
      * Вызывается при успешном входе через WebView или форму.
      */
     fun onLoginSuccess(login: String, sessionCookie: String, password: String = ""): Boolean {
-        Timber.i("NAuthState: успешный вход пользователя $login")
+        Timber.i("NAuthState: успешный вход пользователя")
         val persisted = saveAccess(NAccessCredentials(sessionCookie = sessionCookie))
         _username.value = login
         _isLoggedIn.value = true
@@ -111,10 +135,12 @@ object NAuthState {
                     if (cookieName.equals("sessionid", ignoreCase = true) ||
                         cookieName.equals("csrftoken", ignoreCase = true)
                     ) {
-                        cookieManager.setCookie("https://nhentai.net/", "$cookieName=; Max-Age=0")
+                        cookieManager.setCookie("https://nhentai.net/", "$cookieName=; Max-Age=0; Path=/; Domain=nhentai.net; Secure")
+                        cookieManager.setCookie("https://nhentai.net/", "$cookieName=; Max-Age=0; Path=/; Domain=.nhentai.net; Secure")
+                        cookieManager.setCookie("https://nhentai.net/", "$cookieName=; Max-Age=0; Path=/; Secure")
                     }
                 }
-                cookieManager.flush()
+                ioScope.launch { runCatching { cookieManager.flush() } }
             }
         }
     }

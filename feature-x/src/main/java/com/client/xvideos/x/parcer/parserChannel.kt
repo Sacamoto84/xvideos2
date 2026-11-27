@@ -169,8 +169,8 @@ private fun parseChannelAboutMe(document: Document): String {
     return if (aboutEl != null) {
         val clone = aboutEl.clone()
         clone.select(".show-more").remove()
-        clone.select("br").append("\\n")
-        val raw = clone.text().replace("\\n", "\n").trim()
+        clone.select("br").append("\uE001")
+        val raw = clone.text().replace('\uE001', '\n').trim()
         Parser.unescapeEntities(raw, false)
     } else {
         ""
@@ -437,8 +437,20 @@ fun parseChannelModels(html: String): List<ChannelModelFilterItem> {
     val arrayStart = html.indexOf('[', keyIndex).takeIf { it >= 0 } ?: return emptyList()
     var depth = 0
     var arrayEnd = -1
+    var inString = false
+    var escaped = false
     for (i in arrayStart until html.length) {
-        when (html[i]) {
+        val c = html[i]
+        if (inString) {
+            when {
+                escaped -> escaped = false
+                c == '\\' -> escaped = true
+                c == '"' -> inString = false
+            }
+            continue
+        }
+        when (c) {
+            '"' -> inString = true
             '[' -> depth++
             ']' -> {
                 depth--

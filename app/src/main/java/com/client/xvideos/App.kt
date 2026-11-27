@@ -2,7 +2,8 @@ package com.client.xvideos
 
 import android.app.Application
 import android.content.Context
-import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import com.client.xvideos.common.duress.DuressWipeIsolation
 import com.client.xvideos.common.util.defaultSharedPreferences
 import androidx.compose.runtime.ExperimentalComposeRuntimeApi
@@ -16,8 +17,11 @@ import com.client.xvideos.common.coil.CoilImageLoaderFactory
 import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.P2pSendPreparers
 import com.client.xvideos.common.applock.AppLockLifecycleObserver
+import com.client.xvideos.common.applock.AppLockRepository
+import com.client.xvideos.common.applock.AppLockSession
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.storage.StorageCleanupGate
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitor
 import com.client.xvideos.common.traficStatistic.NetworkTrafficMonitorEntryPoint
 import com.client.xvideos.l.featured.saved.LSendPreparer
@@ -67,10 +71,12 @@ class App : Application(), SingletonImageLoader.Factory {
         super.onCreate()
 
         // Процесс перезапуска после кода уничтожения не инициализирует сервисы и Hilt
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            if (getProcessName().endsWith(":restart")) {
-                return
-            }
+        if (getProcessName().endsWith(":restart")) {
+            return
+        }
+
+        if (BuildConfig.DEBUG) {
+            Timber.plant(DebugTree())
         }
 
         // BuildConfig генерируется на модуль, у :core он свой — поля приложения
@@ -84,6 +90,12 @@ class App : Application(), SingletonImageLoader.Factory {
         // строго до создания Hilt-синглтонов и AppPath.init()
         DuressWipeIsolation.ensureIsolatedBeforeStartup(this)
 
+        // Если предыдущий запуск оборвало во время восстановления бэкапа,
+        // откатываем или доводим журнал строго до AppPath.init(), Hilt и Settings.
+        val storeRoot = AppPath.storeRootDir(this)
+        runCatchingCancellable { XlrBackupManager.recoverInterruptedRestoreBeforeStartup(storeRoot) }
+            .onFailure { Timber.e(it, "App: откат оборванного восстановления не удался") }
+
         // Строго первым делом: Hilt-синглтоны читают пути прямо в конструкторе.
         // init() только назначает пути и создаёт папки — на главном потоке это
         // дёшево. Временные папки отделяются в фоне до доступа к хранилищу.
@@ -95,17 +107,12 @@ class App : Application(), SingletonImageLoader.Factory {
             .fromApplication(this, StorageCleanupEntryPoint::class.java)
             .storageCleanupGate()
             .start(scope) {
-                // Восстановление бэкапа могла оборвать гибель процесса: прежние
-                // данные тогда лежат в отодвинутой копии и должны вернуться.
-                runCatching { XlrBackupManager.recoverInterruptedRestore() }
-                    .onFailure { Timber.e(it, "App: откат оборванного восстановления не удался") }
+                // Зачищаем оставшийся временный каталог бэкапа и отложенные удаления.
+                runCatchingCancellable { XlrBackupManager.recoverInterruptedRestore() }
+                    .onFailure { Timber.e(it, "App: доочистка бэкапа не удалась") }
                 DuressWipeIsolation.cleanPendingWipe(this@App)
                 AppPath.prepareTransientDirs()
             }
-
-        if (BuildConfig.DEBUG) {
-            Timber.plant(DebugTree())
-        }
 
         scope.launch { networkTrafficMonitor.value.startMonitoring() }
 
@@ -116,7 +123,12 @@ class App : Application(), SingletonImageLoader.Factory {
         val prefs = defaultSharedPreferences()
         // Обычные настройки нужны экрану замка. Профили открываются при обращении.
         Settings.init(prefs, this)
+        scope.launch { AppLockRepository.warmUp(this@App) }
         AppLockLifecycleObserver.install(this)
+        val mainHandler = Handler(Looper.getMainLooper())
+        AppLockSession.addOnLockedListener {
+            mainHandler.post { P2pReceiveManager.stop() }
+        }
 
         // P2P знает про разделы только отсюда: базовый слой умеет передавать
         // байты, но не знает, куда их класть и как скачать несохранённый item.

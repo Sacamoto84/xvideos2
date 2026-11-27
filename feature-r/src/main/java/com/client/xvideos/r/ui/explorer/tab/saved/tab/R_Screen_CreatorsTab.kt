@@ -38,7 +38,6 @@ import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.CreatorListItem
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DeleteCreatorDialog
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
-import com.client.xvideos.ui.theme.XvideosTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
@@ -174,23 +173,21 @@ fun CreatorsTabContent(
 @Preview
 @Composable
 private fun CreatorsTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        val sampleUser = UserInfo(
-            name = "Sample Creator",
-            username = "samplecreator",
-            profileImageUrl = "https://via.placeholder.com/96",
-            followers = 21_193,
-            views = 32_986_108,
-            publishedGifs = 2_176,
-            url = "https://example.com/samplecreator"
-        )
-        CreatorsTabContent(
-            creators = listOf(sampleUser),
-            state = rememberLazyListState(),
-            topInset = 24.dp,
-            scrollPercentProvider = { 0f to 1f },
-            onCreatorClick = {},
-            onDeleteRequest = {}
-        )
-    }
+    val sampleUser = UserInfo(
+        name = "Sample Creator",
+        username = "samplecreator",
+        profileImageUrl = "https://via.placeholder.com/96",
+        followers = 21_193,
+        views = 32_986_108,
+        publishedGifs = 2_176,
+        url = "https://example.com/samplecreator"
+    )
+    CreatorsTabContent(
+        creators = listOf(sampleUser),
+        state = rememberLazyListState(),
+        topInset = 24.dp,
+        scrollPercentProvider = { 0f to 1f },
+        onCreatorClick = {},
+        onDeleteRequest = {}
+    )
 }

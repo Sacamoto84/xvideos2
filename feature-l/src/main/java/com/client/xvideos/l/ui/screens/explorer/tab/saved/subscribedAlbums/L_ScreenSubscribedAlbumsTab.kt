@@ -48,7 +48,6 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molec
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.molecule.SubscribedAlbumsGrid
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.subscribedAlbums.model.SubscribedAlbumsUiState
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
-import com.client.xvideos.ui.theme.XvideosTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
@@ -241,17 +240,6 @@ fun SubscribedAlbumsTabContent(
                     modifier = Modifier.hazeSource(hazeState),
                 )
 
-                /*
-                // Скроллбар
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .align(Alignment.CenterEnd)
-                        .width(2.dp)
-                ) {
-                    VerticalScrollbar(scrollPercentProvider)
-                }
-                */
                 LazyGridFastScroll(
                     hazeState = hazeState,
                     state = state,
@@ -276,17 +264,15 @@ fun SubscribedAlbumsTabContent(
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun SubscribedAlbumsTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        SubscribedAlbumsTabContent(
-            state = rememberLazyGridState(),
-            uiState = SubscribedAlbumsUiState(),
-            topInset = 24.dp,
-            pullToRefreshState = rememberPullToRefreshState(),
-            scrollPercentProvider = { 0f to 1f },
-            onAlbumClick = {},
-            onAlbumLongClick = {},
-            onRetry = {},
-            onRefresh = {}
-        )
-    }
+    SubscribedAlbumsTabContent(
+        state = rememberLazyGridState(),
+        uiState = SubscribedAlbumsUiState(),
+        topInset = 24.dp,
+        pullToRefreshState = rememberPullToRefreshState(),
+        scrollPercentProvider = { 0f to 1f },
+        onAlbumClick = {},
+        onAlbumLongClick = {},
+        onRetry = {},
+        onRefresh = {}
+    )
 }

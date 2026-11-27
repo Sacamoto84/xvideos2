@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Отправка сообщения
@@ -44,11 +45,34 @@ object EventBus {
      * доехать в обратном порядке (например, прогресс приёма P2P прыгал назад).
      */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
+    private val queueLock = Any()
+    private val overflowQueue = ArrayDeque<Event>()
+    private val draining = AtomicBoolean(false)
 
     fun postEvent(event: Event) {
         Timber.i("!!! ~~~ EventBus.postEvent ${event.forLog()}")
-        if (!_events.tryEmit(event)) {
-            scope.launch { _events.emit(event) }
+        synchronized(queueLock) {
+            if (overflowQueue.isEmpty() && _events.tryEmit(event)) return
+            overflowQueue.addLast(event)
+            if (draining.compareAndSet(false, true)) {
+                scope.launch { drainOverflow() }
+            }
+        }
+    }
+
+    private suspend fun drainOverflow() {
+        try {
+            while (true) {
+                val next = synchronized(queueLock) { overflowQueue.removeFirstOrNull() }
+                    ?: break
+                _events.emit(next)
+            }
+        } finally {
+            draining.set(false)
+            val hasMore = synchronized(queueLock) { overflowQueue.isNotEmpty() }
+            if (hasMore && draining.compareAndSet(false, true)) {
+                scope.launch { drainOverflow() }
+            }
         }
     }
 

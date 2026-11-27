@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Строка со статистикой креатора (подписчики, просмотры, посты).
@@ -53,11 +52,9 @@ fun CreatorStatsRow(
 @Preview
 @Composable
 private fun CreatorStatsRowPreview() {
-    XvideosTheme {
-        CreatorStatsRow(
-            followersPretty = "12.3K",
-            viewsPretty = "450K",
-            publishedGifsPretty = "89"
-        )
-    }
+    CreatorStatsRow(
+        followersPretty = "12.3K",
+        viewsPretty = "450K",
+        publishedGifsPretty = "89"
+    )
 }

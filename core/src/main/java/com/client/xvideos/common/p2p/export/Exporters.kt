@@ -1,5 +1,6 @@
 package com.client.xvideos.common.p2p.export
 
+import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.p2p.P2pExportBundle
 import com.client.xvideos.common.p2p.P2pType
 import com.client.xvideos.common.zip.ZipUtils
@@ -42,6 +43,7 @@ object LExporter {
 object LCollectionExporter {
 
     fun export(collectionName: String, collectionRoot: File, outboxDir: File): P2pExportBundle? {
+        if (isUnsafeItemName(collectionName)) return null
         val source = File(collectionRoot, collectionName)
         if (!source.isDirectory) return null
         if (source.walkTopDown().none { it.isFile }) return null
@@ -62,6 +64,7 @@ object LCollectionExporter {
 object RCollectionExporter {
 
     fun export(collectionName: String, collectionRoot: File, outboxDir: File): P2pExportBundle? {
+        if (isUnsafeItemName(collectionName)) return null
         val source = File(collectionRoot, collectionName)
         if (!source.isDirectory) return null
         if (source.walkTopDown().none { it.isFile }) return null

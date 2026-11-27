@@ -23,8 +23,8 @@ import com.client.xvideos.common.ui.HintTooltip
 
 @Composable
 fun ButtonUp(
-    width: Dp = 32.dp,
     modifier: Modifier = Modifier,
+    width: Dp = 32.dp,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(8.dp)

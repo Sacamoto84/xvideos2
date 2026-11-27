@@ -34,13 +34,13 @@ import com.client.xvideos.x.feature.saved.SavedLocalVideo
 fun X_SavedList(
     list: List<ItemsX>,
     topCutout: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
     gridState: LazyGridState = rememberLazyGridState(),
     onPlayItem: (ItemsX) -> Unit = {},
     onDeleteItem: (ItemsX) -> Unit = {},
     onShareP2pItem: (ItemsX) -> Unit = {},
     onSaveToGalleryItem: (ItemsX) -> Unit = {},
     localVideoOf: (ItemsX) -> SavedLocalVideo? = { null },
-    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier

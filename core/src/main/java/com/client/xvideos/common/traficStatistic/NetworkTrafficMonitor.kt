@@ -1,6 +1,7 @@
 package com.client.xvideos.common.traficStatistic
 
 import android.net.TrafficStats
+import android.os.SystemClock
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -57,13 +58,15 @@ class NetworkTrafficMonitor @Inject constructor() {
     val timeout = 2000L
 
     private val appUid = android.os.Process.myUid()
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val monitorDispatcher = Dispatchers.IO.limitedParallelism(1)
+    private val scope = CoroutineScope(monitorDispatcher + SupervisorJob())
 
+    private var countersInitialized = false
     private var sessionStartRxBytes = 0L
     private var sessionStartTxBytes = 0L
     private var previousRxBytes = 0L
     private var previousTxBytes = 0L
-    private var previousTime = 0L
+    private var previousTimeElapsedMs = 0L
 
     private val _trafficFlow = MutableStateFlow(TrafficData())
 
@@ -72,25 +75,24 @@ class NetworkTrafficMonitor @Inject constructor() {
 
     private var monitoringJob: Job? = null
 
-    init {
-        initializeCounters()
-    }
-
     /**
-     * Инициализация базовых значений счетчиков при старте мониторинга.
+     * Инициализация базовых значений счетчиков на рабочем потоке мониторинга.
      */
     private fun initializeCounters() {
         val currentRxBytes = TrafficStats.getUidRxBytes(appUid)
         val currentTxBytes = TrafficStats.getUidTxBytes(appUid)
 
         if (currentRxBytes != TrafficStats.UNSUPPORTED.toLong() &&
-            currentTxBytes != TrafficStats.UNSUPPORTED.toLong()) {
-
-            sessionStartRxBytes = currentRxBytes
-            sessionStartTxBytes = currentTxBytes
+            currentTxBytes != TrafficStats.UNSUPPORTED.toLong()
+        ) {
+            if (!countersInitialized) {
+                sessionStartRxBytes = currentRxBytes
+                sessionStartTxBytes = currentTxBytes
+                countersInitialized = true
+            }
             previousRxBytes = currentRxBytes
             previousTxBytes = currentTxBytes
-            previousTime = System.currentTimeMillis()
+            previousTimeElapsedMs = SystemClock.elapsedRealtime()
 
             _trafficFlow.value = _trafficFlow.value.copy(
                 totalDownloaded = currentRxBytes,
@@ -109,9 +111,10 @@ class NetworkTrafficMonitor @Inject constructor() {
         if (monitoringJob?.isActive == true) return
 
         monitoringJob = scope.launch {
+            initializeCounters()
             while (isActive) {
-                _trafficFlow.value = calculateTrafficData()
                 delay(timeout)
+                _trafficFlow.value = calculateTrafficData()
             }
         }
     }
@@ -125,19 +128,20 @@ class NetworkTrafficMonitor @Inject constructor() {
     }
 
     /**
-     * Вычисляет дельту байтов за прошедший временной интервал и определяет текущую скорость.
+     * Вычисляет дельту байтов за прошедший монотонный интервал и определяет текущую скорость.
      */
     private fun calculateTrafficData(): TrafficData {
         val currentRxBytes = TrafficStats.getUidRxBytes(appUid)
         val currentTxBytes = TrafficStats.getUidTxBytes(appUid)
-        val currentTime = System.currentTimeMillis()
+        val currentTime = SystemClock.elapsedRealtime()
 
         if (currentRxBytes == TrafficStats.UNSUPPORTED.toLong() ||
-            currentTxBytes == TrafficStats.UNSUPPORTED.toLong()) {
+            currentTxBytes == TrafficStats.UNSUPPORTED.toLong()
+        ) {
             return _trafficFlow.value.copy(isSupported = false)
         }
 
-        val timeDiffSec = (currentTime - previousTime) / 1000f
+        val timeDiffSec = (currentTime - previousTimeElapsedMs) / 1000f
 
         val downloadSpeed = if (timeDiffSec > 0f && previousRxBytes > 0) {
             ((currentRxBytes - previousRxBytes) / timeDiffSec).toLong().coerceAtLeast(0L)
@@ -149,7 +153,7 @@ class NetworkTrafficMonitor @Inject constructor() {
 
         previousRxBytes = currentRxBytes
         previousTxBytes = currentTxBytes
-        previousTime = currentTime
+        previousTimeElapsedMs = currentTime
 
         return TrafficData(
             downloadSpeed = downloadSpeed,
@@ -171,10 +175,11 @@ class NetworkTrafficMonitor @Inject constructor() {
             val currentTxBytes = TrafficStats.getUidTxBytes(appUid)
 
             if (currentRxBytes != TrafficStats.UNSUPPORTED.toLong() &&
-                currentTxBytes != TrafficStats.UNSUPPORTED.toLong()) {
-
+                currentTxBytes != TrafficStats.UNSUPPORTED.toLong()
+            ) {
                 sessionStartRxBytes = currentRxBytes
                 sessionStartTxBytes = currentTxBytes
+                countersInitialized = true
             }
         }
     }

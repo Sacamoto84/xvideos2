@@ -161,6 +161,20 @@ class KDownloader private constructor(dbHelper: DbHelper, private val config: Do
     }
 
     /**
+     * Отменяет все задачи с указанным тегом и дожидается завершения файлового ввода-вывода.
+     */
+    suspend fun cancelAndJoin(tag: String) {
+        reqQueue.cancelAndJoin(tag)
+    }
+
+    /**
+     * Отменяет все задачи и дожидается завершения файлового ввода-вывода.
+     */
+    suspend fun cancelAllAndJoin() {
+        reqQueue.cancelAllAndJoin()
+    }
+
+    /**
      * Отменяет все задачи с указанным тегом.
      */
     fun cancel(tag: String) {

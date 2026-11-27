@@ -13,15 +13,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.unit.dp
-import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -34,10 +27,8 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +54,8 @@ import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.traficStatistic.AppNetworkSpeedMonitorLite
 import com.client.xvideos.common.ui.statusbar.LocalStatusBarRequests
 import com.client.xvideos.common.ui.statusbar.StatusBarRequests
-import com.client.xvideos.screenRoot.ScreenRoot
+import com.client.xvideos.screenRoot.atom.MinimizedPrivacyOverlay
+import com.client.xvideos.screenRoot.molecule.MainScreenContent
 import com.client.xvideos.screenRoot.molecule.StatusBarHost
 import com.client.xvideos.ui.theme.XvideosTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -271,7 +263,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             }
 
             val blurRecentTasks by Settings.blur_recent_tasks.field.collectAsStateWithLifecycle()
-            val shouldBlur = (isAppMinimized && blurRecentTasks) || isAppLocked
             // Плеерам — объектом состояния: обработчики их жизненного цикла читают его в
             // момент события, а не ждут перекомпоновки после onStart (проход 201, S1).
             val appLockActive = remember { derivedStateOf { isAppLocked || (isAppMinimized && blurRecentTasks) } }
@@ -333,8 +324,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                                     // Глушим отрисовку пикселей и очищаем Semantics-дерево
                                                     // для защиты от Accessibility Services и UI Automator
                                                 }
-                                        } else if (shouldBlur) {
-                                            Modifier.blur(25.dp)
                                         } else {
                                             Modifier
                                         }
@@ -344,7 +333,10 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
                                     LocalStatusBarRequests provides statusBarRequests,
                                     LocalAppLockActive provides appLockActive,
                                 ) {
-                                    MainScreenContent()
+                                    MainScreenContent(
+                                        isStorageReady = isStorageReady,
+                                        isAppLocked = isAppLocked,
+                                    )
                                 }
                                 P2pBackgroundOverlay()
                                 StatusBarHost(
@@ -381,17 +373,6 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
         }
     }
 
-    @Composable
-    private fun MainScreenContent() {
-        var contentOpened by remember { mutableStateOf(false) }
-        if (!isStorageReady || (isAppLocked && !contentOpened)) return
-
-        // При повторной блокировке сохраняем открытый стек навигации под заглушкой.
-        SideEffect { contentOpened = true }
-        ScreenRoot.Content()
-        ReportDrawn()
-    }
-
     private fun configureWindow() {
         val currentWindow = this.window ?: return
         currentWindow.applyAppWindowStyle()
@@ -422,32 +403,5 @@ class MainActivity : ComponentActivity()//, ImageLoaderFactory
             currentWindow.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
         applyRecentsScreenshotPolicy(blurRecentTasksAtStart, lockEnabledAtStart)
-    }
-
-    @Composable
-    private fun MinimizedPrivacyOverlay() {
-        val isCamouflage by Settings.camouflage_calculator_enabled.field.collectAsStateWithLifecycle()
-        val scrimAlpha = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 0.45f else 1.0f
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {}
-                )
-                .background(Color.Black.copy(alpha = scrimAlpha)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(
-                    if (isCamouflage) R.drawable.ic_launcher_calculator
-                    else R.drawable.icon_red
-                ),
-                contentDescription = null,
-                modifier = Modifier.size(72.dp),
-                tint = Color.White.copy(alpha = 0.8f)
-            )
-        }
     }
 }

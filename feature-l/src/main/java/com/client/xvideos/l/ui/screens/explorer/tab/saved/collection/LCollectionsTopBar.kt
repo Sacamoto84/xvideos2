@@ -18,7 +18,6 @@ import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.LSortMenuButton
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
@@ -90,24 +89,20 @@ internal fun LCollectionsTopBar(
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun PreviewLCollectionsTopBarSelectionNull() {
-    XvideosTheme(darkTheme = true) {
-        LCollectionsTopBar(
-            selectedCollection = null,
-            sortOrder = LCollectionSortOrder.RECENT,
-            onSortOrderClick = {},
-        )
-    }
+    LCollectionsTopBar(
+        selectedCollection = null,
+        sortOrder = LCollectionSortOrder.RECENT,
+        onSortOrderClick = {},
+    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun PreviewLCollectionsTopBarWithSelection() {
-    XvideosTheme(darkTheme = true) {
-        LCollectionsTopBar(
-            selectedCollection = "My Private Collection",
-            sortOrder = LCollectionSortOrder.NAME,
-            onSortOrderClick = {},
-        )
-    }
+    LCollectionsTopBar(
+        selectedCollection = "My Private Collection",
+        sortOrder = LCollectionSortOrder.NAME,
+        onSortOrderClick = {},
+    )
 }
 

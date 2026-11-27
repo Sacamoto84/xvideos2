@@ -63,7 +63,9 @@ fun parseBestVariant(master: String, masterUrl: String): XLiveVariant? {
         if (!line.startsWith(STREAM_INF)) return@mapIndexedNotNull null
         val attrs = attributes(line)
         val uri = lines.uriAfter(index) ?: return@mapIndexedNotNull null
-        val (width, height) = attrs["RESOLUTION"]?.split('x')?.map { it.toIntOrNull() ?: 0 } ?: listOf(0, 0)
+        val parts = attrs["RESOLUTION"]?.split('x')
+        val width = parts?.takeIf { it.size == 2 }?.get(0)?.toIntOrNull() ?: 0
+        val height = parts?.takeIf { it.size == 2 }?.get(1)?.toIntOrNull() ?: 0
         XLiveVariant(
             videoUrl = resolve(masterUrl, uri) ?: return@mapIndexedNotNull null,
             audioUrl = attrs["AUDIO"]?.let(audioByGroup::get)?.let { resolve(masterUrl, it) },

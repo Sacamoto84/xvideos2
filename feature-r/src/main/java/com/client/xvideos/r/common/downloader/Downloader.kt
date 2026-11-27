@@ -11,16 +11,22 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.model.GifsInfo
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import timber.log.Timber
 import androidx.compose.runtime.Immutable
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -111,6 +117,47 @@ class Downloader @Inject constructor(
      */
     private val activeProgress = HashMap<String, Float>()
 
+    /** Сериализует финализацию закачек (запись `.info`) и удаление из кэша. */
+    private val cacheMutationMutex = Mutex()
+    private val globalCacheGeneration = AtomicLong(0L)
+    private val itemGenerations = ConcurrentHashMap<String, AtomicLong>()
+    private val completionJobs = ConcurrentHashMap.newKeySet<TrackedCompletion>()
+
+    private class TrackedCompletion(val itemId: String, val job: Job)
+
+    private fun itemGeneration(id: String): Long = itemGenerations[id]?.get() ?: 0L
+
+    internal fun invalidateItem(id: String) {
+        itemGenerations.computeIfAbsent(id) { AtomicLong(0L) }.incrementAndGet()
+    }
+
+    internal fun invalidateAll() {
+        globalCacheGeneration.incrementAndGet()
+    }
+
+    internal suspend fun joinCompletionJobs(id: String) {
+        completionJobs.filter { it.itemId == id }.forEach { it.job.join() }
+    }
+
+    internal suspend fun joinAllCompletionJobs() {
+        completionJobs.forEach { it.job.join() }
+    }
+
+    internal suspend fun <T> withCacheLock(block: suspend () -> T): T = cacheMutationMutex.withLock {
+        block()
+    }
+
+    private fun launchTrackedCompletion(itemId: String, block: suspend () -> Unit): Job {
+        val job = scope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
+            block()
+        }
+        val entry = TrackedCompletion(itemId, job)
+        completionJobs.add(entry)
+        job.invokeOnCompletion { completionJobs.remove(entry) }
+        job.start()
+        return job
+    }
+
     internal fun onVideoProgress(id: String, value: Float) = synchronized(activeProgress) {
         activeProgress[id] = value
         percent.value = activeProgress.values.average().toFloat()
@@ -178,6 +225,8 @@ class Downloader @Inject constructor(
                 enqueuePreview(item, creatorPath, showSnackBarErrors = false, onEvent = {})
             }
 
+            val startGlobalGen = globalCacheGeneration.get()
+            val startItemGen = itemGeneration(item.id)
             val request = kDownloader.newRequestBuilder(videoUrl, creatorPath, "${item.id}.mp4").tag(item.id).build()
 
             kDownloader.enqueue(
@@ -203,28 +252,38 @@ class Downloader @Inject constructor(
                 onProgress = { it1 -> onVideoProgress(item.id, it1 / 100f) },
                 onCompleted = {
                     Timber.i("Downloader: завершено скачивание id=${item.id}")
-                    scope.launch(Dispatchers.IO) {
-                        val videoFile = File(creatorPath, "${item.id}.mp4")
-                        if (!videoFile.exists() || videoFile.length() == 0L) {
-                            videoFile.delete()
-                            onVideoFinished(item.id, failed = true)
-                            withContext(Dispatchers.Main) {
-                                SnackBar.error("Ошибка: скачанный файл пуст")
+                    launchTrackedCompletion(item.id) {
+                        var completedOk = false
+                        cacheMutationMutex.withLock {
+                            if (globalCacheGeneration.get() != startGlobalGen ||
+                                itemGeneration(item.id) != startItemGen
+                            ) {
+                                onVideoFinished(item.id, failed = false)
+                                return@withLock
                             }
-                            return@launch
+                            val videoFile = File(creatorPath, "${item.id}.mp4")
+                            if (!videoFile.exists() || videoFile.length() == 0L) {
+                                videoFile.delete()
+                                onVideoFinished(item.id, failed = true)
+                                withContext(Dispatchers.Main) {
+                                    SnackBar.error("Ошибка: скачанный файл пуст")
+                                }
+                                return@withLock
+                            }
+                            onVideoFinished(item.id, failed = false)
+                            runCatching {
+                                val text = AppJson.encodeToString(item)
+                                File(creatorPath, "${item.id}.info").writeTextAtomically(text)
+                            }.onFailure {
+                                Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
+                            }
+                            completedOk = true
                         }
-                        onVideoFinished(item.id, failed = false)
-                        withContext(Dispatchers.Main) {
-                            SnackBar.success("Скачивание завершено")
-                        }
-                        runCatching {
-                            val text = AppJson.encodeToString(item)
-                            File(creatorPath, "${item.id}.info").writeTextAtomically(text)
-                        }.onFailure {
-                            Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
-                        }
-                        withContext(Dispatchers.Main) {
-                            onComplete()
+                        if (completedOk) {
+                            withContext(Dispatchers.Main) {
+                                SnackBar.success("Скачивание завершено")
+                                onComplete()
+                            }
                         }
                     }
                 },
@@ -275,34 +334,38 @@ class Downloader @Inject constructor(
 
         val videoFile = File(creatorPath, "${item.id}.mp4")
         val previewFile = File(creatorPath, "${item.id}.jpg")
+        val needPreview = !previewFile.exists() || previewFile.length() == 0L
+        val willEnqueuePreview = needPreview && item.previewUrl() != null
+        val needVideo = !videoFile.exists() || videoFile.length() == 0L
+        val willEnqueueVideo = needVideo && item.downloadVideoUrl() != null
+
         var queuedVideo = 0
         var queuedPreview = 0
         var skippedNoVideoUrl = 0
         var skippedNoPreviewUrl = 0
 
-        if (!previewFile.exists() || previewFile.length() == 0L) {
-            if (item.previewUrl() == null) {
+        if (needPreview) {
+            if (!willEnqueuePreview) {
                 skippedNoPreviewUrl++
             } else {
-                val finished = pending?.let { CompletableDeferred<Unit>() }
-                enqueuePreview(item, creatorPath, showSnackBarErrors, onEvent, finished)
-                if (finished != null) pending?.add(finished)
+                val finished = if (pending != null) CompletableDeferred<Unit>().also(pending::add) else null
+                val previewOnComplete = if (!willEnqueueVideo) onComplete else ({})
+                enqueuePreview(item, creatorPath, showSnackBarErrors, onEvent, finished, previewOnComplete)
                 queuedPreview++
             }
         }
 
-        if (!videoFile.exists() || videoFile.length() == 0L) {
-            if (item.downloadVideoUrl() == null) {
+        if (needVideo) {
+            if (!willEnqueueVideo) {
                 skippedNoVideoUrl++
             } else {
-                val finished = pending?.let { CompletableDeferred<Unit>() }
+                val finished = if (pending != null) CompletableDeferred<Unit>().also(pending::add) else null
                 enqueueVideo(item, creatorPath, videoFile, showSnackBarErrors, onEvent, onComplete, finished)
-                if (finished != null) pending?.add(finished)
                 queuedVideo++
             }
         }
 
-        if (queuedVideo == 0) {
+        if (queuedVideo == 0 && queuedPreview == 0) {
             scope.launch(Dispatchers.Main) {
                 onComplete()
             }
@@ -365,7 +428,8 @@ class Downloader @Inject constructor(
         dirPath: String,
         showSnackBarErrors: Boolean,
         onEvent: (String) -> Unit,
-        finished: CompletableDeferred<Unit>? = null
+        finished: CompletableDeferred<Unit>? = null,
+        onComplete: () -> Unit = {}
     ) {
         val previewUrl = item.previewUrl() ?: return
         val requestImage = kDownloader.newRequestBuilder(previewUrl, dirPath, "${item.id}.jpg").tag(item.id).build()
@@ -382,6 +446,9 @@ class Downloader @Inject constructor(
             onCompleted = {
                 onEvent("R Download: preview готов ${item.id}")
                 finished?.complete(Unit)
+                scope.launch(Dispatchers.Main) {
+                    onComplete()
+                }
             },
             onCancelled = {
                 onEvent("R Download: preview отменён ${item.id}")
@@ -403,6 +470,8 @@ class Downloader @Inject constructor(
         finished: CompletableDeferred<Unit>?
     ) {
         val videoUrl = item.downloadVideoUrl() ?: return
+        val startGlobalGen = globalCacheGeneration.get()
+        val startItemGen = itemGeneration(item.id)
         val request = kDownloader.newRequestBuilder(videoUrl, dirPath, "${item.id}.mp4").tag(item.id).build()
         kDownloader.enqueue(
             request,
@@ -422,30 +491,42 @@ class Downloader @Inject constructor(
             },
             onProgress = { progress -> onVideoProgress(item.id, progress / 100f) },
             onCompleted = {
-                scope.launch(Dispatchers.IO) {
-                    if (!videoFile.exists() || videoFile.length() == 0L) {
-                        videoFile.delete()
-                        onVideoFinished(item.id, failed = true)
-                        onEvent("R Download: video пустой или повреждён ${item.id}")
-                        if (showSnackBarErrors) {
-                            withContext(Dispatchers.Main) {
-                                SnackBar.error("Ошибка: скачанный файл пуст")
+                launchTrackedCompletion(item.id) {
+                    var completedOk = false
+                    cacheMutationMutex.withLock {
+                        if (globalCacheGeneration.get() != startGlobalGen ||
+                            itemGeneration(item.id) != startItemGen
+                        ) {
+                            onVideoFinished(item.id, failed = false)
+                            return@withLock
+                        }
+                        if (!videoFile.exists() || videoFile.length() == 0L) {
+                            videoFile.delete()
+                            onVideoFinished(item.id, failed = true)
+                            onEvent("R Download: video пустой или повреждён ${item.id}")
+                            if (showSnackBarErrors) {
+                                withContext(Dispatchers.Main) {
+                                    SnackBar.error("Ошибка: скачанный файл пуст")
+                                }
+                            }
+                            return@withLock
+                        }
+                        onVideoFinished(item.id, failed = false)
+                        onEvent("R Download: video готов ${item.id}")
+                        val infoFile = File(dirPath, "${item.id}.info")
+                        if (!infoFile.exists() || infoFile.length() == 0L) {
+                            runCatching {
+                                infoFile.writeTextAtomically(AppJson.encodeToString(item))
+                            }.onFailure {
+                                Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
                             }
                         }
-                        return@launch
+                        completedOk = true
                     }
-                    onVideoFinished(item.id, failed = false)
-                    onEvent("R Download: video готов ${item.id}")
-                    val infoFile = File(dirPath, "${item.id}.info")
-                    if (!infoFile.exists() || infoFile.length() == 0L) {
-                        runCatching {
-                            infoFile.writeTextAtomically(AppJson.encodeToString(item))
-                        }.onFailure {
-                            Timber.e(it, "Downloader: ошибка записи .info для ${item.id}")
+                    if (completedOk) {
+                        withContext(Dispatchers.Main) {
+                            onComplete()
                         }
-                    }
-                    withContext(Dispatchers.Main) {
-                        onComplete()
                     }
                 }.invokeOnCompletion { finished?.complete(Unit) }
             }

@@ -2,8 +2,8 @@ package com.client.xvideos.screenSettings.backup
 
 import com.client.xvideos.R
 
-import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.core.net.toUri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -41,7 +41,6 @@ import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsRowTextSecondary
 import com.client.xvideos.screenSettings.components.SettingsScreenBackground
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
@@ -185,7 +184,7 @@ internal fun BackupSettingsSection(
     }
     val backupValueText = busyText ?: backupSummaryText
     val restoreSubtitle = remember(restoreUri) {
-        restoreUri?.let { Uri.parse(it).lastPathSegment } ?: "Сначала выберите архив"
+        restoreUri?.let { it.toUri().lastPathSegment } ?: "Сначала выберите архив"
     }
     val restoreSummaryText = remember(restoreReport) { selectionSummaryText(restoreReport) }
     val restoreValueText = busyText ?: restoreSummaryText
@@ -332,7 +331,9 @@ internal fun BackupSettingsSection(
         SettingsGroup {
             BackupConsole(
                 lines = backup.console,
-                onClear = onClearConsole
+                onClear = onClearConsole,
+                consoleSeq = backup.consoleSeq,
+                consoleBaseIndex = backup.consoleBaseIndex,
             )
         }
     }
@@ -395,7 +396,7 @@ private object PreviewBackupEngine : BackupEngine {
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun BackupSettingsSectionPreview() = SettingsPreview {
+private fun BackupSettingsSectionPreview() {
     BackupSettingsSection(
         controller = null,
         onDataChanged = {}

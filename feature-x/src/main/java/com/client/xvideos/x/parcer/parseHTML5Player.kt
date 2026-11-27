@@ -100,7 +100,7 @@ fun parseHTML5Player(script: String): HTML5PlayerConfig? {
 /** Извлекает значение первого вызова сеттера плеера с раскодированными JS-escape. */
 private fun extractValue(script: String, pattern: Pattern): String? {
     val matcher = pattern.matcher(script)
-    return if (matcher.find()) unescapeJsString(matcher.group(1)) else null
+    return if (matcher.find()) matcher.group(1)?.let(::unescapeJsString) else null
 }
 
 /**

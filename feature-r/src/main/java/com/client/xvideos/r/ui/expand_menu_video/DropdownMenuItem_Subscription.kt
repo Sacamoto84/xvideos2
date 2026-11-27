@@ -1,16 +1,10 @@
 package com.client.xvideos.r.ui.expand_menu_video
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Subscriptions
-import androidx.compose.material.icons.filled.Unsubscribe
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.client.xvideos.common.expandmenu.ExpandMenuActionItem
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.r.common.saved.SavedRed
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.network.api.RedApi
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -51,27 +45,4 @@ fun DropdownMenuItem_Subscription(item: GifsInfo? = null, redApi: () -> RedApi, 
             onDismiss.invoke()
         }
     )
-}
-
-@Composable
-fun DropdownMenuItem_SubscriptionContent(
-    isSubscribed: Boolean,
-    onClick: () -> Unit
-) {
-    ExpandMenuActionItem(
-        icon = if (isSubscribed) Icons.Default.Unsubscribe else Icons.Default.Subscriptions,
-        text = if (isSubscribed) "Unsubscribe" else "Subscribe",
-        onClick = onClick
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun DropdownMenuItem_SubscriptionPreview() {
-    XvideosTheme {
-        DropdownMenuItem_SubscriptionContent(
-            isSubscribed = true,
-            onClick = {}
-        )
-    }
 }

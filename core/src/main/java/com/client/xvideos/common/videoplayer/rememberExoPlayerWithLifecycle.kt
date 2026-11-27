@@ -52,6 +52,7 @@ fun rememberExoPlayerWithLifecycle(
     clips: List<MediaClip> = emptyList(),
 ): ExoPlayer {
     val lifecycleOwner = LocalLifecycleOwner.current
+    val appContext = remember(context) { context.applicationContext }
 
     // P4: не пересоздаём LoadControl на каждой рекомпозиции.
     val loadControl = remember(minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferM) {
@@ -60,8 +61,8 @@ fun rememberExoPlayerWithLifecycle(
             .build()
     }
 
-    val exoPlayer = remember(context) {
-        ExoPlayer.Builder(context)
+    val exoPlayer = remember(appContext) {
+        ExoPlayer.Builder(appContext)
             .setLoadControl(loadControl)
             .setSeekForwardIncrementMs(seekForwardIncrementMs) // Приращение перемотки вперёд (по умолчанию 1 сек)
             .setSeekBackIncrementMs(seekBackIncrementMs)       // Приращение перемотки назад (по умолчанию 1 сек)
@@ -72,6 +73,7 @@ fun rememberExoPlayerWithLifecycle(
     }
 
     val currentError by rememberUpdatedState(error)
+    val currentPlayFromTime by rememberUpdatedState(playFromTime)
 
     // P3: единый владелец жизненного цикла плеера — тот, кто его создал.
     // Освобождаем ровно здесь, при выходе из композиции (или смене player).
@@ -89,7 +91,7 @@ fun rememberExoPlayerWithLifecycle(
     }
 
     // С отрезками повторяется весь список, без них — сам ролик.
-    LaunchedEffect(isLooping, clips) {
+    LaunchedEffect(exoPlayer, isLooping, clips) {
         exoPlayer.repeatMode = playerRepeatMode(isLooping, hasClips = clips.isNotEmpty())
     }
 
@@ -113,11 +115,11 @@ fun rememberExoPlayerWithLifecycle(
                         mediaItem,
                         headers
                     )
-                    else -> createProgressiveMediaSource(mediaItem, context, headers)
+                    else -> createProgressiveMediaSource(mediaItem, appContext, headers)
                 }
             }
 
-            val initialSeekMs = (playFromTime?.times(1000f)?.toLong() ?: 0L).coerceAtLeast(0L)
+            val initialSeekMs = (currentPlayFromTime?.times(1000f)?.toLong() ?: 0L).coerceAtLeast(0L)
             exoPlayer.apply {
                 stop()
                 clearMediaItems()

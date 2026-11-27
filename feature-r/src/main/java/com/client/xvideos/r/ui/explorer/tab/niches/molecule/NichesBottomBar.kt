@@ -18,7 +18,6 @@ import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
 import com.client.xvideos.r.model.Order
 import com.client.xvideos.r.ui.ui.sortByOrder.RSortOrderIcon
 import com.client.xvideos.r.ui.ui.sortByOrder.SortByOrder
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.persistentListOf
 
 private val NICHE_SORT_ORDERS = persistentListOf(
@@ -67,12 +66,10 @@ fun NichesBottomBar(
 @Preview
 @Composable
 private fun NichesBottomBarPreview() {
-    XvideosTheme {
-        NichesBottomBar(
-            isSearchFocused = false,
-            sortType = Order.NICHES_SUBSCRIBERS_D,
-            onSortTypeChange = {},
-            searchWidget = {}
-        )
-    }
+    NichesBottomBar(
+        isSearchFocused = false,
+        sortType = Order.NICHES_SUBSCRIBERS_D,
+        onSortTypeChange = {},
+        searchWidget = {}
+    )
 }

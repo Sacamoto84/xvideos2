@@ -27,18 +27,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.calculator.CalculatorColors
+import com.client.xvideos.calculator.finance.model.AgeResult
+import com.client.xvideos.calculator.finance.molecule.AgeResultCard
+import com.client.xvideos.calculator.finance.molecule.FinanceInputField
 import java.time.LocalDate
 import java.time.Period
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
-
-private data class AgeResult(
-    val ageText: String,
-    val nextBirthdayDays: String,
-    val dayOfWeek: String,
-    val totalDays: String
-)
 
 @Composable
 fun AgeCalculatorView(
@@ -123,48 +119,5 @@ fun AgeCalculatorView(
         Spacer(Modifier.height(20.dp))
 
         AgeResultCard(result = result)
-    }
-}
-
-@Composable
-private fun AgeResultCard(result: AgeResult) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(CalculatorColors.XIAOMI_SURFACE)
-            .padding(18.dp)
-    ) {
-        Text(
-            text = "Точный возраст",
-            color = CalculatorColors.XIAOMI_TEXT_SECONDARY,
-            fontSize = 13.sp
-        )
-        Text(
-            text = result.ageText,
-            color = CalculatorColors.XIAOMI_ORANGE,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(Modifier.height(18.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(text = "До следующего ДР", color = CalculatorColors.XIAOMI_TEXT_SECONDARY, fontSize = 12.sp)
-                Text(text = result.nextBirthdayDays, color = CalculatorColors.XIAOMI_TEXT_PRIMARY, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-            Column {
-                Text(text = "День недели", color = CalculatorColors.XIAOMI_TEXT_SECONDARY, fontSize = 12.sp)
-                Text(text = result.dayOfWeek, color = CalculatorColors.XIAOMI_TEXT_PRIMARY, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(text = "Прожито", color = CalculatorColors.XIAOMI_TEXT_SECONDARY, fontSize = 12.sp)
-                Text(text = result.totalDays, color = CalculatorColors.XIAOMI_TEXT_PRIMARY, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-        }
     }
 }

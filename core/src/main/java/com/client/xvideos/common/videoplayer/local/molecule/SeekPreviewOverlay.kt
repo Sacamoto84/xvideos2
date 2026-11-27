@@ -25,7 +25,7 @@ import com.client.xvideos.common.videoplayer.local.model.storyboardFrameIndex
 @Composable
 fun SeekPreviewOverlay(
     storyboard: ImageBitmap?,
-    scrub: SeekScrub?,
+    scrubProvider: () -> SeekScrub?,
     durationSec: Int,
     modifier: Modifier = Modifier,
 ) {
@@ -36,7 +36,7 @@ fun SeekPreviewOverlay(
             .fillMaxSize()
             .onGloballyPositioned { overlayStartPx = it.positionInRoot().x }
     ) {
-        if (scrub == null) return@Box
+        val scrub = scrubProvider() ?: return@Box
         SeekPreviewFollow(
             storyboard = storyboard,
             frameIndex = storyboardFrameIndex(scrub.positionSec, durationSec),
@@ -57,7 +57,7 @@ fun SeekPreviewOverlay(
 private fun SeekPreviewOverlayPreview() {
     SeekPreviewOverlay(
         storyboard = null,
-        scrub = SeekScrub(positionSec = 97f, trackStartPx = 120f, trackWidthPx = 900f),
+        scrubProvider = { SeekScrub(positionSec = 97f, trackStartPx = 120f, trackWidthPx = 900f) },
         durationSec = 805
     )
 }

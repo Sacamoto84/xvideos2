@@ -1,6 +1,7 @@
 package com.client.xvideos.common.fileDB
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.Snapshot
 import com.client.xvideos.common.io.isUnsafeItemName
 import com.client.xvideos.common.io.writeTextAtomically
 import com.client.xvideos.common.json.AppJson
@@ -143,7 +144,7 @@ class FileDB<T>(
                     val allFiles = dir.listFiles()
                     if (allFiles != null) {
                         for (file in allFiles) {
-                            if (file.extension == extension || file.name.endsWith(".tmp")) {
+                            if (file.isFile && (file.extension == extension || file.name.endsWith(".tmp"))) {
                                 file.delete()
                             }
                         }
@@ -153,9 +154,11 @@ class FileDB<T>(
             }
 
             synchronized(publishLock) {
-                if (seq > publishedSeq) {
-                    publishedSeq = seq
-                    list.clear()
+                Snapshot.withMutableSnapshot {
+                    if (seq > publishedSeq) {
+                        publishedSeq = seq
+                        list.clear()
+                    }
                 }
             }
 
@@ -225,6 +228,7 @@ class FileDB<T>(
                 val files = ArrayList<File>()
                 if (rawFiles != null) {
                     for (file in rawFiles) {
+                        if (!file.isFile) continue
                         if (file.name.endsWith(".tmp")) {
                             runCatching { file.delete() }
                         } else if (file.extension == extension) {
@@ -255,9 +259,11 @@ class FileDB<T>(
             }
 
             synchronized(publishLock) {
-                if (seq > publishedSeq) {
-                    publishedSeq = seq
-                    list.replaceWith(loaded)
+                Snapshot.withMutableSnapshot {
+                    if (seq > publishedSeq) {
+                        publishedSeq = seq
+                        list.replaceWith(loaded)
+                    }
                 }
             }
 

@@ -13,11 +13,8 @@ import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSectionTitle
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
-
-private const val ICON_DNS = R.drawable.ic_dns_24
 
 @Composable
 internal fun NetworkParamsGroup(
@@ -50,7 +47,7 @@ internal fun NetworkParamsGroup(
         SettingsSectionTitle("Параметры сети")
         SettingsGroup {
             SettingsSwitchRow(
-                icon = ICON_DNS,
+                icon = R.drawable.ic_dns_24,
                 text = "Fallback на системный DNS",
                 subtitle = fallbackSubtitle,
                 value = fallbackToSystem,
@@ -58,7 +55,7 @@ internal fun NetworkParamsGroup(
             )
             SettingsDivider()
             SettingsSwitchRow(
-                icon = ICON_DNS,
+                icon = R.drawable.ic_dns_24,
                 text = "Только IPv4",
                 subtitle = ipv4OnlySubtitle,
                 value = ipv4Only,
@@ -70,6 +67,6 @@ internal fun NetworkParamsGroup(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun NetworkParamsGroupPreview() = SettingsPreview {
+private fun NetworkParamsGroupPreview() {
     NetworkParamsGroup(fallbackToSystem = true, ipv4Only = true)
 }

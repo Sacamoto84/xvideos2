@@ -29,19 +29,20 @@ private val SIGN_IN_STEP_PREFIXES = listOf(
  */
 internal fun signInStep(url: String): String {
     val uri = runCatching { URI(url) }.getOrNull() ?: return "другой сайт"
-    if (!isXLiveHost(uri.host.orEmpty())) return "другой сайт"
+    if (!uri.scheme.equals("https", ignoreCase = true) || !isXLiveHost(uri.host.orEmpty())) return "другой сайт"
     val path = uri.path.orEmpty()
     return SIGN_IN_STEP_PREFIXES.firstOrNull { path.startsWith(it) } ?: "сайт"
 }
 
 /**
- * WebView ушёл со страниц входа: [url] — сайт, но не служебная страница, и
+ * WebView ушёл со страниц входа: [url] — сайт по HTTPS, но не служебная страница, и
  * cookie сессии есть ([hasSession]). Это ещё не вход: сайт мог и не узнать
  * сессию, — его подтверждает запрос подписок ([XLiveSession.confirmSignIn]).
  */
 internal fun isPastSignInPages(url: String, hasSession: Boolean): Boolean {
     if (!hasSession) return false
     val uri = runCatching { URI(url) }.getOrNull() ?: return false
+    if (!uri.scheme.equals("https", ignoreCase = true)) return false
     val path = uri.path.orEmpty()
     return isXLiveHost(uri.host.orEmpty()) && SIGN_IN_STEP_PREFIXES.none { path.startsWith(it) }
 }

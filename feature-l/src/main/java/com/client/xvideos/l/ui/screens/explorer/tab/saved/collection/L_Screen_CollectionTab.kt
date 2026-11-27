@@ -29,7 +29,6 @@ import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.model.LColl
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.CollectionDialogsHost
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.L_CollectionNameContent
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.molecule.L_SavedCollectionTabContent
-import com.client.xvideos.ui.theme.XvideosTheme
 
 object L_Screen_CollectionTab : Screen {
 
@@ -198,15 +197,13 @@ fun CollectionTabContent(
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun CollectionTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        L_SavedCollectionTabContent(
-            collectionList = emptyList(),
-            sortOrder = LCollectionSortOrder.RECENT,
-            gridState = rememberLazyGridState(),
-            onSortOrderClick = {},
-            onCollectionClick = {},
-            onCollectionLongClick = {},
-            onCreateNewCollectionClick = {}
-        )
-    }
+    L_SavedCollectionTabContent(
+        collectionList = emptyList(),
+        sortOrder = LCollectionSortOrder.RECENT,
+        gridState = rememberLazyGridState(),
+        onSortOrderClick = {},
+        onCollectionClick = {},
+        onCollectionLongClick = {},
+        onCreateNewCollectionClick = {}
+    )
 }

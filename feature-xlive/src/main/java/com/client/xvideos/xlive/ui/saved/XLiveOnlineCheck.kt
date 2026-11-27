@@ -5,6 +5,7 @@ import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -53,38 +54,52 @@ class XLiveOnlineCheck(
     val isChecking: StateFlow<Boolean> = _isChecking.asStateFlow()
 
     private var job: Job? = null
-    private data class CheckRequest(val names: List<String>, val force: Boolean)
+    private data class CheckRequest(val names: List<String>, val forcedNames: Set<String>)
 
     private var queued: CheckRequest? = null
 
     /** Проверить [names]; уже известные — только при [force]: свайп вниз. */
     fun check(names: List<String>, force: Boolean = false) {
+        checkInternal(names, if (force) names.toSet() else emptySet())
+    }
+
+    private fun checkInternal(names: List<String>, forcedNames: Set<String>) {
         if (job?.isActive == true) {
-            queued = CheckRequest(names, force)
+            val prev = queued
+            queued = CheckRequest(
+                names = if (prev == null) names.distinct() else (prev.names + names).distinct(),
+                forcedNames = prev?.forcedNames.orEmpty() + forcedNames,
+            )
             return
         }
         val known = _online.value
-        val todo = names.distinct().filter { force || it !in known }
+        val todo = names.distinct().filter { it in forcedNames || it !in known }
         if (todo.isEmpty()) return
         _isChecking.value = true
-        job = scope.launch {
-            val gate = Semaphore(PARALLEL_CHECKS)
-            val answers = todo
-                .map { name -> async { gate.withPermit { name to statusOf(name) } } }
-                .awaitAll()
-                .mapNotNull { (name, status) -> status?.let { name to it } }
-            Timber.i(
-                "XLive: эфир проверен — в эфире %d из %d, без ответа %d",
-                answers.count { it.second }, todo.size, todo.size - answers.size,
-            )
-            _online.update { it.puttingAll(answers.toMap()) }
-            _isChecking.value = false
-            job = null
+        lateinit var currentJob: Job
+        currentJob = scope.launch(start = CoroutineStart.LAZY) {
+            try {
+                val gate = Semaphore(PARALLEL_CHECKS)
+                val answers = todo
+                    .map { name -> async { gate.withPermit { name to statusOf(name) } } }
+                    .awaitAll()
+                    .mapNotNull { (name, status) -> status?.let { name to it } }
+                Timber.i(
+                    "XLive: эфир проверен — в эфире %d из %d, без ответа %d",
+                    answers.count { it.second }, todo.size, todo.size - answers.size,
+                )
+                _online.update { it.puttingAll(answers.toMap()) }
+            } finally {
+                if (job === currentJob) job = null
+                _isChecking.value = false
+            }
             queued?.let { next ->
                 queued = null
-                check(next.names, next.force)
+                checkInternal(next.names, next.forcedNames)
             }
         }
+        job = currentJob
+        currentJob.start()
     }
 
     private suspend fun statusOf(name: String): Boolean? = try {

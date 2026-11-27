@@ -33,7 +33,6 @@ import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.scroll.LazyGridPosition
 import com.client.xvideos.common.ui.adaptive.adaptiveGridColumns
 import com.client.xvideos.common.ui.atom.TopLoadingBar
-import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.model.ChannelModelFilterItem
 import com.client.xvideos.x.model.ChannelSortOrder
 import com.client.xvideos.x.model.ItemsX
@@ -188,25 +187,23 @@ private fun ChannelVideosPagerPreview() {
     val gridPosition = remember { LazyGridPosition() }
     val pagerState = rememberPagerState { 1 }
 
-    XvideosTheme(darkTheme = true) {
-        ChannelVideosPager(
-            pagerState = pagerState,
-            pagesCache = mapOf(0 to sampleVideos),
-            loadingPages = emptySet(),
-            errorPages = emptyMap(),
-            currentSort = ChannelSortOrder.NEW,
-            selectedModel = null,
-            isModel = false,
-            getGridPosition = { gridPosition },
-            onLoadPage = {},
-            onRetryPage = {},
-            onOpenVideo = {},
-            isFavorite = { false },
-            localVideoOf = { null },
-            onFavoriteAdd = {},
-            onFavoriteRemove = {},
-            onDownload = {},
-            onSaveToGallery = {},
-        )
-    }
+    ChannelVideosPager(
+        pagerState = pagerState,
+        pagesCache = mapOf(0 to sampleVideos),
+        loadingPages = emptySet(),
+        errorPages = emptyMap(),
+        currentSort = ChannelSortOrder.NEW,
+        selectedModel = null,
+        isModel = false,
+        getGridPosition = { gridPosition },
+        onLoadPage = {},
+        onRetryPage = {},
+        onOpenVideo = {},
+        isFavorite = { false },
+        localVideoOf = { null },
+        onFavoriteAdd = {},
+        onFavoriteRemove = {},
+        onDownload = {},
+        onSaveToGallery = {},
+    )
 }

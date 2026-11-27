@@ -33,7 +33,6 @@ import com.client.xvideos.common.applock.AccessCodeVisualTransformation
 import com.client.xvideos.common.applock.atom.SecurePasswordToolbar
 import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun AppLockInputForm(
@@ -137,17 +136,15 @@ fun AppLockInputForm(
 @Preview
 @Composable
 private fun AppLockInputFormPreview() {
-    XvideosTheme(darkTheme = true) {
-        AppLockInputForm(
-            password = "123",
-            onPasswordChange = {},
-            showPassword = false,
-            onShowPasswordToggle = {},
-            errorText = null,
-            isLockedOut = false,
-            lockoutSeconds = 0,
-            onSubmit = {},
-            focusRequester = remember { FocusRequester() }
-        )
-    }
+    AppLockInputForm(
+        password = "123",
+        onPasswordChange = {},
+        showPassword = false,
+        onShowPasswordToggle = {},
+        errorText = null,
+        isLockedOut = false,
+        lockoutSeconds = 0,
+        onSubmit = {},
+        focusRequester = remember { FocusRequester() }
+    )
 }

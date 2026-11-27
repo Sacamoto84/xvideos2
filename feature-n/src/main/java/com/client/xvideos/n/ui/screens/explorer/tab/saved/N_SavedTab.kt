@@ -31,9 +31,9 @@ import com.client.xvideos.common.settings.advanceColumnCount
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.common.ui.atom.ProvidePagerScrollbarAlpha
 import com.client.xvideos.n.net.NAuthState
-import com.client.xvideos.n.ui.atom.LocalNGridScrollIndicator
-import com.client.xvideos.n.ui.atom.NGridScrollIndicatorLayout
 import com.client.xvideos.n.ui.atom.NGridScrollIndicatorOverlay
+import com.client.xvideos.n.ui.model.LocalNGridScrollIndicator
+import com.client.xvideos.n.ui.model.NGridScrollIndicatorLayout
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.collections.N_ScreenSavedCollectionsTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.likes.N_ScreenSavedLikesTab
 import com.client.xvideos.n.ui.screens.explorer.tab.saved.manga.N_ScreenSavedMangaTab
@@ -68,6 +68,13 @@ object N_SavedTab : Screen {
             initialPage = nSavedTabPage(vm.screenType, pageCount),
             pageCount = { pageCount }
         )
+
+        LaunchedEffect(vm.screenType, pageCount) {
+            val target = nSavedTabPage(vm.screenType, pageCount)
+            if (target != pagerState.currentPage) {
+                pagerState.scrollToPage(target)
+            }
+        }
 
         LaunchedEffect(pageCount) {
             val visible = nSavedTabPage(pagerState.currentPage, pageCount)

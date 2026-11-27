@@ -34,9 +34,9 @@ import com.client.xvideos.common.theme.Theme
 @Composable
 fun AlbumInfoButtonServerFavorite(
     isFavorite: Boolean,
-    isLoading: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     label: String? = null
 ) {
     val buttonText = label ?: if (isFavorite) "Удалить альбом с сервера" else "Добавить альбом на сервер"

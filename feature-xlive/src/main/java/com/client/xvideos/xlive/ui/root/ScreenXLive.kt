@@ -22,6 +22,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.client.xvideos.common.ui.statusbar.NoStatusBarScrimEffect
 import com.client.xvideos.xlive.ui.XLiveColors
@@ -78,98 +79,56 @@ class ScreenXLive : Screen {
         val following by vm.following.collectAsStateWithLifecycle()
         val records by vm.recordsState.collectAsStateWithLifecycle()
 
-        val barActions = remember(vm) {
-            XLiveBarActions(
-                onTab = vm::selectTab,
-                onGender = vm::selectGender,
-                onCollection = vm::selectCollection,
-                onTagSort = vm::selectTagSort,
-                onSavedTab = vm::selectSavedTab,
-            )
-        }
-        val feedActions = remember(vm, navigator) {
-            XLiveFeedActions(
-                onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
-                onRetry = vm::reload,
-                onRetryLoadMore = vm::retryLoadMore,
-                onRefresh = vm::refresh,
-                onLoadMore = vm::loadMore,
-            )
-        }
-        val tagsActions = remember(vm, navigator) {
-            XLiveTagsActions(
-                onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag, vm.gender.value)) },
-                onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
-                onRetry = vm::reloadTags,
-                onRetryLoadMore = vm::retryLoadMoreTags,
-                onLoadMore = vm::loadMoreTags,
-            )
-        }
-
-        val favoritesActions = remember(vm, navigator) {
-            XLiveFavoritesActions(
-                grid = XLiveSavedActions(
-                    onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
-                    onRemove = vm::removeSaved,
-                    onRefresh = vm::refreshSaved,
-                ),
-                following = XLiveFollowingActions(
-                    onSignIn = { navigator.push(ScreenXLiveLogin()) },
-                    onSignOut = vm::signOut,
-                    onRetry = vm::retryFollowing,
-                ),
-                records = XLiveRecordsActions(
-                    onOpen = { id -> navigator.push(ScreenXLiveRecord(id)) },
-                    onRemove = vm::removeRecord,
-                    onSaveToGallery = vm::saveRecordToGallery,
-                ),
-            )
-        }
-        val searchActions = remember(vm, navigator) {
-            XLiveSearchActions(
-                onQueryChange = vm::changeSearchQuery,
-                onSearch = vm::submitSearch,
-                onClear = vm::clearSearch,
-                onFilters = vm::selectSearchFilters,
-                feed = XLiveFeedActions(
-                    onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
-                    onRetry = vm::reloadSearch,
-                    onRetryLoadMore = vm::retryLoadMoreSearch,
-                    onRefresh = vm::refreshSearch,
-                    onLoadMore = vm::loadMoreSearch,
-                ),
-            )
-        }
+        val barActions = remember(vm) { buildXLiveBarActions(vm) }
+        val feedActions = remember(vm, navigator) { buildXLiveFeedActions(vm, navigator) }
+        val tagsActions = remember(vm, navigator) { buildXLiveTagsActions(vm, navigator) }
+        val favoritesActions = remember(vm, navigator) { buildXLiveFavoritesActions(vm, navigator) }
+        val searchActions = remember(vm, navigator) { buildXLiveSearchActions(vm, navigator) }
         val isHistory = savedTab == XLiveSavedTab.HISTORY
 
-        ScreenXLiveContent(
-            bar = XLiveBarState(
+        val barState = remember(tab, gender, collection, tagSort, savedTab) {
+            XLiveBarState(
                 tab = tab,
                 gender = gender,
                 collection = collection,
                 tagSort = tagSort,
                 savedTab = savedTab,
-            ),
+            )
+        }
+        val savedList = if (isHistory) recent else my
+        val favoritesState = remember(savedList, following, records) {
+            XLiveFavoritesState(saved = savedList, following = following, records = records)
+        }
+        val roomsGridState = vm.gridPosition.rememberState()
+        val tagsListState = vm.tagsPosition.rememberState()
+        val savedGridState = when (savedTab) {
+            XLiveSavedTab.MY -> vm.myPosition.rememberState()
+            XLiveSavedTab.FOLLOWING -> vm.followingPosition.rememberState()
+            XLiveSavedTab.HISTORY -> vm.recentPosition.rememberState()
+            XLiveSavedTab.RECORDS -> vm.recordsPosition.rememberState()
+        }
+        val searchGridState = vm.searchPosition.rememberState()
+        val listStates = remember(roomsGridState, tagsListState, savedGridState, searchGridState) {
+            XLiveListStates(
+                rooms = roomsGridState,
+                tags = tagsListState,
+                saved = savedGridState,
+                search = searchGridState,
+            )
+        }
+
+        ScreenXLiveContent(
+            bar = barState,
             barActions = barActions,
             feed = feed,
             feedActions = feedActions,
             tags = tags,
             tagsActions = tagsActions,
-            favorites = XLiveFavoritesState(saved = if (isHistory) recent else my, following = following, records = records),
+            favorites = favoritesState,
             favoritesActions = favoritesActions,
             search = search,
             searchActions = searchActions,
-            lists = XLiveListStates(
-                rooms = vm.gridPosition.rememberState(),
-                tags = vm.tagsPosition.rememberState(),
-                saved = when (savedTab) {
-                    XLiveSavedTab.MY -> vm.myPosition.rememberState()
-                    XLiveSavedTab.FOLLOWING -> vm.followingPosition.rememberState()
-                    XLiveSavedTab.HISTORY -> vm.recentPosition.rememberState()
-                    XLiveSavedTab.RECORDS -> vm.recordsPosition.rememberState()
-                },
-                search = vm.searchPosition.rememberState(),
-            ),
+            lists = listStates,
         )
     }
 }
@@ -261,3 +220,59 @@ private fun ScreenXLivePreview() {
         ),
     )
 }
+
+private fun buildXLiveBarActions(vm: XLiveSM) = XLiveBarActions(
+    onTab = vm::selectTab,
+    onGender = vm::selectGender,
+    onCollection = vm::selectCollection,
+    onTagSort = vm::selectTagSort,
+    onSavedTab = vm::selectSavedTab,
+)
+
+private fun buildXLiveFeedActions(vm: XLiveSM, navigator: Navigator) = XLiveFeedActions(
+    onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+    onRetry = vm::reload,
+    onRetryLoadMore = vm::retryLoadMore,
+    onRefresh = vm::refresh,
+    onLoadMore = vm::loadMore,
+)
+
+private fun buildXLiveTagsActions(vm: XLiveSM, navigator: Navigator) = XLiveTagsActions(
+    onOpenTag = { tag -> navigator.push(ScreenXLiveTag(tag, vm.gender.value)) },
+    onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+    onRetry = vm::reloadTags,
+    onRetryLoadMore = vm::retryLoadMoreTags,
+    onLoadMore = vm::loadMoreTags,
+)
+
+private fun buildXLiveFavoritesActions(vm: XLiveSM, navigator: Navigator) = XLiveFavoritesActions(
+    grid = XLiveSavedActions(
+        onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+        onRemove = vm::removeSaved,
+        onRefresh = vm::refreshSaved,
+    ),
+    following = XLiveFollowingActions(
+        onSignIn = { navigator.push(ScreenXLiveLogin()) },
+        onSignOut = vm::signOut,
+        onRetry = vm::retryFollowing,
+    ),
+    records = XLiveRecordsActions(
+        onOpen = { id -> navigator.push(ScreenXLiveRecord(id)) },
+        onRemove = vm::removeRecord,
+        onSaveToGallery = vm::saveRecordToGallery,
+    ),
+)
+
+private fun buildXLiveSearchActions(vm: XLiveSM, navigator: Navigator) = XLiveSearchActions(
+    onQueryChange = vm::changeSearchQuery,
+    onSearch = vm::submitSearch,
+    onClear = vm::clearSearch,
+    onFilters = vm::selectSearchFilters,
+    feed = XLiveFeedActions(
+        onOpenRoom = { room -> navigator.push(ScreenXLiveRoom(room)) },
+        onRetry = vm::reloadSearch,
+        onRetryLoadMore = vm::retryLoadMoreSearch,
+        onRefresh = vm::refreshSearch,
+        onLoadMore = vm::loadMoreSearch,
+    ),
+)

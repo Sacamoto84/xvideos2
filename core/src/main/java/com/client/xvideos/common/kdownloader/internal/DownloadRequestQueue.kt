@@ -1,6 +1,7 @@
 package com.client.xvideos.common.kdownloader.internal
 
 import com.client.xvideos.common.kdownloader.Status
+import kotlinx.coroutines.joinAll
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -132,6 +133,23 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
     }
 
     /**
+     * Отменяет все задачи с указанным тегом и дожидается завершения их корутин и очистки.
+     */
+    suspend fun cancelAndJoin(tag: String) {
+        val jobs = idRequestMap.values
+            .filter { it.tag == tag }
+            .mapNotNull { req ->
+                val removed = idRequestMap.remove(req.downloadId)
+                if (removed != null && removed.status != Status.CANCELLED) {
+                    downloader.cancelAsync(removed)
+                } else {
+                    null
+                }
+            }
+        jobs.joinAll()
+    }
+
+    /**
      * Отменяет все задачи в очереди и очищает диспетчер.
      */
     fun cancelAll() {
@@ -140,5 +158,13 @@ class DownloadRequestQueue(private val downloader: DownloadDispatchers) {
             cancel(req.downloadId)
         }
         downloader.cancelAll()
+    }
+
+    /**
+     * Отменяет все задачи в очереди и дожидается завершения всех активных загрузок и очистки.
+     */
+    suspend fun cancelAllAndJoin() {
+        val list = idRequestMap.values.mapNotNull { idRequestMap.remove(it.downloadId) }
+        downloader.cancelAllAndJoin(list)
     }
 }

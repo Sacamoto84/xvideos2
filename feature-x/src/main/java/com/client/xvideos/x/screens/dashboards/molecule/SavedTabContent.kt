@@ -34,8 +34,8 @@ fun SavedTabContent(
     pagerState: PagerState,
     favoritesScreen: ScreenFavorites,
     listPositions: SavedTabListPositions,
-    saved: SavedX? = null,
     modifier: Modifier = Modifier,
+    saved: SavedX? = null,
 ) {
     if (LocalInspectionMode.current || saved == null) {
         Box(

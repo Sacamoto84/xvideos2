@@ -20,8 +20,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -132,6 +137,7 @@ class ScreenXLiveRoom(private val room: String) : Screen {
 
 private const val VIDEO_ASPECT_RATIO = 16f / 9f
 private const val MILLIS_PER_SECOND = 1000L
+private const val ON_AIR_REFRESH_INTERVAL_MS = 30_000L
 
 @Composable
 fun ScreenXLiveRoomContent(
@@ -176,8 +182,17 @@ fun ScreenXLiveRoomContent(
                 val topic = remember(info.title) { splitRoomTitle(info.title) }
                 val topicText = rememberEnglishToRussianTranslation(topic.text, translationEngine)
                 val aboutText = rememberEnglishToRussianTranslation(bio?.aboutMe.orEmpty(), translationEngine)
-                val onAir = remember(info.startedAt) {
-                    onAirLabel(info.startedAt, System.currentTimeMillis() / MILLIS_PER_SECOND)
+                var nowSec by remember(info.startedAt) {
+                    mutableLongStateOf(System.currentTimeMillis() / MILLIS_PER_SECOND)
+                }
+                LaunchedEffect(info.startedAt) {
+                    while (isActive) {
+                        delay(ON_AIR_REFRESH_INTERVAL_MS)
+                        nowSec = System.currentTimeMillis() / MILLIS_PER_SECOND
+                    }
+                }
+                val onAir = remember(info.startedAt, nowSec) {
+                    onAirLabel(info.startedAt, nowSec)
                 }
 
                 XLiveRoomPlayer(

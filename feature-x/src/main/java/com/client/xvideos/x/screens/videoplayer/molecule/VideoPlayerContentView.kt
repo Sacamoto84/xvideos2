@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -157,6 +158,14 @@ fun VideoPlayerContentView(
         return
     }
 
+    val currentOnPlaybackError by rememberUpdatedState(onPlaybackError)
+    val currentOnExitFullScreen by rememberUpdatedState(onExitFullScreen)
+    val currentOnPopBack by rememberUpdatedState(onPopBack)
+    val currentOnTagClick by rememberUpdatedState(onTagClick)
+    val currentOnRestartFromBeginning by rememberUpdatedState(onRestartFromBeginning)
+    val currentOnSaveProgress by rememberUpdatedState(onSaveProgress)
+    val currentIsFullScreen by rememberUpdatedState(isFullScreen)
+
     // Единый Compose-плеер (общий с R/L). Хост сам освобождает ExoPlayer
     // при выходе из композиции (RememberObserver).
     val host = remember(passedHLS) {
@@ -167,10 +176,11 @@ fun VideoPlayerContentView(
             startTimeInSeconds = resumePositionSeconds,
         ).apply {
             onError = {
-                onPlaybackError()
+                currentOnPlaybackError()
             }
         }
     }
+    val currentHost by rememberUpdatedState(host)
 
     // Состояния видимости элементов управления и масштабирования (pinch-to-zoom)
     var areControlsVisible by remember { mutableStateOf(true) }
@@ -198,8 +208,8 @@ fun VideoPlayerContentView(
     // 2. В ландшафтном полноэкранном режиме возвращает в портретный режим
     // 3. Выходит из экрана плеера
     BackHandler(enabled = isZoomed, onBack = onResetZoom)
-    BackHandler(enabled = !isZoomed && isFullScreen, onBack = onExitFullScreen)
-    BackHandler(enabled = !isZoomed && !isFullScreen, onBack = onPopBack)
+    BackHandler(enabled = !isZoomed && isFullScreen, onBack = currentOnExitFullScreen)
+    BackHandler(enabled = !isZoomed && !isFullScreen, onBack = currentOnPopBack)
 
     // При смене режима экрана (полноэкранный/обычный) сбрасываем видимость контроллеров в активное состояние
     LaunchedEffect(isFullScreen) {
@@ -235,25 +245,31 @@ fun VideoPlayerContentView(
     // свёрнутом приложении каждые 3 с переписывал ту же запись истории на диск
     // (проход 204, T1). На уходе прогресс сохраняется один раз (`ON_STOP`).
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(host.isPaused, lifecycleOwner) {
+    LaunchedEffect(host, host.isPaused, lifecycleOwner) {
         if (!host.isPaused) {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                onSaveProgress(host.currentTime, host.totalTime)
                 while (isActive) {
                     delay(3000L)
-                    onSaveProgress(host.currentTime, host.totalTime)
+                    if (host.totalTime > 0 || host.currentTime > 0f) {
+                        currentOnSaveProgress(host.currentTime, host.totalTime)
+                    }
                 }
             }
         }
     }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        onSaveProgress(host.currentTime, host.totalTime)
+        val activeHost = currentHost
+        if (activeHost.totalTime > 0 || activeHost.currentTime > 0f) {
+            currentOnSaveProgress(activeHost.currentTime, activeHost.totalTime)
+        }
     }
 
-    // Финальное сохранение текущей позиции при закрытии экрана
-    DisposableEffect(Unit) {
+    // Финальное сохранение текущей позиции при смене хоста или закрытии экрана
+    DisposableEffect(host) {
         onDispose {
-            onSaveProgress(host.currentTime, host.totalTime)
+            if (host.totalTime > 0 || host.currentTime > 0f) {
+                currentOnSaveProgress(host.currentTime, host.totalTime)
+            }
         }
     }
 
@@ -265,7 +281,7 @@ fun VideoPlayerContentView(
     val onTap: () -> Unit = remember(playbackFeedback) {
         {
             playbackFeedback.togglePlayback()
-            if (isFullScreen) areControlsVisible = true
+            if (currentIsFullScreen) areControlsVisible = true
         }
     }
 
@@ -273,7 +289,7 @@ fun VideoPlayerContentView(
     val handleTagClick: (String) -> Unit = remember(host) {
         { tag ->
             host.pause()
-            onTagClick(tag)
+            currentOnTagClick(tag)
         }
     }
 
@@ -297,7 +313,7 @@ fun VideoPlayerContentView(
     val onRestartPlayback: () -> Unit = remember(host) {
         {
             host.seekTo(0f)
-            onRestartFromBeginning()
+            currentOnRestartFromBeginning()
         }
     }
 
@@ -395,7 +411,7 @@ fun VideoPlayerContentView(
                 // владельца от 21.10.2026); ниже нижней панели, чтобы полоса была поверх.
                 SeekPreviewOverlay(
                     storyboard = storyboard,
-                    scrub = scrub,
+                    scrubProvider = { scrub },
                     durationSec = host.totalTime
                 )
 

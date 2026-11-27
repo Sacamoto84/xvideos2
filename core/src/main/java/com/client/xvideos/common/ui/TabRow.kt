@@ -71,6 +71,7 @@ fun TabRow(
     val haptic = LocalHapticFeedback.current
 
     var state by remember(value) { mutableIntStateOf(value) }
+    val selectedIndex = if (titlesIcon.isEmpty()) 0 else state.coerceIn(0, titlesIcon.lastIndex)
 
     // Фон и разделитель — на всю ширину, вкладки — не шире 640dp по центру.
     // Цвет рисует внешний Box, а не сам ряд: при прозрачном ряде цвет не
@@ -78,16 +79,17 @@ fun TabRow(
     // индикатор лежит поверх него, как и прежде.
     Box(modifier = Modifier.background(containerColor)) {
         HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
+        if (titlesIcon.isEmpty()) return@Box
         SecondaryTabRow(
             modifier = Modifier
                 .adaptiveContentWidth()
                 .height(48.dp),
-            selectedTabIndex = state,
+            selectedTabIndex = selectedIndex,
             containerColor = Color.Transparent,
             contentColor = Color.White,
             indicator = {
                 TabRowDefaults.SecondaryIndicator(
-                    Modifier.tabIndicatorOffset(state, matchContentSize = false),
+                    Modifier.tabIndicatorOffset(selectedIndex, matchContentSize = false),
                     height = 4.dp,
                     color = Theme.R.colorRed
                 )
@@ -96,15 +98,16 @@ fun TabRow(
         ) {
             titlesIcon.forEachIndexed { index, item ->
                 val tooltip = tooltips.getOrElse(index) { "" }
+                val tag = tags.getOrNull(index)
                 HintTooltip(text = tooltip, modifier = Modifier.background(Color.Transparent)) {
                     Tab(
                         modifier = Modifier.then(
-                            if (tags.isNotEmpty()) {
-                                Modifier.testTag(tags[index])
+                            if (tag != null) {
+                                Modifier.testTag(tag)
                             } else
                                 Modifier
                         ),
-                        selected = index == state,
+                        selected = index == selectedIndex,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                             state = index

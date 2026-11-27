@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.ui.HintTooltip
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Плашка с уведомлением о возобновлении воспроизведения и кнопкой «С начала».
@@ -75,10 +74,8 @@ fun ResumePlaybackPill(
 @Preview
 @Composable
 private fun ResumePlaybackPillPreview() {
-    XvideosTheme(darkTheme = true) {
-        ResumePlaybackPill(
-            text = "Продолжить с 05:20",
-            onRestart = {}
-        )
-    }
+    ResumePlaybackPill(
+        text = "Продолжить с 05:20",
+        onRestart = {}
+    )
 }

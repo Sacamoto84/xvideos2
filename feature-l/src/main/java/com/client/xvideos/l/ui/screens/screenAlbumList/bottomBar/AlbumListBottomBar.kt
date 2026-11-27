@@ -1,8 +1,6 @@
 package com.client.xvideos.l.ui.screens.screenAlbumList.bottomBar
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,22 +8,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.ui.HintTooltip
 import com.client.xvideos.common.ui.adaptive.adaptiveContentWidth
+import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListFilterButton
 import com.client.xvideos.l.ui.screens.screenAlbumList.atom.AlbumListPageSelector
 
 @Composable
@@ -48,7 +39,7 @@ fun AlbumListBottomBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            FilterButton(
+            AlbumListFilterButton(
                 modifier = Modifier.padding(end = 2.dp),
                 onClick = onClickVisibleFilter
             )
@@ -61,33 +52,13 @@ fun AlbumListBottomBar(
                 )
             }
 
-            FilterButton(
+            AlbumListFilterButton(
                 modifier = Modifier.padding(start = 2.dp),
                 onClick = onClickVisibleFilter
             )
         }
 
         HorizontalDivider()
-    }
-}
-
-@Composable
-private fun FilterButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val hint = "Фильтры"
-    HintTooltip(text = hint, modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .border(2.dp, Color(0xFF434343), RoundedCornerShape(4.dp))
-                .background(Color(0xFF414141))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.FilterList, contentDescription = hint, tint = Color.White)
-        }
     }
 }
 
@@ -101,4 +72,3 @@ fun AlbumListBottomBarPreview() {
         onChange = {}
     )
 }
-

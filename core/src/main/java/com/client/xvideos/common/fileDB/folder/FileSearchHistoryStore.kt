@@ -48,7 +48,7 @@ open class FileSearchHistoryStore(
         }
         texts.value = all
             .sortedByDescending { it.fields[FolderTable.FIELD_TIME_CREATE]?.toLongOrNull() ?: 0L }
-            .mapNotNull { it.fields[FIELD_TEXT] ?: it.key }
+            .mapNotNull { it.fields[FIELD_TEXT]?.takeIf(String::isNotBlank) }
     }
 
     private suspend fun trim(limit: Int) {

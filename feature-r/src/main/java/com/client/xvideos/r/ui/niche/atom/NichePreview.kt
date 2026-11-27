@@ -32,7 +32,6 @@ import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.model.Preview as NichePreviewModel
-import com.client.xvideos.ui.theme.XvideosTheme
 
 
 @Composable
@@ -119,32 +118,30 @@ fun NichePreview(
 @Preview
 @Composable
 private fun NichePreviewPreview() {
-    XvideosTheme {
-        NichePreview(
-            niches = {
-                Niche(
-                    id = "female-backs",
-                    name = "Female Backs",
-                    gifs = 245,
-                    subscribers = 914,
-                    thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
-                    previews = listOf(
-                        NichePreviewModel(
-                            id = "dangerouswanmice",
-                            thumbnail = "https://media.redgifs.com/DangerousWanMice-mobile.jpg"
-                        ),
-                        NichePreviewModel(
-                            id = "weirddaringbovine",
-                            thumbnail = "https://media.redgifs.com/WeirdDaringBovine-mobile.jpg"
-                        ),
-                        NichePreviewModel(
-                            id = "unsteadyphonywren",
-                            thumbnail = "https://media.redgifs.com/UnsteadyPhonyWren-mobile.jpg"
-                        )
+    NichePreview(
+        niches = {
+            Niche(
+                id = "female-backs",
+                name = "Female Backs",
+                gifs = 245,
+                subscribers = 914,
+                thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
+                previews = listOf(
+                    NichePreviewModel(
+                        id = "dangerouswanmice",
+                        thumbnail = "https://media.redgifs.com/DangerousWanMice-mobile.jpg"
+                    ),
+                    NichePreviewModel(
+                        id = "weirddaringbovine",
+                        thumbnail = "https://media.redgifs.com/WeirdDaringBovine-mobile.jpg"
+                    ),
+                    NichePreviewModel(
+                        id = "unsteadyphonywren",
+                        thumbnail = "https://media.redgifs.com/UnsteadyPhonyWren-mobile.jpg"
                     )
                 )
-            },
-            onClick = {}
-        )
-    }
+            )
+        },
+        onClick = {}
+    )
 }

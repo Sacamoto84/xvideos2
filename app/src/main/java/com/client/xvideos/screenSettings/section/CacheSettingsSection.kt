@@ -16,7 +16,6 @@ import com.client.xvideos.screenSettings.components.IntSliderSetting
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsSwitchRow
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.snackbar.SnackBar
@@ -120,7 +119,7 @@ internal fun CacheSettingsSection(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun CacheSettingsSectionPreview() = SettingsPreview {
+private fun CacheSettingsSectionPreview() {
     val context = LocalContext.current
     CacheSettingsSection(
         ramCachePercent = 15,

@@ -90,30 +90,32 @@ fun CustomSeekBar(
         label = "Thumb Scale"
     )
 
+    val currentMaxProgress by rememberUpdatedState(maxProgress)
+
     Box(
         modifier = modifier
             .height(thumbRadius * 2)
             .onSizeChanged { newSize -> trackWidth = newSize.width.toFloat().coerceAtLeast(1f) }
-            .pointerInput(maxProgress) {
+            .pointerInput(Unit) {
                 detectTapGestures { offset ->
-                    val newValue = calculateCustomSeekBarSeekPosition(offset.x, trackWidth, maxProgress)
+                    val newValue = calculateCustomSeekBarSeekPosition(offset.x, trackWidth, currentMaxProgress)
                     localProgress = newValue
                     currentOnValueChange(localProgress)
                     currentOnValueChangeFinished()
                 }
             }
-            .pointerInput(maxProgress) {
+            .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = { offset ->
                         isDragging = true
                         dragStartOffsetX = offset.x
-                        initialProgress = calculateCustomSeekBarSeekPosition(dragStartOffsetX, trackWidth, maxProgress)
+                        initialProgress = calculateCustomSeekBarSeekPosition(dragStartOffsetX, trackWidth, currentMaxProgress)
                         localProgress = initialProgress
                         currentOnValueChange(localProgress)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        localProgress = calculateCustomSeekBarDragDelta(dragAmount.x, trackWidth, maxProgress, localProgress)
+                        localProgress = calculateCustomSeekBarDragDelta(dragAmount.x, trackWidth, currentMaxProgress, localProgress)
                         currentOnValueChange(localProgress)
                     },
                     onDragEnd = {

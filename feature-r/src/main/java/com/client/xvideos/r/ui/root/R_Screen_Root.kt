@@ -75,8 +75,8 @@ class R_Screen_Root : Screen {
 fun R_Screen_RootContent(
     navigationState: RNavigationState,
     percentDownload: Float,
-    dialogsContent: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
+    dialogsContent: @Composable () -> Unit = {},
 ) {
     CompositionLocalProvider(LocalRNavigationState provides navigationState) {
         dialogsContent()

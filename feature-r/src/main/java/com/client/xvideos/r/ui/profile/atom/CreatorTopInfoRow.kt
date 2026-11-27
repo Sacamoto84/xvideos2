@@ -37,7 +37,6 @@ import com.client.xvideos.feature.r.R
 import com.client.xvideos.r.model.UserInfo
 import com.client.xvideos.r.network.api.AccountMembership
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.account.molecule.AccountMembershipMenu
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Верхняя строка информации о креаторе: аватар, имя, бейдж верификации и кнопка подписки.
@@ -147,14 +146,12 @@ fun CreatorTopInfoRow(
 @Preview
 @Composable
 private fun CreatorTopInfoRowPreview() {
-    XvideosTheme {
-        CreatorTopInfoRow(
-            item = UserInfo(
-                username = "test_creator",
-                verified = true
-            ),
-            isFollow = false,
-            onFollowClick = {}
-        )
-    }
+    CreatorTopInfoRow(
+        item = UserInfo(
+            username = "test_creator",
+            verified = true
+        ),
+        isFollow = false,
+        onFollowClick = {}
+    )
 }

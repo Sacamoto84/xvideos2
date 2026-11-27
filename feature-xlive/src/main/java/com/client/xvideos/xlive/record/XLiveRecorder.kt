@@ -68,12 +68,10 @@ class XLiveRecorder(
     private val stop = CompletableDeferred<XLiveRecordStop>()
     private val addressLock = Mutex()
 
-    @Volatile
-    private var variant: XLiveVariant? = null
+    private data class AddressSnapshot(val generation: Int, val variant: XLiveVariant?)
 
-    /** Растёт с каждым новым адресом: две дорожки с 403 не берут его дважды. */
     @Volatile
-    private var generation = 0
+    private var address = AddressSnapshot(generation = 0, variant = null)
 
     @Volatile
     private var lastVideoProgressMs = 0L
@@ -90,11 +88,11 @@ class XLiveRecorder(
         lastVideoProgressMs = nowMs()
         val watchdog = launch { watchVideoProgress() }
         val work = launch {
-            while (variant == null && !stop.isCompleted) {
+            while (address.variant == null && !stop.isCompleted) {
                 refreshAddress(seen = 0)
-                if (variant == null) delay(RETRY_MS)
+                if (address.variant == null) delay(RETRY_MS)
             }
-            val first = variant ?: return@launch
+            val first = address.variant ?: return@launch
             launch { Track(isVideo = true, videoOut).run() }
             if (first.audioUrl != null) launch { Track(isVideo = false, audioOut).run() }
         }
@@ -123,7 +121,7 @@ class XLiveRecorder(
 
     /** Свежий адрес, если его ещё не взяла другая дорожка после поколения [seen]. */
     private suspend fun refreshAddress(seen: Int) = addressLock.withLock {
-        if (generation != seen) return@withLock
+        if (address.generation != seen) return@withLock
         // Новый master может постоянно отдавать недоступные медиаплейлисты.
         lastAddressRequestMs?.let { previous -> delay(RETRY_MS - (nowMs() - previous)) }
         lastAddressRequestMs = nowMs()
@@ -139,8 +137,7 @@ class XLiveRecorder(
         }
         val master = request { net.text(room.hlsUrl) } ?: return@withLock
         val best = master.body?.takeIf { master.isSuccess }?.let { parseBestVariant(it, room.hlsUrl) } ?: return@withLock
-        variant = best
-        generation++
+        address = AddressSnapshot(generation = address.generation + 1, variant = best)
         _stats.update { it.copy(width = best.width, height = best.height) }
     }
 
@@ -185,20 +182,15 @@ class XLiveRecorder(
          * другая дорожка — тогда эта узнаёт о смене здесь, а не по своему 403.
          */
         private var seenGeneration = -1
+        private var trackEnded = false
 
-        private val playlistUrl: String?
-            get() = variant?.let { if (isVideo) it.videoUrl else it.audioUrl }
+        private fun AddressSnapshot.url(): String? =
+            variant?.let { if (isVideo) it.videoUrl else it.audioUrl }
 
         suspend fun run() {
-            // Остановка проверяется в цикле, а не только отменой: шаг, который
-            // сам решил остановить запись (нет места), возвращается без
-            // приостановки, и без проверки дорожка крутилась бы, не отдав поток.
-            // Файл не открылся или запись на диск не прошла (обычно — место
-            // кончилось между проверками): запись заканчивается, записанное
-            // остаётся, исключение дальше не идёт.
             try {
                 FileOutputStream(out).use { stream ->
-                    while (!stop.isCompleted) {
+                    while (!stop.isCompleted && !trackEnded) {
                         currentCoroutineContext().ensureActive()
                         step(stream)
                     }
@@ -210,11 +202,11 @@ class XLiveRecorder(
         }
 
         private suspend fun step(stream: FileOutputStream) {
-            val gen = generation
-            noteGeneration(gen)
-            val playlist = readPlaylist(gen) ?: return
+            val snap = address
+            noteGeneration(snap.generation)
+            val playlist = readPlaylist(snap) ?: return
             val last = playlist.lastMsn ?: return delay(RETRY_MS)
-            if (!initWritten && !writeInit(stream, playlist.initUrl, gen)) return
+            if (!initWritten && !writeInit(stream, playlist.initUrl, snap.generation)) return
             var expected = next ?: last
             if (afterRefresh && last < expected) {
                 gap(isVideo)
@@ -225,7 +217,7 @@ class XLiveRecorder(
             val fresh = playlist.segments.filter { it.msn >= expected }
             if (fresh.isEmpty()) return delay(RETRY_MS)
             if (fresh.first().msn > expected) gap(isVideo)
-            writeSegments(stream, fresh, gen)
+            writeSegments(stream, fresh, snap.generation)
         }
 
         /** Адрес сменился с прошлого шага — возможно, его взяла другая дорожка. */
@@ -236,13 +228,17 @@ class XLiveRecorder(
         }
 
         /** Медиаплейлист текущего адреса; `null` — шаг повторится (пауза, свежий адрес или конец). */
-        private suspend fun readPlaylist(gen: Int): XLiveMediaPlaylist? {
-            val url = playlistUrl ?: return null.also { finish(XLiveRecordStop.STREAM_ENDED) }
+        private suspend fun readPlaylist(snap: AddressSnapshot): XLiveMediaPlaylist? {
+            val url = snap.url()
+            if (url == null) {
+                if (isVideo) finish(XLiveRecordStop.STREAM_ENDED) else trackEnded = true
+                return null
+            }
             // После смены адреса — без блокировки: номера на новом могли начаться
             // заново, и сервер ждал бы сегмент, которого не будет.
             val wanted = next?.takeUnless { afterRefresh }
             val response = request { net.text(wanted?.let { blockingReloadUrl(url, it) } ?: url) } ?: return null
-            if (response.code in NEW_ADDRESS || response.code in GONE) return null.also { renew(gen) }
+            if (response.code in NEW_ADDRESS || response.code in GONE) return null.also { renew(snap.generation) }
             // 400 на блокирующее перечитывание — такого номера сервер не ждёт
             // (нумерация началась заново): перечитать без номера.
             if (response.code == BAD_REQUEST && wanted != null) {
@@ -257,7 +253,7 @@ class XLiveRecorder(
         private suspend fun renew(gen: Int) {
             refreshAddress(gen)
             afterRefresh = true
-            if (generation == gen) delay(RETRY_MS)
+            if (address.generation == gen) delay(RETRY_MS)
         }
 
         /** `false` — init не записан, шаг повторится. */

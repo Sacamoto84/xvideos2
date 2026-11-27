@@ -27,13 +27,13 @@ fun X_SubscriptionsList(
     itemsList: List<XSubscriptionItem>,
     isModel: Boolean,
     topCutout: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
     listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
     onOpenCreator: (XSubscriptionItem) -> Unit = {},
     onDeleteRequest: (XSubscriptionItem) -> Unit = {},
     onImageError: (XSubscriptionItem) -> Unit = {},
     order: XSubscriptionsOrder = XSubscriptionsOrder.NEWEST,
     onOrderChange: (XSubscriptionsOrder) -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     val title = if (isModel) "Подписки на актрис" else "Подписки на каналы"
     if (itemsList.isEmpty()) {

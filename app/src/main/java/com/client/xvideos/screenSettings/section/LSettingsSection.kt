@@ -11,7 +11,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.common.settings.ThumbnailsSize
 import com.client.xvideos.screenSettings.components.ThumbnailSizeSelector
@@ -69,6 +68,6 @@ internal fun LSettingsSection(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun LSettingsSectionPreview() = SettingsPreview {
+private fun LSettingsSectionPreview() {
     LSettingsSection(lLogin = "preview_user", hasLAccount = true, onLogin = {}, modifier = Modifier)
 }

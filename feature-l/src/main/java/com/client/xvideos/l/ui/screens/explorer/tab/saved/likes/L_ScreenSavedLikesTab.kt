@@ -26,7 +26,6 @@ import com.client.xvideos.l.ui.element.lazyRowPictureDetails.L_LazyRowPictureDet
 import com.client.xvideos.l.ui.element.lazyRowPictureDetails.LazyRowPictureDetailsHost
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.atom.LikesEmptyMessage
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.likes.molecule.LikesFilterRow
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -113,12 +112,10 @@ fun SavedLikesTabContent(
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun SavedLikesTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        SavedLikesTabContent(
-            host = remember { LazyRowPictureDetailsHost("preview_likes") },
-            selectedIndex = 0,
-            onSelectFilterIndex = {},
-            topInset = Dp(24f)
-        )
-    }
+    SavedLikesTabContent(
+        host = remember { LazyRowPictureDetailsHost("preview_likes") },
+        selectedIndex = 0,
+        onSelectFilterIndex = {},
+        topInset = Dp(24f)
+    )
 }

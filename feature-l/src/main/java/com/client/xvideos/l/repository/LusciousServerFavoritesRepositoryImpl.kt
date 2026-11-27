@@ -1,5 +1,6 @@
 package com.client.xvideos.l.repository
 
+import com.client.xvideos.common.util.runCatchingCancellable
 import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.model.PicsDetails
 import com.client.xvideos.l.net.graphQl.FavoriteAdd
@@ -15,11 +16,13 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -116,21 +119,23 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             return Result.failure(rawResult.exceptionOrNull() ?: IllegalStateException("Request failed"))
         }
 
-        return runCatching {
-            val raw = rawResult.getOrThrow()
-            val json = LJson.parseToJsonElement(raw).jsonObject
-            val listByDate = json.objectAt("data", "favorite", "list_by_date")
+        return withContext(Dispatchers.Default) {
+            runCatchingCancellable {
+                val raw = rawResult.getOrThrow()
+                val json = LJson.parseToJsonElement(raw).jsonObject
+                val listByDate = json.objectAt("data", "favorite", "list_by_date")
 
-            listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
-                throw IllegalStateException("Server error: $msg")
-            }
+                listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
+                    throw IllegalStateException("Server error: $msg")
+                }
 
-            val items = listByDate.objectAt("picture_sets")?.get("items")
+                val items = listByDate.objectAt("picture_sets")?.get("items")
 
-            if (items is JsonArray) {
-                LJson.decodeFromJsonElement<List<AlbumDetails>>(items)
-            } else {
-                emptyList()
+                if (items is JsonArray) {
+                    LJson.decodeFromJsonElement<List<AlbumDetails>>(items)
+                } else {
+                    emptyList()
+                }
             }
         }.onFailure { e ->
             Timber.e("Failed to parse subscribed albums response: ${e.javaClass.simpleName}")
@@ -161,50 +166,52 @@ class LusciousServerFavoritesRepositoryImpl @Inject constructor(
             return Result.failure(rawResult.exceptionOrNull() ?: IllegalStateException("Request failed"))
         }
 
-        return runCatching {
-            val raw = rawResult.getOrThrow()
-            val json = LJson.parseToJsonElement(raw).jsonObject
-            val listByDate = json.objectAt("data", "favorite", "list_by_date")
+        return withContext(Dispatchers.Default) {
+            runCatchingCancellable {
+                val raw = rawResult.getOrThrow()
+                val json = LJson.parseToJsonElement(raw).jsonObject
+                val listByDate = json.objectAt("data", "favorite", "list_by_date")
 
-            listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
-                throw IllegalStateException("Server error: $msg")
-            }
+                listByDate?.get("errors").errorMessagesOrNull("Unknown error")?.let { msg ->
+                    throw IllegalStateException("Server error: $msg")
+                }
 
-            val itemsElement = listByDate.objectAt("pictures")?.get("items")
+                val itemsElement = listByDate.objectAt("pictures")?.get("items")
 
-            if (itemsElement is JsonArray) {
-                val sanitized = buildJsonArray {
-                    itemsElement.forEach { elem ->
-                        if (elem is JsonObject) {
-                            val albumElem = elem["album"]
-                            val albumId = if (albumElem is JsonObject) {
-                                albumElem["id"]?.jsonPrimitive?.contentOrNull
-                            } else if (albumElem is JsonPrimitive) {
-                                albumElem.contentOrNull
-                            } else {
-                                null
-                            }
-                            add(buildJsonObject {
-                                elem.forEach { (k, v) ->
-                                    if (k == "album") {
-                                        // Нет альбома — null. Раньше сюда писалась
-                                        // строка "null", и она уходила в метаданные
-                                        // сохранённого лайка.
-                                        put("album", albumId?.let(::JsonPrimitive) ?: JsonNull)
-                                    } else {
-                                        put(k, v)
-                                    }
+                if (itemsElement is JsonArray) {
+                    val sanitized = buildJsonArray {
+                        itemsElement.forEach { elem ->
+                            if (elem is JsonObject) {
+                                val albumElem = elem["album"]
+                                val albumId = if (albumElem is JsonObject) {
+                                    albumElem["id"]?.jsonPrimitive?.contentOrNull
+                                } else if (albumElem is JsonPrimitive) {
+                                    albumElem.contentOrNull
+                                } else {
+                                    null
                                 }
-                            })
-                        } else {
-                            add(elem)
+                                add(buildJsonObject {
+                                    elem.forEach { (k, v) ->
+                                        if (k == "album") {
+                                            // Нет альбома — null. Раньше сюда писалась
+                                            // строка "null", и она уходила в метаданные
+                                            // сохранённого лайка.
+                                            put("album", albumId?.let(::JsonPrimitive) ?: JsonNull)
+                                        } else {
+                                            put(k, v)
+                                        }
+                                    }
+                                })
+                            } else {
+                                add(elem)
+                            }
                         }
                     }
+                    val pics = LJson.decodeFromJsonElement<List<PicsDetails>>(sanitized)
+                    normalizePictureUrls(pics)
+                } else {
+                    emptyList()
                 }
-                val pics = LJson.decodeFromJsonElement<List<PicsDetails>>(sanitized)
-                normalizePictureUrls(pics)
-            } else {
-                emptyList()
             }
         }.onFailure { e ->
             Timber.e("Failed to parse server liked pictures response: ${e.javaClass.simpleName}")

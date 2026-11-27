@@ -17,8 +17,11 @@ import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import com.client.xvideos.common.util.runCatchingCancellable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -90,7 +93,9 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
 
         when (val apiResult = get(apiEndpoint)) {
             is NNetworkResult.Success -> {
-                val parsed = runCatching { NParser.parseGalleryPageV2(apiResult.body, page) }
+                val parsed = withContext(Dispatchers.Default) {
+                    runCatchingCancellable { NParser.parseGalleryPageV2(apiResult.body, page) }
+                }
                 if (parsed.isSuccess) return parsed
             }
             is NNetworkResult.CloudflareRequired -> {
@@ -119,7 +124,9 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
     suspend fun getFavoritesPage(page: Int = 1): Result<NGalleryPageResult> {
         val authHint = "Для загрузки избранного укажите действующий API-ключ в настройках N."
         return when (val result = get("/api/v2/favorites?page=$page")) {
-            is NNetworkResult.Success -> runCatching { NParser.parseGalleryPageV2(result.body, page) }
+            is NNetworkResult.Success -> withContext(Dispatchers.Default) {
+                runCatchingCancellable { NParser.parseGalleryPageV2(result.body, page) }
+            }
             is NNetworkResult.CloudflareRequired -> Result.failure(result.toException())
             is NNetworkResult.Failure -> Result.failure(result.throwable)
             is NNetworkResult.Error -> when {
@@ -160,9 +167,11 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
         return searchPage(query = tagQuery, page = page, sort = sort)
     }
 
-    private fun parseGalleryListing(body: String, page: Int): NGalleryPageResult? =
-        runCatching { NParser.parseGalleryPageV2(body, page) }.getOrNull()
-            ?: NParser.parseGalleryPageJson(body, page).takeIf { it.items.isNotEmpty() }
+    private suspend fun parseGalleryListing(body: String, page: Int): NGalleryPageResult? =
+        withContext(Dispatchers.Default) {
+            runCatchingCancellable { NParser.parseGalleryPageV2(body, page) }.getOrNull()
+                ?: NParser.parseGalleryPageJson(body, page).takeIf { it.items.isNotEmpty() }
+        }
 
     private suspend fun fetchGalleriesPageFromHtml(
         endpoint: String,
@@ -170,9 +179,11 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
         favoritesAuthHint: String? = null
     ): Result<NGalleryPageResult> {
         return when (val result = get(endpoint)) {
-            is NNetworkResult.Success -> runCatching {
-                if (favoritesAuthHint == null) NParser.parseSearchHtmlPage(result.body, defaultPage)
-                else checkNotNull(parseNFavoritesPage(result.finalUrl, result.body, defaultPage)) { favoritesAuthHint }
+            is NNetworkResult.Success -> withContext(Dispatchers.Default) {
+                runCatchingCancellable {
+                    if (favoritesAuthHint == null) NParser.parseSearchHtmlPage(result.body, defaultPage)
+                    else checkNotNull(parseNFavoritesPage(result.finalUrl, result.body, defaultPage)) { favoritesAuthHint }
+                }
             }
             is NNetworkResult.CloudflareRequired -> {
                 Result.failure(result.toException())
@@ -203,7 +214,7 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
         // Сначала пробуем прямой v2 JSON API с рекомендациями похожих работ
         when (val apiResult = get("/api/v2/galleries/$id?include=related")) {
             is NNetworkResult.Success -> {
-                val gallery = NParser.parseGalleryJson(apiResult.body)
+                val gallery = withContext(Dispatchers.Default) { NParser.parseGalleryJson(apiResult.body) }
                 if (gallery != null && gallery.id == id && gallery.pages.isNotEmpty()) {
                     return Result.success(gallery)
                 }
@@ -220,7 +231,9 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
         // Если JSON API недоступен, пробуем распарсить HTML страницы галереи
         return when (val htmlResult = get("/g/$id/")) {
             is NNetworkResult.Success -> {
-                val gallery = NParser.parseGalleryHtml(htmlResult.body, expectedGalleryId = id, requirePages = true)
+                val gallery = withContext(Dispatchers.Default) {
+                    NParser.parseGalleryHtml(htmlResult.body, expectedGalleryId = id, requirePages = true)
+                }
                 if (gallery != null) {
                     Result.success(gallery)
                 } else {
@@ -258,8 +271,10 @@ class NRepository internal constructor(private val get: suspend (String) -> NNet
         get("/api/v2/tags/${type.value}?sort=${sort.value}&page=$page")
             .parseTagsResponse(NParser::parseTagPage)
 
-    private fun <T> NNetworkResult.parseTagsResponse(parse: (String) -> T): Result<T> = when (this) {
-        is NNetworkResult.Success -> runCatching { parse(body) }
+    private suspend fun <T> NNetworkResult.parseTagsResponse(parse: (String) -> T): Result<T> = when (this) {
+        is NNetworkResult.Success -> withContext(Dispatchers.Default) {
+            runCatchingCancellable { parse(body) }
+        }
         is NNetworkResult.CloudflareRequired -> Result.failure(toException())
         is NNetworkResult.Error -> Result.failure(
             IllegalStateException(if (code == 429) message else "Не удалось загрузить теги (HTTP $code)")

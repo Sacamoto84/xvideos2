@@ -188,8 +188,12 @@ internal fun String.normalizedPreviewUrlOrNull(): String? {
 
 internal fun String.withHost(host: String): String? {
     val schemeEnd = indexOf("://").takeIf { it >= 0 } ?: return null
-    val pathStart = indexOf('/', startIndex = schemeEnd + 3)
-    val pathAndQuery = if (pathStart >= 0) substring(pathStart) else ""
-    return substring(0, schemeEnd + 3) + host + pathAndQuery
+    val scheme = substring(0, schemeEnd).lowercase()
+    if (scheme != "http" && scheme != "https") return null
+    val authorityStart = schemeEnd + 3
+    val suffixStart = indexOfAny(charArrayOf('/', '?', '#'), startIndex = authorityStart)
+    val suffix = if (suffixStart >= 0) substring(suffixStart) else ""
+    if (authorityStart == suffixStart || authorityStart >= length && suffixStart < 0) return null
+    return substring(0, authorityStart) + host + suffix
 }
 

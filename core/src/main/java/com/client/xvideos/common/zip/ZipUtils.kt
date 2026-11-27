@@ -18,6 +18,8 @@ import java.util.zip.ZipOutputStream
 object ZipUtils {
 
     private const val ZIP_BUFFER_SIZE = 32 * 1024
+    private const val MAX_UNZIP_ENTRIES = 20_000
+    private const val MAX_UNZIP_TOTAL_BYTES = 1024L * 1024 * 1024
 
     fun zipDirectory(sourceDir: File, zipFile: File) {
         require(sourceDir.exists()) { "Source directory does not exist: ${sourceDir.absolutePath}" }
@@ -50,21 +52,46 @@ object ZipUtils {
         val root = destDir.canonicalFile
         if (!root.exists()) root.mkdirs()
         ZipInputStream(BufferedInputStream(zipFile.inputStream(), ZIP_BUFFER_SIZE)).use { zip ->
+            var entryCount = 0
+            var totalUnpackedBytes = 0L
+            val buffer = ByteArray(ZIP_BUFFER_SIZE)
             while (true) {
                 val entry = zip.nextEntry ?: break
-                val name = normalizeRelativePath(entry.name)
-                val target = File(root, name).canonicalFile
-                requireInside(root, target)
-                if (entry.isDirectory || entry.name.endsWith("/")) {
-                    target.mkdirs()
-                } else {
-                    target.parentFile?.let { if (!it.exists()) it.mkdirs() }
-                    BufferedOutputStream(target.outputStream(), ZIP_BUFFER_SIZE).use { out ->
-                        zip.copyTo(out, ZIP_BUFFER_SIZE)
-                    }
-                }
+                entryCount++
+                check(entryCount <= MAX_UNZIP_ENTRIES) { "Too many entries in zip archive" }
+                totalUnpackedBytes = unpackEntry(zip, root, entry, buffer, totalUnpackedBytes)
                 zip.closeEntry()
             }
         }
+    }
+
+    private fun unpackEntry(
+        zip: ZipInputStream,
+        root: File,
+        entry: ZipEntry,
+        buffer: ByteArray,
+        initialTotalBytes: Long,
+    ): Long {
+        val name = normalizeRelativePath(entry.name)
+        val target = File(root, name).canonicalFile
+        requireInside(root, target)
+        if (entry.isDirectory || entry.name.endsWith("/") || entry.name.endsWith('\\')) {
+            target.mkdirs()
+            return initialTotalBytes
+        }
+        var totalBytes = initialTotalBytes
+        target.parentFile?.let { if (!it.exists()) it.mkdirs() }
+        BufferedOutputStream(target.outputStream(), ZIP_BUFFER_SIZE).use { out ->
+            while (true) {
+                val read = zip.read(buffer)
+                if (read < 0) break
+                totalBytes += read
+                check(totalBytes <= MAX_UNZIP_TOTAL_BYTES) {
+                    "Zip archive exceeds maximum uncompressed size limit"
+                }
+                out.write(buffer, 0, read)
+            }
+        }
+        return totalBytes
     }
 }

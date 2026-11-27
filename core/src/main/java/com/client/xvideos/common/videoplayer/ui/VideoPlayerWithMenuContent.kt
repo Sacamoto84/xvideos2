@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -34,8 +35,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun VideoPlayerWithMenuContent(
-    modifier: Modifier,
     playerHost: MediaPlayerHost,
+    autoRotate: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     /**
      * Долгое нажатие по видео; `null` — не обрабатывается. Превью в карточке
@@ -43,7 +45,6 @@ fun VideoPlayerWithMenuContent(
      * треть) удержание не обрабатывается: касание уходит предкам.
      */
     onLongClick: (() -> Unit)? = null,
-    autoRotate: Boolean,
     /**
      * Перемотка горизонтальным свайпом по нижней трети плеера.
      * Выключать, если плеер лежит внутри контейнера, который сам листается
@@ -55,6 +56,9 @@ fun VideoPlayerWithMenuContent(
     onZoomChanged: (Boolean) -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val currentOnClick by rememberUpdatedState(onClick)
+    val currentOnLongClick by rememberUpdatedState(onLongClick)
+    val currentOnZoomChanged by rememberUpdatedState(onZoomChanged)
     val zoomState = rememberZoomState(maxScale = 3f)
     LaunchedEffect(playerHost.videoFitMode, playerHost.url) { zoomState.reset() }
 
@@ -62,14 +66,12 @@ fun VideoPlayerWithMenuContent(
         derivedStateOf { isZoomActive(zoomState.scale) }
     }
     LaunchedEffect(isZoomed) {
-        onZoomChanged(isZoomed)
+        currentOnZoomChanged(isZoomed)
     }
 
     LaunchedEffect(resetZoomTrigger) {
         if (resetZoomTrigger > 0) {
-            coroutineScope.launch {
-                zoomState.changeScale(1.0f, Offset.Zero)
-            }
+            zoomState.changeScale(1.0f, Offset.Zero)
         }
     }
 
@@ -111,14 +113,20 @@ fun VideoPlayerWithMenuContent(
     Box(modifier = modifier.clipToBounds()) {
 
         Box(
-            modifier = modifier.zoomable(
-                zoomState = zoomState,
-                zoomEnabled = true,
-                enableOneFingerZoom = false,
-                onTap = { onClick() },
-                onDoubleTap = onDoubleTapZoom,
-                onLongPress = onLongClick?.let { longClick -> { _: Offset -> longClick() } },
-            )
+            modifier = Modifier
+                .fillMaxSize()
+                .zoomable(
+                    zoomState = zoomState,
+                    zoomEnabled = true,
+                    enableOneFingerZoom = false,
+                    onTap = { currentOnClick() },
+                    onDoubleTap = onDoubleTapZoom,
+                    onLongPress = if (onLongClick != null) {
+                        { _: Offset -> currentOnLongClick?.invoke() }
+                    } else {
+                        null
+                    },
+                )
         ) {
             StaticPlayer(playerHost, autoRotate)
         }

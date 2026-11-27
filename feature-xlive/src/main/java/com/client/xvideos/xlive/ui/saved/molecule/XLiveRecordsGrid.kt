@@ -63,14 +63,16 @@ fun XLiveRecordsGrid(
             }
         } else {
             items(items = state.records, key = { it.id }) { record ->
+                val canOpen = record.status == XLiveRecordStatus.READY
+                val canDelete = record.status == XLiveRecordStatus.READY || record.status == XLiveRecordStatus.BROKEN
                 XLiveRecordCard(
                     record = record,
                     snapshot = state.snapshots[record.id]?.let(::File),
-                    onClick = { actions.onOpen(record.id) },
-                    onLongClick = { pendingRemoval = record.id },
+                    onClick = { if (canOpen) actions.onOpen(record.id) },
+                    onLongClick = { if (canDelete) pendingRemoval = record.id },
                     online = state.online[record.username] == true,
                     // В галерею — только готовая запись: у пишущейся и оборванной видео ещё нет.
-                    onSaveToGallery = if (record.status == XLiveRecordStatus.READY) {
+                    onSaveToGallery = if (canOpen) {
                         { actions.onSaveToGallery(record.id) }
                     } else {
                         null

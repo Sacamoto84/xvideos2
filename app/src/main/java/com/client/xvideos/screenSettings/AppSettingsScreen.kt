@@ -44,7 +44,6 @@ import com.client.xvideos.r.ui.auth.ScreenRLoginContent
 import com.client.xvideos.screenSettings.molecule.SettingsXLoginForm
 import com.client.xvideos.screenSettings.model.SettingsDetailParams
 import com.client.xvideos.screenSettings.model.SettingsLoginForms
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -255,23 +254,21 @@ internal fun AppSettingsScreenContent(
 private fun AppSettingsScreenPreview() {
     val context = LocalContext.current
     Settings.init(context.getSharedPreferences("preview_prefs", 0))
-    XvideosTheme {
-        AppSettingsScreenBody(
-            params = SettingsDetailParams(
-                currentPage = SettingsPage.Main,
-                imageCacheSizeBytes = 128_000_000L,
-                storageStats = EmptyStorageStats,
-                sizeRedTotal = 512_000_000L,
-                sizeRedDownload = 64_000_000L,
-                onClearImageCache = {},
-                onClearDownload = {},
-                data = SettingsDataHolders(),
-                context = context.applicationContext,
-                onBackupDataChanged = {},
-                onOpenLLogin = {},
-                onOpenXLogin = {}
-            ),
-            modifier = Modifier.verticalScroll(rememberScrollState())
-        )
-    }
+    AppSettingsScreenBody(
+        params = SettingsDetailParams(
+            currentPage = SettingsPage.Main,
+            imageCacheSizeBytes = 128_000_000L,
+            storageStats = EmptyStorageStats,
+            sizeRedTotal = 512_000_000L,
+            sizeRedDownload = 64_000_000L,
+            onClearImageCache = {},
+            onClearDownload = {},
+            data = SettingsDataHolders(),
+            context = context.applicationContext,
+            onBackupDataChanged = {},
+            onOpenLLogin = {},
+            onOpenXLogin = {}
+        ),
+        modifier = Modifier.verticalScroll(rememberScrollState())
+    )
 }

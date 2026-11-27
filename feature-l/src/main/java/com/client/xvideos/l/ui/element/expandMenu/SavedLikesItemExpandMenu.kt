@@ -2,6 +2,7 @@ package com.client.xvideos.l.ui.element.expandMenu
 
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.expandmenu.LazyExpandMenuAnchor
 import com.client.xvideos.l.featured.saved.SavedL
@@ -14,7 +15,6 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveT
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_ServerLike
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SetCover
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Меню элемента в сохранённых лайках. Само меню поднимается только после
@@ -22,8 +22,8 @@ import com.client.xvideos.ui.theme.XvideosTheme
  */
 @Composable
 fun SavedLikesItemExpandMenu(
+    modifier: Modifier = Modifier,
     item: PicsDetails? = null,
-    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
     onClick: () -> Unit = {},
     onDelete: (PicsDetails) -> Unit = {},
     onServerLike: (PicsDetails) -> Unit = {},
@@ -68,17 +68,15 @@ fun SavedLikesItemExpandMenu(
 @Preview(showBackground = true, backgroundColor = 0xFF303030)
 @Composable
 private fun SavedLikesItemExpandMenuPreview() {
-    XvideosTheme(darkTheme = true) {
-        SavedLikesItemExpandMenu(
-            item = PicsDetails(
-                height = 1080,
-                width = 1920,
-                is_animated = false,
-                url_to_original = null,
-                url_to_video = null,
-                album = "preview-album",
-                thumbnails = emptyList(),
-            )
+    SavedLikesItemExpandMenu(
+        item = PicsDetails(
+            height = 1080,
+            width = 1920,
+            is_animated = false,
+            url_to_original = null,
+            url_to_video = null,
+            album = "preview-album",
+            thumbnails = emptyList(),
         )
-    }
+    )
 }

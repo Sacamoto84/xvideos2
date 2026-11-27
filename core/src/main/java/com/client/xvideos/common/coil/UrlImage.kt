@@ -1,8 +1,8 @@
 package com.client.xvideos.common.coil
 
-import com.client.xvideos.common.theme.Theme
-
+import android.graphics.drawable.Animatable
 import android.graphics.drawable.AnimatedImageDrawable
+import android.graphics.drawable.AnimatedVectorDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -38,11 +39,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.asDrawable
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
@@ -51,9 +53,7 @@ import coil3.request.ImageRequest
 import coil3.size.Precision
 import coil3.size.Scale
 import com.client.xvideos.common.AppPath
-import androidx.compose.material3.Text
 import com.client.xvideos.common.util.fileNameForLog
-import com.client.xvideos.common.util.formatBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.conflate
@@ -105,6 +105,8 @@ fun UrlImage(
 //    }
 
     val context = LocalContext.current
+    val appContext = remember(context) { context.applicationContext }
+    val resources = LocalResources.current
 
     // В режиме превью возвращаем заглушку, чтобы избежать инициализации OkHttp/Conscrypt,
     // которая вызывает NoClassDefFoundError в LayoutLib.
@@ -123,12 +125,11 @@ fun UrlImage(
         return
     }
 
+    val effectiveUrl = url.ifBlank { urlGif.orEmpty() }
+
     // Пустая строка — не адрес. Coil трактует её как локальный файл и падает с
     // `filePath == null`, а сообщение уезжало пользователю в текст ошибки.
-    // Так выглядят записи, потерявшие поля: избранное X, сохранённое старой
-    // сборкой с обфускацией, читается в объект со значениями по умолчанию —
-    // Gson сопоставляет поля по именам, а в файле лежат `a`, `b`, `c`.
-    if (url.isBlank()) {
+    if (effectiveUrl.isBlank()) {
         Box(
             modifier = modifier.background(backgroung),
             contentAlignment = Alignment.Center
@@ -145,28 +146,16 @@ fun UrlImage(
 
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
-    var isPlaying by remember { mutableStateOf(autoPlay) }
+    var isPlaying by remember(effectiveUrl, autoPlay) { mutableStateOf(autoPlay) }
 
-    val rawProgress by remember(url) {
+    val rawProgress by remember(effectiveUrl) {
         derivedStateOf {
-            CoilProgressManager.progressMap[url] ?: CoilProgressItem( url, 0L, 0L, false )
+            CoilProgressManager.progressMap[effectiveUrl] ?: CoilProgressItem(effectiveUrl, 0L, 0L, false)
         }
     }
 
-    // Прогресс нужен только тексту загрузки и индикатору анимации.
-    // Было: бесконечный while + delay(200) на КАЖДУЮ картинку. Для url без записи
-    // в progressMap done навсегда остаётся false, поэтому цикл не завершался и
-    // будил корутину 5 раз в секунду на каждую картинку и каждую миниатюру.
-    // Стало: подписка на snapshot-состояние с тем же троттлингом 200 мс —
-    // когда прогресс не меняется, корутина просто спит.
-    //
-    // Начальное значение — пустой прогресс, а не rawProgress: аргумент вычисляется
-    // в теле composable, и чтение rawProgress подписывало UrlImage на каждую порцию
-    // загрузки (обычно по 8 КБ) в обход троттлинга — даже там, где прогресс не
-    // нужен вовсе (проход 206, T2). rawProgress читается только в snapshotFlow, и
-    // композицию будит лишь progress: не чаще раза в 200 мс и только при needProgress.
     val needProgress = isVisibleProgressText || isAnimated
-    val progress by produceState(CoilProgressItem(url, 0L, 0L, false), url, needProgress) {
+    val progress by produceState(CoilProgressItem(effectiveUrl, 0L, 0L, false), effectiveUrl, needProgress) {
         if (!needProgress) return@produceState
         snapshotFlow { rawProgress }
             .conflate()
@@ -179,14 +168,16 @@ fun UrlImage(
     val bytes = progress.bytes
     val total = progress.total
 
-    val dataSource = remember(url, urlGif, albumName) {
-        if (url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)) {
-            url.toUri()
+    val dataSource = remember(effectiveUrl, albumName) {
+        if (effectiveUrl.startsWith("https://", ignoreCase = true) ||
+            effectiveUrl.startsWith("http://", ignoreCase = true)
+        ) {
+            effectiveUrl.toUri()
         } else {
-            val cleanUrl = if (url.startsWith("file://", ignoreCase = true)) {
-                url.substring(7)
+            val cleanUrl = if (effectiveUrl.startsWith("file://", ignoreCase = true)) {
+                effectiveUrl.substring(7)
             } else {
-                url
+                effectiveUrl
             }
             val fileName = cleanUrl.substringAfterLast('/').substringBefore('?')
             val localFile = File(cleanUrl)
@@ -203,13 +194,14 @@ fun UrlImage(
         }
     }
 
-    // Один глобальный ImageLoader на всё приложение
-    val imageLoader = remember {CoilImageLoaderFactory.getImageLoader(context) }
+    // Один глобальный ImageLoader на всё приложение (обновляется после recreate/clearCache)
+    val loaderVersion by CoilImageLoaderFactory.version.collectAsStateWithLifecycle()
+    val imageLoader = remember(appContext, loaderVersion) { CoilImageLoaderFactory.getImageLoader(appContext) }
 
     val sizeResolver = rememberConstraintsSizeResolver()
 
-    val imageRequest = remember(dataSource, rotate, isFullScreen, sizeResolver) {
-        ImageRequest.Builder(context)
+    val imageRequest = remember(appContext, dataSource, rotate, isFullScreen, sizeResolver) {
+        ImageRequest.Builder(appContext)
             .data(dataSource)
             .scale(Scale.FIT)
             .apply {
@@ -221,8 +213,10 @@ fun UrlImage(
             .build()
     }
 
-    var state by remember { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
-    var hasLoaded by remember(url) { mutableStateOf(false) }
+    var state by remember(imageRequest, imageLoader) {
+        mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty)
+    }
+    var hasLoaded by remember(effectiveUrl) { mutableStateOf(false) }
     val shouldLoad = isVisible || hasLoaded
 
     val currentOnSuccess by rememberUpdatedState(onSuccess)
@@ -239,25 +233,25 @@ fun UrlImage(
         }
     }
 
-    //// Управление воспроизведением анимации
-    LaunchedEffect(state, isPlaying, isAnimated) {
-
-        if (isAnimated && state is AsyncImagePainter.State.Success) {
-
-            val drawable =
-                (state as AsyncImagePainter.State.Success).result.image.asDrawable(context.resources)
-
-            if (drawable is AnimatedImageDrawable) {
-                if (isPlaying) {
-                    drawable.start()
-                    Timber.d("!!! AnimatedImageDrawable started")
-                } else {
-                    drawable.stop()
-                    Timber.d("!!! AnimatedImageDrawable stopped")
-                }
+    // Управление воспроизведением анимации + остановка при уходе элемента
+    DisposableEffect(state, isPlaying, isAnimated, resources) {
+        val drawable = if (isAnimated && state is AsyncImagePainter.State.Success) {
+            (state as AsyncImagePainter.State.Success).result.image.asDrawable(resources)
+        } else {
+            null
+        }
+        if (drawable is AnimatedImageDrawable || drawable is AnimatedVectorDrawable || drawable is Animatable) {
+            val anim = drawable as Animatable
+            if (isPlaying) {
+                anim.start()
+            } else {
+                anim.stop()
             }
-            else if (drawable is android.graphics.drawable.AnimatedVectorDrawable) { if (isPlaying) { drawable.start() } else { drawable.stop() } }
-            else if (drawable is android.graphics.drawable.Animatable) { if (isPlaying) { drawable.start() } else { drawable.stop() } }
+        }
+        onDispose {
+            if (drawable is Animatable && drawable.isRunning) {
+                drawable.stop()
+            }
         }
     }
 
@@ -402,30 +396,4 @@ fun UrlImage(
     }
 
 
-}
-
-
-@Composable
-private fun ProgressText(
-    bytesRead: Long,
-    totalBytes: Long,
-    visibleByte: Boolean = true
-) {
-    if (bytesRead > 1000) {
-        val text = if (totalBytes > 0) {
-            if (visibleByte) "${formatBytes(bytesRead)} / ${formatBytes(totalBytes)}" else formatBytes(
-                totalBytes
-            )
-        } else {
-            formatBytes(bytesRead)
-        }
-
-        Text(
-            text,
-            color = Color.White,
-            modifier = Modifier.offset((-1).dp, 7.dp),
-            fontFamily = Theme.L.fontFamilyKarla,
-            fontSize = 9.sp
-        )
-    }
 }

@@ -70,6 +70,12 @@ class MediaPlayerHost(
     fun loadUrl(mediaUrl: String, headers: Map<String, String>? = null, drmConfig: DrmConfig? = null) {
         this.headers = headers
         this.drmConfig = drmConfig
+        playFromTime = null
+        totalTime = 0
+        currentTime = 0f
+        seekRequest = null
+        poster = true
+        isBuffering = true
         url = mediaUrl
     }
 

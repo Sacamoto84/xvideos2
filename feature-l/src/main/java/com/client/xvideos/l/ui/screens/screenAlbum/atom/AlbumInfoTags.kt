@@ -18,7 +18,6 @@ import com.client.xvideos.common.util.capitalizeEachWord
 import com.client.xvideos.l.model.Tag
 import com.client.xvideos.l.ui.screens.screenAlbum.model.groupAlbumTags
 import com.client.xvideos.l.ui.screens.screenAlbum.model.textWithoutCategory
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Теги альбома рядами по категориям: «Character: [Frieren (260)]», ниже —
@@ -73,16 +72,14 @@ fun AlbumInfoTags(
 @Preview
 @Composable
 private fun AlbumInfoTagsPreview() {
-    XvideosTheme {
-        AlbumInfoTags(
-            tags = {
-                listOf(
-                    Tag(id = "tag1", category = "Character", text = "Character: frieren", url = "url1", count = 260),
-                    Tag(id = "tag2", category = "Ethnicity", text = "Ethnicity: elf", url = "url2", count = 163),
-                    Tag(id = "tag3", text = "nature photography", url = "url3", count = 150)
-                )
-            },
-            onClick = {}
-        )
-    }
+    AlbumInfoTags(
+        tags = {
+            listOf(
+                Tag(id = "tag1", category = "Character", text = "Character: frieren", url = "url1", count = 260),
+                Tag(id = "tag2", category = "Ethnicity", text = "Ethnicity: elf", url = "url2", count = 163),
+                Tag(id = "tag3", text = "nature photography", url = "url3", count = 150)
+            )
+        },
+        onClick = {}
+    )
 }

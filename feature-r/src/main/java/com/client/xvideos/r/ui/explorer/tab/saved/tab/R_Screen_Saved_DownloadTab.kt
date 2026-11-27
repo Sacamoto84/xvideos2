@@ -51,7 +51,6 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadListItem
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadSortMenu
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.DownloadViewMenu
 import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
-import com.client.xvideos.ui.theme.XvideosTheme
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 
@@ -208,23 +207,21 @@ private fun SavedDownloadTabContent(
 @Preview
 @Composable
 private fun SavedDownloadTabPreview() {
-    XvideosTheme(darkTheme = true) {
-        val items = List(8) { GifsInfo(id = "sample_${it + 1}", userName = "author") }
-        var view by remember { mutableStateOf(DownloadView.DETAILS) }
-        var sort by remember { mutableStateOf(DownloadSort.DATE) }
-        SavedDownloadTabContent(
-            downloads = RedDownloadsScan(items, items.mapIndexed { index, item ->
-                downloadedVideoKey(item.userName, item.id) to (index + 1) * 1_500_000L
-            }.toMap()),
-            view = view,
-            onViewChange = { view = it },
-            sort = sort,
-            onSortChange = { sort = it },
-            state = rememberLazyGridState(),
-            topInset = 24.dp,
-            onItemClick = {},
-            onShareClick = {},
-            onDeleteClick = {}
-        )
-    }
+    val items = List(8) { GifsInfo(id = "sample_${it + 1}", userName = "author") }
+    var view by remember { mutableStateOf(DownloadView.DETAILS) }
+    var sort by remember { mutableStateOf(DownloadSort.DATE) }
+    SavedDownloadTabContent(
+        downloads = RedDownloadsScan(items, items.mapIndexed { index, item ->
+            downloadedVideoKey(item.userName, item.id) to (index + 1) * 1_500_000L
+        }.toMap()),
+        view = view,
+        onViewChange = { view = it },
+        sort = sort,
+        onSortChange = { sort = it },
+        state = rememberLazyGridState(),
+        topInset = 24.dp,
+        onItemClick = {},
+        onShareClick = {},
+        onDeleteClick = {}
+    )
 }

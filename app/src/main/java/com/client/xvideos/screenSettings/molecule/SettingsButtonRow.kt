@@ -10,7 +10,6 @@ import com.client.xvideos.screenSettings.atom.SettingsOutlinedButton
 import com.client.xvideos.screenSettings.components.SettingsAccentColor
 import com.client.xvideos.screenSettings.components.SettingsDestructiveColor
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
  * Строка настроек с кнопкой с обводкой справа.
@@ -44,7 +43,7 @@ fun SettingsButtonRow(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun SettingsButtonRowPreview() = SettingsPreview {
+private fun SettingsButtonRowPreview() {
     SettingsButtonRow(
         icon = R.drawable.icon_red,
         text = "Профиль",

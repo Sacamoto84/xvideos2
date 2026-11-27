@@ -21,13 +21,19 @@ object NCookieHelper {
     fun getAllCookies(cookieManager: CookieManager, currentUrl: String? = null): String {
         val targets = listOfNotNull(currentUrl?.takeIf(::isNTrustedWebUrl)) + NHENTAI_URLS
 
-        return targets
+        val byName = linkedMapOf<String, String>()
+        targets
             .mapNotNull { runCatching { cookieManager.getCookie(it) }.getOrNull() }
             .flatMap { it.split(";") }
             .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .distinct()
-            .joinToString("; ")
+            .filter { it.isNotEmpty() && '=' in it }
+            .forEach { pair ->
+                val nameKey = pair.substringBefore('=').trim().lowercase()
+                if (nameKey.isNotEmpty() && !byName.containsKey(nameKey)) {
+                    byName[nameKey] = pair
+                }
+            }
+        return byName.values.joinToString("; ")
     }
 
     /**
@@ -44,4 +50,4 @@ object NCookieHelper {
 }
 
 internal fun isNTrustedWebUrl(url: String): Boolean =
-    url.toHttpUrlOrNull()?.let { it.isHttps && it.host == "nhentai.net" && it.port == 443 } == true
+    url.toHttpUrlOrNull()?.let { it.isHttps && it.host.equals("nhentai.net", ignoreCase = true) && it.port == 443 } == true

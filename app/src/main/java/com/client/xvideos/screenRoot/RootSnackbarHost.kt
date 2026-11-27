@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.client.xvideos.common.snackbar.UiMessage
 import com.client.xvideos.common.snackbar.UiSnackbarVisuals
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.coroutines.delay
 
 @Composable
@@ -104,7 +103,5 @@ fun RootSnackbarHostPreview() {
             )
         )
     }
-    XvideosTheme {
-        RootSnackbarHost(snackBarHostState = snackbarHostState)
-    }
+    RootSnackbarHost(snackBarHostState = snackbarHostState)
 }

@@ -28,10 +28,10 @@ fun ConverterKeypad(
     onDecimal: () -> Unit,
     onBackspace: () -> Unit,
     onClear: () -> Unit,
+    modifier: Modifier = Modifier,
     onOperator: (String) -> Unit = {},
     onPercent: () -> Unit = {},
     onEquals: () -> Unit = {},
-    modifier: Modifier = Modifier,
     spacing: Dp = 10.dp
 ) {
     Column(

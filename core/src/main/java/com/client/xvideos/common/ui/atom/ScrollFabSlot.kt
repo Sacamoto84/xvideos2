@@ -41,9 +41,9 @@ fun ScrollFabSlot(
     icon: ImageVector,
     contentDescription: String,
     hazeState: HazeState,
+    modifier: Modifier = Modifier,
     contentColor: Color = Theme.ScrollFab.contentColor,
     effect: ScrollButtonEffect = ScrollButtonEffect.FLAT,
-    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.size(Theme.ScrollFab.size),

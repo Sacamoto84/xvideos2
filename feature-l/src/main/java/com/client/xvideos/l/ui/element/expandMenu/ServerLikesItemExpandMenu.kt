@@ -12,7 +12,6 @@ import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Downl
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_SaveToGallery
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_ServerUnlike
 import com.client.xvideos.l.ui.element.expandMenu.element.DropdownMenuItem_Share
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Меню элемента в лайках на сервере L.
@@ -21,8 +20,8 @@ import com.client.xvideos.ui.theme.XvideosTheme
  */
 @Composable
 fun ServerLikesItemExpandMenu(
-    item: PicsDetails? = null,
     modifier: Modifier = Modifier,
+    item: PicsDetails? = null,
     onClick: () -> Unit = {},
     onDownload: (PicsDetails) -> Unit = {},
     onServerUnlike: (PicsDetails) -> Unit = {},
@@ -52,17 +51,15 @@ fun ServerLikesItemExpandMenu(
 @Preview(showBackground = true, backgroundColor = 0xFF303030)
 @Composable
 private fun ServerLikesItemExpandMenuPreview() {
-    XvideosTheme(darkTheme = true) {
-        ServerLikesItemExpandMenu(
-            item = PicsDetails(
-                height = 1080,
-                width = 1920,
-                is_animated = false,
-                url_to_original = null,
-                url_to_video = null,
-                album = "preview-album",
-                thumbnails = emptyList(),
-            )
+    ServerLikesItemExpandMenu(
+        item = PicsDetails(
+            height = 1080,
+            width = 1920,
+            is_animated = false,
+            url_to_original = null,
+            url_to_video = null,
+            album = "preview-album",
+            thumbnails = emptyList(),
         )
-    }
+    )
 }

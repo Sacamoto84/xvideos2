@@ -8,7 +8,7 @@ data class NAlbumFilter(
     val maxPages: Int? = null,
     val minFavorites: Int? = null,
     val uploadedWithin: NUploadPeriod = NUploadPeriod.ANY
-) {
+) : java.io.Serializable {
     val isDefault: Boolean
         get() = this == DEFAULT
 
@@ -53,7 +53,7 @@ private fun String.hasLanguageOperator(): Boolean {
     return false
 }
 
-data class NTagCondition(val tag: NTag, val excluded: Boolean) {
+data class NTagCondition(val tag: NTag, val excluded: Boolean) : java.io.Serializable {
     val searchToken: String
         get() {
             val type = tag.type.ifBlank { "tag" }

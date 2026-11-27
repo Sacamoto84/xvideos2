@@ -40,7 +40,6 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.collection.ScreenCollectio
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogActions
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.model.R_CollectionDialogData
 import com.client.xvideos.r.ui.explorer.tab.saved.tab.molecule.R_CollectionDialogsHost
-import com.client.xvideos.ui.theme.XvideosTheme
 import timber.log.Timber
 
 internal val redCollectionsGridStyle = CollectionsGridStyle(
@@ -228,22 +227,20 @@ fun R_SavedCollectionTabContent(
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun R_SavedCollectionTabPreview() {
-    XvideosTheme(darkTheme = true) {
-        val sampleCollections = listOf(
-            CollectionEntity(
-                collection = "Favorites",
-                items = emptyList<GifsInfo>()
-            )
+    val sampleCollections = listOf(
+        CollectionEntity(
+            collection = "Favorites",
+            items = emptyList<GifsInfo>()
         )
-        R_SavedCollectionTabContent(
-            selectedCollection = null,
-            collectionList = sampleCollections,
-            gridState = rememberLazyGridState(),
-            topInset = 24.dp,
-            onCollectionClick = {},
-            onCollectionLongClick = {},
-            onCreateNewCollectionClick = {},
-            navigationContent = {}
-        )
-    }
+    )
+    R_SavedCollectionTabContent(
+        selectedCollection = null,
+        collectionList = sampleCollections,
+        gridState = rememberLazyGridState(),
+        topInset = 24.dp,
+        onCollectionClick = {},
+        onCollectionLongClick = {},
+        onCreateNewCollectionClick = {},
+        navigationContent = {}
+    )
 }

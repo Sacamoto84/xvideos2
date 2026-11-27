@@ -13,7 +13,6 @@ import com.client.xvideos.R
 import com.client.xvideos.screenSettings.atom.SettingsOutlinedButton
 import com.client.xvideos.screenSettings.components.SettingsDestructiveColor
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
  * Строка настройки кода уничтожения в разделе «Приватность».
@@ -65,7 +64,7 @@ fun DuressCodeRow(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun DuressCodeRowPreview() = SettingsPreview {
+private fun DuressCodeRowPreview() {
     DuressCodeRow(
         isSet = true,
         onSetClick = {},

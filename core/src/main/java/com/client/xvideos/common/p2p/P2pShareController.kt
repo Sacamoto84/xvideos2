@@ -4,12 +4,15 @@ import com.client.xvideos.common.p2p.nearby.NearbyClient
 import com.client.xvideos.common.p2p.nearby.P2pEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /** Найденный рядом телефон. */
 data class P2pEndpoint(val id: String, val name: String)
@@ -49,14 +52,17 @@ class P2pShareController(
 
     private val endpoints = linkedMapOf<String, P2pEndpoint>()
     private var targetEndpoint: String? = null
-    private var eventsJob: kotlinx.coroutines.Job? = null
-    private var prepareJob: kotlinx.coroutines.Job? = null
+    private var eventsJob: Job? = null
+    private var prepareJob: Job? = null
+    private var sendJob: Job? = null
+    private var reconnectJob: Job? = null
 
     /** Бандл, закешированный после первой подготовки — рестарт не качает заново. */
     private var bundle: P2pExportBundle? = null
 
     /** Payload'ы, поставленные в очередь и ещё не подтверждённые доставкой. */
-    private val pendingPayloads = mutableSetOf<Long>()
+    private val pendingPayloads = ConcurrentHashMap.newKeySet<Long>()
+    @Volatile
     private var allEnqueued = false
 
     fun start() {
@@ -67,6 +73,8 @@ class P2pShareController(
         allEnqueued = false
         eventsJob?.cancel()
         prepareJob?.cancel()
+        sendJob?.cancel()
+        reconnectJob?.cancel()
         _state.value = ShareState.Preparing
         prepareJob = scope.launch {
             val prepared = try {
@@ -141,8 +149,9 @@ class P2pShareController(
                     _state.value = ShareState.Error("Соединение разорвано")
                 }
                 // После разрыва возвращаемся в поиск, чтобы можно было отправить снова
-                scope.launch {
-                    kotlinx.coroutines.delay(1000)
+                reconnectJob?.cancel()
+                reconnectJob = scope.launch {
+                    delay(1000)
                     if (_state.value is ShareState.Error || _state.value is ShareState.Done) {
                         start()
                     }
@@ -161,7 +170,8 @@ class P2pShareController(
         _state.value = ShareState.Sending(0, 0)
         pendingPayloads.clear()
         allEnqueued = false
-        scope.launch {
+        sendJob?.cancel()
+        sendJob = scope.launch {
             try {
                 val payloadIds = HashMap<File, Long>()
                 for (file in b.files) {
@@ -200,6 +210,9 @@ class P2pShareController(
 
     fun stop() {
         prepareJob?.cancel()
+        eventsJob?.cancel()
+        sendJob?.cancel()
+        reconnectJob?.cancel()
         nearby.stopAll()
     }
 }

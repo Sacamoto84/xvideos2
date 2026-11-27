@@ -5,7 +5,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
  * Строка профиля nhentai в настройках: отображает статус авторизации и управляет входом/выходом.
@@ -42,14 +41,12 @@ internal fun NProfileRow(
 @Preview
 @Composable
 private fun NProfileRowPreview() {
-    SettingsPreview {
-        SettingsGroup {
-            NProfileRow(
-                username = "OtakuUser",
-                hasAccount = true,
-                onLogin = {},
-                onLogout = {}
-            )
-        }
+    SettingsGroup {
+        NProfileRow(
+            username = "OtakuUser",
+            hasAccount = true,
+            onLogin = {},
+            onLogout = {}
+        )
     }
 }

@@ -9,10 +9,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,16 +85,16 @@ fun LocalVideoPlayerContent(
     }
 
     var resumeNoticeText by remember(fileUrl, showResumeNotice) {
-        mutableStateOf(
-            if (showResumeNotice) {
-                resumePosition?.let { sec ->
-                    "Возобновлено с ${formatTime(sec.toInt())}"
-                }
-            } else {
-                null
-            }
-        )
+        mutableStateOf(buildResumeNoticeText(showResumeNotice, resumePosition))
     }
+
+    val currentOnSaveProgress by rememberUpdatedState(onSaveProgress)
+    val currentOnPopBack by rememberUpdatedState(onPopBack)
+    val currentOnToggleFullScreen by rememberUpdatedState(onToggleFullScreen)
+    val currentOnExitFullScreen by rememberUpdatedState(onExitFullScreen)
+    val currentOnToggleMute by rememberUpdatedState(onToggleMute)
+    val currentIsFullScreen by rememberUpdatedState(isFullScreen)
+    val currentEnablePlayPauseFeedback by rememberUpdatedState(enablePlayPauseFeedback)
 
     val host = remember(fileUrl) {
         MediaPlayerHost(
@@ -117,12 +119,20 @@ fun LocalVideoPlayerContent(
     // собранной из самого файла. Ролик перематывается один раз — при отпускании.
     // Захват ползунка возвращает панель, чтобы она не дотухла под пальцем.
     var scrub by remember { mutableStateOf<SeekScrub?>(null) }
+    var isSpeedMenuOpen by remember { mutableStateOf(false) }
     val onScrub: (SeekScrub?) -> Unit = remember {
         { value ->
             scrub = value
             if (value != null) areControlsVisible = true
         }
     }
+    val onSpeedMenuExpandedChange: (Boolean) -> Unit = remember {
+        { expanded ->
+            isSpeedMenuOpen = expanded
+            if (expanded) areControlsVisible = true
+        }
+    }
+    val scrubProvider: () -> SeekScrub? = remember { { scrub } }
     val storyboardImage = rememberStoryboardImage(storyboard)
 
     // При смене режима панели снова видны.
@@ -135,10 +145,10 @@ fun LocalVideoPlayerContent(
         host.videoFitMode = if (isFullScreen) ScreenResize.FILL else ScreenResize.FIT
     }
 
-    // Автоскрытие панелей через 3,5 с на весь экран, пока ролик играет и палец не ведёт ползунок.
-    val isScrubbing = scrub != null
-    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused, isScrubbing) {
-        if (shouldAutoHideControls(isFullScreen, areControlsVisible, host.isPaused, false, isScrubbing)) {
+    // Автоскрытие панелей через 3,5 с на весь экран, пока ролик играет и меню скорости/ползунок не открыты.
+    val isScrubbing by remember { derivedStateOf { scrub != null } }
+    LaunchedEffect(isFullScreen, areControlsVisible, host.isPaused, isSpeedMenuOpen, isScrubbing) {
+        if (shouldAutoHideControls(isFullScreen, areControlsVisible, host.isPaused, isSpeedMenuOpen, isScrubbing)) {
             delay(3500)
             areControlsVisible = false
         }
@@ -153,29 +163,26 @@ fun LocalVideoPlayerContent(
     }
 
     // Периодическое сохранение прогресса во время воспроизведения — только пока экран
-    // запущен. `isPaused` — пауза с экрана, уход в фон её не ставит: раньше цикл и в
-    // свёрнутом приложении каждые 3 с переписывал ту же запись истории на диск
-    // (проход 204, T1). На уходе прогресс сохраняется один раз (`ON_STOP`).
+    // запущен и ролик подготовлен (не перетираем сохранённую позицию нулём до старта seek).
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(host.isPaused, lifecycleOwner) {
+    LaunchedEffect(host, host.isPaused, lifecycleOwner) {
         if (!host.isPaused) {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                onSaveProgress(host.currentTime, host.totalTime)
                 while (isActive) {
                     delay(3000L)
-                    onSaveProgress(host.currentTime, host.totalTime)
+                    saveHostProgressIfReady(host, currentOnSaveProgress)
                 }
             }
         }
     }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        onSaveProgress(host.currentTime, host.totalTime)
+        saveHostProgressIfReady(host, currentOnSaveProgress)
     }
 
     // Финальное сохранение при закрытии экрана
     DisposableEffect(host) {
         onDispose {
-            onSaveProgress(host.currentTime, host.totalTime)
+            saveHostProgressIfReady(host, currentOnSaveProgress)
         }
     }
 
@@ -186,20 +193,20 @@ fun LocalVideoPlayerContent(
 
     // «Назад»: зум сбрасывает масштаб, затем выход из полного экрана, затем из плеера.
     BackHandler(enabled = isZoomed, onBack = onResetZoom)
-    BackHandler(enabled = !isZoomed && isFullScreen, onBack = onExitFullScreen)
-    BackHandler(enabled = !isZoomed && !isFullScreen, onBack = onPopBack)
+    BackHandler(enabled = !isZoomed && isFullScreen, onBack = currentOnExitFullScreen)
+    BackHandler(enabled = !isZoomed && !isFullScreen, onBack = currentOnPopBack)
 
     val onZoomChanged: (Boolean) -> Unit = remember { { isZoomed = it } }
-    val playbackFeedback = remember(host, isFullScreen, enablePlayPauseFeedback) {
+    val playbackFeedback = remember(host, enablePlayPauseFeedback) {
         PlayPauseFeedbackState(host, enablePlayPauseFeedback)
     }
-    val onTap: () -> Unit = remember(isFullScreen, playbackFeedback) {
+    val onTap: () -> Unit = remember(playbackFeedback) {
         {
-            if (isFullScreen && !enablePlayPauseFeedback) {
+            if (currentIsFullScreen && !currentEnablePlayPauseFeedback) {
                 areControlsVisible = !areControlsVisible
             } else {
                 playbackFeedback.togglePlayback()
-                if (isFullScreen) areControlsVisible = true
+                if (currentIsFullScreen) areControlsVisible = true
             }
         }
     }
@@ -210,13 +217,18 @@ fun LocalVideoPlayerContent(
         }
     }
 
-    val overlayActions = remember(onExitFullScreen, onRestartPlayback, onToggleFullScreen, onScrub, onToggleMute) {
+    val overlayActions = remember(
+        onRestartPlayback,
+        onScrub,
+        onSpeedMenuExpandedChange,
+    ) {
         LocalVideoPlayerOverlayActions(
-            onExitFullScreen = onExitFullScreen,
+            onExitFullScreen = { currentOnExitFullScreen() },
             onRestartPlayback = onRestartPlayback,
-            onToggleFullScreen = onToggleFullScreen,
+            onToggleFullScreen = { currentOnToggleFullScreen() },
             onScrub = onScrub,
-            onToggleMute = onToggleMute,
+            onToggleMute = currentOnToggleMute?.let { { currentOnToggleMute?.invoke() } },
+            onSpeedMenuExpandedChange = onSpeedMenuExpandedChange,
         )
     }
 
@@ -238,12 +250,27 @@ fun LocalVideoPlayerContent(
                     title = title,
                     resumeNoticeText = resumeNoticeText,
                     storyboard = storyboardImage,
-                    scrub = scrub,
+                    scrubProvider = scrubProvider,
                     muted = muted,
                     actions = overlayActions,
                 )
             }
         )
+    }
+}
+
+private fun buildResumeNoticeText(showResumeNotice: Boolean, resumePosition: Float?): String? {
+    if (!showResumeNotice) return null
+    val sec = resumePosition ?: return null
+    return "Возобновлено с ${formatTime(sec.toInt())}"
+}
+
+private fun saveHostProgressIfReady(
+    host: MediaPlayerHost,
+    onSaveProgress: (Float, Int) -> Unit,
+) {
+    if (host.totalTime > 0 || host.currentTime > 0f) {
+        onSaveProgress(host.currentTime, host.totalTime)
     }
 }
 

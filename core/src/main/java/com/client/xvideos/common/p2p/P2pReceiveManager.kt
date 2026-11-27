@@ -104,6 +104,8 @@ object P2pReceiveManager {
             }
             is ReceiveState.Done -> {
                 EventBus.postEvent(Event.P2pTransferUpdate.Success(peerName()))
+                // Даём отправителю получить ACK и UI показать «Принято» до перезапуска рекламы.
+                kotlinx.coroutines.delay(2_500)
                 _controller.value?.start()
             }
             is ReceiveState.Error -> {

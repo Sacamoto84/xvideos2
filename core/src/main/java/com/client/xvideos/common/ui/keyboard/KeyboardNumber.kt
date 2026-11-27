@@ -66,8 +66,9 @@ fun KeyboardNumber(
     onClick: (Int) -> Unit,
 ) {
 
-    var textFieldValue by remember {
-        mutableStateOf(TextFieldValue(if (value == -1) "" else value.toString(), TextRange(value.toString().length)))
+    var textFieldValue by remember(value) {
+        val initialText = if (value < 0) "" else value.toString()
+        mutableStateOf(TextFieldValue(initialText, TextRange(initialText.length)))
     }
 
     Column {

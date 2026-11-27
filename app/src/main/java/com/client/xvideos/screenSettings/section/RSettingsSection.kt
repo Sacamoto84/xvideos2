@@ -5,10 +5,8 @@ import com.client.xvideos.screenSettings.redDownloadRecoveryText
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
-import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,12 +18,12 @@ import androidx.compose.ui.Modifier
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.client.xvideos.screenSettings.atom.SettingsActionButton
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsDividerColor
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
 import com.client.xvideos.screenSettings.components.WhatsAppGreen
 import com.client.xvideos.screenSettings.molecule.RProfileRow
@@ -36,8 +34,6 @@ import com.client.xvideos.r.common.downloader.DownloadRed
 import com.client.xvideos.r.common.downloader.RedDownloadRecoveryReport
 import com.client.xvideos.r.common.saved.SavedRed
 import kotlinx.coroutines.launch
-
-private const val ICON_RED = R.drawable.icon_red
 
 @Composable
 internal fun RSettingsSection(
@@ -92,13 +88,13 @@ internal fun RSettingsSection(
 
     val recoveryTrailing: @Composable () -> Unit = remember(isRecoveryEnabled, onStartRecovery) {
         {
-            RecoveryTrailingButton(enabled = isRecoveryEnabled, onClick = onStartRecovery)
+            SettingsActionButton(text = "Старт", enabled = isRecoveryEnabled, onClick = onStartRecovery)
         }
     }
 
     val nichesTrailing: @Composable () -> Unit = remember(isNichesEnabled, onRefreshNichesCache) {
         {
-            NichesTrailingButton(enabled = isNichesEnabled, onClick = onRefreshNichesCache)
+            SettingsActionButton(text = "Обновить", enabled = isNichesEnabled, onClick = onRefreshNichesCache)
         }
     }
 
@@ -117,21 +113,21 @@ internal fun RSettingsSection(
         RProfileRow(onLogin = onOpenLogin)
         SettingsDivider()
         SettingsValueRow(
-            icon = ICON_RED,
+            icon = R.drawable.icon_red,
             text = "Размер всех папок Red",
             value = formattedTotal
         )
         SettingsDivider()
 
         SettingsValueRow(
-            icon = ICON_RED,
+            icon = R.drawable.icon_red,
             text = "Размер папки Download",
             value = formattedDownload
         )
         SettingsDivider()
 
         SettingsButtonRowWithDialog(
-            icon = ICON_RED,
+            icon = R.drawable.icon_red,
             text = "Очистить папку Download",
             value = "Очистить",
             textDialogTitle = "Очистка папки Download",
@@ -150,7 +146,7 @@ internal fun RSettingsSection(
         SettingsDivider()
 
         SettingsValueRow(
-            icon = ICON_RED,
+            icon = R.drawable.icon_red,
             text = "Кэш Niches",
             value = nichesCacheValue
         )
@@ -170,7 +166,7 @@ internal fun RSettingsSection(
         SettingsDivider()
 
         SettingsListItem(
-            icon = ICON_RED,
+            icon = R.drawable.icon_red,
             text = "Обновить кэш Niches",
             subtitle = nichesSubtitle,
             trailing = nichesTrailing
@@ -178,39 +174,9 @@ internal fun RSettingsSection(
     }
 }
 
+@Preview
 @Composable
-private fun RecoveryTrailingButton(
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Button(
-        enabled = enabled,
-        onClick = onClick,
-        modifier = modifier
-    ) {
-        Text("Старт")
-    }
-}
-
-@Composable
-private fun NichesTrailingButton(
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Button(
-        enabled = enabled,
-        onClick = onClick,
-        modifier = modifier
-    ) {
-        Text("Обновить")
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF262626)
-@Composable
-private fun RSettingsSectionPreview() = SettingsPreview {
+private fun RSettingsSectionPreview() {
     RSettingsSection(
         sizeRedTotal = 1024L * 1024L * 250L,
         sizeRedDownload = 1024L * 1024L * 50L,

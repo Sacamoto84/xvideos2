@@ -129,8 +129,11 @@ object AppPath {
      * создаёт папки. Всё, что может занять заметное время, — в
      * [prepareTransientDirs].
      */
+    /** Возвращает корневой каталог хранилища [main] до вызова [init]. */
+    fun storeRootDir(context: Context): File = File(context.filesDir, STORE_DIR)
+
     fun init(context: Context) {
-        root = File(context.filesDir, STORE_DIR)
+        root = storeRootDir(context)
 
         File(main).mkdirs()
         File(file_db).mkdirs()

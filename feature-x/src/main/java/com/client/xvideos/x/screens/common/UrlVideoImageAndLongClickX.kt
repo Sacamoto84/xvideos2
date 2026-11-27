@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.urlVideoImage.UrlVideoLite
 import com.client.xvideos.common.vibrate.vibrateWithPatternAndAmplitude
-import com.client.xvideos.ui.theme.XvideosTheme
 import com.client.xvideos.x.feature.saved.SavedLocalVideo
 import com.client.xvideos.x.model.ItemsX
 import com.client.xvideos.x.parcer.parserVideoPreviewFromImageUrl
@@ -132,21 +131,19 @@ fun UrlVideoImageAndLongClickX(
 @Preview
 @Composable
 private fun UrlVideoImageAndLongClickXPreview() {
-    XvideosTheme {
-        UrlVideoImageAndLongClickX(
-            item = ItemsX(
-                id = 1L,
-                title = "Preview video",
-                duration = "10:00",
-                views = "100K",
-                channel = "Channel",
-                previewImage = "",
-                href = "/video",
-                nameProfile = "Profile",
-                linkProfile = "/profile",
-            ),
-            onLongClick = {},
-            onDoubleClick = {}
-        )
-    }
+    UrlVideoImageAndLongClickX(
+        item = ItemsX(
+            id = 1L,
+            title = "Preview video",
+            duration = "10:00",
+            views = "100K",
+            channel = "Channel",
+            previewImage = "",
+            href = "/video",
+            nameProfile = "Profile",
+            linkProfile = "/profile",
+        ),
+        onLongClick = {},
+        onDoubleClick = {}
+    )
 }

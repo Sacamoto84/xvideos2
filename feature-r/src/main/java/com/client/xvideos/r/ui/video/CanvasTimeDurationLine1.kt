@@ -1,0 +1,367 @@
+package com.client.xvideos.r.ui.video
+
+import com.client.xvideos.common.theme.Theme
+
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.horizontalDrag
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.client.xvideos.common.util.toMinSec
+import kotlinx.coroutines.coroutineScope
+import kotlin.coroutines.cancellation.CancellationException
+
+/**
+ * @param currentTime текущее время, с. Поставщиком, а не числом: плеер обновляет
+ * его 20 раз в секунду. Текст зависит только от целых секунд, полоса читает время
+ * в отрисовке — перекомпоновка раз в секунду, а не на каждое обновление
+ * (проход 217, T2).
+ */
+@Composable
+fun CanvasTimeDurationLine1(
+    currentTime: () -> Float,
+    duration: Int,
+    modifier: Modifier = Modifier,
+    timeA: Float = 0f,
+    timeB: Float = 1f,
+    timeABEnable: Boolean,
+    visibleAB: Boolean = true,
+    play: Boolean = false,
+    isBuffering: Boolean = false,
+    onSeek: (Float) -> Unit,              // 🔹 при перетаскивании
+    onSeekFinished: (() -> Unit)? = null, // 🔹 когда отпустили
+    isVisibleTime: Boolean = true,
+    isVisibleStep: Boolean = true
+) {
+
+    var isDragging by remember { mutableStateOf(false) }
+
+    val currentTimeProvider by rememberUpdatedState(currentTime)
+    val currentSeconds by remember { derivedStateOf { timelineWholeSeconds(currentTimeProvider()) } }
+    val currentTimeText = " " + currentSeconds.toMinSec()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "buffering")
+    val bufferingColor by infiniteTransition.animateColor(
+        initialValue = Color(0xFFCDECFB),
+        //targetValue = Color(0xFF137CBD), // Синий
+        targetValue = Color(0xFF73CDF1),
+        animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bufferingColor"
+    )
+
+    Row(
+        modifier = Modifier
+            .then(modifier)
+            .fillMaxWidth()
+            .height(32.dp)
+            .timelineSeekGestures(
+                duration = duration,
+                onDraggingChange = { isDragging = it },
+                onSeek = onSeek,
+                onSeekFinished = onSeekFinished
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        if (isVisibleTime) {
+            Box {
+                Text(
+                    currentTimeText,
+                    color = Color.Black,
+                    fontSize = 12.sp,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
+                    modifier = Modifier
+                        .width(44.dp)
+                        .offset(0.5.dp, 0.5.dp)//.background(Color.Green)
+                )
+
+                Text(
+                    currentTimeText,
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
+                    modifier = Modifier.width(44.dp)//.background(Color.Green)
+                )
+            }
+        }
+
+        Canvas(modifier = Modifier
+            .fillMaxSize()
+            .weight(1f))
+        {
+            val canvasWidth = size.width
+            val canvasHeight = size.height
+            val baseLineColor = if (isBuffering) bufferingColor else Color(0xff909090)
+            val stepColor = if (isBuffering) bufferingColor else Color.Gray
+
+            if (duration > 0 && isVisibleStep && canvasWidth > 0f) {
+                drawTimelineStepMarks(duration = duration, stepColor = stepColor)
+            }
+
+            // Фон
+            drawLine(
+                color = baseLineColor,
+                start = Offset(x = 0f, y = canvasHeight / 2),
+                end = Offset(x = canvasWidth, y = canvasHeight / 2),
+                strokeWidth = 2.dp.toPx(),
+                cap = StrokeCap.Square
+            )
+
+            if (duration > 0 && canvasWidth > 0f) {
+                drawTimelineProgressAndMarkers(
+                    duration = duration,
+                    currentTime = currentTimeProvider(),
+                    timeA = timeA,
+                    timeB = timeB,
+                    timeABEnable = timeABEnable,
+                    visibleAB = visibleAB,
+                )
+            }
+        }
+
+
+
+        if (isVisibleTime) {
+
+            Box {
+
+                Text(
+                    duration.toDouble().toMinSec() + " ",
+                    color = Color.Black,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.End,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
+                    modifier = Modifier
+                        .width(44.dp)
+                        .offset(0.5.dp, 0.5.dp)//.background(Color.Green)
+                )
+
+                Text(
+                    duration.toDouble().toMinSec() + " ",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.End,
+                    fontFamily = Theme.R.fontFamilyPopinsRegular,
+                    modifier = Modifier.width(44.dp)//.background(Color.Green)
+                )
+            }
+
+        }
+    }
+}
+
+internal fun calculateSeekTime(x: Float, width: Int, duration: Int): Float? {
+    if (width <= 0 || duration <= 0) return null
+    val newTime = (x / width) * duration
+    return if (!newTime.isNaN() && !newTime.isInfinite()) {
+        newTime.coerceIn(0f, duration.toFloat())
+    } else {
+        null
+    }
+}
+
+/**
+ * Целые секунды для подписи времени — то же, что `toDouble().toMinSec()` считал
+ * из дробного времени: не число и не больше нуля — ноль.
+ */
+internal fun timelineWholeSeconds(time: Float): Int =
+    if (!time.isFinite() || time <= 0f) 0 else time.toInt()
+
+internal fun calculateTimelineProgressWidth(currentTime: Float, duration: Int, canvasWidth: Float): Float {
+    if (duration <= 0 || canvasWidth <= 0f) return 0f
+    if (currentTime.isNaN() || currentTime.isInfinite()) return 0f
+    return (canvasWidth * (currentTime / duration)).coerceIn(0f, canvasWidth)
+}
+
+internal fun calculateTimelinePointX(
+    pointTime: Float,
+    duration: Int,
+    canvasWidth: Float,
+    defaultRatio: Float = 0f
+): Float {
+    if (duration <= 0 || canvasWidth <= 0f) return 0f
+    if (pointTime.isNaN() || pointTime.isInfinite()) {
+        return (canvasWidth * defaultRatio).coerceIn(0f, canvasWidth)
+    }
+    return (canvasWidth * (pointTime / duration)).coerceIn(0f, canvasWidth)
+}
+
+private fun DrawScope.drawTimelineStepMarks(duration: Int, stepColor: Color) {
+    val canvasWidth = size.width
+    val canvasHeight = size.height
+    val pxPerSec = canvasWidth / duration
+    val minStepPx = 6.dp.toPx()
+    val stepSec = when {
+        pxPerSec >= minStepPx -> 1
+        pxPerSec * 5 >= minStepPx -> 5
+        pxPerSec * 10 >= minStepPx -> 10
+        pxPerSec * 30 >= minStepPx -> 30
+        pxPerSec * 60 >= minStepPx -> 60
+        else -> 300
+    }
+    val strokeWidthPx = 2.dp.toPx()
+    val tickHeightPx = 4.dp.toPx()
+    for (i in 0..duration step stepSec) {
+        val x = (i * pxPerSec).coerceIn(0f, canvasWidth)
+        drawLine(
+            color = stepColor,
+            start = Offset(x = x, y = canvasHeight / 2),
+            end = Offset(x = x, y = canvasHeight / 2 + tickHeightPx),
+            strokeWidth = strokeWidthPx,
+            cap = StrokeCap.Round
+        )
+    }
+}
+
+private fun DrawScope.drawTimelineProgressAndMarkers(
+    duration: Int,
+    currentTime: Float,
+    timeA: Float,
+    timeB: Float,
+    timeABEnable: Boolean,
+    visibleAB: Boolean,
+) {
+    val canvasWidth = size.width
+    val canvasHeight = size.height
+    val centerY = canvasHeight / 2
+    val strokeWidthPx = 2.dp.toPx()
+    val progressRatioA = calculateTimelinePointX(timeA, duration, canvasWidth, defaultRatio = 0f)
+    val progressRatioB = calculateTimelinePointX(timeB, duration, canvasWidth, defaultRatio = 1f)
+    val progressWidth = calculateTimelineProgressWidth(currentTime, duration, canvasWidth)
+
+    if (!timeABEnable) {
+        drawLine(
+            color = Color(0xFFE73538),
+            start = Offset(x = 0f, y = centerY),
+            end = Offset(x = progressWidth, y = centerY),
+            strokeWidth = strokeWidthPx,
+            cap = StrokeCap.Square
+        )
+    }
+
+    drawCircle(
+        color = Color(0xFFE73538),
+        center = Offset(progressWidth, centerY),
+        radius = 3.dp.toPx()
+    )
+
+    if (visibleAB) {
+        val abOffset = 4.dp.toPx()
+        drawLine(
+            color = Color(0xFF8BC34A),
+            start = Offset(x = progressRatioA, y = centerY - abOffset),
+            end = Offset(x = progressRatioB, y = centerY - abOffset),
+            strokeWidth = strokeWidthPx,
+            cap = StrokeCap.Square
+        )
+    }
+}
+
+private fun Modifier.timelineSeekGestures(
+    duration: Int,
+    onDraggingChange: (Boolean) -> Unit,
+    onSeek: (Float) -> Unit,
+    onSeekFinished: (() -> Unit)?
+): Modifier = pointerInput(duration) {
+    coroutineScope {
+        while (true) {
+            awaitPointerEventScope {
+                // Касание забираем сразу: полоса перематывает уже на нём, а без
+                // consume() тап доходил и до клика карточки мини-плеера R, и тот
+                // гасил видео (проход 217, C1). Clickable предка не начинает
+                // нажатие по поглощённому касанию.
+                val down = awaitFirstDown().also { it.consume() }
+                calculateSeekTime(down.position.x, size.width, duration)?.let(onSeek)
+
+                try {
+                    var drag: PointerInputChange? = null
+                    try {
+                        drag = awaitTouchSlopOrCancellation(down.id) { change, _ ->
+                            onDraggingChange(true)
+                            change.consume()
+                        }
+                    } catch (_: CancellationException) {
+                    }
+
+                    if (drag != null) {
+                        horizontalDrag(drag.id) { change ->
+                            calculateSeekTime(change.position.x, size.width, duration)?.let(onSeek)
+                            change.consume()
+                        }
+                    }
+                } finally {
+                    onDraggingChange(false)
+                    onSeekFinished?.invoke()
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, device = "id:Nexus 5", apiLevel = 34)
+@Composable
+fun CanvasTimeDurationLine1Preview() {
+
+    CanvasTimeDurationLine1(
+        currentTime = { 7f },
+        duration = 20,
+        timeA = 2f,
+        timeB = 5f,
+        timeABEnable = false,
+        visibleAB = true,
+        play = false,
+        onSeek = { },
+        onSeekFinished = { },
+        isVisibleTime = true,
+        isVisibleStep = true
+    )
+
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+fun CanvasTimeDurationLine1BufferingPreview() {
+    CanvasTimeDurationLine1(
+        currentTime = { 5f },
+        duration = 20,
+        timeABEnable = false,
+        isBuffering = true,
+        onSeek = { },
+        onSeekFinished = { }
+    )
+}

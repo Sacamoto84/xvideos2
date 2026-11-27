@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.backup.XlrRestoreMode
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.screenSettings.components.SettingsPreview
 
 /**
  * Вопрос перед восстановлением: что делать с тем, чего в архиве нет.
@@ -91,6 +90,6 @@ internal fun BackupRestoreModeDialog(
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun BackupRestoreModeDialogPreview() = SettingsPreview {
+private fun BackupRestoreModeDialogPreview() {
     BackupRestoreModeDialog(summary = "214 файлов, 3.1 МБ", onDismiss = {}, onSelected = {})
 }

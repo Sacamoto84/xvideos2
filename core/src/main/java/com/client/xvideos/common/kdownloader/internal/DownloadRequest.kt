@@ -13,26 +13,29 @@ import kotlinx.coroutines.Job
  * таймаутов, текущего состояния выполнения и ссылки на активную корутину [job].
  */
 class DownloadRequest private constructor(
-    internal var url: String,
+    @Volatile internal var url: String,
     internal val tag: String?,
     @Volatile internal var listener: Listener?,
-    internal val headers: HashMap<String, List<String>>?,
+    @Volatile internal var headers: HashMap<String, List<String>>?,
     internal val dirPath: String,
     internal val downloadId: Int,
     internal val fileName: String,
-    internal var status: Status = Status.UNKNOWN,
+    @Volatile internal var status: Status = Status.UNKNOWN,
     internal var readTimeOut: Int = 0,
     internal var connectTimeOut: Int = 0,
     internal var userAgent: String = Constants.DEFAULT_USER_AGENT
 ) {
 
     /** Полный размер файла в байтах. */
+    @Volatile
     var totalBytes: Long = 0
 
     /** Количество уже скачанных байт. */
+    @Volatile
     var downloadedBytes: Long = 0
 
     /** Активная корутинная задача выполнения загрузки. */
+    @Volatile
     internal var job: Job? = null
 
     /**

@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
+import com.client.xvideos.n.ui.model.NGridScrollIndicatorLayout
 
 @Composable
 internal fun BoxScope.NGridScrollIndicatorOverlay(

@@ -15,7 +15,6 @@ import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.components.SettingsButtonRowWithDialog
 import com.client.xvideos.screenSettings.components.SettingsGroup
 import com.client.xvideos.screenSettings.components.SettingsListItem
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -69,7 +68,7 @@ internal fun RProfileRow(onLogin: () -> Unit) {
 
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
-private fun RProfileRowPreview() = SettingsPreview {
+private fun RProfileRowPreview() {
     SettingsGroup {
         RProfileRow(onLogin = {})
     }

@@ -5,13 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -245,31 +243,6 @@ private fun L_LazyRowPictureDetailsPreview() {
         contentAlignment = Alignment.Center
     ) {
         InitialPictureItemsLoading()
-    }
-}
-
-@Composable
-private fun rememberActiveItemRange(
-    gridState: LazyStaggeredGridState,
-    showInitialLoading: Boolean,
-    columns: Int,
-): State<IntRange> {
-    // columns — ключ: derivedStateOf читает его как обычный параметр, без ключа
-    // после раскрытия складного буферы остались бы от прежнего числа колонок.
-    return remember(gridState, showInitialLoading, columns) {
-        derivedStateOf {
-            val visible = gridState.layoutInfo.visibleItemsInfo
-            if (visible.isEmpty()) {
-                0..15
-            } else {
-                val headerOffset = if (showInitialLoading) 2 else 1
-                val first = (visible.minOf { it.index } - headerOffset).coerceAtLeast(0)
-                val last = (visible.maxOf { it.index } - headerOffset).coerceAtLeast(0)
-                val bufferBefore = columns
-                val bufferAfter = columns * 2
-                ((first - bufferBefore).coerceAtLeast(0))..(last + bufferAfter)
-            }
-        }
     }
 }
 

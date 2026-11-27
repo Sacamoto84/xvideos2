@@ -19,8 +19,8 @@ import com.client.xvideos.l.model.Genre
 @Composable
 fun AlbumInfoGreeting(
     parsed: AlbumDetails,
+    modifier: Modifier = Modifier,
     onGenreClick: (Genre) -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     val headerStyle = remember(Theme.L.Type.rowTitle) {
         Theme.L.Type.rowTitle.copy(fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)

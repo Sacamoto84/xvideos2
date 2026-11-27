@@ -9,4 +9,5 @@ internal class LocalVideoPlayerOverlayActions(
     val onToggleFullScreen: () -> Unit,
     val onScrub: (SeekScrub?) -> Unit,
     val onToggleMute: (() -> Unit)?,
+    val onSpeedMenuExpandedChange: (Boolean) -> Unit = {},
 )

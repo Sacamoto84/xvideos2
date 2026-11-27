@@ -11,9 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.screenSettings.atom.StorageFolderRow
 import com.client.xvideos.screenSettings.components.SettingsDivider
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.StorageFolderStat
-import com.client.xvideos.screenSettings.components.StorageProgressRow
 import com.client.xvideos.screenSettings.components.StorageStat
 
 /**
@@ -60,7 +58,7 @@ internal fun StorageSectionItem(
 
 @Preview
 @Composable
-private fun StorageSectionItemPreview() = SettingsPreview {
+private fun StorageSectionItemPreview() {
     StorageSectionItem(
         stat = StorageStat(
             key = "R",

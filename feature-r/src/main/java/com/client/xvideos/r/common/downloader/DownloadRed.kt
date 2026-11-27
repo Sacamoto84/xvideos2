@@ -31,6 +31,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -271,12 +272,27 @@ class DownloadRed internal constructor(
         if (isUnsafeItemName(item.userName) || isUnsafeItemName(item.id)) return
 
         scope.launch(Dispatchers.IO) {
-            val tmpRoot = File(appContext.cacheDir, "p2p_r_export")
-            tmpRoot.deleteRecursively()
+            val exportRoot = File(appContext.cacheDir, "p2p_r_export")
+            cleanupStaleP2pExports(exportRoot)
+            val tmpRoot = File(exportRoot, "${System.currentTimeMillis()}_${UUID.randomUUID()}")
             val infoJson = AppJson.encodeToString(item)
             val bundle = buildRMetaBundle(tmpRoot, item.userName, item.id, infoJson)
             withContext(Dispatchers.Main) { onReady(bundle) }
         }
+    }
+
+    private fun cleanupStaleP2pExports(exportRoot: File, nowMs: Long = System.currentTimeMillis()) {
+        val children = exportRoot.listFiles() ?: return
+        val staleCutoffMs = nowMs - STALE_P2P_EXPORT_AGE_MS
+        for (child in children) {
+            if (child.lastModified() <= staleCutoffMs) {
+                child.deleteRecursively()
+            }
+        }
+    }
+
+    private companion object {
+        const val STALE_P2P_EXPORT_AGE_MS = 60L * 60 * 1000
     }
 
     private var refreshJob: Job? = null
@@ -338,7 +354,7 @@ class DownloadRed internal constructor(
             scan.candidates.forEach { candidate ->
                 val enqueueReport = downloader.downloadMissingFilesForRecovery(
                     item = candidate.item,
-                    onComplete = { refreshDownloadList() },
+                    onComplete = {},
                     onEvent = onEvent,
                     pending = pending
                 )
@@ -363,11 +379,15 @@ class DownloadRed internal constructor(
      * Удаляет все скачанные файлы R и очищает каталог загрузок.
      */
     fun deleteAll(onComplete: () -> Unit = {}) {
-        downloader.kDownloader.cancelAll()
+        downloader.invalidateAll()
         scope.launch(Dispatchers.IO) {
-            File(AppPath.r_cache_download).apply {
-                deleteRecursively()
-                mkdirs()
+            downloader.kDownloader.cancelAllAndJoin()
+            downloader.joinAllCompletionJobs()
+            downloader.withCacheLock {
+                File(AppPath.r_cache_download).apply {
+                    deleteRecursively()
+                    mkdirs()
+                }
             }
             refreshDownloadList()
             withContext(Dispatchers.Main) {
@@ -388,8 +408,10 @@ class DownloadRed internal constructor(
             Timber.w("DownloadRed.delete -> Отклонён небезопасный путь: userName=$userName, id=$id")
             return
         }
+        downloader.invalidateItem(id)
         scope.launch(Dispatchers.IO) {
-            downloader.kDownloader.cancel(item.id)
+            downloader.kDownloader.cancelAndJoin(id)
+            downloader.joinCompletionJobs(id)
             val baseDir = File(AppPath.r_cache_download)
             val userDir = File(baseDir, item.userName)
             val files = downloadedItemFiles(userDir, item.id)
@@ -402,13 +424,15 @@ class DownloadRed internal constructor(
                 return@launch
             }
 
-            files.forEach { it.delete() }
+            downloader.withCacheLock {
+                files.forEach { it.delete() }
 
-            // Проверяем, осталась ли папка пользователя пустой
-            if (userDir.exists() && userDir.isDirectory) {
-                val files = userDir.listFiles()
-                if (files.isNullOrEmpty()) {
-                    userDir.delete()  // папка пустая → удаляем
+                // Проверяем, осталась ли папка пользователя пустой
+                if (userDir.exists() && userDir.isDirectory) {
+                    val remaining = userDir.listFiles()
+                    if (remaining.isNullOrEmpty()) {
+                        userDir.delete()  // папка пустая → удаляем
+                    }
                 }
             }
 

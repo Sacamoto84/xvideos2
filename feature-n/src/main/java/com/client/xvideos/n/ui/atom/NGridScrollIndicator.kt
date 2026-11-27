@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
 import com.client.xvideos.common.ui.atom.VerticalScrollbar
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
+import com.client.xvideos.n.ui.model.LocalNGridScrollIndicator
+import com.client.xvideos.n.ui.model.NGridScrollIndicatorLayout
 import kotlin.math.roundToInt
 
 @Composable
@@ -37,11 +39,19 @@ internal fun BoxScope.NGridScrollIndicator(state: LazyGridState, columns: Int) {
             }
         }
         Box(track.onGloballyPositioned { coordinates ->
-            host.value = NGridScrollIndicatorLayout(
-                visibleRange = visibleRange,
-                topInRoot = coordinates.positionInRoot().y.roundToInt(),
-                height = coordinates.size.height,
-            )
+            val topInRoot = coordinates.positionInRoot().y.roundToInt()
+            val height = coordinates.size.height
+            val current = host.value
+            if (current?.visibleRange !== visibleRange ||
+                current.topInRoot != topInRoot ||
+                current.height != height
+            ) {
+                host.value = NGridScrollIndicatorLayout(
+                    visibleRange = visibleRange,
+                    topInRoot = topInRoot,
+                    height = height,
+                )
+            }
         })
     }
 }

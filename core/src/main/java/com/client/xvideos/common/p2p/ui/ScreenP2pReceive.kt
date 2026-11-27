@@ -33,7 +33,6 @@ import com.client.xvideos.common.p2p.P2pPermissions
 import com.client.xvideos.common.p2p.P2pReceiveManager
 import com.client.xvideos.common.p2p.ReceiveState
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /** Экран «Приём P2P»: рекламируется и принимает один item. */
 class ScreenP2pReceive : Screen {
@@ -140,25 +139,21 @@ private fun ScreenP2pReceiveContent(
 @Preview(showBackground = true)
 @Composable
 private fun PreviewScreenP2pReceiveConnecting() {
-    XvideosTheme {
-        ScreenP2pReceiveContent(
-            state = ReceiveState.Connecting("Pixel 6", "1234"),
-            onPop = {},
-            onAccept = {},
-            onReject = {},
-        )
-    }
+    ScreenP2pReceiveContent(
+        state = ReceiveState.Connecting("Pixel 6", "1234"),
+        onPop = {},
+        onAccept = {},
+        onReject = {},
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PreviewScreenP2pReceiveReceiving() {
-    XvideosTheme {
-        ScreenP2pReceiveContent(
-            state = ReceiveState.Receiving(transferred = 45, total = 100),
-            onPop = {},
-            onAccept = {},
-            onReject = {},
-        )
-    }
+    ScreenP2pReceiveContent(
+        state = ReceiveState.Receiving(transferred = 45, total = 100),
+        onPop = {},
+        onAccept = {},
+        onReject = {},
+    )
 }

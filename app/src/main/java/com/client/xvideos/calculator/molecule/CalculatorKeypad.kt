@@ -28,8 +28,8 @@ fun CalculatorKeypad(
     scope: CoroutineScope,
     haptic: HapticFeedback,
     onUnlock: suspend (String) -> Boolean,
+    modifier: Modifier = Modifier,
     onUnlockFailed: () -> Unit = {},
-    modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         if (state.isScientific) {

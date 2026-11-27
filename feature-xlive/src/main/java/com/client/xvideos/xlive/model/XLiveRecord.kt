@@ -49,6 +49,7 @@ data class XLiveRecord(
     val hasFrame: Boolean = false,
     val frameVersion: Int = 0,
     val keyFramesVersion: Int = 0,
+    val repairAttempts: Int = 0,
 )
 
 /**

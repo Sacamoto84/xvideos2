@@ -35,11 +35,11 @@ import com.client.xvideos.x.model.ProfileType
 @Composable
 fun ChannelHeader(
     header: ChannelHeaderModel,
+    modifier: Modifier = Modifier,
     isSubscribed: Boolean = false,
     onToggleSubscription: () -> Unit = {},
     onCollaboratorClick: (ChannelCollaborator) -> Unit = {},
     onRankingClick: (targetUrl: String, title: String) -> Unit = { _, _ -> },
-    modifier: Modifier = Modifier,
     topInset: Dp = 0.dp,
 ) {
     var isAboutExpanded by remember { mutableStateOf(false) }

@@ -38,6 +38,9 @@ class XLiveRecordStore(
     /** Записи от новых к старым. */
     val records: StateFlow<ImmutableList<XLiveRecord>> = _records.asStateFlow()
 
+    private val _loaded = MutableStateFlow(false)
+    val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
+
     init {
         refresh()
     }
@@ -75,8 +78,12 @@ class XLiveRecordStore(
     /** Список с диска заново — при создании и после восстановления резервной копии. */
     fun refresh() {
         scope.launch(diskDispatcher) {
-            val dirs = File(dirPath).listFiles { file -> file.isDirectory }.orEmpty()
-            publish(dirs.mapNotNull { read(File(it, RECORD_JSON)) })
+            try {
+                val dirs = File(dirPath).listFiles { file -> file.isDirectory }.orEmpty()
+                publish(dirs.mapNotNull { read(File(it, RECORD_JSON)) })
+            } finally {
+                _loaded.value = true
+            }
         }
     }
 

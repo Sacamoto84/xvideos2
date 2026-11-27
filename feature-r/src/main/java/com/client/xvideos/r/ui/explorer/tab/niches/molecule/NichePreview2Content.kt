@@ -33,7 +33,6 @@ import com.client.xvideos.common.util.toPrettyCountInt
 import com.client.xvideos.core.R
 import com.client.xvideos.r.model.Niche
 import com.client.xvideos.r.ui.niche.atom.NicheMembershipButtonLabel
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun NichePreview2Content(
@@ -165,39 +164,35 @@ private fun Long.toNicheCountText(): String = if (this >= 0L) toPrettyCountInt()
 @Preview
 @Composable
 private fun NichePreview2ContentPreview() {
-    XvideosTheme {
-        NichePreview2Content(
-            niche = Niche(
-                id = "female-backs",
-                name = "Female Backs",
-                gifs = 245,
-                subscribers = 914,
-                thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
-                previews = emptyList()
-            ),
-            isFollowed = false,
-            onFollowClick = {},
-            onClick = {}
-        )
-    }
+    NichePreview2Content(
+        niche = Niche(
+            id = "female-backs",
+            name = "Female Backs",
+            gifs = 245,
+            subscribers = 914,
+            thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
+            previews = emptyList()
+        ),
+        isFollowed = false,
+        onFollowClick = {},
+        onClick = {}
+    )
 }
 
 @Preview
 @Composable
 private fun NichePreview2ContentFollowedPreview() {
-    XvideosTheme {
-        NichePreview2Content(
-            niche = Niche(
-                id = "female-backs",
-                name = "Female Backs",
-                gifs = 245,
-                subscribers = 914,
-                thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
-                previews = emptyList()
-            ),
-            isFollowed = true,
-            onFollowClick = {},
-            onClick = {}
-        )
-    }
+    NichePreview2Content(
+        niche = Niche(
+            id = "female-backs",
+            name = "Female Backs",
+            gifs = 245,
+            subscribers = 914,
+            thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg",
+            previews = emptyList()
+        ),
+        isFollowed = true,
+        onFollowClick = {},
+        onClick = {}
+    )
 }

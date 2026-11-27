@@ -27,11 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.client.xvideos.common.theme.Theme
@@ -49,8 +50,8 @@ fun AlbumFilterAudiencesDialog(
     onDismiss: () -> Unit
 ) {
     val palette = StyleGenresTags.Palette
-    val configuration = LocalConfiguration.current
-    val maxListHeight = (configuration.screenHeightDp * 0.6f).dp.coerceIn(240.dp, 480.dp)
+    val windowHeightDp = LocalWindowInfo.current.containerDpSize.height.takeIf { it.isSpecified && it > 0.dp }?.value ?: 800f
+    val maxListHeight = (windowHeightDp * 0.6f).dp.coerceIn(240.dp, 480.dp)
     val headerStyle = remember(palette.textPrimary) {
         Theme.L.Type.screenTitle.copy(fontWeight = FontWeight.Bold)
     }

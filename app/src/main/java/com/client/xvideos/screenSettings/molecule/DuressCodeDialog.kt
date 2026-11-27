@@ -24,7 +24,7 @@ import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.theme.LavenderDialog
 import com.client.xvideos.common.theme.Theme
 import com.client.xvideos.screenSettings.components.PasswordSettingField
-import com.client.xvideos.screenSettings.components.SettingsPreview
+import com.client.xvideos.screenSettings.model.DuressDialogMode
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
@@ -213,7 +213,7 @@ fun DuressCodeDialog(
 
 @Preview(showBackground = true, backgroundColor = 0xFF353535)
 @Composable
-private fun DuressCodeDialogPreview() = SettingsPreview {
+private fun DuressCodeDialogPreview() {
     DuressCodeDialog(
         mode = DuressDialogMode.SET,
         onDismiss = {},

@@ -14,6 +14,7 @@ import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
 import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -51,6 +52,13 @@ private data class AvoidCameraAndCornerElement(
         node.gap = gap
         node.avoidCorner = avoidCorner
         node.atStart = atStart
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "avoidCameraAndCorner"
+        properties["gap"] = gap
+        properties["avoidCorner"] = avoidCorner
+        properties["atStart"] = atStart
     }
 }
 

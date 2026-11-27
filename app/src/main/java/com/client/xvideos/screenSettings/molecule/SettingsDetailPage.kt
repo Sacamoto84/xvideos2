@@ -18,7 +18,6 @@ import com.client.xvideos.screenSettings.SettingsPage
 import com.client.xvideos.screenSettings.backup.BackupSettingsSection
 import com.client.xvideos.screenSettings.components.AppLockSettingsSection
 import com.client.xvideos.screenSettings.components.EmptyStorageStats
-import com.client.xvideos.screenSettings.components.StorageStatisticsSection
 import com.client.xvideos.screenSettings.section.AppearanceSettingsSection
 import com.client.xvideos.screenSettings.section.CacheSettingsSection
 import com.client.xvideos.screenSettings.section.LSettingsSection

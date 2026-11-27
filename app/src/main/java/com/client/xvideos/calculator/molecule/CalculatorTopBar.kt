@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.calculator.CalculatorColors
+import com.client.xvideos.calculator.model.CalculatorTab
 
 /**
  * Верхняя навигационная панель калькулятора Xiaomi MIUI / HyperOS.
@@ -52,4 +54,10 @@ fun CalculatorTopBar(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun CalculatorTopBarPreview() {
+    CalculatorTopBar(selectedTab = CalculatorTab.CALCULATOR, onTabSelected = {})
 }

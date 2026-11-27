@@ -11,6 +11,9 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowHardware
 import com.client.xvideos.common.net.doh.AppDns
 import com.client.xvideos.common.settings.Settings
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import timber.log.Timber
@@ -40,6 +43,9 @@ object CoilImageLoaderFactory {
 
     @Volatile
     private var instance: ImageLoader? = null
+
+    private val _version = MutableStateFlow(0)
+    val version: StateFlow<Int> = _version.asStateFlow()
 
     fun getImageLoader(context: Context): ImageLoader {
         return instance ?: synchronized(this) {
@@ -138,6 +144,7 @@ object CoilImageLoaderFactory {
         synchronized(this) {
             val old = instance
             instance = createImageLoader(context.applicationContext)
+            _version.value++
             old?.memoryCache?.clear()
             old?.shutdown()
         }
@@ -150,11 +157,12 @@ object CoilImageLoaderFactory {
             old?.apply {
                 memoryCache?.clear()
                 diskCache?.clear()
+                shutdown()
             }
             clearDirectory(imageCacheDir(appContext))
             clearDirectory(httpCacheDir(appContext))
             instance = createImageLoader(appContext)
-            old?.shutdown()
+            _version.value++
         }
     }
 

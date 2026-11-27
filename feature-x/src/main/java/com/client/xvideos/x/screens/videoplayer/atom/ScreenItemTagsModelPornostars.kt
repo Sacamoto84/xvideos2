@@ -28,12 +28,12 @@ import com.client.xvideos.core.R
  */
 @Composable
 fun ScreenItemTagsModelPornostars(
-    icon : String = "",
     text: String,
     color: Color,
     count: String,
-    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    icon: String = "",
+    onClick: (() -> Unit)? = null,
 ) {
     val hasCount = count.isNotBlank()
     val baseModifier = modifier

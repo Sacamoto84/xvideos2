@@ -1,14 +1,10 @@
 package com.client.xvideos.screenSettings.section
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,8 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,15 +20,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.client.xvideos.R
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.common.ui.excludedFromAutofill
 import com.client.xvideos.n.net.NAuthState
 import com.client.xvideos.n.net.NCloudflareState
 import com.client.xvideos.n.ui.molecule.NCloudflareChallengeDialog
 import com.client.xvideos.n.ui.molecule.NLoginDialog
 import com.client.xvideos.screenSettings.components.SettingsDivider
 import com.client.xvideos.screenSettings.components.SettingsGroup
-import com.client.xvideos.screenSettings.components.SettingsPreview
 import com.client.xvideos.screenSettings.components.SettingsValueRow
+import com.client.xvideos.screenSettings.molecule.NApiKeyDialog
 import com.client.xvideos.screenSettings.molecule.NProfileRow
 import com.client.xvideos.screenSettings.molecule.SettingsButtonRow
 
@@ -154,46 +147,8 @@ internal fun NSettingsSection(
     }
 }
 
+@Preview
 @Composable
-private fun NApiKeyDialog(hasApiKey: Boolean, onDismiss: () -> Unit) {
-    var key by remember { mutableStateOf("") }
-    val trimmedKey = key.trim()
-    val validKey = trimmedKey.isNotEmpty() && trimmedKey.all { it in '!'..'~' }
-    val uriHandler = LocalUriHandler.current
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (hasApiKey) "Изменить API-ключ nhentai" else "API-ключ nhentai") },
-        text = {
-            Column {
-                Text("Создайте ключ в аккаунте, где сохранены ваши альбомы.")
-                TextButton(onClick = { uriHandler.openUri("https://nhentai.net/user/settings#apikeys") }) {
-                    Text("Открыть настройки сайта")
-                }
-                OutlinedTextField(
-                    value = key,
-                    modifier = Modifier.excludedFromAutofill(),
-                    onValueChange = { key = it },
-                    label = { Text(if (hasApiKey) "Новый API-ключ" else "API-ключ") },
-                    isError = trimmedKey.isNotEmpty() && !validKey,
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(enabled = validKey, onClick = {
-                if (!NAuthState.setApiKey(trimmedKey)) {
-                    SnackBar.info("Ключ действует до перезапуска. Защищённое хранилище недоступно.")
-                }
-                onDismiss()
-            }) { Text("Сохранить") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } }
-    )
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF262626)
-@Composable
-private fun NSettingsSectionPreview() = SettingsPreview {
+private fun NSettingsSectionPreview() {
     NSettingsSection()
 }

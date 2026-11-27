@@ -17,6 +17,7 @@ import com.client.xvideos.common.backup.XlrRestoreMode
 import com.client.xvideos.common.di.ApplicationScope
 import com.client.xvideos.common.snackbar.SnackBar
 import com.client.xvideos.common.util.formatBytes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -72,6 +73,10 @@ class BackupController(
     val isIdle: Boolean get() = !isWorking && !isRecovering
 
     val console = mutableStateListOf<String>()
+    var consoleSeq by mutableIntStateOf(0)
+        private set
+    var consoleBaseIndex by mutableIntStateOf(0)
+        private set
 
     var lMode by mutableStateOf(XlrBackupContentMode.MINI)
     var rMode by mutableStateOf(XlrBackupContentMode.MINI)
@@ -98,6 +103,7 @@ class BackupController(
         private set
     private var pendingRestoreUri: String? = null
     private var decryptJob: Job? = null
+    private var pendingCloseArchive = false
 
     /** Растёт с каждым успешным восстановлением: экран по нему пересчитывает статистику файлов. */
     var restoreCount by mutableIntStateOf(0)
@@ -113,8 +119,10 @@ class BackupController(
     private fun log(message: String) {
         if (console.size >= CONSOLE_MAX_LINES) {
             console.removeAt(0)
+            consoleBaseIndex++
         }
         console.add(message)
+        consoleSeq++
     }
 
     /** Строка из фонового потока — докачка пишет в консоль откуда придётся. */
@@ -126,12 +134,17 @@ class BackupController(
     private fun logProgress(message: String) {
         if (console.lastOrNull()?.startsWith(PROGRESS_PREFIX) == true) {
             console[console.lastIndex] = message
+            consoleSeq++
         } else {
             log(message)
         }
     }
 
-    fun clearConsole() = console.clear()
+    fun clearConsole() {
+        console.clear()
+        consoleBaseIndex = 0
+        consoleSeq++
+    }
 
     // --- Выбор папок для архива ---
 
@@ -304,6 +317,7 @@ class BackupController(
                         SnackBar.success("Архив успешно расшифрован: ${items.size} папок")
                     }
                     .onFailure { error ->
+                        if (error is CancellationException) throw error
                         val wrongPassword = error is XlrInvalidPasswordException || error.cause is XlrInvalidPasswordException
                         val message = if (wrongPassword) {
                             "Неверный пароль для расшифровки бэкапа"
@@ -315,7 +329,13 @@ class BackupController(
                     }
             } finally {
                 // Отмена чтения минует и успех, и ошибку: пароль стирается здесь.
-                if (!passwordKept) password.fill(WIPED)
+                if (!passwordKept || pendingCloseArchive) {
+                    password.fill(WIPED)
+                    if (pendingCloseArchive) {
+                        pendingCloseArchive = false
+                        resetArchive()
+                    }
+                }
                 isWorking = false
             }
         }
@@ -355,7 +375,11 @@ class BackupController(
      * после первого же восстановления, и второе из того же архива падало.
      */
     fun closeArchive() {
-        if (isWorking) return
+        if (isWorking) {
+            pendingCloseArchive = true
+            return
+        }
+        pendingCloseArchive = false
         resetArchive()
     }
 
@@ -430,6 +454,10 @@ class BackupController(
             } finally {
                 isRecovering = restoredPaths != null
                 isWorking = false
+                if (pendingCloseArchive) {
+                    pendingCloseArchive = false
+                    resetArchive()
+                }
             }
             val appliedPaths = restoredPaths ?: return@launch
             try {

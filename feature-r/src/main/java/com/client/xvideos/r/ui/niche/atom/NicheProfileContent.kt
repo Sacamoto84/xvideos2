@@ -1,6 +1,5 @@
 package com.client.xvideos.r.ui.niche.atom
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,28 +7,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.common.util.toPrettyCount
 import com.client.xvideos.core.R
 import com.client.xvideos.r.model.NichesInfo
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Блок информации о профиле ниши (обложка, название, счетчики и кнопка подписки).
@@ -80,40 +70,20 @@ fun NicheProfileContent(
     }
 }
 
-@Composable
-private fun NicheCounter(count: Long, @DrawableRes icon: Int, label: String) {
-    val countText = remember(count) { count.toPrettyCount() }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = label,
-            tint = Color.White,
-            modifier = Modifier.size(16.dp),
-        )
-        Text(
-            text = countText,
-            modifier = Modifier.padding(horizontal = 4.dp).wrapContentWidth(Alignment.CenterHorizontally),
-            style = TextStyle(color = Color.White, textAlign = TextAlign.Center, fontSize = 16.sp),
-        )
-    }
-}
-
 @Preview
 @Composable
 private fun NicheProfileContentPreview() {
-    XvideosTheme {
-        NicheProfileContent(
-            niche = {
-                NichesInfo(
-                    id = "female-backs",
-                    name = "Female Backs",
-                    subscribers = 914,
-                    gifs = 245,
-                    thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg"
-                )
-            },
-            isFollowed = false,
-            onFollowClick = {}
-        )
-    }
+    NicheProfileContent(
+        niche = {
+            NichesInfo(
+                id = "female-backs",
+                name = "Female Backs",
+                subscribers = 914,
+                gifs = 245,
+                thumbnail = "https://userpic.redgifs.com/niches/thumbnails/female-backs-dee7838f.jpg"
+            )
+        },
+        isFollowed = false,
+        onFollowClick = {}
+    )
 }

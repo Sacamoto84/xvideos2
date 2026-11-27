@@ -7,7 +7,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.client.xvideos.common.ui.composition.LocalScrollbarAlpha
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.abs
 
 internal const val SCROLLBAR_FULL_HEIGHT_TOLERANCE = 0.001f
@@ -64,11 +67,12 @@ internal fun calculateScrollbarOffsetYAndHeight(
 @Composable
 fun VerticalScrollbar(scrollPercent: () -> Pair<Float, Float>) {
     val alphaProvider = LocalScrollbarAlpha.current
+    val currentScrollPercent by rememberUpdatedState(scrollPercent)
     val spanAnim = remember { Animatable(Float.NaN) }
 
     LaunchedEffect(Unit) {
         snapshotFlow {
-            val range = scrollPercent()
+            val range = currentScrollPercent()
             val start = range.first.coerceIn(0f, 1f)
             val end = range.second.coerceIn(0f, 1f)
             if (shouldDrawScrollbar(start, end)) {
@@ -76,6 +80,9 @@ fun VerticalScrollbar(scrollPercent: () -> Pair<Float, Float>) {
             } else {
                 Float.NaN
             }
+        }.distinctUntilChanged { old, new ->
+            (old.isNaN() && new.isNaN()) ||
+                (!old.isNaN() && !new.isNaN() && abs(old - new) <= SCROLLBAR_FULL_HEIGHT_TOLERANCE)
         }.collectLatest { targetSpan ->
             if (targetSpan.isNaN()) {
                 spanAnim.snapTo(Float.NaN)
@@ -94,7 +101,7 @@ fun VerticalScrollbar(scrollPercent: () -> Pair<Float, Float>) {
         val alpha = alphaProvider()
         if (alpha <= 0f) return@Canvas
 
-        val range = scrollPercent()
+        val range = currentScrollPercent()
         val trackHeight = size.height
         if (range.second <= range.first || trackHeight <= 0f) return@Canvas
 

@@ -33,7 +33,6 @@ import com.client.xvideos.r.model.TopCreatorsResponse
 import com.client.xvideos.r.ui.niche.atom.NicheCreatorItem
 import com.client.xvideos.r.ui.niche.atom.NichePreviewItem
 import com.client.xvideos.r.ui.niche.atom.NicheProfileContent
-import com.client.xvideos.ui.theme.XvideosTheme
 
 /**
  * Секция заголовка экрана ниши: профиль ниши, похожие ниши, топовые креаторы и нижняя панель сортировки.
@@ -127,17 +126,15 @@ fun NicheHeaderContent(
 @Preview
 @Composable
 private fun NicheHeaderContentPreview() {
-    XvideosTheme {
-        NicheHeaderContent(
-            niche = NichesInfo(id = "female-backs", name = "Female Backs"),
-            relatedNiches = { NichesResponse() },
-            topCreators = { TopCreatorsResponse() },
-            onNicheClick = {},
-            onCreatorClick = {},
-            isFollowed = true,
-            onFollowClick = {},
-            currentSort = Order.NICHES_NAME_A_Z,
-            onSortChange = {},
-        )
-    }
+    NicheHeaderContent(
+        niche = NichesInfo(id = "female-backs", name = "Female Backs"),
+        relatedNiches = { NichesResponse() },
+        topCreators = { TopCreatorsResponse() },
+        onNicheClick = {},
+        onCreatorClick = {},
+        isFollowed = true,
+        onFollowClick = {},
+        currentSort = Order.NICHES_NAME_A_Z,
+        onSortChange = {},
+    )
 }

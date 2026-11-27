@@ -23,9 +23,18 @@ import java.util.concurrent.TimeUnit
  */
 class DefaultHttpClient : HttpClient {
     // Отменяется из потока, который отменяет загрузку.
+    private val stateLock = Any()
+
+    @Volatile
+    private var closed = false
+
     @Volatile
     private var call: Call? = null
+
+    @Volatile
     private var response: Response? = null
+
+    @Volatile
     private var bodyStream: InputStream? = null
 
     companion object {
@@ -78,10 +87,19 @@ class DefaultHttpClient : HttpClient {
         }
 
         val newCall = client.newCall(builder.build())
-        call = newCall
+        synchronized(stateLock) {
+            if (closed) throw IOException("HTTP client already closed")
+            call = newCall
+        }
         val res = newCall.execute()
-        response = res
-        bodyStream = res.body.byteStream()
+        synchronized(stateLock) {
+            if (closed) {
+                runCatching { res.close() }
+                throw IOException("HTTP client closed during connect")
+            }
+            response = res
+            bodyStream = res.body.byteStream()
+        }
     }
 
     override fun getResponseCode(): Int = response?.code ?: 0
@@ -93,9 +111,21 @@ class DefaultHttpClient : HttpClient {
     override fun getResponseHeader(name: String): String = response?.header(name) ?: ""
 
     override fun close() {
-        runCatching { call?.cancel() }
-        runCatching { bodyStream?.close() }
-        runCatching { response?.close() }
+        val activeCall: Call?
+        val stream: InputStream?
+        val activeResponse: Response?
+        synchronized(stateLock) {
+            closed = true
+            activeCall = call
+            stream = bodyStream
+            activeResponse = response
+            call = null
+            bodyStream = null
+            response = null
+        }
+        runCatching { activeCall?.cancel() }
+        runCatching { stream?.close() }
+        runCatching { activeResponse?.close() }
     }
 
     override fun getHeaderFields(): Map<String, List<String>> =

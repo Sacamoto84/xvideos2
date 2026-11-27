@@ -16,16 +16,14 @@ import timber.log.Timber
  */
 class AppDbHelper(context: Context?) : DbHelper {
 
-    private var db: SQLiteDatabase
+    private val appContext = context?.applicationContext
+    private val db: SQLiteDatabase by lazy {
+        DatabaseOpenHelper(appContext).writableDatabase
+    }
 
     companion object {
         /** Имя таблицы для хранения записей о загрузках. */
         const val TABLE_NAME = "downloads"
-    }
-
-    init {
-        val databaseOpenHelper = DatabaseOpenHelper(context)
-        db = databaseOpenHelper.writableDatabase
     }
 
     @SuppressLint("Range")

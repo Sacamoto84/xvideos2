@@ -62,6 +62,7 @@ import com.client.xvideos.x.screens.search.ScreenXSearchTabContent
 import com.client.xvideos.x.screens.search.SearchUiMode
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.client.xvideos.x.screens.common.rememberLocalVideoOf
 
@@ -91,7 +92,6 @@ class ScreenXDashBoards : Screen {
         val searchUiMode by searchVm.uiMode.collectAsStateWithLifecycle()
         val searchPage by searchVm.currentPage.collectAsStateWithLifecycle()
         val searchMaxPages by searchVm.maxPages.collectAsStateWithLifecycle()
-        val downloadPercent by vm.saved.downloads.percent.collectAsStateWithLifecycle()
 
         val onBack: () -> Unit = remember(vm, searchVm) {
             {
@@ -123,13 +123,29 @@ class ScreenXDashBoards : Screen {
             }
         }
 
-        val rubricsTab: @Composable () -> Unit = {
-            ScreenXRubricsTabContent(
-                vm = rubricsVm,
-                category = XCategoryState.current,
-                onOpenRubric = { rubric -> navigator.push(ScreenXRubric(rubric.id, rubric.slug, rubric.title)) },
-            )
+        val currentCategory = XCategoryState.current
+        val rubricsTab: @Composable () -> Unit = remember(rubricsVm, currentCategory, navigator) {
+            {
+                ScreenXRubricsTabContent(
+                    vm = rubricsVm,
+                    category = currentCategory,
+                    onOpenRubric = { rubric -> navigator.push(ScreenXRubric(rubric.id, rubric.slug, rubric.title)) },
+                )
+            }
         }
+
+        val onMainTabChange: (Int) -> Unit = remember(vm) { { vm.mainTab = it } }
+        val onSavedTabChange: (Int) -> Unit = remember(scope, savedPagerState) {
+            { tab -> scope.launch { savedPagerState.scrollToPage(tab) } }
+        }
+        val onOpenVideoPlayer: (ItemsX) -> Unit = remember(vm, navigator) {
+            { item -> vm.openVideoPlayer(item, navigator) }
+        }
+        val onIsFavorite: (Long) -> Boolean = remember(vm) { vm::isFavorite }
+        val onFavoriteAdd: (ItemsX) -> Unit = remember(vm) { { item -> vm.addFavorite(item) } }
+        val onFavoriteRemove: (ItemsX) -> Unit = remember(vm) { { item -> vm.removeFavorite(item) } }
+        val onDownload: (ItemsX) -> Unit = remember(vm) { vm::download }
+        val onSaveToGallery: (ItemsX) -> Unit = remember(vm) { vm::saveToGallery }
 
         ScreenXDashBoardsContent(
             mainTab = vm.mainTab,
@@ -141,20 +157,20 @@ class ScreenXDashBoards : Screen {
             searchUiMode = searchUiMode,
             searchPage = searchPage,
             searchMaxPages = searchMaxPages,
-            downloadPercent = downloadPercent,
+            downloadPercentFlow = vm.saved.downloads.percent,
             favoritesScreen = favoritesScreen,
             navigator = navigator,
-            onMainTabChange = { vm.mainTab = it },
-            onSavedTabChange = { tab -> scope.launch { savedPagerState.scrollToPage(tab) } },
-            onOpenVideoPlayer = { item -> vm.openVideoPlayer(item, navigator) },
-            onIsFavorite = { itemId -> vm.isFavorite(itemId) },
-            onFavoriteAdd = { item -> vm.addFavorite(item) },
-            onFavoriteRemove = { item -> vm.removeFavorite(item) },
-            onDownload = { item -> vm.download(item) },
-            onSaveToGallery = { item -> vm.saveToGallery(item) },
+            onMainTabChange = onMainTabChange,
+            onSavedTabChange = onSavedTabChange,
+            onOpenVideoPlayer = onOpenVideoPlayer,
+            onIsFavorite = onIsFavorite,
+            onFavoriteAdd = onFavoriteAdd,
+            onFavoriteRemove = onFavoriteRemove,
+            onDownload = onDownload,
+            onSaveToGallery = onSaveToGallery,
             onLoadDashboardPage = vm::loadDashboardPage,
             cachedDashboardPage = vm::cachedDashboardPage,
-            category = XCategoryState.current,
+            category = currentCategory,
             onCategorySelect = onCategorySelect,
             rubricsTab = rubricsTab,
         )
@@ -176,7 +192,7 @@ fun ScreenXDashBoardsContent(
     searchUiMode: SearchUiMode,
     searchPage: Int,
     searchMaxPages: Int,
-    downloadPercent: Float,
+    downloadPercentFlow: StateFlow<Float>,
     favoritesScreen: ScreenFavorites,
     navigator: Navigator,
     onMainTabChange: (Int) -> Unit,
@@ -253,6 +269,7 @@ fun ScreenXDashBoardsContent(
                     XCategorySwitch(current = category, onSelect = onCategorySelect)
                 }
 
+                val downloadPercent by downloadPercentFlow.collectAsStateWithLifecycle()
                 DownloadIndicator(downloadPercent)
             }
         },

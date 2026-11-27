@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +37,6 @@ import com.client.xvideos.common.util.getTopInsetDp
 import com.client.xvideos.n.model.NPage
 import com.client.xvideos.n.model.NPicture
 import com.client.xvideos.n.model.NTag
-import com.client.xvideos.n.repository.CloudflareBlockedException
 import com.client.xvideos.n.ui.atom.NCloudflareBanner
 import com.client.xvideos.n.ui.atom.NGalleryTopBar
 import com.client.xvideos.n.ui.molecule.NCollectionDialogs
@@ -56,13 +56,9 @@ class ScreenNGallery(val galleryId: Long) : Screen {
     override val key: ScreenKey = "NGallery:$galleryId:${UUID.randomUUID()}"
 
     @Composable
-    internal fun rememberModel(): ScreenNGallerySM =
-        getScreenModel<ScreenNGallerySM, ScreenNGallerySM.Factory> { it.create(galleryId) }
-
-    @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val vm = rememberModel()
+        val vm = getScreenModel<ScreenNGallerySM, ScreenNGallerySM.Factory> { it.create(galleryId) }
 
         val onBack: () -> Unit = remember(navigator) { { navigator.pop() } }
         BackHandler(onBack = onBack)
@@ -188,7 +184,7 @@ fun ScreenNGalleryContent(
 ) {
     val topInset = getTopInsetDp()
     val title = (uiState as? NGalleryUiState.Success)?.gallery?.title ?: "Манга #$galleryId"
-    var dismissedChallenge by remember { mutableStateOf<CloudflareBlockedException?>(null) }
+    var dismissedChallengeUrl by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -233,13 +229,13 @@ fun ScreenNGalleryContent(
                 }
                 is NGalleryUiState.CloudflareRequired -> {
                     NCloudflareBanner(
-                        onVerifyClick = { dismissedChallenge = null },
+                        onVerifyClick = { dismissedChallengeUrl = null },
                         modifier = Modifier.align(Alignment.Center)
                     )
-                    if (dismissedChallenge !== uiState.challenge) {
+                    if (dismissedChallengeUrl != uiState.challenge.url) {
                         NRequestChallengeDialog(
                             challenge = uiState.challenge,
-                            onDismiss = { dismissedChallenge = uiState.challenge },
+                            onDismiss = { dismissedChallengeUrl = uiState.challenge.url },
                             onVerified = onRetry
                         )
                     }

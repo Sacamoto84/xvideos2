@@ -46,7 +46,6 @@ import com.client.xvideos.l.model.AlbumDetails
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.albums.atom.SavedAlbumGridItem
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.molecule.LSortMenuButton
 import com.client.xvideos.l.ui.screens.screenAlbum.ScreenLAlbum
-import com.client.xvideos.ui.theme.XvideosTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
@@ -209,14 +208,12 @@ fun SavedAlbumsTabContent(
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 private fun SavedAlbumsTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        SavedAlbumsTabContent(
-            albums = emptyList(),
-            state = rememberLazyGridState(),
-            topInset = 24.dp,
-            order = LSavedAlbumsOrder.NEWEST,
-            onOrderChange = {},
-            onAlbumClick = {}
-        )
-    }
+    SavedAlbumsTabContent(
+        albums = emptyList(),
+        state = rememberLazyGridState(),
+        topInset = 24.dp,
+        order = LSavedAlbumsOrder.NEWEST,
+        onOrderChange = {},
+        onAlbumClick = {}
+    )
 }

@@ -3,6 +3,7 @@ package com.client.xvideos.common.videoplayer.util
 import android.content.Context
 import android.media.MediaDrm
 import androidx.annotation.OptIn
+import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -33,7 +34,7 @@ fun isHlsUrl(url: String?): Boolean {
         return true
     }
     return runCatching {
-        val uri = android.net.Uri.parse(trimmed)
+        val uri = trimmed.toUri()
         Util.inferContentType(uri) == C.CONTENT_TYPE_HLS
     }.getOrDefault(false)
 }
@@ -51,7 +52,7 @@ fun createProgressiveMediaSource(
     headers: Map<String, String>?
 ): MediaSource {
     val httpDataSourceFactory = VideoHttpDataSource.factory(headers)
-    return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context, httpDataSourceFactory))
+    return ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context.applicationContext, httpDataSourceFactory))
         .createMediaSource(mediaItem)
 }
 

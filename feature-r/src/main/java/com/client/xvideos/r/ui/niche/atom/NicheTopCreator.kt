@@ -12,7 +12,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.client.xvideos.common.coil.UrlImage
 import com.client.xvideos.r.model.TopCreator
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun NicheTopCreator(
@@ -36,21 +35,19 @@ fun NicheTopCreator(
 @Preview
 @Composable
 private fun NicheTopCreatorPreview() {
-    XvideosTheme {
-        NicheTopCreator(
-            creator = TopCreator(
-                creationtime = 0,
-                description = "description",
-                followers = 1,
-                gifs = 1,
-                name = "name",
-                profileImageUrl = "",
-                username = "username",
-                verified = false,
-                studio = false,
-                views = 1
-            ),
-            onClick = {}
-        )
-    }
+    NicheTopCreator(
+        creator = TopCreator(
+            creationtime = 0,
+            description = "description",
+            followers = 1,
+            gifs = 1,
+            name = "name",
+            profileImageUrl = "",
+            username = "username",
+            verified = false,
+            studio = false,
+            views = 1
+        ),
+        onClick = {}
+    )
 }

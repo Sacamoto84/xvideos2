@@ -33,7 +33,7 @@ internal fun BoxScope.LocalVideoPlayerOverlay(
     title: String,
     resumeNoticeText: String?,
     storyboard: ImageBitmap?,
-    scrub: SeekScrub?,
+    scrubProvider: () -> SeekScrub?,
     muted: Boolean,
     actions: LocalVideoPlayerOverlayActions,
 ) {
@@ -70,7 +70,7 @@ internal fun BoxScope.LocalVideoPlayerOverlay(
 
     SeekPreviewOverlay(
         storyboard = storyboard,
-        scrub = scrub,
+        scrubProvider = scrubProvider,
         durationSec = host.totalTime
     )
 
@@ -87,6 +87,7 @@ internal fun BoxScope.LocalVideoPlayerOverlay(
             onScrub = actions.onScrub,
             muted = muted,
             onToggleMute = actions.onToggleMute,
+            onSpeedMenuExpandedChange = actions.onSpeedMenuExpandedChange,
             onTogglePlayPause = playbackFeedback::togglePlayback,
         )
     }

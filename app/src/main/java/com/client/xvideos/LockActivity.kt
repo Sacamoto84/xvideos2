@@ -67,9 +67,14 @@ class LockActivity : ComponentActivity() {
     private var countedInTask: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val launchedFromLauncher = intent?.action == Intent.ACTION_MAIN &&
+            intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+        if (!isTaskRoot && launchedFromLauncher && AppLockRepository.isEnabled(this)) {
+            AppLockSession.lock()
+        }
         secretLost = AppLockRepository.isSecretLost(this)
-        val showCalculator = isCamouflage && !secretLost
-        if (showCalculator) {
+        val initialShowCalculator = isCamouflage && !secretLost
+        if (initialShowCalculator) {
             enableEdgeToEdge(
                 statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
                 navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
@@ -94,6 +99,7 @@ class LockActivity : ComponentActivity() {
         applyPrivacy()
 
         setContent {
+            val showCalculator = isCamouflage && !secretLost
             XvideosTheme(darkTheme = !showCalculator) {
                 Box(
                     modifier = Modifier
@@ -153,13 +159,13 @@ class LockActivity : ComponentActivity() {
                 true
             }
             is AppLockUnlockResult.DuressTriggered -> {
-                AppLockRepository.resetFailedAttempts(this)
                 val success = DuressLauncher.execute(this)
-                if (!success) {
+                if (success) {
+                    AppLockRepository.resetFailedAttempts(this)
+                    true
+                } else {
                     // Если изоляция не удалась, отвечаем как на неверный код (спека, пункт 8)
                     false
-                } else {
-                    true
                 }
             }
             is AppLockUnlockResult.Wrong -> {

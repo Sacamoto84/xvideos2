@@ -14,7 +14,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun AlbumTagChip(
@@ -48,11 +47,9 @@ fun AlbumTagChip(
 @Preview
 @Composable
 private fun AlbumTagChipPreview() {
-    XvideosTheme {
-        AlbumTagChip(
-            label = "Nature (150)",
-            onClick = {},
-            textStyle = TextStyle(fontSize = 14.sp)
-        )
-    }
+    AlbumTagChip(
+        label = "Nature (150)",
+        onClick = {},
+        textStyle = TextStyle(fontSize = 14.sp)
+    )
 }

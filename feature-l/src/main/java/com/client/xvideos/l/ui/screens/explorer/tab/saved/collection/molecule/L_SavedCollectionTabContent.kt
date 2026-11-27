@@ -15,7 +15,6 @@ import com.client.xvideos.l.featured.saved.LCollectionEntity
 import com.client.xvideos.l.featured.saved.LCollectionSortOrder
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.CollectionsGrid
 import com.client.xvideos.l.ui.screens.explorer.tab.saved.collection.LCollectionsTopBar
-import com.client.xvideos.ui.theme.XvideosTheme
 
 @Composable
 fun L_SavedCollectionTabContent(
@@ -76,19 +75,17 @@ fun L_SavedCollectionTabContent(
 @Preview(showBackground = true, backgroundColor = 0xFF262626)
 @Composable
 private fun L_SavedCollectionTabContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        L_SavedCollectionTabContent(
-            collectionList = listOf(
-                LCollectionEntity("Favorites", null, 10, 0, 0, false),
-                LCollectionEntity("Travel", null, 5, 0, 0, false),
-                LCollectionEntity("Work", null, 2, 0, 0, false)
-            ),
-            sortOrder = LCollectionSortOrder.RECENT,
-            gridState = rememberLazyGridState(),
-            onSortOrderClick = {},
-            onCollectionClick = {},
-            onCollectionLongClick = {},
-            onCreateNewCollectionClick = {}
-        )
-    }
+    L_SavedCollectionTabContent(
+        collectionList = listOf(
+            LCollectionEntity("Favorites", null, 10, 0, 0, false),
+            LCollectionEntity("Travel", null, 5, 0, 0, false),
+            LCollectionEntity("Work", null, 2, 0, 0, false)
+        ),
+        sortOrder = LCollectionSortOrder.RECENT,
+        gridState = rememberLazyGridState(),
+        onSortOrderClick = {},
+        onCollectionClick = {},
+        onCollectionLongClick = {},
+        onCreateNewCollectionClick = {}
+    )
 }

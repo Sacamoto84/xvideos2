@@ -89,6 +89,9 @@ open class Repository(
     @Volatile
     private var handler = createHandler()
 
+    @Volatile
+    private var activeRomCacheScope: String = "anon"
+
     private val authMutex = Mutex()
 
     /**
@@ -184,7 +187,7 @@ open class Repository(
 
     private fun createHandler(): KtorRequestHandler {
         return KtorRequestHandler(
-            timeoutMillis = 5000,
+            timeoutMillis = 15000,
             engineOverride = engineFactory?.invoke(),
         )
     }
@@ -220,6 +223,7 @@ open class Repository(
         requestMutex.withLock {
             val oldHandler = handler
             handler = createHandler()
+            activeRomCacheScope = "anon"
             oldHandler.close()
             clearRamCache()
         }
@@ -260,6 +264,7 @@ open class Repository(
                 // Без логина или пароля работаем анонимно (сервер отдаёт меньше
                 // альбомов), с ними — входим.
                 if (profile.isValid && loginAllowed) logInIfNeeded(profile)
+                activeRomCacheScope = if (handler.loggedIn) "rev_${saved.revision}" else "anon"
                 SUCCESS_UNIT
             }
         } catch (e: CancellationException) {
@@ -311,9 +316,11 @@ open class Repository(
     /**
      * Запрашивает данные с использованием постоянного ROM-кэша (с проверкой срока жизни).
      */
+    private fun romCacheKey(data: String): String = "$activeRomCacheScope:$data".toMD5()
+
     private suspend fun getFromCacheRom(data: String): Result<String> {
         return try {
-            val cacheKey = data.toMD5()
+            val cacheKey = romCacheKey(data)
             val res = cacheUrlStringRomDao.get(cacheKey)
             if (res != null) {
                 val ageMs = System.currentTimeMillis() - res.timeCreate
@@ -575,10 +582,9 @@ open class Repository(
      */
     suspend fun deleteCache(data: String, config: RepositoryUriConfig) {
         if (config == RepositoryUriConfig.DIRECT) return
-        val cacheKey = data.toMD5()
         when (config) {
-            RepositoryUriConfig.CACHE_RAM -> deleteRamCache(cacheKey)
-            RepositoryUriConfig.CACHE_ROM -> cacheUrlStringRomDao.delete(cacheKey)
+            RepositoryUriConfig.CACHE_RAM -> deleteRamCache(data.toMD5())
+            RepositoryUriConfig.CACHE_ROM -> cacheUrlStringRomDao.delete(romCacheKey(data))
             RepositoryUriConfig.DIRECT -> Unit
         }
     }

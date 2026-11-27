@@ -6,22 +6,29 @@ import android.os.Looper
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.client.xvideos.common.AppContextHolder
 import com.client.xvideos.common.net.SiteMaintenanceReporter
 import com.client.xvideos.common.net.isMaintenanceStatus
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.serialization.builtins.serializer
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import com.client.xvideos.common.util.pathForLog
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
+
+private val cookieFlushScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 /** Сколько ждём `onPageFinished`, прежде чем считать загрузку провалившейся. */
 private const val WEB_VIEW_LOAD_TIMEOUT_MS = 45_000L
@@ -51,7 +58,8 @@ private const val WEB_VIEW_HEIGHT_DP = 8_000
 suspend fun readHtmlFromURLWebView(url: String = "https://www.xvideos.com"): String {
     val trimmed = url.trim()
     if (trimmed.isEmpty()) return ""
-    if (!trimmed.startsWith("http://", ignoreCase = true) && !trimmed.startsWith("https://", ignoreCase = true)) {
+    val parsedUrl = trimmed.toHttpUrlOrNull()
+    if (parsedUrl == null || !parsedUrl.isHttps) {
         Timber.w("readHtmlFromURLWebView: invalid scheme, url length ${trimmed.length}")
         return ""
     }
@@ -86,6 +94,7 @@ private suspend fun loadHtmlInWebView(url: String): String =
                 mainHandler.post {
                     runCatching {
                         webView.stopLoading()
+                        webView.webChromeClient = WebChromeClient()
                         webView.webViewClient = WebViewClient()
                         webView.destroy()
                     }.onFailure { Timber.w(it, "readHtmlFromURLWebView: destroy failed") }
@@ -129,14 +138,21 @@ private suspend fun loadHtmlInWebView(url: String): String =
             override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean = true
         }
 
+        val targetHost = url.toHttpUrlOrNull()?.host
         webView.webViewClient = object : WebViewClient() {
 
-            @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-            override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
-                super.onReceivedError(view, errorCode, description, failingUrl)
-                Timber.w("readHtmlFromURLWebView: onReceivedError $errorCode: $description for ${failingUrl?.pathForLog()}")
-                if (continuation.isActive) continuation.resume("")
-                destroyWebView()
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val nextUrl = request?.url ?: return true
+                if (!nextUrl.scheme.equals("https", ignoreCase = true)) return true
+                if (request.isForMainFrame) {
+                    val host = nextUrl.host ?: return true
+                    if (targetHost != null && !host.equals(targetHost, ignoreCase = true) &&
+                        !host.endsWith(".${targetHost.removePrefix("www.")}", ignoreCase = true)
+                    ) {
+                        return true
+                    }
+                }
+                return false
             }
 
             override fun onReceivedError(
@@ -179,10 +195,10 @@ private suspend fun loadHtmlInWebView(url: String): String =
                     return
                 }
 
-                CookieManager.getInstance().flush()
+                cookieFlushScope.launch { runCatching { cookieManager.flush() } }
 
                 webView.evaluateJavascript(
-                    "(function() { return document.documentElement.outerHTML; })();"
+                    "(function() { return document.documentElement ? document.documentElement.outerHTML : ''; })();"
                 ) { html ->
 
                     Timber.d("readHtmlFromURL end %s", url.pathForLog())

@@ -10,12 +10,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -35,40 +33,40 @@ object NParser {
      * Парсит детальную информацию о галерее из JSON (ответ API v2/v1 или тело скрипта).
      */
     fun parseGalleryJson(jsonString: String): NGallery? = runCatching {
-        parseGallery(jsonConfig.parseToJsonElement(jsonString).jsonObject)
+        jsonConfig.parseToJsonElement(jsonString).asObjectOrNull()?.let { parseGallery(it) }
     }.getOrNull()
 
     private fun parseGallery(root: JsonObject, includeRelated: Boolean = true): NGallery? {
-        val id = root["id"]?.jsonPrimitive?.longOrNull ?: 0L
-        val mediaId = root["media_id"]?.jsonPrimitive?.let {
+        val id = root["id"].asPrimitiveOrNull()?.longOrNull ?: 0L
+        val mediaId = root["media_id"].asPrimitiveOrNull()?.let {
             it.longOrNull ?: it.contentOrNull?.toLongOrNull()
         } ?: 0L
         if (id == 0L || mediaId == 0L) return null
 
-        val titlesObj = root["title"]?.jsonObject
-        val prettyTitle = titlesObj?.get("pretty")?.jsonPrimitive?.contentOrNull.orEmpty()
-        val englishTitle = titlesObj?.get("english")?.jsonPrimitive?.contentOrNull.orEmpty()
-        val japaneseTitle = titlesObj?.get("japanese")?.jsonPrimitive?.contentOrNull.orEmpty()
+        val titlesObj = root["title"].asObjectOrNull()
+        val prettyTitle = titlesObj?.get("pretty").asPrimitiveOrNull()?.contentOrNull.orEmpty()
+        val englishTitle = titlesObj?.get("english").asPrimitiveOrNull()?.contentOrNull.orEmpty()
+        val japaneseTitle = titlesObj?.get("japanese").asPrimitiveOrNull()?.contentOrNull.orEmpty()
         val title = prettyTitle.ifEmpty { englishTitle.ifEmpty { japaneseTitle } }
 
-        val uploadDate = root["upload_date"]?.jsonPrimitive?.longOrNull ?: 0L
-        val numPages = root["num_pages"]?.jsonPrimitive?.intOrNull ?: 0
-        val numFavorites = root["num_favorites"]?.jsonPrimitive?.intOrNull ?: 0
+        val uploadDate = root["upload_date"].asPrimitiveOrNull()?.longOrNull ?: 0L
+        val numPages = root["num_pages"].asPrimitiveOrNull()?.intOrNull ?: 0
+        val numFavorites = root["num_favorites"].asPrimitiveOrNull()?.intOrNull ?: 0
 
         // Поддержка v2 (поля напрямую в root) и v1 (вложенные в images)
-        val imagesObj = root["images"]?.jsonObject
-        val coverObj = root["cover"]?.jsonObject ?: imagesObj?.get("cover")?.jsonObject
-        val thumbObj = root["thumbnail"]?.jsonObject ?: imagesObj?.get("thumbnail")?.jsonObject
+        val imagesObj = root["images"].asObjectOrNull()
+        val coverObj = root["cover"].asObjectOrNull() ?: imagesObj?.get("cover").asObjectOrNull()
+        val thumbObj = root["thumbnail"].asObjectOrNull() ?: imagesObj?.get("thumbnail").asObjectOrNull()
         val pages = parseGalleryPages(root["pages"] ?: imagesObj?.get("pages"))
 
         val cover = parsePage(coverObj, 1)
         val thumbnail = parsePage(thumbObj, 1)
 
-        val tags = (root["tags"] as? JsonArray).orEmpty()
+        val tags = root["tags"].asArrayOrNull().orEmpty()
             .mapNotNull { runCatching { parseTag(it) }.getOrNull() }
             .distinctBy { it.id }
 
-        val relatedArray = if (includeRelated) root["related"] as? JsonArray else null
+        val relatedArray = if (includeRelated) root["related"].asArrayOrNull() else null
         val relatedGalleries = relatedArray?.mapNotNull(::parseGalleryPreview).orEmpty().distinctBy { it.id }
 
         return NGallery(
@@ -89,8 +87,8 @@ object NParser {
     }
 
     private fun parseGalleryPages(element: JsonElement?): List<NPage> {
-        val pages = element?.jsonArray.orEmpty().mapIndexed { index, page ->
-            parsePage(page.jsonObject, index + 1)
+        val pages = element.asArrayOrNull().orEmpty().mapIndexed { index, page ->
+            parsePage(page.asObjectOrNull(), index + 1)
         }
         val numbers = pages.map { it.pageNumber }
         return if (numbers.any { it <= 0 } || numbers.toSet().size != numbers.size) {
@@ -100,19 +98,19 @@ object NParser {
 
     private fun parsePage(pageObj: JsonObject?, index: Int): NPage {
         if (pageObj == null) return NPage(pageNumber = index)
-        val path = pageObj["path"]?.jsonPrimitive?.contentOrNull.orEmpty()
-        val thumbPath = pageObj["thumbnail"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val path = pageObj["path"].asPrimitiveOrNull()?.contentOrNull.orEmpty()
+        val thumbPath = pageObj["thumbnail"].asPrimitiveOrNull()?.contentOrNull.orEmpty()
         val ext = if (path.isNotEmpty()) {
             path.substringAfterLast('.', "jpg")
         } else {
-            val type = pageObj["t"]?.jsonPrimitive?.contentOrNull.orEmpty()
+            val type = pageObj["t"].asPrimitiveOrNull()?.contentOrNull.orEmpty()
             NPage.extFromApiType(type)
         }
-        val pageNum = pageObj["number"]?.jsonPrimitive?.intOrNull ?: index
-        val width = pageObj["width"]?.jsonPrimitive?.intOrNull
-            ?: pageObj["w"]?.jsonPrimitive?.intOrNull ?: 0
-        val height = pageObj["height"]?.jsonPrimitive?.intOrNull
-            ?: pageObj["h"]?.jsonPrimitive?.intOrNull ?: 0
+        val pageNum = pageObj["number"].asPrimitiveOrNull()?.intOrNull ?: index
+        val width = pageObj["width"].asPrimitiveOrNull()?.intOrNull
+            ?: pageObj["w"].asPrimitiveOrNull()?.intOrNull ?: 0
+        val height = pageObj["height"].asPrimitiveOrNull()?.intOrNull
+            ?: pageObj["h"].asPrimitiveOrNull()?.intOrNull ?: 0
         return NPage(
             pageNumber = pageNum,
             ext = ext,
@@ -198,22 +196,22 @@ object NParser {
      * Парсит отдельный элемент галереи API v2 (GalleryListItem).
      */
     fun parseGalleryListItem(obj: JsonObject): NGalleryPreview? = runCatching {
-        val id = obj["id"]?.jsonPrimitive?.longOrNull ?: return null
+        val id = obj["id"].asPrimitiveOrNull()?.longOrNull ?: return null
         if (id <= 0L) return null
 
-        val mediaId = obj["media_id"]?.jsonPrimitive?.let {
+        val mediaId = obj["media_id"].asPrimitiveOrNull()?.let {
             it.longOrNull ?: it.contentOrNull?.toLongOrNull()
         } ?: 0L
 
-        val englishTitle = obj["english_title"]?.jsonPrimitive?.contentOrNull.orEmpty()
-        val japaneseTitle = obj["japanese_title"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val englishTitle = obj["english_title"].asPrimitiveOrNull()?.contentOrNull.orEmpty()
+        val japaneseTitle = obj["japanese_title"].asPrimitiveOrNull()?.contentOrNull.orEmpty()
         val title = englishTitle.ifEmpty { japaneseTitle }
 
-        val thumbnailPath = obj["thumbnail"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val thumbnailPath = obj["thumbnail"].asPrimitiveOrNull()?.contentOrNull.orEmpty()
         val thumbnailUrl = NGalleryPreview.buildThumbnailUrl(thumbnailPath, mediaId)
 
-        val numPages = obj["num_pages"]?.jsonPrimitive?.intOrNull ?: 0
-        val tagIds = obj["tag_ids"]?.jsonArray?.mapNotNull { it.jsonPrimitive.longOrNull }
+        val numPages = obj["num_pages"].asPrimitiveOrNull()?.intOrNull ?: 0
+        val tagIds = obj["tag_ids"].asArrayOrNull()?.mapNotNull { it.asPrimitiveOrNull()?.longOrNull }
         val language = detectLanguage(title, tagIds)
 
         NGalleryPreview(
@@ -243,8 +241,8 @@ object NParser {
         val itemsArray: JsonArray = when (parsed) {
             is JsonArray -> parsed
             is JsonObject -> {
-                parsed["result"]?.jsonArray
-                    ?: parsed["related"]?.jsonArray
+                parsed["result"].asArrayOrNull()
+                    ?: parsed["related"].asArrayOrNull()
                     ?: JsonArray(emptyList())
             }
             else -> JsonArray(emptyList())
@@ -254,14 +252,14 @@ object NParser {
     }.getOrDefault(emptyList())
 
     fun parseFavoriteState(body: String): Boolean = requireNotNull(
-        jsonConfig.parseToJsonElement(body).jsonObject["favorited"]?.jsonPrimitive?.booleanOrNull
+        jsonConfig.parseToJsonElement(body).asObjectOrNull()?.get("favorited").asPrimitiveOrNull()?.booleanOrNull
     ) { "Неверный ответ при обновлении избранного" }
 
     /** Пустой result считается успешным только при корректной структуре ответа v2. */
     fun parseGalleryPageV2(body: String, page: Int): NGalleryPageResult {
-        val root = jsonConfig.parseToJsonElement(body) as? JsonObject
-        val items = root?.get("result") as? JsonArray
-        val totalPages = root?.get("num_pages")?.jsonPrimitive?.intOrNull
+        val root = jsonConfig.parseToJsonElement(body).asObjectOrNull()
+        val items = root?.get("result").asArrayOrNull()
+        val totalPages = root?.get("num_pages").asPrimitiveOrNull()?.intOrNull
         require(items != null && totalPages != null && totalPages >= 0) {
             "Неверный формат списка альбомов"
         }
@@ -280,12 +278,12 @@ object NParser {
      * Парсит подсказки из ответа API v2 (/tags/search).
      */
     fun parseTagsJson(jsonString: String): List<NTag> =
-        parseTagItems(jsonConfig.parseToJsonElement(jsonString).jsonArray)
+        parseTagItems(requireNotNull(jsonConfig.parseToJsonElement(jsonString).asArrayOrNull()) { "Неверный формат списка тегов" })
 
     fun parseTagPage(jsonString: String): NTagPage {
-        val root = jsonConfig.parseToJsonElement(jsonString).jsonObject
-        val items = requireNotNull(root["result"] as? JsonArray) { "Неверный формат списка тегов" }
-        val pages = requireNotNull(root["num_pages"]?.jsonPrimitive?.intOrNull) { "Нет числа страниц тегов" }
+        val root = jsonConfig.parseToJsonElement(jsonString).asObjectOrNull()
+        val items = requireNotNull(root?.get("result").asArrayOrNull()) { "Неверный формат списка тегов" }
+        val pages = requireNotNull(root?.get("num_pages").asPrimitiveOrNull()?.intOrNull) { "Нет числа страниц тегов" }
         return NTagPage(parseTagItems(items), pages.coerceAtLeast(1))
     }
 
@@ -293,12 +291,22 @@ object NParser {
         items.map(::parseTag).distinctBy { it.id }
 
     private fun parseTag(element: JsonElement): NTag {
-        val obj = element.jsonObject
-        val id = requireNotNull(obj["id"]?.jsonPrimitive?.longOrNull) { "Не удалось прочитать тег" }
-        val type = obj["type"]?.jsonPrimitive?.contentOrNull.orEmpty()
-        val name = obj["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
-        val count = obj["count"]?.jsonPrimitive?.intOrNull ?: 0
-        val url = obj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        val obj = requireNotNull(element.asObjectOrNull()) { "Не удалось прочитать тег" }
+        val id = requireNotNull(obj["id"].asPrimitiveOrNull()?.longOrNull) { "Не удалось прочитать тег" }
+        val typeEl = obj["type"]
+        val nameEl = obj["name"]
+        val countEl = obj["count"]
+        val urlEl = obj["url"]
+        require(
+            (typeEl == null || typeEl is JsonPrimitive) &&
+                (nameEl == null || nameEl is JsonPrimitive) &&
+                (countEl == null || countEl is JsonPrimitive) &&
+                (urlEl == null || urlEl is JsonPrimitive)
+        ) { "Не удалось прочитать тег" }
+        val type = typeEl?.contentOrNull.orEmpty()
+        val name = nameEl?.contentOrNull.orEmpty()
+        val count = countEl?.intOrNull ?: 0
+        val url = urlEl?.contentOrNull.orEmpty()
         return NTag(id = id, type = type, name = name, count = count, url = url)
     }
 
@@ -314,8 +322,8 @@ object NParser {
         val galleries = parseGalleryListJson(jsonString)
         val root = jsonConfig.parseToJsonElement(jsonString)
         val numPages = if (root is JsonObject) {
-            root["num_pages"]?.jsonPrimitive?.intOrNull
-                ?: root["total_pages"]?.jsonPrimitive?.intOrNull
+            root["num_pages"].asPrimitiveOrNull()?.intOrNull
+                ?: root["total_pages"].asPrimitiveOrNull()?.intOrNull
                 ?: 1
         } else {
             1
@@ -418,4 +426,10 @@ object NParser {
         }
         return sb.toString()
     }
+
+    private fun JsonElement?.asObjectOrNull(): JsonObject? = this as? JsonObject
+
+    private fun JsonElement?.asArrayOrNull(): JsonArray? = this as? JsonArray
+
+    private fun JsonElement?.asPrimitiveOrNull(): JsonPrimitive? = this as? JsonPrimitive
 }

@@ -1,73 +1,39 @@
 package com.client.xvideos.r.ui.ui.lazyrow123
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.CircularProgressIndicator
-import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
-import com.client.xvideos.common.ui.atom.FloatingScrollButtons
-import com.client.xvideos.common.ui.atom.TopLoadingBar
-import com.client.xvideos.r.network.toRUserMessage
-import com.client.xvideos.common.snackbar.SnackBar
-import com.client.xvideos.r.ui.ui.lazyrow123.molecule.RListLoadError
-import com.client.xvideos.r.ui.ui.lazyrow123.model.TypePager
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
-import androidx.paging.LoadStates
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
-import cafe.adriel.voyager.navigator.LocalNavigator
-import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.r.ui.explorer.LocalRNavigationState
-import com.client.xvideos.r.ui.fullscreen.ScreenRedFullScreen
+import com.client.xvideos.common.snackbar.SnackBar
+import com.client.xvideos.common.theme.Theme
+import com.client.xvideos.common.ui.adaptive.adaptiveUserGridColumns
+import com.client.xvideos.common.ui.atom.FloatingScrollButtons
 import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
-import com.client.xvideos.common.theme.Theme
-import com.client.xvideos.ui.theme.XvideosTheme
+import com.client.xvideos.r.model.GifsInfo
+import com.client.xvideos.r.network.toRUserMessage
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -84,7 +50,6 @@ fun LazyRow123(
     enableFastScroll: Boolean = true,
     fastScrollSessionKey: Any? = null,
 ) {
-
     val listGifs = host.pager.collectAsLazyPagingItems()
 
     val scope = rememberCoroutineScope()
@@ -208,21 +173,6 @@ fun LazyRow123(
                 .padding(16.dp)
         )
     }
-
-}
-
-@Composable
-private fun rememberCanScrollToBottom(gridState: LazyGridState) = remember(gridState) {
-    derivedStateOf {
-        val layoutInfo = gridState.layoutInfo
-        val totalItems = layoutInfo.totalItemsCount
-        val visible = layoutInfo.visibleItemsInfo
-        if (totalItems <= 4 || visible.isEmpty()) {
-            false
-        } else {
-            visible.maxOf { it.index } < totalItems - 1
-        }
-    }
 }
 
 private fun shouldShowEmptyMessage(
@@ -235,238 +185,3 @@ private fun shouldShowEmptyMessage(
     if (refreshState !is LoadState.NotLoading || appendState !is LoadState.NotLoading) return false
     return appendState.endOfPaginationReached
 }
-
-/** @param columns колонки сетки, уже с запасом широкого окна — их считает [LazyRow123]. */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun LazyRow123Content(
-    host: LazyRow123Host,
-    listGifs: LazyPagingItems<GifsInfo>,
-    columns: Int,
-    gridState: LazyGridState,
-    modifier: Modifier = Modifier,
-    onClickOpenProfile: (String) -> Unit = {},
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    contentBeforeList: (@Composable () -> Unit)? = null,
-    isRunLike: Boolean = false,
-    onAppendLoaded: (LazyPagingItems<GifsInfo>) -> Unit = {},
-) {
-    SideEffect { Timber.d("!!! LazyRow123::SideEffect columns: ${host.columns}") }
-
-    val isConnected by host.isConnected.collectAsStateWithLifecycle()
-    val state = gridState
-
-    val navigator = LocalNavigator.current
-    val navigationState = LocalRNavigationState.current
-    val downloadList by host.downloadRed.downloadList.collectAsStateWithLifecycle()
-    val downloadedIds = remember(downloadList) { downloadList.mapTo(HashSet(downloadList.size)) { it.id } }
-    val loadState = listGifs.loadState
-    var wasAppendLoading by remember { mutableStateOf(false) }
-
-    LaunchedEffect(loadState.refresh) {
-        if (loadState.refresh is LoadState.NotLoading) {
-            onAppendLoaded(listGifs)
-        }
-    }
-
-    LaunchedEffect(loadState.append) {
-        if (loadState.append is LoadState.Loading && !wasAppendLoading) {
-            wasAppendLoading = true
-            onAppendLoaded(listGifs)
-        }
-        if (loadState.append !is LoadState.Loading) {
-            wasAppendLoading = false
-        }
-    }
-
-    LaunchedEffect(host.returnToIndex, listGifs.itemCount, host.columns) {
-        val targetIndex = host.returnToIndex
-        if (targetIndex >= 0 && listGifs.itemCount > targetIndex) {
-            val offset = if (contentBeforeList != null) 1 else 0
-            state.scrollToItem(targetIndex + offset)
-            host.returnToIndex = -1
-        }
-    }
-
-    // paging-compose itemKey зовёт peek(index) и кидает IndexOutOfBounds, когда снапшот
-    // синхронно сжался (unlike в R Likes), а грид ещё запрашивает ключи по старому
-    // диапазону. Защищаем границу: за пределами снапшота отдаём индекс-заглушку.
-    val pagingItemKey = listGifs.itemKey { it.id }
-
-    LazyRow123ContentStateless(
-        columns = columns,
-        state = state,
-        itemCount = listGifs.itemCount,
-        loadState = loadState,
-        itemKey = { index -> if (index < listGifs.itemCount) "${pagingItemKey(index)}#$index" else index },
-        modifier = modifier,
-        contentPadding = contentPadding,
-        contentBeforeList = contentBeforeList,
-        onRetry = { listGifs.retry() },
-        showLoadingWhenEmpty = when (host.typePager) {
-            TypePager.NICHES, TypePager.PROFILE -> false
-            else -> true
-        },
-    ) { index ->
-        // Та же защита границы, что и для itemKey (см. выше).
-        if (index >= listGifs.itemCount) return@LazyRow123ContentStateless
-        listGifs[index]?.let { item ->
-            val isDownloaded = item.id in downloadedIds
-
-            LazyRow123GridItem(
-                item = item,
-                index = index,
-                host = host,
-                isConnected = isConnected,
-                isDownloaded = isDownloaded,
-                isRunLike = isRunLike,
-                onItemClick = {
-                    host.currentIndex = index
-                    host.returnToIndex = index
-                    host.block.blockItem = item
-                    navigator?.push(ScreenRedFullScreen(item, host.feedKey, index))
-                },
-                onRefresh = { listGifs.refresh() },
-                onClickOpenProfile = onClickOpenProfile,
-                onTagClick = { tag ->
-                    host.search.searchText.value = TextFieldValue(tag, TextRange(tag.length))
-                    host.search.searchTextDone.value = tag
-                    navigationState.rootTab = 0
-                    navigator?.popAll()
-                }
-            )
-        } ?: Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.7f)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, Color.DarkGray, RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun LazyRow123ContentStateless(
-    columns: Int,
-    state: LazyGridState,
-    itemCount: Int,
-    loadState: CombinedLoadStates,
-    itemKey: ((Int) -> Any)?,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    contentBeforeList: (@Composable () -> Unit)? = null,
-    onRetry: () -> Unit = {},
-    showLoadingWhenEmpty: Boolean = true,
-    itemContent: @Composable (Int) -> Unit
-) {
-    val showLoadingIndicators = showLoadingWhenEmpty || itemCount > 0
-    val isAnyLoading = loadState.refresh is LoadState.Loading ||
-            loadState.append is LoadState.Loading ||
-            loadState.prepend is LoadState.Loading
-
-    Box(modifier.fillMaxSize()) {
-        LazyVerticalGrid(
-            horizontalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
-            verticalArrangement = Arrangement.spacedBy(Theme.Content.itemSpacing),
-            state = state,
-            columns = GridCells.Fixed(columns),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = contentPadding,
-        ) {
-            if (contentBeforeList != null) {
-                item(key = "before", span = { GridItemSpan(maxLineSpan) }) { contentBeforeList() }
-            }
-
-            items(
-                count = itemCount,
-                key = itemKey,
-                contentType = { "video_grid_item" }
-            ) { index ->
-                itemContent(index)
-            }
-
-            if (showLoadingIndicators && loadState.append is LoadState.Loading) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
-
-            val loadError = listLoadError(loadState)
-            if (loadError != null) {
-                item(key = "load_error", span = { GridItemSpan(maxLineSpan) }) {
-                    RListLoadError(message = loadError.toRUserMessage(), onRetry = onRetry)
-                }
-            }
-        }
-
-        if (showLoadingWhenEmpty && loadState.refresh is LoadState.Loading && itemCount == 0) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-
-        if (showLoadingIndicators && isAnyLoading) {
-            TopLoadingBar(modifier = Modifier.align(Alignment.TopCenter))
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun LazyRow123ContentPreview() {
-    XvideosTheme {
-        val sampleItems = List(10) { index ->
-            GifsInfo(
-                id = index.toString(),
-                userName = "User $index",
-                description = "Sample description $index"
-            )
-        }
-
-        val notLoading = LoadState.NotLoading(false)
-        val mockLoadState = CombinedLoadStates(
-            refresh = notLoading,
-            prepend = notLoading,
-            append = notLoading,
-            source = LoadStates(
-                refresh = notLoading,
-                prepend = notLoading,
-                append = notLoading
-            )
-        )
-
-        LazyRow123ContentStateless(
-            columns = 2,
-            state = rememberLazyGridState(),
-            itemCount = sampleItems.size,
-            loadState = mockLoadState,
-            itemKey = { index -> sampleItems[index].id },
-            contentPadding = PaddingValues(8.dp)
-        ) { index ->
-            Box(
-                modifier = Modifier
-                    .padding(4.dp)
-                    .fillMaxWidth()
-                    .aspectRatio(0.7f)
-                    .background(Color.DarkGray, RoundedCornerShape(8.dp))
-                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Item $index", color = Color.White)
-            }
-        }
-    }
-}
-
-

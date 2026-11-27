@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import com.client.xvideos.xlive.ui.room.atom.XLiveMessage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,6 +67,7 @@ class ScreenXLiveRecord(private val id: Long) : Screen {
         val context = LocalContext.current
         val vm = rememberScreenModel { XLiveRecordSM(id) }
         val record by vm.record.collectAsStateWithLifecycle()
+        val isNotFound by vm.isNotFound.collectAsStateWithLifecycle()
         val storyboard by vm.storyboard.collectAsStateWithLifecycle()
         val isSaved by vm.isSaved.collectAsStateWithLifecycle()
         val muted by vm.muted.collectAsStateWithLifecycle()
@@ -92,6 +94,7 @@ class ScreenXLiveRecord(private val id: Long) : Screen {
 
         ScreenXLiveRecordContent(
             record = record,
+            isNotFound = isNotFound,
             videoUrl = vm.videoUrl,
             storyboard = storyboard,
             isSaved = isSaved,
@@ -116,6 +119,7 @@ fun ScreenXLiveRecordContent(
     aboutExpanded: Boolean,
     actions: XLiveRecordActions,
     modifier: Modifier = Modifier,
+    isNotFound: Boolean = false,
 ) {
     val scrollState = rememberScrollState()
 
@@ -127,7 +131,11 @@ fun ScreenXLiveRecordContent(
     ) {
         if (record == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color.White)
+                if (isNotFound) {
+                    XLiveMessage(text = "Запись не найдена", onRetry = actions.onBack, actionLabel = "Назад")
+                } else {
+                    CircularProgressIndicator(color = Color.White)
+                }
             }
             return@Column
         }

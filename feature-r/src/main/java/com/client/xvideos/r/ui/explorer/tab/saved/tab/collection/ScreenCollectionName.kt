@@ -29,7 +29,6 @@ import com.client.xvideos.r.ui.explorer.tab.saved.tab.collection.molecule.Collec
 import com.client.xvideos.r.ui.profile.ScreenRedProfile
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123
 import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
-import com.client.xvideos.ui.theme.XvideosTheme
 import timber.log.Timber
 
 class ScreenCollectionName(
@@ -121,13 +120,11 @@ fun ScreenCollectionNameContent(
 @Preview
 @Composable
 private fun ScreenCollectionNameContentPreview() {
-    XvideosTheme(darkTheme = true) {
-        ScreenCollectionNameContent(
-            title = "Favorites",
-            host = null,
-            topInset = 24.dp,
-            onBackClick = {},
-            onClickOpenProfile = {}
-        )
-    }
+    ScreenCollectionNameContent(
+        title = "Favorites",
+        host = null,
+        topInset = 24.dp,
+        onBackClick = {},
+        onClickOpenProfile = {}
+    )
 }

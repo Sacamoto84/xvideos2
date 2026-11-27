@@ -45,6 +45,11 @@ class XLiveRecordSM(
         .map { list -> list.firstOrNull { it.id == id } }
         .stateIn(screenModelScope, SharingStarted.Eagerly, store.records.value.firstOrNull { it.id == id })
 
+    /** Запись не найдена (диск уже прочитан или id некорректный). */
+    val isNotFound: StateFlow<Boolean> = combine(record, store.loaded) { current, loaded ->
+        loaded && current == null
+    }.stateIn(screenModelScope, SharingStarted.Eagerly, false)
+
     /** Комната записи в «Моих». */
     val isSaved: StateFlow<Boolean> = combine(saved.rooms, record) { rooms, now ->
         now != null && rooms.any { it.username == now.username }

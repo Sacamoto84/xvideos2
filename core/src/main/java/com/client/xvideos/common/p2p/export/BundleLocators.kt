@@ -1,5 +1,6 @@
 package com.client.xvideos.common.p2p.export
 
+import com.client.xvideos.common.io.isUnsafeItemName
 import java.io.File
 
 /** Результат локации: корень store, файлы бандла, файл-метаданные. */
@@ -26,6 +27,7 @@ object XBundleLocator {
 /** R: `<storeRoot>/<userName>/<id>.mp4|.jpg|.info`. Обязательны mp4 и info. */
 object RBundleLocator {
     fun locate(storeRoot: File, userName: String, id: String): LocatedBundle? {
+        if (isUnsafeItemName(userName) || isUnsafeItemName(id)) return null
         val dir = File(storeRoot, userName)
         val mp4 = File(dir, "$id.mp4")
         val info = File(dir, "$id.info")

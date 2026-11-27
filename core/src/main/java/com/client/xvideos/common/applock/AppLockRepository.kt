@@ -6,6 +6,7 @@ import android.os.SystemClock
 import androidx.core.content.edit
 import com.client.xvideos.common.settings.Settings
 import com.client.xvideos.common.util.defaultSharedPreferences
+import com.client.xvideos.common.util.runCatchingCancellable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -70,17 +71,24 @@ object AppLockRepository {
         testElapsedRealtimeRef.set(null)
     }
 
+    /**
+     * Прогревает зашифрованное хранилище в фоне (при старте процесса), чтобы
+     * дальнейшие проверки в жизненном цикле не упирались в холодный Keystore.
+     */
+    suspend fun warmUp(context: Context?) {
+        withContext(Dispatchers.IO) {
+            getPrefs(context)
+        }
+    }
+
     private fun getPrefs(context: Context?): SharedPreferences? {
         testPrefsRef.get()?.let { testPrefs ->
             migrateLegacyIfNeeded(context, testPrefs)
             return testPrefs
         }
-        val securePrefs = AppLockSecureStore.getOrNull(context, mayRecreate = { !isArmed(context) })
-        if (securePrefs != null) {
-            migrateLegacyIfNeeded(context, securePrefs)
-            return securePrefs
-        }
-        return plainPrefs(context)
+        val securePrefs = AppLockSecureStore.getOrNull(context, mayRecreate = { !isArmed(context) }) ?: return null
+        migrateLegacyIfNeeded(context, securePrefs)
+        return securePrefs
     }
 
     /** Обычные, незашифрованные настройки приложения. */
@@ -148,8 +156,8 @@ object AppLockRepository {
             return
         }
 
-        // Затираем открытые секреты из обычного SharedPreferences файла
-        defaultPrefs.edit {
+        // Синхронно затираем открытые секреты из обычного SharedPreferences файла
+        defaultPrefs.edit(commit = true) {
             remove(KEY_PASSWORD_HASH)
             remove(KEY_PASSWORD_SALT)
             remove(KEY_FAILED_ATTEMPTS)
@@ -236,7 +244,7 @@ object AppLockRepository {
      * запуске, и каждая попытка ввода замораживала интерфейс. Отсюда `suspend` и
      * [Dispatchers.Default] — считаем на процессоре, а не в UI.
      */
-    suspend fun setPassword(context: Context? = null, password: String): Result<Unit> = runCatching {
+    suspend fun setPassword(context: Context? = null, password: String): Result<Unit> = runCatchingCancellable {
         require(password.length >= MIN_PASSWORD_LENGTH) {
             "Код доступа должен быть не короче $MIN_PASSWORD_LENGTH символов"
         }
@@ -264,9 +272,9 @@ object AppLockRepository {
                 // На диск новый код не лёг, а в памяти уже лежит. Оставить так —
                 // значит до конца сеанса считать замок включённым и поставить
                 // отметку, которой после перезапуска не будет соответствовать код.
-                prefs.edit {
-                    putString(KEY_PASSWORD_SALT, previousSalt)
-                    putString(KEY_PASSWORD_HASH, previousHash)
+                prefs.edit(commit = true) {
+                    if (previousSalt == null) remove(KEY_PASSWORD_SALT) else putString(KEY_PASSWORD_SALT, previousSalt)
+                    if (previousHash == null) remove(KEY_PASSWORD_HASH) else putString(KEY_PASSWORD_HASH, previousHash)
                     putBoolean(KEY_SECURE_LOCK_ENABLED, previousEnabled)
                 }
                 error("Не удалось сохранить код доступа")
@@ -314,7 +322,7 @@ object AppLockRepository {
         return AppLockCheckResult.Wrong(lockoutRemainingMs = registerFailedAttempt(context))
     }
 
-    suspend fun setDuressCode(context: Context? = null, code: String): Result<Unit> = runCatching {
+    suspend fun setDuressCode(context: Context? = null, code: String): Result<Unit> = runCatchingCancellable {
         require(code.length >= MIN_PASSWORD_LENGTH) {
             "Код уничтожения должен быть не короче $MIN_PASSWORD_LENGTH символов"
         }
@@ -339,7 +347,7 @@ object AppLockRepository {
 
     fun clearDuressCode(context: Context? = null) {
         val prefs = getPrefs(context) ?: return
-        prefs.edit {
+        prefs.edit(commit = true) {
             remove(KEY_DURESS_SALT)
             remove(KEY_DURESS_HASH)
         }
@@ -411,8 +419,14 @@ object AppLockRepository {
      * Заменяет текущий код доступа кодом уничтожения, удаляет код уничтожения
      * и сбрасывает счётчики троттлинга. Замок остаётся включённым и взведённым.
      */
-    fun promoteDuressCodeToAccessCode(context: Context? = null): Boolean {
-        val prefs = getPrefs(context) ?: return false
+    fun promoteDuressCodeToAccessCode(context: Context? = null): Boolean =
+        promoteDuressCode(context = context, securePrefsOverride = null)
+
+    internal fun promoteDuressCode(
+        context: Context? = null,
+        securePrefsOverride: SharedPreferences? = null,
+    ): Boolean {
+        val prefs = securePrefsOverride ?: getPrefs(context) ?: return false
         val duressSalt = prefs.getString(KEY_DURESS_SALT, null) ?: return false
         val duressHash = prefs.getString(KEY_DURESS_HASH, null) ?: return false
         val saved = prefs.edit().apply {
@@ -462,7 +476,7 @@ object AppLockRepository {
             lockoutUntilElapsed = prefs.getLong(KEY_LOCKOUT_UNTIL_ELAPSED, 0L),
         )
         val reanchored = AppLockThrottle.reanchorAfterReboot(stored, elapsedNow) ?: return stored
-        prefs.edit { putLong(KEY_LOCKOUT_UNTIL_ELAPSED, reanchored.lockoutUntilElapsed) }
+        prefs.edit(commit = true) { putLong(KEY_LOCKOUT_UNTIL_ELAPSED, reanchored.lockoutUntilElapsed) }
         return reanchored
     }
 
@@ -483,7 +497,7 @@ object AppLockRepository {
             wallNow = wallNow,
             elapsedNow = elapsedNow,
         )
-        prefs.edit {
+        prefs.edit(commit = true) {
             putInt(KEY_FAILED_ATTEMPTS, state.attempts)
             putLong(KEY_LOCKOUT_UNTIL, state.lockoutUntilWall)
             putLong(KEY_LOCKOUT_UNTIL_ELAPSED, state.lockoutUntilElapsed)
@@ -494,7 +508,7 @@ object AppLockRepository {
     /** Сбрасывает счётчик попыток и блокировку (вызывать после успешного ввода). */
     fun resetFailedAttempts(context: Context? = null) {
         val prefs = getPrefs(context) ?: return
-        prefs.edit {
+        prefs.edit(commit = true) {
             remove(KEY_FAILED_ATTEMPTS)
             remove(KEY_LOCKOUT_UNTIL)
             remove(KEY_LOCKOUT_UNTIL_ELAPSED)
@@ -505,7 +519,7 @@ object AppLockRepository {
         val prefs = getPrefs(context)
         // Отметка снимается раньше, чем стирается код, — см. [isArmed].
         setArmed(context, false)
-        prefs?.edit {
+        prefs?.edit(commit = true) {
             remove(KEY_PASSWORD_SALT)
             remove(KEY_PASSWORD_HASH)
             remove(KEY_DURESS_SALT)

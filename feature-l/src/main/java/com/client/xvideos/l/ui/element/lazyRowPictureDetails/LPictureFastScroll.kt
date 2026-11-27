@@ -68,10 +68,10 @@ internal fun LPictureFastScroll(
             itemCount = pictures.size,
         ) { pictures[it].safeAspectRatio() }
     }
-    var lastSample by remember(gridState, viewport, columns, spacing, prefixHeight, firstItemIndex, sessionKey) {
+    var lastSample by remember(gridState, geometry, viewport, columns, spacing, prefixHeight, firstItemIndex, sessionKey) {
         mutableStateOf<ScrollSample?>(null)
     }
-    LaunchedEffect(gridState, viewport, columns, spacing, prefixHeight, firstItemIndex, sessionKey) {
+    LaunchedEffect(gridState, geometry, viewport, columns, spacing, prefixHeight, firstItemIndex, sessionKey) {
         snapshotFlow { gridState.layoutInfo }.collect { layout ->
             val position = gridState.pixelPosition(geometry, layout, lastSample)
             lastSample = captureScrollSample(layout, position)

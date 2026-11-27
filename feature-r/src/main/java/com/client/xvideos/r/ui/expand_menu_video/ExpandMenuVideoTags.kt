@@ -33,14 +33,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.client.xvideos.r.model.GifsInfo
-import com.client.xvideos.ui.theme.XvideosTheme
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpandMenuVideoTags(
-    item: GifsInfo? = null,
     modifier: Modifier = Modifier,
+    item: GifsInfo? = null,
     onClick: (String) -> Unit = {},
 ) {
 
@@ -104,12 +103,10 @@ fun ExpandMenuVideoTags(
 @Preview(showBackground = true, backgroundColor = 0xFF303030)
 @Composable
 fun ExpandMenuVideoTagsPreview() {
-    XvideosTheme {
-        ExpandMenuVideoTags(
-            item = GifsInfo(
-                tags = listOf("Action", "Adventure", "Comedy", "Drama", "Fantasy", "Sci-Fi"),
-                id = "id",
-            )
+    ExpandMenuVideoTags(
+        item = GifsInfo(
+            tags = listOf("Action", "Adventure", "Comedy", "Drama", "Fantasy", "Sci-Fi"),
+            id = "id",
         )
-    }
+    )
 }
