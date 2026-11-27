@@ -21,6 +21,7 @@ class DownloadSortTest {
                 "second/video" to 900L,
                 "second/medium" to 2_000L,
             ),
+            totalBytes = 4_000_004_900L,
         )
 
         assertEquals(byDate, downloads.sortedItems(DownloadSort.DATE))

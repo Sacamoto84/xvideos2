@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -24,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.lifecycle.SlidingWindowEffect
 import androidx.paging.LoadState
+import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.navigator.Navigator
 import com.client.xvideos.common.videoplayer.feed.rememberFeedPlayerState
@@ -32,24 +34,26 @@ import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.network.toRUserMessage
 import com.client.xvideos.r.ui.fullscreen.model.RedFullScreenPlayerState
 import com.client.xvideos.r.ui.fullscreen.peekUrl
-import com.client.xvideos.r.ui.ui.lazyrow123.LazyRow123Host
 import com.client.xvideos.r.ui.ui.lazyrow123.molecule.RListLoadError
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
 
 @OptIn(UnstableApi::class)
 @Suppress("LongMethod")
 @Composable
 fun RedFullScreenFeed(
-    host: LazyRow123Host,
+    pager: Flow<PagingData<GifsInfo>>,
     startIndex: Int,
     fallbackItem: GifsInfo,
     player: RedFullScreenPlayerState,
     downloadRed: DownloadRed,
     navigator: Navigator,
     pageOverlay: @Composable (item: GifsInfo, onBack: () -> Unit) -> Unit,
+    onPageChanged: (Int) -> Unit,
 ) {
-    val listGifs = host.pager.collectAsLazyPagingItems()
+    val listGifs = pager.collectAsLazyPagingItems()
+    val currentOnPageChanged by rememberUpdatedState(onPageChanged)
     val downloadedKeys by downloadRed.downloadedVideoKeys.collectAsStateWithLifecycle()
     val append = listGifs.loadState.append
     val appendExtra = if (append !is LoadState.NotLoading && listGifs.itemCount > 0) 1 else 0
@@ -105,7 +109,7 @@ fun RedFullScreenFeed(
     }
     BackHandler(enabled = !isCurrentPageZoomed, onBack = handleBack)
 
-    LaunchedEffect(pagerState, host) {
+    LaunchedEffect(pagerState, listGifs) {
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
             .collect { page ->
@@ -113,8 +117,7 @@ fun RedFullScreenFeed(
                 feedState.updateCurrentPage(page)
                 feedState.retryPending { i -> listGifs.peekUrl(i, downloadedKeys) }
                 if (page >= listGifs.itemCount) isVideoBuffering = false
-                host.currentIndex = page
-                host.returnToIndex = page
+                currentOnPageChanged(page)
                 player.playPauseFeedback.clear()
                 player.play = true
                 player.currentPlayerTime = 0f

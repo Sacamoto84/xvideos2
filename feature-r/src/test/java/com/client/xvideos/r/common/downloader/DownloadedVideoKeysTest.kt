@@ -35,19 +35,23 @@ class DownloadedVideoKeysTest {
         File(creator, "abc.mp4").writeBytes(ByteArray(20))
         File(other, "abc.mp4").writeBytes(ByteArray(30))
         File(creator, "pending.mp4").createNewFile()
-        File(creator, "pending.info").writeText("""{"userName":"Creator","id":"pending"}""")
+        val info = File(creator, "pending.info").apply { writeText("""{"userName":"Creator","id":"pending"}""") }
         File(creator, "pending.mp4.temp").writeBytes(ByteArray(40))
+        File(creator, "pending.jpg").writeBytes(ByteArray(15))
 
         val scan = readRedDownloads(tempDir.root)
 
         assertEquals(mapOf("Creator/abc" to 20L, "Other/abc" to 30L), scan.videoSizes)
         assertEquals(scan.videoSizes.keys, scan.videoKeys)
         assertEquals("pending", scan.list.single().id)
+        assertEquals(105L + info.length(), scan.totalBytes)
     }
 
     @Test
     fun `пустой каталог возвращает пустое множество ключей`() {
-        assertTrue(readRedDownloads(tempDir.root).videoKeys.isEmpty())
+        val scan = readRedDownloads(tempDir.root)
+        assertTrue(scan.videoKeys.isEmpty())
+        assertEquals(0L, scan.totalBytes)
     }
 
     @Test

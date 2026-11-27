@@ -10,19 +10,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
@@ -40,6 +43,7 @@ import com.client.xvideos.common.ui.atom.SavedTabHeader
 import com.client.xvideos.common.ui.scroll.LazyGridFastScroll
 import com.client.xvideos.common.ui.scroll.rememberVisibleRangePercentIgnoringFirstNForGrid
 import com.client.xvideos.common.util.getTopInsetDp
+import com.client.xvideos.common.util.formatBytes
 import com.client.xvideos.r.common.downloader.DownloadSort
 import com.client.xvideos.r.common.downloader.RedDownloadsScan
 import com.client.xvideos.r.common.downloader.downloadedVideoKey
@@ -72,8 +76,17 @@ object R_Screen_Saved_DownloadTab : Screen {
         val savedSort by Settings.r_download_sort.field.collectAsStateWithLifecycle()
         val sort = DownloadSort.entries.firstOrNull { it.name == savedSort } ?: DownloadSort.DATE
 
-        val onItemClickHandler = remember(navigator) {
-            { item: GifsInfo -> navigator.push(ScreenRedFullScreen(item)) }
+        val onItemClickHandler = remember(navigator, sort) {
+            { items: List<GifsInfo>, index: Int ->
+                navigator.push(
+                    ScreenRedFullScreen(
+                        item = items[index],
+                        startIndex = index,
+                        downloadSort = sort,
+                        downloadItems = items,
+                    ),
+                )
+            }
         }
 
         var chooserItem by remember { mutableStateOf<GifsInfo?>(null) }
@@ -131,7 +144,7 @@ private fun SavedDownloadTabContent(
     onSortChange: (DownloadSort) -> Unit,
     state: LazyGridState,
     topInset: Dp,
-    onItemClick: (GifsInfo) -> Unit,
+    onItemClick: (List<GifsInfo>, Int) -> Unit,
     onShareClick: (GifsInfo) -> Unit,
     onDeleteClick: (GifsInfo) -> Unit,
     modifier: Modifier = Modifier,
@@ -150,6 +163,7 @@ private fun SavedDownloadTabContent(
                 title = "Загрузки",
                 topCutout = topInset,
                 trailing = {
+                    Text("Всего ${formatBytes(downloads.totalBytes)}", color = Color.LightGray, fontSize = 14.sp, maxLines = 1)
                     DownloadSortMenu(sort) { selected ->
                         if (selected != sort) {
                             onSortChange(selected)
@@ -175,16 +189,16 @@ private fun SavedDownloadTabContent(
                 modifier = Modifier.fillMaxSize().hazeSource(hazeState),
                 contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
             ) {
-                items(
+                itemsIndexed(
                     items = items,
-                    key = { downloadedVideoKey(it.userName, it.id) },
-                    contentType = { view },
-                ) { item ->
+                    key = { _, item -> downloadedVideoKey(item.userName, item.id) },
+                    contentType = { _, _ -> view },
+                ) { index, item ->
                     DownloadListItem(
                         item = item,
                         view = view,
                         videoSize = downloads.videoSize(item),
-                        onItemClick = onItemClick,
+                        onItemClick = { onItemClick(items, index) },
                         onShareClick = onShareClick,
                         onDeleteClick = onDeleteClick,
                         modifier = if (showGrid) Modifier else Modifier.adaptiveContentWidth(),
@@ -208,19 +222,20 @@ private fun SavedDownloadTabContent(
 @Composable
 private fun SavedDownloadTabPreview() {
     val items = List(8) { GifsInfo(id = "sample_${it + 1}", userName = "author") }
+    val videoSizes = items.mapIndexed { index, item ->
+        downloadedVideoKey(item.userName, item.id) to (index + 1) * 1_500_000L
+    }.toMap()
     var view by remember { mutableStateOf(DownloadView.DETAILS) }
     var sort by remember { mutableStateOf(DownloadSort.DATE) }
     SavedDownloadTabContent(
-        downloads = RedDownloadsScan(items, items.mapIndexed { index, item ->
-            downloadedVideoKey(item.userName, item.id) to (index + 1) * 1_500_000L
-        }.toMap()),
+        downloads = RedDownloadsScan(items, videoSizes, totalBytes = videoSizes.values.sum()),
         view = view,
         onViewChange = { view = it },
         sort = sort,
         onSortChange = { sort = it },
         state = rememberLazyGridState(),
         topInset = 24.dp,
-        onItemClick = {},
+        onItemClick = { _, _ -> },
         onShareClick = {},
         onDeleteClick = {}
     )

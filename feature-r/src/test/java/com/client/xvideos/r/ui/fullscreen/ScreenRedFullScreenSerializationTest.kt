@@ -1,5 +1,6 @@
 package com.client.xvideos.r.ui.fullscreen
 
+import com.client.xvideos.r.common.downloader.DownloadSort
 import com.client.xvideos.r.model.GifsInfo
 import com.client.xvideos.r.model.URL1
 import org.junit.Test
@@ -62,6 +63,25 @@ class ScreenRedFullScreenSerializationTest {
         val restored = roundTrip(screen)
         assertEquals("RedFullScreen:abc123:7", restored.key)
         assertEquals("abc123", restored.item.id)
+    }
+
+    @Test
+    fun `экран загрузок сохраняется без снимка списка`() {
+        val item = GifsInfo(id = "downloaded", userName = "creator")
+        val items = object : AbstractList<GifsInfo>() {
+            override val size = 3
+            override fun get(index: Int) = item
+        }
+        val screen = ScreenRedFullScreen(
+            item = item,
+            startIndex = 1,
+            downloadSort = DownloadSort.SIZE_DESCENDING,
+            downloadItems = items,
+        )
+
+        val restored = roundTrip(screen)
+        assertEquals("RedFullScreen:downloaded:1", restored.key)
+        assertEquals(item, restored.item)
     }
 
     @Test

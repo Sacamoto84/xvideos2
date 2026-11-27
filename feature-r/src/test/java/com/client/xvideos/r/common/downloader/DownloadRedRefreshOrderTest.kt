@@ -34,8 +34,8 @@ class DownloadRedRefreshOrderTest {
 
     @Test
     fun `следующий обход читает каталог только после того, как прежний опубликовал результат`() {
-        val stale = RedDownloadsScan(emptyList(), mapOf("Creator/Old" to 10L))
-        val fresh = RedDownloadsScan(emptyList(), mapOf("Creator/Old" to 10L, "Creator/New" to 20L))
+        val stale = RedDownloadsScan(emptyList(), mapOf("Creator/Old" to 10L), totalBytes = 10L)
+        val fresh = RedDownloadsScan(emptyList(), mapOf("Creator/Old" to 10L, "Creator/New" to 20L), totalBytes = 30L)
         val firstStarted = CountDownLatch(1)
         val releaseFirst = CountDownLatch(1)
         val secondRead = CountDownLatch(1)

@@ -115,7 +115,7 @@ class DownloadRed internal constructor(
     /** Реактивный список всех сохраненных роликов (сортировка по убыванию даты изменения). */
     val downloadList: StateFlow<List<GifsInfo>> = _downloadList.asStateFlow()
 
-    private val _downloads = MutableStateFlow(RedDownloadsScan(emptyList(), emptyMap()))
+    private val _downloads = MutableStateFlow(RedDownloadsScan(emptyList(), emptyMap(), totalBytes = 0L))
     internal val downloads = _downloads.asStateFlow()
 
     /**
@@ -517,26 +517,32 @@ internal fun downloadedVideoKey(userName: String, id: String): String = "$userNa
 internal fun downloadedVideoKey(file: File): String =
     downloadedVideoKey(file.parentFile?.name.orEmpty(), file.nameWithoutExtension)
 
-/** Ролики по `.info` и размеры готовых `.mp4` из одного обхода каталога. */
-internal data class RedDownloadsScan(val list: List<GifsInfo>, val videoSizes: Map<String, Long>) {
+/** Ролики по `.info`, размеры готовых `.mp4` и общий объём файлов каталога. */
+internal data class RedDownloadsScan(
+    val list: List<GifsInfo>,
+    val videoSizes: Map<String, Long>,
+    val totalBytes: Long,
+) {
     val videoKeys: Set<String> get() = videoSizes.keys
 
     fun videoSize(item: GifsInfo): Long? = videoSizes[downloadedVideoKey(item.userName, item.id)]
 }
 
 /**
- * Собирает `.info` и размеры `.mp4` за один обход [rootDir].
+ * Собирает `.info`, размеры `.mp4` и общий объём файлов за один обход [rootDir].
  * Список упорядочен по дате изменения `.info`, повреждённые записи пропускаются.
  */
 internal fun readRedDownloads(rootDir: File): RedDownloadsScan {
-    if (!rootDir.isDirectory) return RedDownloadsScan(emptyList(), emptyMap())
+    if (!rootDir.isDirectory) return RedDownloadsScan(emptyList(), emptyMap(), totalBytes = 0L)
 
     val infoFiles = ArrayList<File>()
     val videoSizes = HashMap<String, Long>()
+    var totalBytes = 0L
     for (f in rootDir.walkTopDown()) {
         if (!f.isFile) continue
         val size = f.length()
         if (size <= 0L) continue
+        totalBytes += size
         when (f.extension) {
             "info" -> infoFiles.add(f)
             "mp4" -> videoSizes[downloadedVideoKey(f)] = size
@@ -558,5 +564,5 @@ internal fun readRedDownloads(rootDir: File): RedDownloadsScan {
         }
     }
 
-    return RedDownloadsScan(result, videoSizes)
+    return RedDownloadsScan(result, videoSizes, totalBytes)
 }
